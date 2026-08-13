@@ -1,0 +1,168 @@
+/**
+ * UBICACION: src/app/globals.css
+ * OPTIMIZACIONES MOBILE:
+ *  - Media queries para pantallas pequeñas
+ *  - Touch targets mínimos de 44px (WCAG)
+ *  - Texto legible sin zoom (mínimo 16px en inputs)
+ *  - Scroll suave nativo
+ *  - Prevenir highlight azul en tap (mobile)
+ */
+
+:root {
+  --color-crema:   #eee6d9;
+  --color-verde:   #334c2b;
+  --color-naranja: #f46e15;
+  --color-dorado:  #b7996b;
+  --color-oliva:   #8f9a44;
+  --color-blanco:  #ffffff;
+  --color-texto:   #334c2b;
+  --color-acento:  #f46e15;
+  --color-borde:   #b7996b;
+  --color-exito:   #2e7d32;
+  --color-error:   #c62828;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+html, body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #ffffff;
+  color: #334c2b;
+  overflow-x: hidden;
+}
+
+/* Touch targets mínimos accesibles */
+button, a, input, select {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+/* Inputs sin zoom en iOS (requiere font-size >= 16px) */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* Imagen responsive por defecto */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ===== HEADER RESPONSIVE ===== */
+@media (max-width: 480px) {
+  .header-logo-text {
+    display: none !important;
+  }
+  .header-logo-img {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .header-inner {
+    padding: 0.5rem 1rem !important;
+  }
+}
+
+/* ===== GRILLA DE PRODUCTOS RESPONSIVE ===== */
+.products-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+@media (max-width: 640px) {
+  .products-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ===== PAGE CONTAINER ===== */
+.page-container {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 480px) {
+  .page-container {
+    padding: 1rem 0.85rem;
+  }
+}
+
+/* ===== HERO SECTION ===== */
+.hero-title {
+  font-size: 2.5rem;
+}
+
+@media (max-width: 640px) {
+  .hero-title {
+    font-size: 1.6rem;
+  }
+  .hero-subtitle {
+    font-size: 1rem !important;
+  }
+  .hero-section {
+    padding: 1.5rem 0 !important;
+  }
+}
+
+/* ===== PRODUCT CARD ===== */
+.product-card {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .product-card {
+    padding: 1rem !important;
+  }
+  .product-card-image {
+    height: 160px !important;
+  }
+}
+
+/* ===== CART SIDEBAR ===== */
+@media (max-width: 480px) {
+  .cart-sidebar {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+/* ===== AUTH MODAL ===== */
+@media (max-width: 480px) {
+  .auth-modal {
+    width: 95% !important;
+    padding: 1.25rem !important;
+  }
+}
+
+/* ===== FOOTER ===== */
+@media (max-width: 480px) {
+  .footer-inner {
+    padding: 1.5rem 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-cuenta-texto {
+    display: none;
+  }
+}
