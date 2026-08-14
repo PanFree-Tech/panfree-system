@@ -1,12 +1,6 @@
 /**
  * 📁 UBICACIÓN: src/components/ProductCard.js
- * 📅 ACTUALIZADO: 2026-03-07
- * 📌 CAMBIOS:
- *  - Carrusel automático: imagen_url + imagenes_urls[]
- *  - Auto-avance cada 3 segundos, pausa al hover
- *  - Fade crossfade — sin controles (grilla compacta)
- *  - Si solo hay 1 imagen: comportamiento idéntico al original
- *  - Todos los hooks SIEMPRE antes de cualquier return condicional
+ * 📅 ACTUALIZADO: 2026-08-14 — badge Sin TACC visible + debug log
  */
 'use client'
 import { useState, useEffect, useCallback } from 'react'
@@ -90,6 +84,10 @@ function CarruselCard({ imagenes, nombre, imagenAlt }) {
 export default function ProductCard({ producto, onAddToCart, disponible = true, requiereAnticipacion = false }) {
   const [cantidad, setCantidad] = useState(1)
 
+  useEffect(() => {
+    console.log('[ProductCard] render producto:', producto?.id, producto?.nombre)
+  }, [producto])
+
   if (!producto) return null
 
   const agotado = !disponible
@@ -124,7 +122,16 @@ export default function ProductCard({ producto, onAddToCart, disponible = true, 
       boxShadow: '0 2px 8px rgba(62,39,35,0.1)', backgroundColor: '#ffffff',
       fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif',
       transition: 'opacity 0.2s',
+      position: 'relative',
     }}>
+
+      {/* Badge Sin TACC */}
+      {producto?.certificado_tacc && (
+        <div style={{ position: 'absolute', top: 12, left: 12, background: '#fff7e6', border: '1px solid #ffd966', padding: '6px 10px', borderRadius: 18, fontWeight: 700, fontSize: '0.8rem' }}>
+          ✅ Sin TACC
+        </div>
+      )}
+
       <a href={slugUrl || '#'} style={{ display: 'block', textDecoration: 'none' }}>
         <CarruselCard imagenes={imagenes} nombre={producto.nombre} imagenAlt={producto.imagen_alt} />
       </a>
@@ -151,7 +158,7 @@ export default function ProductCard({ producto, onAddToCart, disponible = true, 
       </p>
 
       {!agotado && requiereAnticipacion && (
-        <p style={{ margin: '0 0 1rem 0', fontSize: '0.8rem', color: '#5d4037', fontWeight: '600', backgroundColor: '#fff8e1', border: '1px solid #ffe082', borderRadius: '4px', padding: '0.3rem 0.6rem', display: 'inline-block' }}>
+        <p style={{ margin: '0 0 1rem 0', fontSize: '0.8rem', color: '#5d4037', fontWeight: '600', backgroundColor: '#fff8e1', border: '1px solid #ffe082', borderRadius: '4px', padding: '0.3rem 0.6rem' }}>
           ⏰ Pedido con 24hs de anticipación
         </p>
       )}
@@ -161,15 +168,19 @@ export default function ProductCard({ producto, onAddToCart, disponible = true, 
         <>
           <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
             <button onClick={() => setCantidad(c => Math.max(1, c - 1))} aria-label="Reducir cantidad"
-              style={{ width: '44px', height: '44px', border: '2px solid #b7996b', borderRadius: '4px', background: '#f9f5f0', cursor: 'pointer', fontWeight: '700', fontSize: '1.2rem', color: '#334c2b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+              style={{ width: '44px', height: '44px', border: '2px solid #b7996b', borderRadius: '4px', background: '#f9f5f0', cursor: 'pointer', fontWeight: '700', fontSize: '1.2rem', color: '#334c2b' }}>
+              −
+            </button>
             <input type="number" min="1" max={99} value={cantidad}
               onChange={e => setCantidad(Math.max(1, Math.min(parseInt(e.target.value) || 1, 99)))}
               style={{ width: '60px', height: '44px', textAlign: 'center', border: '2px solid #b7996b', borderRadius: '4px', fontFamily: 'inherit', fontSize: '16px', backgroundColor: '#fff', color: '#334c2b' }} />
             <button onClick={() => setCantidad(c => Math.min(c + 1, 99))} aria-label="Aumentar cantidad"
-              style={{ width: '44px', height: '44px', border: '2px solid #b7996b', borderRadius: '4px', background: '#f9f5f0', cursor: 'pointer', fontWeight: '700', fontSize: '1.2rem', color: '#334c2b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+              style={{ width: '44px', height: '44px', border: '2px solid #b7996b', borderRadius: '4px', background: '#f9f5f0', cursor: 'pointer', fontWeight: '700', fontSize: '1.2rem', color: '#334c2b' }}>
+              +
+            </button>
           </div>
           <button onClick={manejarAgregar}
-            style={{ width: '100%', minHeight: '48px', padding: '0.75rem', backgroundColor: '#f46e15', color: '#fff', border: '2px solid #d4580f', borderRadius: '6px', fontSize: '1rem', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 6px rgba(244,110,21,0.3)' }}>
+            style={{ width: '100%', minHeight: '48px', padding: '0.75rem', backgroundColor: '#f46e15', color: '#fff', border: '2px solid #d4580f', borderRadius: '6px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer' }}>
             🛒 Agregar al Carrito
           </button>
         </>
@@ -178,7 +189,7 @@ export default function ProductCard({ producto, onAddToCart, disponible = true, 
       {agotado && (
         <div style={{ marginTop: '0.5rem' }}>
           <button onClick={manejarPedidoEspecial}
-            style={{ width: '100%', minHeight: '48px', padding: '0.75rem', backgroundColor: '#334c2b', color: '#eee6d9', border: '2px solid #b7996b', borderRadius: '4px', fontSize: '0.95rem', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', marginBottom: '0.5rem' }}>
+            style={{ width: '100%', minHeight: '48px', padding: '0.75rem', backgroundColor: '#334c2b', color: '#eee6d9', border: '2px solid #b7996b', borderRadius: '4px', fontSize: '0.95rem', fontWeight: 600 }}>
             ✉️ Quiero encargar este producto
           </button>
           <p style={{ fontSize: '0.75rem', color: '#888', margin: 0, lineHeight: '1.4' }}>Te contactamos para producirlo especialmente 🍞</p>

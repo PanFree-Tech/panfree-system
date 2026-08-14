@@ -1,22 +1,18 @@
-/**
- * UBICACION: src/app/TiendaCliente.js
- * CREADO: 2026-03-06
- * DESCRIPCION:
- *  - Client Component que recibe datos pre-cargados del servidor
- *  - Maneja filtros de categoría, carrito e interactividad
- *  - Mismo patrón que layout-client.js
- *  - Los datos ya vienen cacheados desde page.js (revalidate: 300)
- */
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCart } from '../context/CartContext'
 import ProductCard from '../components/ProductCard'
 
 const CATEGORIAS = ['todos', 'panes', 'dulces', 'salados', 'eventos']
 
-export default function TiendaCliente({ productos, disponibilidad }) {
+export default function TiendaCliente({ productos = [], disponibilidad = {}, fetchErrors = {} }) {
   const [categoriaActiva, setCategoriaActiva] = useState('todos')
   const { agregarAlCarrito } = useCart()
+
+  useEffect(() => {
+    // Log cliente para verificar que la lista llegó al cliente
+    console.log('[TiendaCliente] productos recibidos:', productos?.length, 'fetchErrors:', fetchErrors)
+  }, [productos, fetchErrors])
 
   const productosFiltrados =
     categoriaActiva === 'todos'
@@ -75,6 +71,24 @@ export default function TiendaCliente({ productos, disponibilidad }) {
         </div>
       </section>
 
+      {/* Banner de error si hubo problemas al obtener datos en el server */}
+      {fetchErrors && (fetchErrors.productos || fetchErrors.disponibilidad || fetchErrors.missingEnv) && (
+        <div style={{
+          border: '2px solid #c62828', background: '#fff3f3', color: '#8a1f1f',
+          padding: '0.75rem 1rem', borderRadius: 6, marginBottom: '1rem'
+        }}>
+          <strong>Problema cargando productos:</strong>
+          <div style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>
+            {fetchErrors.missingEnv ? 'Variables de entorno de Supabase ausentes en el servidor.' : 'Hubo un error al consultar los productos. Revisa logs del servidor.'}
+          </div>
+          <div style={{ marginTop: '0.5rem' }}>
+            <button onClick={() => window.location.reload()} style={{ padding: '0.4rem 0.6rem', borderRadius: 4, cursor: 'pointer' }}>
+              Reintentar (recargar)
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* === GRILLA DE PRODUCTOS === */}
       <section className="products-grid">
         {productosFiltrados.length === 0 ? (
@@ -83,7 +97,9 @@ export default function TiendaCliente({ productos, disponibilidad }) {
             gridColumn: '1 / -1', fontSize: '1.1rem', padding: '2rem 0'
           }}>
             {categoriaActiva === 'todos'
-              ? 'No hay productos disponibles en este momento.'
+              ? (fetchErrors && (fetchErrors.productos || fetchErrors.missingEnv)
+                  ? 'No se pudieron cargar los productos (ver logs).'
+                  : 'No hay productos disponibles en este momento.')
               : `No hay productos en la categoría "${categoriaActiva}".`}
           </p>
         ) : (

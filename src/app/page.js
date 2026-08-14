@@ -1,26 +1,31 @@
 /**
  * UBICACION: src/app/page.js
- * ACTUALIZADO: 2026-03-06
- * CAMBIOS:
- *  - Convertido a Server Component (elimina 'use client')
- *  - Datos cargados en servidor con revalidate: 300 (5 min)
- *  - Estado e interactividad delegados a TiendaCliente.js
- *  - Mismo patrón que layout.js → layout-client.js
+ * ACTUALIZADO: 2026-08-14 — manejo de errores y logs
  */
 import { createClient } from '@supabase/supabase-js'
 import TiendaCliente from './TiendaCliente'
 
-const supabaseUrl     = process.env.NEXT_PUBLIC_SUPABASE_URL     || 'https://gbdrcaumghykiipqgbty.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjczNjIsImV4cCI6MjA4NzgwMzM2Mn0.OydRQxa51Ql42zvscWnQkEKJuU_3yeCS4qPQQoP6TuM'
+const supabaseUrl     = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // Caché: revalidar cada 5 minutos
-// Cambiar a 60 si Luciana actualiza insumos varias veces por hora
 export const revalidate = 300
 
 async function cargarDatos() {
-  const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // Fail loudly in server logs so deploys with missing envs sean detectables.
+    console.error('[cargarDatos] Falta NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY', {
+      hasUrl: Boolean(supabaseUrl),
+      hasAnonKey: Boolean(supabaseAnonKey),
+    })
+    return { productos: [], disponibilidad: {}, errors: { missingEnv: true } }
+  }
 
-  const [{ data: productos }, { data: disponibilidad }] = await Promise.all([
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false, detectSessionInUrl: false }
+  })
+
+  const [prodRes, dispRes] = await Promise.all([
     supabase
       .from('productos')
       .select('*')
@@ -32,23 +37,41 @@ async function cargarDatos() {
       .select('producto_id, disponible, tandas_posibles, ingredientes_faltantes, requiere_anticipacion'),
   ])
 
-  // Mapa rápido: producto_id → disponibilidad
+  if (prodRes.error) {
+    console.error('[Supabase] productos error:', prodRes.error)
+  } else {
+    console.log(`[Supabase] productos: ${Array.isArray(prodRes.data) ? prodRes.data.length : 0} items`)
+  }
+
+  if (dispRes.error) {
+    console.error('[Supabase] disponibilidad error:', dispRes.error)
+  } else {
+    console.log(`[Supabase] disponibilidad: ${Array.isArray(dispRes.data) ? dispRes.data.length : 0} rows`)
+  }
+
   const dispMap = {}
-  ;(disponibilidad || []).forEach(d => { dispMap[d.producto_id] = d })
+  ;(dispRes.data || []).forEach(d => { dispMap[d.producto_id] = d })
 
   return {
-    productos:     productos || [],
+    productos:     prodRes.data || [],
     disponibilidad: dispMap,
+    errors: {
+      productos: prodRes.error || null,
+      disponibilidad: dispRes.error || null,
+    }
   }
 }
 
 export default async function PaginaInicio() {
-  const { productos, disponibilidad } = await cargarDatos()
+  const { productos, disponibilidad, errors } = await cargarDatos()
+
+  console.log('[PaginaInicio] productos.length =', (productos || []).length, ' errors=', errors)
 
   return (
     <TiendaCliente
       productos={productos}
       disponibilidad={disponibilidad}
+      fetchErrors={errors}
     />
   )
 }
