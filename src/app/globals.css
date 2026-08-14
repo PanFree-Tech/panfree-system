@@ -9,6 +9,17 @@
  */
 
 :root {
+  --brand-brown: #b7996b;
+  --brand-dark: #334c2b;
+  --accent: #f46e15;
+  --muted: #f9f5f0;
+  --danger: #c62828;
+  --surface: #ffffff;
+  --shadow: 0 2px 8px rgba(62,39,35,0.08);
+  --radius: 8px;
+  --gap: 0.75rem;
+  --font-stack: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  
   --color-crema:   #eee6d9;
   --color-verde:   #334c2b;
   --color-naranja: #f46e15;
