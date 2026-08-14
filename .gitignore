@@ -27,4 +27,7 @@ Thumbs.db
 
 # Docker (opcional)
 Dockerfile
-.dockerignore
+.dockerignore".next/" 
+"node_modules/" 
+".env.local" 
+".env.*.local" 
