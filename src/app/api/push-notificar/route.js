@@ -1,14 +1,16 @@
 /**
  * 📁 UBICACIÓN: src/app/api/push-notificar/route.js
- * 📅 ACTUALIZADO: 2026-08-15 (PROTEGIDO - SOLO ADMIN)
+ * 📅 ACTUALIZADO: 2026-08-15
  * 📌 DESCRIPCIÓN: Envía notificaciones push a clientes.
- *    CAMBIO CRÍTICO: Ahora requiere JWT válido con rol admin.
+ *    CAMBIO CRÍTICO: DEDUPLICA por endpoint antes de enviar.
+ *    Un endpoint = un dispositivo real → 1 notificación por dispositivo.
  */
 
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import webpush from 'web-push'
+
 export const dynamic = 'force-dynamic'
 
 // Configurar web-push
@@ -78,6 +80,15 @@ export async function POST(request) {
     }
 
     // ============================================
+    // ✅ DEDUPLICAR POR ENDPOINT (UN ENDPOINT = UN DISPOSITIVO)
+    // ============================================
+    const subsUnicas = Array.from(
+      new Map((subscriptions || []).map(s => [s.endpoint, s])).values()
+    )
+
+    console.log(`📨 ${(subscriptions || []).length} filas, ${subsUnicas.length} endpoints únicos`)
+
+    // ============================================
     // ENVIAR NOTIFICACIONES
     // ============================================
     const payload = JSON.stringify({
@@ -93,7 +104,7 @@ export async function POST(request) {
     let enviadas = 0
     let fallos = 0
 
-    for (const sub of subscriptions || []) {
+    for (const sub of subsUnicas) {
       try {
         await webpush.sendNotification(
           {
@@ -109,6 +120,12 @@ export async function POST(request) {
       } catch (err) {
         console.error('Error enviando notificación:', err)
         fallos++
+        // Limpieza automática: si el endpoint ya no existe (410 Gone / 404),
+        // borrar la suscripción vencida para no seguir intentando
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+          console.log(`🧹 Suscripción eliminada: ${sub.endpoint}`)
+        }
       }
     }
 
@@ -119,8 +136,10 @@ export async function POST(request) {
       success: true,
       enviadas,
       fallos,
-      total: (subscriptions || []).length,
+      total: subsUnicas.length,
+      mensaje: `Notificaciones enviadas a ${enviadas} dispositivos`,
     })
+
   } catch (error) {
     console.error('Error en /api/push-notificar:', error)
     return NextResponse.json(
