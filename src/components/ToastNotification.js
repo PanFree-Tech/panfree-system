@@ -9,8 +9,12 @@ function ensureCart() {
 
 export default function ToastNotification() {
   const [toasts, setToasts] = useState([]);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    // Marcar que el componente está montado en el cliente
+    setIsMounted(true);
+    
     const cart = ensureCart();
     if (!cart) return;
 
@@ -18,7 +22,6 @@ export default function ToastNotification() {
       const message = ev.detail;
       const id = Math.random().toString(36).slice(2, 9);
       setToasts((t) => [...t, { id, message }]);
-      // auto remove after 2s
       setTimeout(() => {
         setToasts((t) => t.filter(x => x.id !== id));
       }, 2000);
@@ -28,7 +31,8 @@ export default function ToastNotification() {
     return () => cart.offToast(onToast);
   }, []);
 
-  if (toasts.length === 0) return null;
+  // ✅ NO renderizar nada hasta que esté montado en el cliente
+  if (!isMounted || toasts.length === 0) return null;
 
   return (
     <div className={styles.container} aria-live="polite" aria-atomic="true">
