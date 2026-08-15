@@ -30,7 +30,7 @@ import CartSidebar from '../components/CartSidebar'
 import AuthModal from '../components/AuthModal'
 import ErrorBoundary from '../components/ErrorBoundary'
 
-// ✅ NUEVO: Componentes del carrito flotante
+// ✅ Componentes del carrito flotante
 import FloatingCartButton from '@/components/FloatingCartButton'
 import SlideCart from '@/components/SlideCart'
 import ToastNotification from '@/components/ToastNotification'
@@ -87,8 +87,7 @@ export default function LayoutClient({ children }) {
         <AuthModal />
         <Footer />
 
-        {/* ✅ NUEVO: Componentes del carrito flotante */}
-        {/* ❌ CartInitializer ELIMINADO - ahora CartContext es la única fuente */}
+        {/* ✅ Componentes del carrito flotante */}
         <FloatingCartButton />
         <SlideCart />
         <ToastNotification />
