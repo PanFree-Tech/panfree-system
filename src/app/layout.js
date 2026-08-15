@@ -9,10 +9,20 @@
  *   - title como objeto con template para páginas internas
  *   - og:image con alt descriptivo
  *   - link rel="shortcut icon" en <head>
+ * CAMBIOS 2026-03-07:
+ *   - ✅ NUEVO: FloatingCartButton (botón flotante en móvil)
+ *   - ✅ NUEVO: SlideCart (carrito deslizable)
+ *   - ✅ NUEVO: ToastNotification (notificaciones emergentes)
+ * CAMBIOS 2026-08-15:
+ *   - ✅ FIX: Mover CartInitializer a layout-client.js (Client Component)
  */
+
 import './globals.css'
 import LayoutClient from './layout-client'
 
+// ============================================
+// METADATOS (SEO) - SIN CAMBIOS
+// ============================================
 export const metadata = {
   metadataBase: new URL('https://panfree.fit'),
 
@@ -62,7 +72,9 @@ export const metadata = {
   },
 }
 
-// viewport y themeColor DEBEN exportarse por separado en Next.js 14
+// ============================================
+// VIEWPORT - SIN CAMBIOS
+// ============================================
 export const viewport = {
   width:        'device-width',
   initialScale: 1,
@@ -72,6 +84,9 @@ export const viewport = {
   themeColor:   '#334c2b',
 }
 
+// ============================================
+// ROOT LAYOUT (Server Component)
+// ============================================
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
