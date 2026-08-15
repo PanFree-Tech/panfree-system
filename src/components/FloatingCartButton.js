@@ -50,7 +50,6 @@ function ensureCart() {
         return items.reduce((s, it) => s + (it.quantity || 1) * (it.price || 0), 0);
       },
       addItem(product) {
-        // merge by id
         const idx = items.findIndex((i) => i.id === product.id);
         if (idx >= 0) {
           items[idx].quantity = (items[idx].quantity || 1) + (product.quantity || 1);
@@ -81,7 +80,6 @@ function ensureCart() {
         items.length = 0;
         save();
       },
-      // toast API
       showToast(msg) {
         toastListeners.dispatchEvent(new CustomEvent('toast', { detail: msg }));
       },
@@ -97,12 +95,16 @@ function ensureCart() {
 }
 
 export default function FloatingCartButton() {
-  const [visible, setVisible] = useState(false); // whether button is visible (scroll + mobile)
+  const [visible, setVisible] = useState(false);
   const [count, setCount] = useState(0);
   const [total, setTotal] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    // Marcar que el componente está montado en el cliente
+    setIsMounted(true);
+    
     const cart = ensureCart();
     if (!cart) return;
 
@@ -114,18 +116,15 @@ export default function FloatingCartButton() {
     update();
     cart.subscribe(update);
 
-    // mobile detection
     const onResize = () => {
       setIsMobile(window.innerWidth < 768);
     };
     onResize();
     window.addEventListener('resize', onResize);
 
-    // show when user scrolls down
     let lastY = window.scrollY;
     const onScroll = () => {
       const currentY = window.scrollY;
-      // Show when scrolling down and scrolled at least 80px
       if (currentY > lastY && currentY > 80 && window.innerWidth < 768) {
         setVisible(true);
       } else {
@@ -148,17 +147,16 @@ export default function FloatingCartButton() {
     cart.open();
   };
 
-  // Format currency - local Paraguayan Guaraní '₲' as in example. Fallback to number.
   const formatCurrency = (value) => {
     try {
-      // Use Intl.NumberFormat for better formatting (no decimals)
       return new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(value);
     } catch {
       return `₲ ${value}`;
     }
   };
 
-  if (!isMobile) return null; // do not render on desktop
+  // ✅ NO renderizar nada hasta que esté montado en el cliente
+  if (!isMounted || !isMobile) return null;
 
   return (
     <div

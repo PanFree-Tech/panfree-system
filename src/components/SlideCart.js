@@ -11,8 +11,12 @@ export default function SlideCart() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    // Marcar que el componente está montado en el cliente
+    setIsMounted(true);
+    
     const cart = ensureCart();
     if (!cart) return;
 
@@ -28,12 +32,10 @@ export default function SlideCart() {
       setOpen(false);
     };
 
-    // Use EventTarget listeners on cart.listeners
     cart.listeners.addEventListener('update', update);
     cart.listeners.addEventListener('open', onOpen);
     cart.listeners.addEventListener('close', onClose);
 
-    // init
     update();
 
     return () => {
@@ -64,8 +66,6 @@ export default function SlideCart() {
   };
 
   const goToCheckout = () => {
-    // navigate to a checkout route - keep simple: window.location
-    // You can change this to router.push('/checkout') if you use next/navigation
     window.location.href = '/checkout';
   };
 
@@ -76,6 +76,9 @@ export default function SlideCart() {
       return `₲ ${value}`;
     }
   };
+
+  // ✅ NO renderizar nada hasta que esté montado en el cliente
+  if (!isMounted) return null;
 
   return (
     <>
