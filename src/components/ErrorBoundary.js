@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import React, { Component } from 'react';
 
 export default function ErrorBoundary({ children, fallback }) {
   const [error, setError] = useState(null)
