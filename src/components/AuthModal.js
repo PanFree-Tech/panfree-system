@@ -14,7 +14,7 @@
  *  - Registro exitoso: si requiere confirmación → avisa y pasa a login
  */
 'use client'
-import { useState } from 'react'
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 

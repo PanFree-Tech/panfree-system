@@ -1,33 +1,15 @@
-/**
- * 📁 UBICACIÓN: src/components/ProductCard.js
- * 📅 ACTUALIZADO: 2026-03-07
- * 📌 CAMBIOS:
- *  - Carrusel automático: imagen_url + imagenes_urls[]
- *  - Auto-avance cada 3 segundos, pausa al hover
- *  - Fade crossfade — sin controles (grilla compacta)
- *  - Si solo hay 1 imagen: comportamiento idéntico al original
- *  - Todos los hooks SIEMPRE antes de cualquier return condicional
- */
 'use client'
 
-/**
- * Archivo: src/components/ProductCard.js
- * Mejoras:
- * - Estilos movidos a ProductCard.module.css
- * - Accesibilidad: aria-labels, roles, ids vinculados
- * - Manejo de teclado: botones nativos y atributos aria
- * - Responsive mediante CSS module
- * - Mantiene toda la funcionalidad original (carrusel, cantidad, añadir al carrito, encargo por WA)
- */
-
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import styles from './ProductCard.module.css'
 
 // Número de WhatsApp original del repo
 const WA_NUMBER = '595984589845'
 
-/* Carrusel interno (se mantiene la misma funcionalidad que tenía el original) */
+// ============================================
+// CARRUSEL INTERNO
+// ============================================
 function CarruselCard({ imagenes = [], nombre = '', imagenAlt = '' }) {
   const [indice, setIndice] = useState(0)
   const [pausado, setPausado] = useState(false)
@@ -92,8 +74,89 @@ function CarruselCard({ imagenes = [], nombre = '', imagenAlt = '' }) {
   )
 }
 
-export default function ProductCard({ producto, onAddToCart, disponible = true, requiereAnticipacion = false }) {
+// ============================================
+// FUNCIÓN PARA ASEGURAR QUE EL CARRITO EXISTE
+// ============================================
+function ensureCart() {
+  if (typeof window === 'undefined') return null
+  if (!window.__PANFREE_CART) {
+    window.__PANFREE_CART = {
+      items: [],
+      listeners: new EventTarget(),
+      toastListeners: new EventTarget(),
+      isOpen: false,
+      subscribe(fn) { this.listeners.addEventListener('update', fn) },
+      unsubscribe(fn) { this.listeners.removeEventListener('update', fn) },
+      open() { this.isOpen = true; this.listeners.dispatchEvent(new CustomEvent('open')) },
+      close() { this.isOpen = false; this.listeners.dispatchEvent(new CustomEvent('close')) },
+      getItems() { return [...this.items] },
+      getCount() { return this.items.reduce((s, i) => s + (i.quantity || 1), 0) },
+      getTotal() { return this.items.reduce((s, i) => s + (i.quantity || 1) * (i.price || 0), 0) },
+      addItem(product) {
+        const idx = this.items.findIndex(i => i.id === product.id)
+        if (idx >= 0) {
+          this.items[idx].quantity = (this.items[idx].quantity || 1) + (product.quantity || 1)
+        } else {
+          this.items.push({ ...product, quantity: product.quantity || 1 })
+        }
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('panfree_cart_v1', JSON.stringify(this.items))
+        }
+        this.listeners.dispatchEvent(new CustomEvent('update'))
+      },
+      updateQuantity(id, quantity) {
+        const idx = this.items.findIndex(i => i.id === id)
+        if (idx >= 0) {
+          this.items[idx].quantity = quantity
+          if (this.items[idx].quantity <= 0) this.items.splice(idx, 1)
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('panfree_cart_v1', JSON.stringify(this.items))
+          }
+          this.listeners.dispatchEvent(new CustomEvent('update'))
+        }
+      },
+      removeItem(id) {
+        const idx = this.items.findIndex(i => i.id === id)
+        if (idx >= 0) {
+          this.items.splice(idx, 1)
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('panfree_cart_v1', JSON.stringify(this.items))
+          }
+          this.listeners.dispatchEvent(new CustomEvent('update'))
+        }
+      },
+      clear() {
+        this.items.length = 0
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('panfree_cart_v1', JSON.stringify(this.items))
+        }
+        this.listeners.dispatchEvent(new CustomEvent('update'))
+      },
+      showToast(msg) {
+        this.toastListeners.dispatchEvent(new CustomEvent('toast', { detail: msg }))
+      },
+      onToast(fn) {
+        this.toastListeners.addEventListener('toast', fn)
+      },
+      offToast(fn) {
+        this.toastListeners.removeEventListener('toast', fn)
+      }
+    }
+  }
+  return window.__PANFREE_CART
+}
+
+// ============================================
+// PRODUCT CARD PRINCIPAL
+// ============================================
+export default function ProductCard({
+  producto,
+  onAddToCart,
+  disponible = true,
+  requiereAnticipacion = false
+}) {
   const [cantidad, setCantidad] = useState(1)
+  const imgRef = useRef(null)
 
   if (!producto) return null
 
@@ -106,7 +169,66 @@ export default function ProductCard({ producto, onAddToCart, disponible = true, 
 
   const manejarAgregar = useCallback(() => {
     if (agotado) return
+
+    const cart = ensureCart()
+    if (cart) {
+      cart.addItem({
+        id: producto.id || producto.slug || Date.now().toString(),
+        name: producto.nombre,
+        price: producto.precio_venta || 0,
+        image: producto.imagen_url || '',
+        quantity: cantidad,
+      })
+    }
+
     onAddToCart?.({ ...producto, cantidad, subtotal: producto.precio_venta * cantidad })
+
+    const imgEl = imgRef.current
+    const target = document.getElementById('floating-cart-button') ||
+                   document.querySelector('[data-cart-target]') ||
+                   document.body
+
+    if (imgEl && target) {
+      try {
+        const startRect = imgEl.getBoundingClientRect()
+        const targetRect = target.getBoundingClientRect()
+
+        const flyImg = document.createElement('img')
+        flyImg.src = producto.imagen_url || ''
+        flyImg.alt = producto.nombre || 'producto'
+        flyImg.style.position = 'fixed'
+        flyImg.style.left = `${startRect.left}px`
+        flyImg.style.top = `${startRect.top}px`
+        flyImg.style.width = `${startRect.width}px`
+        flyImg.style.height = `${startRect.height}px`
+        flyImg.style.objectFit = 'cover'
+        flyImg.style.borderRadius = '8px'
+        flyImg.style.zIndex = '1400'
+        flyImg.style.pointerEvents = 'none'
+        flyImg.style.transition = 'transform 700ms cubic-bezier(.22,1,.36,1), opacity 700ms ease'
+        flyImg.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)'
+        document.body.appendChild(flyImg)
+
+        const deltaX = targetRect.left + targetRect.width / 2 - (startRect.left + startRect.width / 2)
+        const deltaY = targetRect.top + targetRect.height / 2 - (startRect.top + startRect.height / 2)
+
+        requestAnimationFrame(() => {
+          flyImg.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.15)`
+          flyImg.style.opacity = '0.4'
+        })
+
+        setTimeout(() => {
+          flyImg.remove()
+        }, 750)
+      } catch (err) {
+        // ignorar
+      }
+    }
+
+    if (cart) {
+      cart.showToast(`✅ ${producto.nombre} agregado al carrito`)
+    }
+
     setCantidad(1)
   }, [agotado, onAddToCart, producto, cantidad])
 
@@ -121,7 +243,7 @@ export default function ProductCard({ producto, onAddToCart, disponible = true, 
   }, [producto])
 
   const slugUrl = producto?.slug ? `/producto/${producto.slug}` : '#'
-  const productId = producto?.id ?? producto?.slug ?? producto?.nombre.slice(0, 12)
+  const productId = producto?.id ?? producto?.slug ?? producto?.nombre?.slice(0, 12) ?? Date.now().toString()
 
   return (
     <article className={styles.card} role="article" aria-labelledby={`product-title-${productId}`}>
@@ -194,6 +316,7 @@ export default function ProductCard({ producto, onAddToCart, disponible = true, 
                 onClick={manejarAgregar}
                 className={styles.addBtn}
                 aria-label={`Agregar ${cantidad} unidades de ${producto.nombre} al carrito`}
+                ref={imgRef}
               >
                 🛒 Agregar al Carrito
               </button>

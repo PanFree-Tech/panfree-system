@@ -1,0 +1,81 @@
+.container {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(90deg, #ffffff, #fafafa);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(8, 15, 30, 0.12);
+  padding: 8px;
+  transform: translateY(120%);
+  opacity: 0;
+  transition: transform 280ms ease, opacity 280ms ease;
+  z-index: 1200;
+}
+
+.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex: 1;
+  text-align: left;
+}
+
+.icon {
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #f4f6fb;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.count {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0b1220;
+}
+
+.total {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.view {
+  background: #111827;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Hide entirely on larger screens */
+@media (min-width: 768px) {
+  .container {
+    display: none;
+  }
+}
