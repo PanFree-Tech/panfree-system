@@ -19,6 +19,7 @@
  *  - ✅ NUEVO: ToastNotification (notificaciones emergentes)
  * CAMBIOS 2026-08-15:
  *  - ✅ NUEVO: CartInitializer (inicialización del carrito global)
+ *  - ✅ NUEVO: ErrorBoundary envuelve <main>{children}</main>
  */
 'use client'
 import { useEffect } from 'react'
@@ -27,6 +28,7 @@ import { AuthProvider, useAuth } from '../context/AuthContext'
 import { CartProvider, useCart } from '../context/CartContext'
 import CartSidebar from '../components/CartSidebar'
 import AuthModal from '../components/AuthModal'
+import ErrorBoundary from '../components/ErrorBoundary'
 
 // ✅ NUEVO: Componentes del carrito flotante
 import FloatingCartButton from '@/components/FloatingCartButton'
@@ -39,7 +41,7 @@ import ToastNotification from '@/components/ToastNotification'
 function CartInitializer() {
   useEffect(() => {
     if (typeof window === 'undefined') return
-    
+
     if (!window.__PANFREE_CART) {
       const listeners = new EventTarget()
       const toastListeners = new EventTarget()
@@ -57,8 +59,12 @@ function CartInitializer() {
         listeners,
         toastListeners,
         isOpen: false,
-        subscribe(fn) { listeners.addEventListener('update', fn) },
-        unsubscribe(fn) { listeners.removeEventListener('update', fn) },
+        subscribe(fn) {
+          listeners.addEventListener('update', fn)
+        },
+        unsubscribe(fn) {
+          listeners.removeEventListener('update', fn)
+        },
         open() {
           window.__PANFREE_CART.isOpen = true
           listeners.dispatchEvent(new CustomEvent('open', { detail: true }))
@@ -67,9 +73,15 @@ function CartInitializer() {
           window.__PANFREE_CART.isOpen = false
           listeners.dispatchEvent(new CustomEvent('close', { detail: false }))
         },
-        getItems() { return [...items] },
-        getCount() { return items.reduce((s, it) => s + (it.quantity || 1), 0) },
-        getTotal() { return items.reduce((s, it) => s + (it.quantity || 1) * (it.price || 0), 0) },
+        getItems() {
+          return [...items]
+        },
+        getCount() {
+          return items.reduce((s, it) => s + (it.quantity || 1), 0)
+        },
+        getTotal() {
+          return items.reduce((s, it) => s + (it.quantity || 1) * (it.price || 0), 0)
+        },
         addItem(product) {
           const idx = items.findIndex((i) => i.id === product.id)
           if (idx >= 0) {
@@ -101,8 +113,12 @@ function CartInitializer() {
         showToast(msg) {
           toastListeners.dispatchEvent(new CustomEvent('toast', { detail: msg }))
         },
-        onToast(fn) { toastListeners.addEventListener('toast', fn) },
-        offToast(fn) { toastListeners.removeEventListener('toast', fn) },
+        onToast(fn) {
+          toastListeners.addEventListener('toast', fn)
+        },
+        offToast(fn) {
+          toastListeners.removeEventListener('toast', fn)
+        },
       }
     }
   }, [])
@@ -148,14 +164,16 @@ const WA_URL             = 'https://wa.me/595984589845'
 const IG_URL             = 'https://www.instagram.com/panfree.py'
 const ENVIO_GRATIS_DESDE = 50000  // ₲ 50.000
 
-// ─── Layout principal ──────────────────────────────────────────────────────────
+// ─── Layout principal ───────────────────────────────────────────────────────
 export default function LayoutClient({ children }) {
   return (
     <AuthProvider>
       <CartProvider>
         <Header />
         <BannerEnvioGratis />
-        <main>{children}</main>
+        <ErrorBoundary>
+          <main>{children}</main>
+        </ErrorBoundary>
         <CartSidebar />
         <AuthModal />
         <Footer />
@@ -170,7 +188,7 @@ export default function LayoutClient({ children }) {
   )
 }
 
-// ─── Banner envío gratis ───────────────────────────────────────────────────────
+// ─── Banner envío gratis ─────────────────────────────────────────────────────
 function BannerEnvioGratis() {
   const pathname = usePathname()
   if (pathname?.startsWith('/admin') || pathname === '/checkout') return null
@@ -188,7 +206,7 @@ function BannerEnvioGratis() {
   )
 }
 
-// ─── Header ────────────────────────────────────────────────────────────────────
+// ─── Header ──────────────────────────────────────────────────────────────────
 function Header() {
   const { cantidadItems, setVisible } = useCart()
   const { usuario, abrirModal }       = useAuth()
@@ -258,14 +276,14 @@ function Header() {
           <div style={{ width: '1px', height: '28px', backgroundColor: '#b7996b', margin: '0 0.25rem' }} />
 
           {/* Inicio */}
-          <a href="/" style={{ color: '#334c2b', fontWeight: '600', fontSize: '0.95rem', padding: '0.4rem 0.6rem', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', minHeight: '44px' }}>
+          <a href="/" style={{ color: '#334c2b', fontWeight: '600', fontSize: '0.95rem', padding: '0.4rem 0.6rem', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
             Inicio
           </a>
 
           {/* Mi Cuenta */}
           {usuario ? (
             <a href="/perfil" title="Mi cuenta"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#334c2b', fontWeight: '600', fontSize: '0.9rem', padding: '0.4rem 0.7rem', borderRadius: '4px', textDecoration: 'none', minHeight: '44px', border: '1px solid #b7996b', backgroundColor: 'rgba(183,153,107,0.12)' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#334c2b', fontWeight: '600', fontSize: '0.9rem', padding: '0.4rem 0.7rem', borderRadius: '4px', textDecoration: 'none' }}
               onMouseOver={e => e.currentTarget.style.backgroundColor = 'rgba(183,153,107,0.25)'}
               onMouseOut={e => e.currentTarget.style.backgroundColor = 'rgba(183,153,107,0.12)'}
             >
@@ -274,7 +292,7 @@ function Header() {
             </a>
           ) : (
             <button onClick={() => abrirModal()} title="Iniciar sesión"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', backgroundColor: 'transparent', color: '#334c2b', fontWeight: '600', fontSize: '0.9rem', padding: '0.4rem 0.7rem', borderRadius: '4px', border: '1px solid #b7996b', cursor: 'pointer', fontFamily: 'inherit', minHeight: '44px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', backgroundColor: 'transparent', color: '#334c2b', fontWeight: '600', fontSize: '0.9rem', padding: '0.4rem 0.7rem', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
               onMouseOver={e => e.currentTarget.style.backgroundColor = 'rgba(183,153,107,0.15)'}
               onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
             >
@@ -285,18 +303,20 @@ function Header() {
 
           {/* Carrito */}
           <button onClick={() => setVisible(true)} aria-label={`Carrito, ${cantidadItems} productos`}
-            style={{ backgroundColor: '#334c2b', color: '#eee6d9', border: '2px solid #b7996b', borderRadius: '4px', padding: '0.5rem 1rem', cursor: 'pointer', fontFamily: 'inherit', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', position: 'relative', minHeight: '44px', minWidth: '44px' }}
+            style={{ backgroundColor: '#334c2b', color: '#eee6d9', border: '2px solid #b7996b', borderRadius: '4px', padding: '0.5rem 1rem', cursor: 'pointer', fontFamily: 'inherit', fontWeight: '700', fontSize: '0.95rem', position: 'relative', minHeight: '44px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
             🛒
             {cantidadItems > 0 && (
-              <span style={{ position: 'absolute', top: '-8px', right: '-8px', backgroundColor: '#c62828', color: '#fff', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '700', border: '2px solid #eee6d9' }}>
+              <span style={{ position: 'absolute', top: '-8px', right: '-8px', backgroundColor: '#c62828', color: '#fff', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '700' }}>
                 {cantidadItems}
               </span>
             )}
           </button>
 
           {/* Link admin oculto */}
-          <a href="/admin/login" style={{ color: 'rgba(51,76,43,0.35)', fontSize: '1.1rem', textDecoration: 'none', display: 'flex', alignItems: 'center', minHeight: '44px', padding: '0 0.3rem' }}>🍀</a>
+          <a href="/admin/login" style={{ color: 'rgba(51,76,43,0.35)', fontSize: '1.1rem', textDecoration: 'none', display: 'flex', alignItems: 'center', minHeight: '44px', padding: '0 0.3rem' }}>
+            ⚙️
+          </a>
 
         </nav>
       </div>
@@ -304,7 +324,7 @@ function Header() {
   )
 }
 
-// ─── Footer ────────────────────────────────────────────────────────────────────
+// ─── Footer ──────────────────────────────────────────────────────────────────
 function Footer() {
   return (
     <footer style={{ backgroundColor: '#334c2b', color: '#eee6d9', marginTop: '3rem' }}>
