@@ -1,68 +1,32 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import styles from './SlideCart.module.css';
-
-function ensureCart() {
-  if (typeof window === 'undefined') return null;
-  return window.__PANFREE_CART || null;
-}
+import { useCart } from '../context/CartContext';
 
 export default function SlideCart() {
-  const [open, setOpen] = useState(false);
-  const [items, setItems] = useState([]);
-  const [total, setTotal] = useState(0);
+  const {
+    carrito,
+    visible,
+    setVisible,
+    actualizarCantidad,
+    eliminarDelCarrito,
+    total,
+  } = useCart();
+
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // Marcar que el componente está montado en el cliente
     setIsMounted(true);
-    
-    const cart = ensureCart();
-    if (!cart) return;
-
-    const update = () => {
-      setItems(cart.getItems());
-      setTotal(cart.getTotal());
-    };
-
-    const onOpen = (e) => {
-      setOpen(true);
-    };
-    const onClose = (e) => {
-      setOpen(false);
-    };
-
-    cart.listeners.addEventListener('update', update);
-    cart.listeners.addEventListener('open', onOpen);
-    cart.listeners.addEventListener('close', onClose);
-
-    update();
-
-    return () => {
-      cart.listeners.removeEventListener('update', update);
-      cart.listeners.removeEventListener('open', onOpen);
-      cart.listeners.removeEventListener('close', onClose);
-    };
   }, []);
 
-  const close = () => {
-    const cart = ensureCart();
-    if (!cart) return;
-    cart.close();
-  };
+  const close = () => setVisible(false);
 
-  const removeItem = (id) => {
-    const cart = ensureCart();
-    if (!cart) return;
-    cart.removeItem(id);
-  };
+  const removeItem = (id) => eliminarDelCarrito(id);
 
   const changeQuantity = (id, delta) => {
-    const cart = ensureCart();
-    if (!cart) return;
-    const existing = cart.getItems().find(i => i.id === id);
-    const next = (existing?.quantity || 1) + delta;
-    cart.updateQuantity(id, Math.max(0, next));
+    const existing = carrito.find(i => i.id === id);
+    const next = (existing?.cantidad || existing?.quantity || 1) + delta;
+    actualizarCantidad(id, Math.max(0, next));
   };
 
   const goToCheckout = () => {
@@ -77,14 +41,13 @@ export default function SlideCart() {
     }
   };
 
-  // ✅ NO renderizar nada hasta que esté montado en el cliente
   if (!isMounted) return null;
 
   return (
     <>
-      <div className={`${styles.backdrop} ${open ? styles.show : ''}`} onClick={close} aria-hidden={!open} />
+      <div className={`${styles.backdrop} ${visible ? styles.show : ''}`} onClick={close} aria-hidden={!visible} />
       <aside
-        className={`${styles.panel} ${open ? styles.open : ''}`}
+        className={`${styles.panel} ${visible ? styles.open : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label="Carrito de compras"
@@ -95,25 +58,25 @@ export default function SlideCart() {
         </header>
 
         <div className={styles.content}>
-          {items.length === 0 ? (
+          {carrito.length === 0 ? (
             <div className={styles.empty}>Tu carrito está vacío</div>
           ) : (
             <ul className={styles.itemsList}>
-              {items.map(item => (
+              {carrito.map(item => (
                 <li key={item.id} className={styles.item}>
-                  <img src={item.image} alt={item.name} className={styles.itemImg} />
+                  <img src={item.image || item.imagen_url} alt={item.name || item.nombre} className={styles.itemImg} />
                   <div className={styles.itemInfo}>
-                    <div className={styles.itemName}>{item.name}</div>
+                    <div className={styles.itemName}>{item.name || item.nombre}</div>
                     <div className={styles.itemMeta}>
-                      <div className={styles.price}>{formatCurrency(item.price || 0)}</div>
+                      <div className={styles.price}>{formatCurrency(item.price || item.precio_venta || 0)}</div>
                       <div className={styles.qtyControls}>
-                        <button aria-label={`Disminuir cantidad de ${item.name}`} onClick={() => changeQuantity(item.id, -1)}>-</button>
-                        <span aria-live="polite" aria-atomic="true">{item.quantity || 1}</span>
-                        <button aria-label={`Aumentar cantidad de ${item.name}`} onClick={() => changeQuantity(item.id, 1)}>+</button>
+                        <button aria-label={`Disminuir cantidad de ${item.name || item.nombre}`} onClick={() => changeQuantity(item.id, -1)}>-</button>
+                        <span aria-live="polite" aria-atomic="true">{item.cantidad || item.quantity || 1}</span>
+                        <button aria-label={`Aumentar cantidad de ${item.name || item.nombre}`} onClick={() => changeQuantity(item.id, 1)}>+</button>
                       </div>
                     </div>
                   </div>
-                  <button aria-label={`Eliminar ${item.name}`} className={styles.removeBtn} onClick={() => removeItem(item.id)}>🗑️</button>
+                  <button aria-label={`Eliminar ${item.name || item.nombre}`} className={styles.removeBtn} onClick={() => removeItem(item.id)}>🗑️</button>
                 </li>
               ))}
             </ul>

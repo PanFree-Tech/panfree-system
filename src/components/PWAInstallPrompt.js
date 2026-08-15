@@ -1,119 +1,68 @@
-// 📁 src/components/PWAInstallPrompt.js
 'use client'
-import React, { useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react'
 
 export default function PWAInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [showPrompt, setShowPrompt] = useState(false)
+  const initialized = useRef(false)
 
   useEffect(() => {
-    const handler = (e) => {
-      e.preventDefault()
-      setDeferredPrompt(e)
-      setShowPrompt(true)
+    if (initialized.current) return
+    initialized.current = true
+
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) return
+
+    // Registrar service worker de forma idempotente
+    let reg
+    navigator.serviceWorker.getRegistration('/sw.js').then(existing => {
+      if (existing) return existing
+      return navigator.serviceWorker.register('/sw.js')
+    }).then((registration) => {
+      reg = registration
+      if (Notification.permission === 'denied') return null
+      return reg.pushManager.getSubscription()
+    }).then((subscription) => {
+      if (subscription) {
+        // ya suscrito — opcional: enviar al backend para refrescar info
+        fetch('/api/push-suscribir', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscription, source: 'pwa-install' }),
+        }).catch(() => {})
+        return
+      }
+      // solicitar permiso y suscribir si fue aceptado
+      return Notification.requestPermission().then(permission => {
+        if (permission !== 'granted') return null
+        // VAPID_PUBLIC_KEY debe inyectarse via env o meta tag
+        const VAPID_PUBLIC_KEY = window.__VAPID_PUBLIC_KEY__ || process.env.NEXT_PUBLIC_VAPID_KEY
+        const converted = urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        return reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: converted,
+        })
+      }).then(newSub => {
+        if (!newSub) return null
+        return fetch('/api/push-suscribir', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscription: newSub, source: 'pwa-install' }),
+        })
+      })
+    }).catch(err => {
+      console.warn('PW install prompt init error', err)
+    })
+
+    // helper
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+      const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
     }
-
-    window.addEventListener('beforeinstallprompt', handler)
-
-    return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
-  const handleInstall = async () => {
-    if (!deferredPrompt) return
-
-    deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
-    
-    if (outcome === 'accepted') {
-      console.log('Usuario aceptó instalar PWA')
-    }
-    
-    setDeferredPrompt(null)
-    setShowPrompt(false)
-  }
-
-  const handleClose = () => {
-    setShowPrompt(false)
-    localStorage.setItem('pwa-prompt-dismissed', Date.now().toString())
-  }
-
-  if (!showPrompt) return null
-
-  return (
-    <div style={{
-      position: 'fixed',
-      bottom: '20px',
-      left: '20px',
-      right: '20px',
-      maxWidth: '400px',
-      margin: '0 auto',
-      backgroundColor: '#334c2b',
-      color: '#eee6d9',
-      padding: '1rem',
-      borderRadius: '8px',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-      zIndex: 1000,
-      border: '2px solid #b7996b',
-      animation: 'slideUp 0.3s ease',
-    }}>
-      <style jsx>{`
-        @keyframes slideUp {
-          from { transform: translateY(100%); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-      `}</style>
-      
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <img 
-          src="/icons/icon-192x192.png" 
-          alt="PanFree"
-          style={{ width: '48px', height: '48px', borderRadius: '12px' }}
-        />
-        <div style={{ flex: 1 }}>
-          <h4 style={{ margin: '0 0 0.25rem', color: '#b7996b' }}>
-            Instalar PanFree
-          </h4>
-          <p style={{ margin: 0, fontSize: '0.85rem' }}>
-            Instala esta app en tu dispositivo para usarla sin internet
-          </p>
-        </div>
-      </div>
-      
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'flex-end', 
-        gap: '0.5rem', 
-        marginTop: '1rem' 
-      }}>
-        <button
-          onClick={handleClose}
-          style={{
-            backgroundColor: 'transparent',
-            border: '2px solid #b7996b',
-            color: '#b7996b',
-            padding: '0.5rem 1rem',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: '600',
-          }}
-        >
-          Ahora no
-        </button>
-        <button
-          onClick={handleInstall}
-          style={{
-            backgroundColor: '#b7996b',
-            border: 'none',
-            color: '#334c2b',
-            padding: '0.5rem 1rem',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: '700',
-          }}
-        >
-          Instalar
-        </button>
-      </div>
-    </div>
-  )
+  return null
 }
