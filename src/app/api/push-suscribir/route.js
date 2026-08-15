@@ -1,54 +1,79 @@
 /**
  * 📁 UBICACIÓN: src/app/api/push-suscribir/route.js
- * 📅 ACTUALIZADO: 2026-03-06
- * 📌 FIX: Supabase client inicializado dentro de la función (no a nivel módulo)
+ * 📅 ACTUALIZADO: 2026-08-15 (PROTEGIDO CON AUTENTICACIÓN)
+ * 📌 DESCRIPCIÓN: Registra cliente para notificaciones push.
+ *    CAMBIO CRÍTICO: Ahora requiere JWT válido.
  */
+
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+export const dynamic = 'force-dynamic'
 
 export async function POST(request) {
   try {
-    const supabase = createClient(
-      process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    )
+    // ============================================
+    // VERIFICAR AUTENTICACIÓN
+    // ============================================
+    const cookieStore = cookies()
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
 
-    const { subscription, userId, userAgent } = await request.json()
-    if (!subscription?.endpoint || !userId) {
-      return NextResponse.json({ error: 'Datos incompletos' }, { status: 400 })
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
+
+    if (sessionError || !session?.user) {
+      return NextResponse.json(
+        { error: 'No autorizado. Debes estar autenticado.' },
+        { status: 401 }
+      )
     }
 
-    const { error } = await supabase
+    // ============================================
+    // OBTENER DATOS DEL REQUEST
+    // ============================================
+    const body = await request.json()
+    const { subscription } = body
+
+    if (!subscription || !subscription.endpoint) {
+      return NextResponse.json(
+        { error: 'Subscription object requerida' },
+        { status: 400 }
+      )
+    }
+
+    // ============================================
+    // GUARDAR EN BASE DE DATOS
+    // ============================================
+    // Asumiendo que existe tabla 'push_subscriptions'
+    const { error: insertError } = await supabase
       .from('push_subscriptions')
       .upsert({
-        user_id   : userId,
-        endpoint  : subscription.endpoint,
-        p256dh    : subscription.keys.p256dh,
-        auth      : subscription.keys.auth,
-        user_agent: userAgent || null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'endpoint' })
+        user_id: session.user.id,
+        endpoint: subscription.endpoint,
+        p256dh: subscription.keys?.p256dh,
+        auth: subscription.keys?.auth,
+        created_at: new Date().toISOString(),
+      })
 
-    if (error) throw error
-    return NextResponse.json({ ok: true })
+    if (insertError) {
+      console.error('Error guardando subscription:', insertError)
+      throw insertError
+    }
 
-  } catch (err) {
-    console.error('Error guardando suscripción push:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
-  }
-}
-
-export async function DELETE(request) {
-  try {
-    const supabase = createClient(
-      process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    // ============================================
+    // DEVOLVER ÉXITO
+    // ============================================
+    return NextResponse.json({
+      success: true,
+      mensaje: 'Suscripción registrada para notificaciones push',
+    })
+  } catch (error) {
+    console.error('Error en /api/push-suscribir:', error)
+    return NextResponse.json(
+      { error: 'Error al registrar suscripción' },
+      { status: 500 }
     )
-    const { endpoint } = await request.json()
-    if (!endpoint) return NextResponse.json({ error: 'Sin endpoint' }, { status: 400 })
-    await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint)
-    return NextResponse.json({ ok: true })
-  } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
