@@ -6,12 +6,25 @@
  *  - Datos cargados en servidor con revalidate: 300 (5 min)
  *  - Estado e interactividad delegados a TiendaCliente.js
  *  - Mismo patrón que layout.js → layout-client.js
+ *  - ✅ FIX: Eliminar fallback inseguro de Supabase
+ *  - ✅ FIX: Lanzar error claro si faltan variables de entorno
  */
 import { createClient } from '@supabase/supabase-js'
 import TiendaCliente from './TiendaCliente'
 
-const supabaseUrl     = process.env.NEXT_PUBLIC_SUPABASE_URL     || 'https://gbdrcaumghykiipqgbty.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjczNjIsImV4cCI6MjA4NzgwMzM2Mn0.OydRQxa51Ql42zvscWnQkEKJuU_3yeCS4qPQQoP6TuM'
+// ============================================
+// ✅ VERIFICAR VARIABLES DE ENTORNO
+// ============================================
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    '❌ Faltan variables de entorno de Supabase.\n' +
+    'Configure NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en Vercel (production).\n' +
+    'URL esperada: https://gbdrcaumghykiipqgbty.supabase.co'
+  )
+}
 
 // Caché: revalidar cada 5 minutos
 // Cambiar a 60 si Luciana actualiza insumos varias veces por hora
