@@ -1,73 +1,131 @@
 /**
  * 📁 UBICACIÓN: src/app/api/push-notificar/route.js
- * 📅 ACTUALIZADO: 2026-03-06
- * 📌 FIX: Supabase y webpush inicializados dentro de la función (no a nivel módulo)
+ * 📅 ACTUALIZADO: 2026-08-15 (PROTEGIDO - SOLO ADMIN)
+ * 📌 DESCRIPCIÓN: Envía notificaciones push a clientes.
+ *    CAMBIO CRÍTICO: Ahora requiere JWT válido con rol admin.
  */
+
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
+export const dynamic = 'force-dynamic'
+
+// Configurar web-push
+webpush.setVapidDetails(
+  'mailto:' + (process.env.NEXT_PUBLIC_VAPID_EMAIL || 'contact@panfree.py'),
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
+  process.env.VAPID_PRIVATE_KEY || ''
+)
 
 export async function POST(request) {
   try {
-    const secret = request.headers.get('x-webhook-secret')
-    if (secret !== process.env.WEBHOOK_SECRET) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    // ============================================
+    // VERIFICAR AUTENTICACIÓN Y PERMISOS (ADMIN ONLY)
+    // ============================================
+    const cookieStore = cookies()
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
+
+    if (sessionError || !session?.user) {
+      return NextResponse.json(
+        { error: 'No autorizado. Debes estar autenticado.' },
+        { status: 401 }
+      )
     }
 
-    // Inicializar dentro de la función para evitar error en build
-    const supabase = createClient(
-      process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    )
+    // Verificar que es admin
+    const isAdmin = session.user.user_metadata?.role === 'admin' ||
+      session.user.app_metadata?.role === 'admin'
 
-    webpush.setVapidDetails(
-      'mailto:notificaciones@panfree.fit',
-      process.env.VAPID_PUBLIC_KEY,
-      process.env.VAPID_PRIVATE_KEY
-    )
-
-    const { titulo, cuerpo, url } = await request.json()
-
-    const { data: suscripciones, error } = await supabase
-      .from('push_subscriptions')
-      .select('endpoint, p256dh, auth')
-
-    if (error) throw error
-    if (!suscripciones?.length) {
-      return NextResponse.json({ ok: true, enviadas: 0, mensaje: 'Sin suscripciones activas' })
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: 'Forbidden. Solo admins pueden enviar notificaciones.' },
+        { status: 403 }
+      )
     }
 
+    // ============================================
+    // OBTENER DATOS DEL REQUEST
+    // ============================================
+    const body = await request.json()
+    const { titulo, cuerpo, url_accion, user_id } = body
+
+    if (!titulo || !cuerpo) {
+      return NextResponse.json(
+        { error: 'titulo y cuerpo son requeridos' },
+        { status: 400 }
+      )
+    }
+
+    // ============================================
+    // OBTENER SUBSCRIPCIONES
+    // ============================================
+    let query = supabase.from('push_subscriptions').select('*')
+
+    if (user_id) {
+      query = query.eq('user_id', user_id)
+    }
+
+    const { data: subscriptions, error: selectError } = await query
+
+    if (selectError) {
+      throw selectError
+    }
+
+    // ============================================
+    // ENVIAR NOTIFICACIONES
+    // ============================================
     const payload = JSON.stringify({
-      title: titulo || '🍞 PanFree',
-      body : cuerpo || 'Nuevo pedido recibido',
-      icon : '/icons/icon-192x192.png',
-      badge: '/icons/icon-192x192.png',
-      url  : url || 'https://panfree.fit/admin',
+      title: titulo,
+      body: cuerpo,
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-96x96.png',
+      data: {
+        url: url_accion || '/',
+      },
     })
 
-    const resultados = await Promise.allSettled(
-      suscripciones.map(sub =>
-        webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+    let enviadas = 0
+    let fallos = 0
+
+    for (const sub of subscriptions || []) {
+      try {
+        await webpush.sendNotification(
+          {
+            endpoint: sub.endpoint,
+            keys: {
+              p256dh: sub.p256dh,
+              auth: sub.auth,
+            },
+          },
           payload
         )
-      )
-    )
-
-    // Limpiar suscripciones expiradas
-    const expiradas = resultados
-      .map((r, i) => r.status === 'rejected' && r.reason?.statusCode === 410 ? suscripciones[i].endpoint : null)
-      .filter(Boolean)
-
-    if (expiradas.length) {
-      await supabase.from('push_subscriptions').delete().in('endpoint', expiradas)
+        enviadas++
+      } catch (err) {
+        console.error('Error enviando notificación:', err)
+        fallos++
+      }
     }
 
-    const enviadas = resultados.filter(r => r.status === 'fulfilled').length
-    return NextResponse.json({ ok: true, enviadas, total: suscripciones.length })
-
-  } catch (err) {
-    console.error('Error enviando push:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    // ============================================
+    // DEVOLVER RESULTADO
+    // ============================================
+    return NextResponse.json({
+      success: true,
+      enviadas,
+      fallos,
+      total: (subscriptions || []).length,
+    })
+  } catch (error) {
+    console.error('Error en /api/push-notificar:', error)
+    return NextResponse.json(
+      { error: 'Error al enviar notificaciones' },
+      { status: 500 }
+    )
   }
 }

@@ -1,3 +1,27 @@
+/**
+ * 📁 UBICACIÓN: src/components/ProductCard.js
+ * 📅 ACTUALIZADO: 2026-08-15 (VERSIÓN COMBINADA: ACTUAL + MEJORAS)
+ * 📌 DESCRIPCIÓN: 
+ *    Tarjeta de producto con TODAS las funcionalidades actuales +
+ *    mejoras visuales (badges, animaciones, hover mejorado).
+ *    
+ *    MANTIENE:
+ *    - Carrusel de imágenes (imagen_url + imagenes_urls[])
+ *    - WhatsApp para productos agotados
+ *    - Controles de cantidad (+ y -)
+ *    - Estado disponible/agotado
+ *    - Animación de vuelo al agregar al carrito
+ *    - Toast notification
+ *    - TODAS las props actuales
+ *    
+ *    AGREGA:
+ *    - Badges (⭐ Más vendido, 🆕 Nuevo, 🔥 Oferta)
+ *    - Animación de check (✅ Agregado!)
+ *    - Hover mejorado (sombra + zoom)
+ *    - Mejor UI con CldImageWrapper
+ * ⚠️  EN CASO DE MODIFICACIÓN SIGNIFICATIVA, actualizar este comentario.
+ */
+
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
@@ -42,12 +66,14 @@ function CarruselCard({ imagenes = [], nombre = '', imagenAlt = '' }) {
       {imagenes.map((src, i) => (
         <div
           key={i}
-          className={`${styles.carouselSlide} ${i === indice ? styles.carouselActive : ''}`}
+          className={`${styles.carouselSlide} ${
+            i === indice ? styles.carouselActive : ''
+          }`}
           aria-hidden={i === indice ? 'false' : 'true'}
         >
           <Image
             src={src}
-            alt={i === 0 ? (imagenAlt || nombre) : `${nombre} — foto ${i + 1}`}
+            alt={i === 0 ? imagenAlt || nombre : `${nombre} — foto ${i + 1}`}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 900px) 50vw, 300px"
             className={styles.carouselImage}
@@ -85,13 +111,29 @@ function ensureCart() {
       listeners: new EventTarget(),
       toastListeners: new EventTarget(),
       isOpen: false,
-      subscribe(fn) { this.listeners.addEventListener('update', fn) },
-      unsubscribe(fn) { this.listeners.removeEventListener('update', fn) },
-      open() { this.isOpen = true; this.listeners.dispatchEvent(new CustomEvent('open')) },
-      close() { this.isOpen = false; this.listeners.dispatchEvent(new CustomEvent('close')) },
-      getItems() { return [...this.items] },
-      getCount() { return this.items.reduce((s, i) => s + (i.quantity || 1), 0) },
-      getTotal() { return this.items.reduce((s, i) => s + (i.quantity || 1) * (i.price || 0), 0) },
+      subscribe(fn) {
+        this.listeners.addEventListener('update', fn)
+      },
+      unsubscribe(fn) {
+        this.listeners.removeEventListener('update', fn)
+      },
+      open() {
+        this.isOpen = true
+        this.listeners.dispatchEvent(new CustomEvent('open'))
+      },
+      close() {
+        this.isOpen = false
+        this.listeners.dispatchEvent(new CustomEvent('close'))
+      },
+      getItems() {
+        return [...this.items]
+      },
+      getCount() {
+        return this.items.reduce((s, i) => s + (i.quantity || 1), 0)
+      },
+      getTotal() {
+        return this.items.reduce((s, i) => s + (i.quantity || 1) * (i.price || 0), 0)
+      },
       addItem(product) {
         const idx = this.items.findIndex(i => i.id === product.id)
         if (idx >= 0) {
@@ -140,22 +182,23 @@ function ensureCart() {
       },
       offToast(fn) {
         this.toastListeners.removeEventListener('toast', fn)
-      }
+      },
     }
   }
   return window.__PANFREE_CART
 }
 
 // ============================================
-// PRODUCT CARD PRINCIPAL
+// PRODUCT CARD PRINCIPAL (VERSIÓN COMBINADA)
 // ============================================
 export default function ProductCard({
   producto,
   onAddToCart,
   disponible = true,
-  requiereAnticipacion = false
+  requiereAnticipacion = false,
 }) {
   const [cantidad, setCantidad] = useState(1)
+  const [isAdded, setIsAdded] = useState(false)
   const imgRef = useRef(null)
 
   if (!producto) return null
@@ -164,9 +207,31 @@ export default function ProductCard({
 
   const imagenes = [
     ...(producto.imagen_url ? [producto.imagen_url] : []),
-    ...(Array.isArray(producto.imagenes_urls) ? producto.imagenes_urls.filter(Boolean) : []),
+    ...(Array.isArray(producto.imagenes_urls)
+      ? producto.imagenes_urls.filter(Boolean)
+      : []),
   ]
 
+  // ============================================
+  // DETERMINAR BADGES
+  // ============================================
+  const badges = []
+  if (producto.destacado || producto.is_featured) {
+    badges.push({ tipo: 'top', emoji: '⭐', label: 'Más vendido' })
+  }
+  if (
+    producto.createdAt &&
+    new Date(producto.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  ) {
+    badges.push({ tipo: 'new', emoji: '🆕', label: 'Nuevo' })
+  }
+  if (producto.descuento || producto.discount) {
+    badges.push({ tipo: 'sale', emoji: '🔥', label: 'Oferta' })
+  }
+
+  // ============================================
+  // AGREGAR AL CARRITO
+  // ============================================
   const manejarAgregar = useCallback(() => {
     if (agotado) return
 
@@ -183,10 +248,12 @@ export default function ProductCard({
 
     onAddToCart?.({ ...producto, cantidad, subtotal: producto.precio_venta * cantidad })
 
+    // ── Animación de vuelo al carrito ──
     const imgEl = imgRef.current
-    const target = document.getElementById('floating-cart-button') ||
-                   document.querySelector('[data-cart-target]') ||
-                   document.body
+    const target =
+      document.getElementById('floating-cart-button') ||
+      document.querySelector('[data-cart-target]') ||
+      document.body
 
     if (imgEl && target) {
       try {
@@ -205,12 +272,15 @@ export default function ProductCard({
         flyImg.style.borderRadius = '8px'
         flyImg.style.zIndex = '1400'
         flyImg.style.pointerEvents = 'none'
-        flyImg.style.transition = 'transform 700ms cubic-bezier(.22,1,.36,1), opacity 700ms ease'
+        flyImg.style.transition =
+          'transform 700ms cubic-bezier(.22,1,.36,1), opacity 700ms ease'
         flyImg.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)'
         document.body.appendChild(flyImg)
 
-        const deltaX = targetRect.left + targetRect.width / 2 - (startRect.left + startRect.width / 2)
-        const deltaY = targetRect.top + targetRect.height / 2 - (startRect.top + startRect.height / 2)
+        const deltaX =
+          targetRect.left + targetRect.width / 2 - (startRect.left + startRect.width / 2)
+        const deltaY =
+          targetRect.top + targetRect.height / 2 - (startRect.top + startRect.height / 2)
 
         requestAnimationFrame(() => {
           flyImg.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.15)`
@@ -229,9 +299,16 @@ export default function ProductCard({
       cart.showToast(`✅ ${producto.nombre} agregado al carrito`)
     }
 
+    // ── Animación de check ──
+    setIsAdded(true)
+    setTimeout(() => setIsAdded(false), 1500)
+
     setCantidad(1)
   }, [agotado, onAddToCart, producto, cantidad])
 
+  // ============================================
+  // PEDIDO ESPECIAL POR WHATSAPP
+  // ============================================
   const manejarPedidoEspecial = useCallback(() => {
     const msg = encodeURIComponent(
       `¡Hola PanFree! 🍞 Me gustaría encargar el siguiente producto:\n\n` +
@@ -239,48 +316,104 @@ export default function ProductCard({
       `*Precio:* ₲ ${producto.precio_venta?.toLocaleString('es-PY')}\n\n` +
       `¿Podrían decirme disponibilidad y tiempo estimado de producción? ¡Gracias!`
     )
-    window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank', 'noopener,noreferrer')
+    window.open(
+      `https://wa.me/${WA_NUMBER}?text=${msg}`,
+      '_blank',
+      'noopener,noreferrer'
+    )
   }, [producto])
 
   const slugUrl = producto?.slug ? `/producto/${producto.slug}` : '#'
-  const productId = producto?.id ?? producto?.slug ?? producto?.nombre?.slice(0, 12) ?? Date.now().toString()
+  const productId =
+    producto?.id ?? producto?.slug ?? producto?.nombre?.slice(0, 12) ?? Date.now().toString()
 
   return (
-    <article className={styles.card} role="article" aria-labelledby={`product-title-${productId}`}>
+    <article
+      className={styles.card}
+      role="article"
+      aria-labelledby={`product-title-${productId}`}
+    >
+      {/* BADGES */}
+      {badges.length > 0 && (
+        <div className={styles.badges}>
+          {badges.map((badge, i) => (
+            <span
+              key={i}
+              className={`${styles.badge} ${styles[`badge${badge.tipo.charAt(0).toUpperCase() + badge.tipo.slice(1)}`]}`}
+              title={badge.label}
+            >
+              {badge.emoji}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* IMAGEN / CARRUSEL */}
       <a href={slugUrl} className={styles.imageLink} aria-label={`Ver detalles de ${producto.nombre}`}>
-        <CarruselCard imagenes={imagenes} nombre={producto.nombre} imagenAlt={producto.imagen_alt} />
+        <div className={styles.imageWrapper}>
+          <CarruselCard
+            imagenes={imagenes}
+            nombre={producto.nombre}
+            imagenAlt={producto.imagen_alt}
+          />
+        </div>
       </a>
 
+      {/* CONTENIDO */}
       <div className={styles.body}>
         {slugUrl ? (
-          <a href={slugUrl} className={styles.titleLink} aria-label={`Ir a la página del producto ${producto.nombre}`}>
-            <h3 id={`product-title-${productId}`} className={styles.title}>{producto.nombre}</h3>
+          <a
+            href={slugUrl}
+            className={styles.titleLink}
+            aria-label={`Ir a la página del producto ${producto.nombre}`}
+          >
+            <h3 id={`product-title-${productId}`} className={styles.title}>
+              {producto.nombre}
+            </h3>
           </a>
         ) : (
-          <h3 id={`product-title-${productId}`} className={styles.title}>{producto.nombre}</h3>
+          <h3 id={`product-title-${productId}`} className={styles.title}>
+            {producto.nombre}
+          </h3>
         )}
 
-        <p className={styles.category} aria-hidden="false">{producto.categoria}</p>
+        <p className={styles.category} aria-hidden="false">
+          {producto.categoria}
+        </p>
         <p className={styles.description}>{producto.descripcion}</p>
 
+        {/* PRECIO Y DISPONIBILIDAD */}
         <div className={styles.pricingRow}>
-          <p className={`${styles.price} ${agotado ? styles.priceDisabled : ''}`} aria-live="polite">
+          <p
+            className={`${styles.price} ${agotado ? styles.priceDisabled : ''}`}
+            aria-live="polite"
+          >
             ₲ {producto.precio_venta?.toLocaleString('es-PY') || '0'}
           </p>
-          <p className={`${styles.availability} ${agotado ? styles.availabilityOut : styles.availabilityIn}`}>
+          <p
+            className={`${styles.availability} ${
+              agotado ? styles.availabilityOut : styles.availabilityIn
+            }`}
+          >
             {agotado ? '❌ No disponible' : '✅ Disponible'}
           </p>
         </div>
 
-        {(!agotado && requiereAnticipacion) && (
-          <p className={styles.preorderBadge} role="status" aria-label="Pedido con anticipación">
+        {!agotado && requiereAnticipacion && (
+          <p
+            className={styles.preorderBadge}
+            role="status"
+            aria-label="Pedido con anticipación"
+          >
             ⏰ Pedido con 24hs de anticipación
           </p>
         )}
 
+        {/* CONTROLES */}
         <div className={styles.controls}>
           {!agotado ? (
             <>
+              {/* CANTIDAD */}
               <div className={styles.qtyGroup} role="group" aria-label="Controles de cantidad">
                 <button
                   type="button"
@@ -296,7 +429,9 @@ export default function ProductCard({
                   min="1"
                   max={99}
                   value={cantidad}
-                  onChange={e => setCantidad(Math.max(1, Math.min(parseInt(e.target.value) || 1, 99)))}
+                  onChange={e =>
+                    setCantidad(Math.max(1, Math.min(parseInt(e.target.value) || 1, 99)))
+                  }
                   className={styles.qtyInput}
                   aria-label={`Cantidad para ${producto.nombre}`}
                 />
@@ -311,17 +446,19 @@ export default function ProductCard({
                 </button>
               </div>
 
+              {/* BOTÓN AGREGAR */}
               <button
                 type="button"
                 onClick={manejarAgregar}
-                className={styles.addBtn}
+                className={`${styles.addBtn} ${isAdded ? styles.added : ''}`}
                 aria-label={`Agregar ${cantidad} unidades de ${producto.nombre} al carrito`}
                 ref={imgRef}
               >
-                🛒 Agregar al Carrito
+                {isAdded ? '✅ ¡Agregado!' : '🛒 Agregar al Carrito'}
               </button>
             </>
           ) : (
+            /* PRODUCTO AGOTADO */
             <div className={styles.outOfStockGroup}>
               <button
                 type="button"
@@ -331,7 +468,9 @@ export default function ProductCard({
               >
                 ✉️ Quiero encargar este producto
               </button>
-              <p className={styles.outOfStockNote}>Te contactamos para producirlo especialmente 🍞</p>
+              <p className={styles.outOfStockNote}>
+                Te contactamos para producirlo especialmente 🍞
+              </p>
             </div>
           )}
         </div>
