@@ -1,17 +1,12 @@
 /**
  * 📁 UBICACIÓN: src/context/CartContext.js
- * 📅 ACTUALIZADO: 2026-03-05
+ * 📅 ACTUALIZADO: 2026-08-15 (REFACTORIZACIÓN UNIFICADA)
  * 📌 DESCRIPCIÓN: Context API global para el carrito de compras.
- *    Provee estado del carrito, visibilidad del sidebar, y funciones:
- *    - agregarAlCarrito: verifica sesión activa antes de agregar.
- *      Si el cliente NO está autenticado, abre el modal de login (AuthContext)
- *      y encola la acción para ejecutarla automáticamente post-login.
- *    - eliminarDelCarrito: quita un producto por id
- *    - actualizarCantidad: modifica cantidad (elimina si llega a 0)
- *    - vaciarCarrito: limpia todo el carrito
- *    - total: suma de subtotales en PYG (₲)
- *    - cantidadItems: cantidad total de unidades en el carrito
- *    Persiste el carrito en localStorage bajo la clave 'panfree-carrito'.
+ *    CAMBIO CRÍTICO: Ahora es la ÚNICA fuente de verdad para el carrito.
+ *    - Mantiene API actual (agregarAlCarrito, eliminarDelCarrito, etc.)
+ *    - Mantiene localStorage key actual ('panfree-carrito')
+ *    - Añade sincronización con window.__PANFREE_CART para compatibilidad
+ *    - Dispatch eventos para FloatingCartButton, SlideCart, ToastNotification
  * ⚠️  EN CASO DE MODIFICACIÓN SIGNIFICATIVA, actualizar este comentario.
  */
 
@@ -26,17 +21,25 @@ export function CartProvider({ children }) {
   const [visible, setVisible] = useState(false)
   const { estaAutenticado, abrirModal } = useAuth()
 
-  // Cargar carrito desde localStorage al iniciar
+  // ============================================
+  // INICIALIZAR CARRITO DESDE LOCALSTORAGE
+  // ============================================
   useEffect(() => {
     try {
       const guardado = localStorage.getItem('panfree-carrito')
-      if (guardado) setCarrito(JSON.parse(guardado))
+      if (guardado) {
+        const parsed = JSON.parse(guardado)
+        setCarrito(Array.isArray(parsed) ? parsed : [])
+      }
     } catch (err) {
       console.error('Error al cargar carrito desde localStorage:', err)
+      setCarrito([])
     }
   }, [])
 
-  // Persistir carrito en localStorage cada vez que cambia
+  // ============================================
+  // PERSISTIR EN LOCALSTORAGE
+  // ============================================
   useEffect(() => {
     try {
       localStorage.setItem('panfree-carrito', JSON.stringify(carrito))
@@ -45,7 +48,43 @@ export function CartProvider({ children }) {
     }
   }, [carrito])
 
-  // Agregar producto — requiere autenticación
+  // ============================================
+  // SINCRONIZAR CON window.__PANFREE_CART (COMPATIBILIDAD)
+  // ============================================
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    // Inicializar window.__PANFREE_CART si no existe
+    if (!window.__PANFREE_CART) {
+      window.__PANFREE_CART = {
+        items: carrito,
+        listeners: new EventTarget(),
+        toastListeners: new EventTarget(),
+        isOpen: false,
+      }
+    }
+
+    // Sincronizar items
+    window.__PANFREE_CART.items = carrito
+
+    // Actualizar métodos getters
+    window.__PANFREE_CART.getItems = () => [...carrito]
+    window.__PANFREE_CART.getCount = () =>
+      carrito.reduce((s, item) => s + (item.cantidad || 1), 0)
+    window.__PANFREE_CART.getTotal = () =>
+      carrito.reduce((s, item) => s + item.subtotal, 0)
+
+    // Dispatch evento 'update' para escuchadores externos
+    if (window.__PANFREE_CART.listeners) {
+      window.__PANFREE_CART.listeners.dispatchEvent(
+        new CustomEvent('update', { detail: carrito })
+      )
+    }
+  }, [carrito])
+
+  // ============================================
+  // AGREGAR PRODUCTO (CON VERIFICACIÓN DE AUTH)
+  // ============================================
   const agregarAlCarrito = (producto) => {
     if (!estaAutenticado) {
       // Abrir modal de login con la acción pendiente
@@ -55,47 +94,126 @@ export function CartProvider({ children }) {
     _agregarProducto(producto)
   }
 
-  // Lógica interna de agregar (sin verificación de auth)
+  // ============================================
+  // LÓGICA INTERNA DE AGREGAR (SIN VERIFICACIÓN DE AUTH)
+  // ============================================
   const _agregarProducto = (producto) => {
     setCarrito(prev => {
       const existente = prev.find(p => p.id === producto.id)
       if (existente) {
         return prev.map(p =>
           p.id === producto.id
-            ? { ...p, cantidad: p.cantidad + producto.cantidad, subtotal: p.subtotal + producto.subtotal }
+            ? {
+                ...p,
+                cantidad: p.cantidad + (producto.cantidad || 1),
+                subtotal:
+                  (p.subtotal || p.precio_venta * p.cantidad) +
+                  (producto.subtotal || producto.precio_venta * (producto.cantidad || 1)),
+              }
             : p
         )
       }
       return [...prev, producto]
     })
     setVisible(true)
+
+    // Mostrar toast si window.__PANFREE_CART existe
+    if (typeof window !== 'undefined' && window.__PANFREE_CART?.showToast) {
+      window.__PANFREE_CART.showToast(
+        `✅ ${producto.nombre} agregado al carrito`
+      )
+    }
   }
 
+  // ============================================
+  // ELIMINAR DEL CARRITO
+  // ============================================
   const eliminarDelCarrito = (productoId) => {
     setCarrito(prev => prev.filter(p => p.id !== productoId))
   }
 
+  // ============================================
+  // ACTUALIZAR CANTIDAD
+  // ============================================
   const actualizarCantidad = (productoId, nuevaCantidad) => {
-    if (nuevaCantidad < 1) { eliminarDelCarrito(productoId); return }
+    if (nuevaCantidad < 1) {
+      eliminarDelCarrito(productoId)
+      return
+    }
     setCarrito(prev =>
       prev.map(p =>
         p.id === productoId
-          ? { ...p, cantidad: nuevaCantidad, subtotal: p.precio_venta * nuevaCantidad }
+          ? {
+              ...p,
+              cantidad: nuevaCantidad,
+              subtotal: p.precio_venta * nuevaCantidad,
+            }
           : p
       )
     )
   }
 
-  const vaciarCarrito = () => setCarrito([])
-  const total = carrito.reduce((sum, item) => sum + item.subtotal, 0)
-  const cantidadItems = carrito.reduce((sum, item) => sum + item.cantidad, 0)
+  // ============================================
+  // VACIAR CARRITO
+  // ============================================
+  const vaciarCarrito = () => {
+    setCarrito([])
+  }
 
+  // ============================================
+  // CALCULAR TOTALES
+  // ============================================
+  const total = carrito.reduce((sum, item) => sum + (item.subtotal || 0), 0)
+  const cantidadItems = carrito.reduce(
+    (sum, item) => sum + (item.cantidad || 1),
+    0
+  )
+
+  // ============================================
+  // MÉTODOS PARA COMPATIBILIDAD CON window.__PANFREE_CART
+  // ============================================
+  const addItemToCart = (product) => {
+    _agregarProducto({
+      id: product.id || product.slug || Date.now().toString(),
+      nombre: product.name || product.nombre,
+      precio_venta: product.price || product.precio_venta || 0,
+      imagen_url: product.image || product.imagen_url || '',
+      cantidad: product.quantity || 1,
+      subtotal:
+        (product.quantity || 1) * (product.price || product.precio_venta || 0),
+      categoria: product.categoria || '',
+    })
+  }
+
+  const updateItemQuantity = (productId, quantity) => {
+    actualizarCantidad(productId, quantity)
+  }
+
+  const removeItemFromCart = (productId) => {
+    eliminarDelCarrito(productId)
+  }
+
+  // ============================================
+  // PROVIDER
+  // ============================================
   return (
-    <CartContext.Provider value={{
-      carrito, visible, setVisible,
-      agregarAlCarrito, eliminarDelCarrito, actualizarCantidad, vaciarCarrito,
-      total, cantidadItems
-    }}>
+    <CartContext.Provider
+      value={{
+        carrito,
+        visible,
+        setVisible,
+        agregarAlCarrito,
+        eliminarDelCarrito,
+        actualizarCantidad,
+        vaciarCarrito,
+        total,
+        cantidadItems,
+        // Métodos para compatibilidad con window.__PANFREE_CART
+        addItemToCart,
+        updateItemQuantity,
+        removeItemFromCart,
+      }}
+    >
       {children}
     </CartContext.Provider>
   )
@@ -103,6 +221,8 @@ export function CartProvider({ children }) {
 
 export function useCart() {
   const context = useContext(CartContext)
-  if (!context) throw new Error('useCart debe usarse dentro de un <CartProvider>')
+  if (!context) {
+    throw new Error('useCart debe usarse dentro de un <CartProvider>')
+  }
   return context
 }
