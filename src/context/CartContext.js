@@ -131,7 +131,15 @@ export function CartProvider({ children }) {
     }
   }, [carrito])
 
-  // Operaciones del carrito (mantengo nombres públicos)
+  // ============================================
+  // OPERACIONES DEL CARRITO
+  // ============================================
+
+  /**
+   * _agregarProducto - Lógica interna para agregar producto
+   * SOLO actualiza el carrito y muestra TOAST VISUAL
+   * NO envía notificaciones push
+   */
   const _agregarProducto = useCallback((producto) => {
     setCarrito(prev => {
       const existente = prev.find(p => p.id === producto.id)
@@ -151,7 +159,9 @@ export function CartProvider({ children }) {
       return [...prev, producto]
     })
     setVisible(true)
-    // showToast a través de API del context (si alguien quiere)
+    
+    // ✅ SOLO toast visual (feedback UI)
+    // ❌ NO notificaciones push (eso es para pedidos confirmados)
     try {
       if (typeof window !== 'undefined' && window.__PANFREE_CART?.showToast) {
         window.__PANFREE_CART.showToast(`✅ ${producto.nombre || producto.name} agregado al carrito`)
@@ -159,6 +169,10 @@ export function CartProvider({ children }) {
     } catch {}
   }, [])
 
+  /**
+   * agregarAlCarrito - API pública
+   * Verifica autenticación antes de agregar
+   */
   const agregarAlCarrito = useCallback((producto) => {
     if (!estaAutenticado) {
       abrirModal(() => _agregarProducto(producto))
@@ -167,10 +181,16 @@ export function CartProvider({ children }) {
     _agregarProducto(producto)
   }, [_agregarProducto, abrirModal, estaAutenticado])
 
+  /**
+   * eliminarDelCarrito - Elimina un producto del carrito
+   */
   const eliminarDelCarrito = useCallback((productoId) => {
     setCarrito(prev => prev.filter(p => p.id !== productoId))
   }, [])
 
+  /**
+   * actualizarCantidad - Actualiza la cantidad de un producto
+   */
   const actualizarCantidad = useCallback((productoId, nuevaCantidad) => {
     if (nuevaCantidad < 1) {
       eliminarDelCarrito(productoId)
@@ -189,11 +209,17 @@ export function CartProvider({ children }) {
     )
   }, [eliminarDelCarrito])
 
+  /**
+   * vaciarCarrito - Vacía todo el carrito
+   */
   const vaciarCarrito = useCallback(() => {
     setCarrito([])
   }, [])
 
-  // Métodos de compatibilidad (expuestos)
+  // ============================================
+  // MÉTODOS DE COMPATIBILIDAD (para código legacy)
+  // ============================================
+
   const addItemToCart = useCallback((product) => {
     _agregarProducto({
       id: product.id || product.slug || Date.now().toString(),
@@ -215,31 +241,50 @@ export function CartProvider({ children }) {
     eliminarDelCarrito(productId)
   }, [eliminarDelCarrito])
 
+  /**
+   * showToast - Muestra un toast visual
+   * SOLO UI, NO notificaciones push
+   */
   const showToast = useCallback((msg) => {
     try {
       if (typeof window !== 'undefined' && window.__PANFREE_CART?.showToast) {
         window.__PANFREE_CART.showToast(msg)
       }
-      // también podríamos integrar un sistema de toasts local aquí si existe
     } catch {}
   }, [])
 
-  const total = carrito.reduce((sum, item) => sum + (item.subtotal || (item.precio_venta || item.price || 0) * (item.cantidad || item.quantity || 1) || 0), 0)
-  const cantidadItems = carrito.reduce((sum, item) => sum + (item.cantidad || item.quantity || 1), 0)
+  // ============================================
+  // CÁLCULO DE TOTALES
+  // ============================================
+
+  const total = carrito.reduce((sum, item) => {
+    return sum + (item.subtotal || (item.precio_venta || item.price || 0) * (item.cantidad || item.quantity || 1) || 0)
+  }, 0)
+
+  const cantidadItems = carrito.reduce((sum, item) => {
+    return sum + (item.cantidad || item.quantity || 1)
+  }, 0)
+
+  // ============================================
+  // PROVIDER
+  // ============================================
 
   return (
     <CartContext.Provider
       value={{
+        // Estado
         carrito,
         visible,
         setVisible,
+        // Acciones principales
         agregarAlCarrito,
         eliminarDelCarrito,
         actualizarCantidad,
         vaciarCarrito,
+        // Totales
         total,
         cantidadItems,
-        // compatibilidad
+        // Compatibilidad (legacy)
         addItemToCart,
         updateItemQuantity,
         removeItemFromCart,
@@ -251,6 +296,9 @@ export function CartProvider({ children }) {
   )
 }
 
+/**
+ * useCart - Hook para usar el carrito en componentes
+ */
 export function useCart() {
   const context = useContext(CartContext)
   if (!context) {

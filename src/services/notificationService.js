@@ -1,23 +1,15 @@
-let notificationInProgress = false
-let lastNotificationTime = 0
-const MIN_INTERVAL = 5000
+/**
+ * src/services/notificationService.js
+ * NOTA: Este archivo ahora solo maneja THROTTLE y DELEGA a pushService.js
+ * Las notificaciones push reales están en pushService.js
+ */
 
-export async function sendNotification(data) {
-  const now = Date.now()
-  if (notificationInProgress || (now - lastNotificationTime < MIN_INTERVAL)) {
-    console.warn('Notificación duplicada evitada por throttle')
-    return { success: false, message: 'Throttled' }
-  }
-  notificationInProgress = true
-  lastNotificationTime = now
-  try {
-    const res = await fetch('/api/push-notificar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    return await res.json()
-  } finally {
-    notificationInProgress = false
-  }
+import { sendPushNotification } from './pushService'
+
+// Re-exportar para compatibilidad con código existente
+export { sendPushNotification as sendNotification }
+
+// Para código que espera la API anterior
+export default {
+  sendNotification: sendPushNotification,
 }
