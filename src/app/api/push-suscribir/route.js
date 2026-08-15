@@ -2,7 +2,7 @@
  * 📁 UBICACIÓN: src/app/api/push-suscribir/route.js
  * 📅 ACTUALIZADO: 2026-08-15
  * 📌 DESCRIPCIÓN: Registra cliente para notificaciones push.
- *    Ahora verifica duplicados antes de insertar.
+ *    CAMBIO CRÍTICO: Usa UPSERT para evitar duplicados atómicamente.
  */
 
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
@@ -47,54 +47,23 @@ export async function POST(request) {
     const endpoint = subscription.endpoint.trim()
 
     // ============================================
-    // VERIFICAR SI YA EXISTE (PREVENIR DUPLICADOS)
+    // ✅ UPSERT: INSERT o UPDATE en una sola operación atómica
     // ============================================
-    const { data: existing, error: selectError } = await supabase
+    const { error: upsertError } = await supabase
       .from('push_subscriptions')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .eq('endpoint', endpoint)
-      .limit(1)
-
-    if (selectError) {
-      console.error('Error verificando suscripción existente:', selectError)
-      throw selectError
-    }
-
-    if (existing?.length > 0) {
-      // Actualizar claves si cambiaron
-      await supabase
-        .from('push_subscriptions')
-        .update({
-          p256dh: subscription.keys?.p256dh || null,
-          auth: subscription.keys?.auth || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', existing[0].id)
-
-      return NextResponse.json({
-        success: true,
-        message: 'Ya suscrito a notificaciones push',
-      })
-    }
-
-    // ============================================
-    // GUARDAR NUEVA SUSCRIPCIÓN
-    // ============================================
-    const { error: insertError } = await supabase
-      .from('push_subscriptions')
-      .insert({
+      .upsert({
         user_id: session.user.id,
         endpoint: endpoint,
         p256dh: subscription.keys?.p256dh || null,
         auth: subscription.keys?.auth || null,
-        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+      }, { 
+        onConflict: 'user_id,endpoint'  // 👈 Usa la constraint UNIQUE que agregaste en SQL
       })
 
-    if (insertError) {
-      console.error('Error guardando subscription:', insertError)
-      throw insertError
+    if (upsertError) {
+      console.error('Error guardando subscription:', upsertError)
+      throw upsertError
     }
 
     // ============================================
