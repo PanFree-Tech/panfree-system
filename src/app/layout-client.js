@@ -13,6 +13,10 @@
  * CAMBIOS 2026-03-04:
  *  - Header: integración de useAuth para mostrar "Mi cuenta" o "Ingresar"
  *  - Header: botón de cuenta con clase .header-cuenta-texto para ocultar en móvil (<480px)
+ * CAMBIOS 2026-03-07:
+ *  - ✅ NUEVO: FloatingCartButton (botón flotante en móvil)
+ *  - ✅ NUEVO: SlideCart (carrito deslizable)
+ *  - ✅ NUEVO: ToastNotification (notificaciones emergentes)
  */
 'use client'
 import { usePathname } from 'next/navigation'
@@ -20,6 +24,11 @@ import { AuthProvider, useAuth } from '../context/AuthContext'
 import { CartProvider, useCart } from '../context/CartContext'
 import CartSidebar from '../components/CartSidebar'
 import AuthModal from '../components/AuthModal'
+
+// ✅ NUEVO: Componentes del carrito flotante
+import FloatingCartButton from '@/components/FloatingCartButton'
+import SlideCart from '@/components/SlideCart'
+import ToastNotification from '@/components/ToastNotification'
 
 // ─── SVG logos oficiales inline ───────────────────────────────────────────────
 
@@ -70,6 +79,11 @@ export default function LayoutClient({ children }) {
         <CartSidebar />
         <AuthModal />
         <Footer />
+
+        {/* ✅ NUEVO: Componentes del carrito flotante */}
+        <FloatingCartButton />
+        <SlideCart />
+        <ToastNotification />
       </CartProvider>
     </AuthProvider>
   )
