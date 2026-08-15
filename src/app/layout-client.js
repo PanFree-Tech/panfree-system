@@ -17,8 +17,11 @@
  *  - ✅ NUEVO: FloatingCartButton (botón flotante en móvil)
  *  - ✅ NUEVO: SlideCart (carrito deslizable)
  *  - ✅ NUEVO: ToastNotification (notificaciones emergentes)
+ * CAMBIOS 2026-08-15:
+ *  - ✅ NUEVO: CartInitializer (inicialización del carrito global)
  */
 'use client'
+import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { AuthProvider, useAuth } from '../context/AuthContext'
 import { CartProvider, useCart } from '../context/CartContext'
@@ -29,6 +32,83 @@ import AuthModal from '../components/AuthModal'
 import FloatingCartButton from '@/components/FloatingCartButton'
 import SlideCart from '@/components/SlideCart'
 import ToastNotification from '@/components/ToastNotification'
+
+// ============================================
+// INICIALIZACIÓN DEL CARRITO GLOBAL
+// ============================================
+function CartInitializer() {
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    if (!window.__PANFREE_CART) {
+      const listeners = new EventTarget()
+      const toastListeners = new EventTarget()
+      const STORAGE_KEY = 'panfree_cart_v1'
+      const saved = localStorage.getItem(STORAGE_KEY)
+      const items = saved ? JSON.parse(saved) : []
+
+      const save = () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+        listeners.dispatchEvent(new CustomEvent('update'))
+      }
+
+      window.__PANFREE_CART = {
+        items,
+        listeners,
+        toastListeners,
+        isOpen: false,
+        subscribe(fn) { listeners.addEventListener('update', fn) },
+        unsubscribe(fn) { listeners.removeEventListener('update', fn) },
+        open() {
+          window.__PANFREE_CART.isOpen = true
+          listeners.dispatchEvent(new CustomEvent('open', { detail: true }))
+        },
+        close() {
+          window.__PANFREE_CART.isOpen = false
+          listeners.dispatchEvent(new CustomEvent('close', { detail: false }))
+        },
+        getItems() { return [...items] },
+        getCount() { return items.reduce((s, it) => s + (it.quantity || 1), 0) },
+        getTotal() { return items.reduce((s, it) => s + (it.quantity || 1) * (it.price || 0), 0) },
+        addItem(product) {
+          const idx = items.findIndex((i) => i.id === product.id)
+          if (idx >= 0) {
+            items[idx].quantity = (items[idx].quantity || 1) + (product.quantity || 1)
+          } else {
+            items.push({ ...product, quantity: product.quantity || 1 })
+          }
+          save()
+        },
+        updateQuantity(id, quantity) {
+          const idx = items.findIndex((i) => i.id === id)
+          if (idx >= 0) {
+            items[idx].quantity = quantity
+            if (items[idx].quantity <= 0) items.splice(idx, 1)
+            save()
+          }
+        },
+        removeItem(id) {
+          const idx = items.findIndex((i) => i.id === id)
+          if (idx >= 0) {
+            items.splice(idx, 1)
+            save()
+          }
+        },
+        clear() {
+          items.length = 0
+          save()
+        },
+        showToast(msg) {
+          toastListeners.dispatchEvent(new CustomEvent('toast', { detail: msg }))
+        },
+        onToast(fn) { toastListeners.addEventListener('toast', fn) },
+        offToast(fn) { toastListeners.removeEventListener('toast', fn) },
+      }
+    }
+  }, [])
+
+  return null
+}
 
 // ─── SVG logos oficiales inline ───────────────────────────────────────────────
 
@@ -81,6 +161,7 @@ export default function LayoutClient({ children }) {
         <Footer />
 
         {/* ✅ NUEVO: Componentes del carrito flotante */}
+        <CartInitializer />
         <FloatingCartButton />
         <SlideCart />
         <ToastNotification />
