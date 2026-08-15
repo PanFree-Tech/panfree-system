@@ -1,3 +1,13 @@
+/**
+ * src/context/CartContext.js
+ * 
+ * ÚNICA fuente de verdad para el carrito.
+ * - Mantiene React state para todos los componentes que usan useCart()
+ * - Expo métodos en window.__PANFREE_CART para compatibilidad con código legacy
+ * - SIEMPRE reasigna los métodos en cada render para asegurar que apunten a React state
+ * - FIX: useEffect de sincronización movido al FINAL para evitar TDZ (Temporal Dead Zone)
+ */
+
 'use client'
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useAuth } from './AuthContext'
@@ -9,7 +19,7 @@ export function CartProvider({ children }) {
   const [visible, setVisible] = useState(false)
   const { estaAutenticado, abrirModal } = useAuth()
 
-  const STORAGE_KEY = 'panfree_cart_v1' // UNIFICADO: usar la key común
+  const STORAGE_KEY = 'panfree_cart_v1'
 
   // ============================================
   // INICIALIZACIÓN (efectos tempranos)
@@ -25,27 +35,21 @@ export function CartProvider({ children }) {
         setCarrito(Array.isArray(parsed) ? parsed : [])
         return
       }
-      // Si no hay localStorage pero existe window.__PANFREE_CART, tomar sus items
-      if (window.__PANFREE_CART?.getItems) {
-        const items = window.__PANFREE_CART.getItems()
-        setCarrito(Array.isArray(items) ? items : [])
-        return
-      }
-      // fallback vacío
       setCarrito([])
     } catch (err) {
-      console.error('Error al cargar carrito desde localStorage o window:', err)
+      console.error('Error al cargar carrito:', err)
       setCarrito([])
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Persistir en localStorage
+  // ============================================
+  // PERSISTIR EN localStorage
+  // ============================================
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(carrito))
     } catch (err) {
-      console.error('Error al guardar carrito en localStorage:', err)
+      console.error('Error al guardar carrito:', err)
     }
   }, [carrito])
 
@@ -53,11 +57,6 @@ export function CartProvider({ children }) {
   // FUNCIONES DEL CARRITO (declaradas PRIMERO)
   // ============================================
 
-  /**
-   * _agregarProducto - Lógica interna para agregar producto
-   * SOLO actualiza el carrito y muestra TOAST VISUAL
-   * NO envía notificaciones push
-   */
   const _agregarProducto = useCallback((producto) => {
     setCarrito(prev => {
       const existente = prev.find(p => p.id === producto.id)
@@ -67,9 +66,7 @@ export function CartProvider({ children }) {
             ? {
                 ...p,
                 cantidad: (p.cantidad || p.quantity || 1) + (producto.cantidad || producto.quantity || 1),
-                subtotal:
-                  (p.subtotal || (p.precio_venta || p.price || 0) * (p.cantidad || p.quantity || 1)) +
-                  (producto.subtotal || (producto.precio_venta || producto.price || 0) * (producto.cantidad || producto.quantity || 1)),
+                subtotal: (p.subtotal || (p.precio_venta || p.price || 0) * (p.cantidad || p.quantity || 1)) + (producto.subtotal || (producto.precio_venta || producto.price || 0) * (producto.cantidad || producto.quantity || 1)),
               }
             : p
         )
@@ -77,20 +74,8 @@ export function CartProvider({ children }) {
       return [...prev, producto]
     })
     setVisible(true)
-    
-    // ✅ SOLO toast visual (feedback UI)
-    // ❌ NO notificaciones push (eso es para pedidos confirmados)
-    try {
-      if (typeof window !== 'undefined' && window.__PANFREE_CART?.showToast) {
-        window.__PANFREE_CART.showToast(`✅ ${producto.nombre || producto.name} agregado al carrito`)
-      }
-    } catch {}
   }, [])
 
-  /**
-   * agregarAlCarrito - API pública
-   * Verifica autenticación antes de agregar
-   */
   const agregarAlCarrito = useCallback((producto) => {
     if (!estaAutenticado) {
       abrirModal(() => _agregarProducto(producto))
@@ -99,16 +84,10 @@ export function CartProvider({ children }) {
     _agregarProducto(producto)
   }, [_agregarProducto, abrirModal, estaAutenticado])
 
-  /**
-   * eliminarDelCarrito - Elimina un producto del carrito
-   */
   const eliminarDelCarrito = useCallback((productoId) => {
     setCarrito(prev => prev.filter(p => p.id !== productoId))
   }, [])
 
-  /**
-   * actualizarCantidad - Actualiza la cantidad de un producto
-   */
   const actualizarCantidad = useCallback((productoId, nuevaCantidad) => {
     if (nuevaCantidad < 1) {
       eliminarDelCarrito(productoId)
@@ -127,15 +106,12 @@ export function CartProvider({ children }) {
     )
   }, [eliminarDelCarrito])
 
-  /**
-   * vaciarCarrito - Vacía todo el carrito
-   */
   const vaciarCarrito = useCallback(() => {
     setCarrito([])
   }, [])
 
   // ============================================
-  // MÉTODOS DE COMPATIBILIDAD (para código legacy)
+  // MÉTODOS DE COMPATIBILIDAD (usados por window.__PANFREE_CART)
   // ============================================
 
   const addItemToCart = useCallback((product) => {
@@ -145,8 +121,7 @@ export function CartProvider({ children }) {
       precio_venta: product.price || product.precio_venta || 0,
       imagen_url: product.image || product.imagen_url || '',
       cantidad: product.quantity || product.cantidad || 1,
-      subtotal:
-        (product.quantity || product.cantidad || 1) * (product.price || product.precio_venta || 0),
+      subtotal: (product.quantity || product.cantidad || 1) * (product.price || product.precio_venta || 0),
       categoria: product.categoria || product.category || '',
     })
   }, [_agregarProducto])
@@ -159,29 +134,12 @@ export function CartProvider({ children }) {
     eliminarDelCarrito(productId)
   }, [eliminarDelCarrito])
 
-  /**
-   * showToast - Muestra un toast visual
-   * SOLO UI, NO notificaciones push
-   */
-  const showToast = useCallback((msg) => {
-    try {
-      if (typeof window !== 'undefined' && window.__PANFREE_CART?.showToast) {
-        window.__PANFREE_CART.showToast(msg)
-      }
-    } catch {}
-  }, [])
-
   // ============================================
   // CÁLCULO DE TOTALES
   // ============================================
 
-  const total = carrito.reduce((sum, item) => {
-    return sum + (item.subtotal || (item.precio_venta || item.price || 0) * (item.cantidad || item.quantity || 1) || 0)
-  }, 0)
-
-  const cantidadItems = carrito.reduce((sum, item) => {
-    return sum + (item.cantidad || item.quantity || 1)
-  }, 0)
+  const total = carrito.reduce((sum, item) => sum + (item.subtotal || (item.precio_venta || item.price || 0) * (item.cantidad || item.quantity || 1) || 0), 0)
+  const cantidadItems = carrito.reduce((sum, item) => sum + (item.cantidad || item.quantity || 1), 0)
 
   // ============================================
   // SINCRONIZACIÓN CON window.__PANFREE_CART
@@ -279,23 +237,19 @@ export function CartProvider({ children }) {
   return (
     <CartContext.Provider
       value={{
-        // Estado
         carrito,
         visible,
         setVisible,
-        // Acciones principales
         agregarAlCarrito,
         eliminarDelCarrito,
         actualizarCantidad,
         vaciarCarrito,
-        // Totales
         total,
         cantidadItems,
-        // Compatibilidad (legacy)
+        // Métodos de compatibilidad
         addItemToCart,
         updateItemQuantity,
         removeItemFromCart,
-        showToast,
       }}
     >
       {children}
@@ -303,9 +257,6 @@ export function CartProvider({ children }) {
   )
 }
 
-/**
- * useCart - Hook para usar el carrito en componentes
- */
 export function useCart() {
   const context = useContext(CartContext)
   if (!context) {
