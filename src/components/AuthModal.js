@@ -1,17 +1,6 @@
 /**
  * UBICACION: src/components/AuthModal.js
- * OPTIMIZACIONES MOBILE:
- *  - Clase auth-modal: 95% ancho en pantallas pequeñas via CSS
- *  - Inputs con font-size: 16px (previene zoom en iOS)
- *  - Botones con minHeight: 48px
- *  - padding reducido en móvil via clase
- * CAMBIOS 2026-03-03:
- *  - Flujo suave: registro inmediato → puede comprar → confirma email después
- *  - Todos los errores de Supabase traducidos al español
- *  - Botón login: "Ingresar" (sin emoji de carrito)
- *  - "Email not confirmed": mensaje amigable + botón reenviar confirmación
- *  - Registro exitoso: si hay sesión activa (confirm email OFF) → entra directo
- *  - Registro exitoso: si requiere confirmación → avisa y pasa a login
+ * Se agregan botones de OAuth (Google, Facebook) y manejo de carga/errores.
  */
 'use client'
 import React, { useState } from 'react';
@@ -44,6 +33,8 @@ export default function AuthModal() {
   const [error, setError]             = useState(null)
   const [errorTipo, setErrorTipo]     = useState(null) // 'no_confirmado' | null
   const [mensaje, setMensaje]         = useState(null)
+  const [loadingGoogle, setLoadingGoogle] = useState(false)
+  const [loadingFacebook, setLoadingFacebook] = useState(false)
 
   if (!modalVisible) return null
 
@@ -102,6 +93,7 @@ export default function AuthModal() {
           email,
           user_id: data.user.id,
           is_active: true,
+          role: 'cliente'
         })
       }
 
@@ -124,6 +116,29 @@ export default function AuthModal() {
         setError(traducido)
       }
     } finally { setLoading(false) }
+  }
+
+  // OAuth with Supabase
+  async function signInWithProvider(provider) {
+    limpiar()
+    if (provider === 'google') setLoadingGoogle(true)
+    if (provider === 'facebook') setLoadingFacebook(true)
+
+    try {
+      const redirectTo = `${window.location.origin}/auth/callback`
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo }
+      })
+      if (error) throw error
+      // Al iniciar OAuth Supabase redirige al proveedor; cerramos modal para UX suave
+      cerrarModal()
+    } catch (err) {
+      setError('No se pudo iniciar sesión con ' + provider + '. Intentá de nuevo.')
+    } finally {
+      if (provider === 'google') setLoadingGoogle(false)
+      if (provider === 'facebook') setLoadingFacebook(false)
+    }
   }
 
   const inp = {
@@ -184,6 +199,45 @@ export default function AuthModal() {
               color: modo === m ? '#eee6d9' : '#334c2b',
             }}>{label}</button>
           ))}
+        </div>
+
+        {/* Social buttons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1rem' }}>
+
+          <button
+            onClick={() => signInWithProvider('google')}
+            aria-label="Continuar con Google"
+            disabled={loadingGoogle}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: 'center',
+              background: '#fff', color: '#333', border: '1px solid #ddd', padding: '0.6rem', borderRadius: '6px',
+              fontWeight: 600, cursor: loadingGoogle ? 'not-allowed' : 'pointer', minHeight: '44px',
+            }}
+          >
+            {/* Google SVG */}
+            <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+              <path fill="#EA4335" d="M12 11.5v2.9h4.3c-.2 1.2-1.1 3.4-4.3 3.4-2.6 0-4.8-2.1-4.8-4.8s2.2-4.8 4.8-4.8c1.5 0 2.5.6 3.1 1.1l2.1-2.1C16.9 6 15.1 5 12 5 7.6 5 4 8.6 4 13s3.6 8 8 8c4.6 0 7.6-3.2 7.6-7.7 0-.6-.1-1-.2-1.4H12z"/>
+            </svg>
+            {loadingGoogle ? '⏳ Redirigiendo...' : 'Continuar con Google'}
+          </button>
+
+          <button
+            onClick={() => signInWithProvider('facebook')}
+            aria-label="Continuar con Facebook"
+            disabled={loadingFacebook}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: 'center',
+              background: '#1877F2', color: '#fff', border: 'none', padding: '0.6rem', borderRadius: '6px',
+              fontWeight: 600, cursor: loadingFacebook ? 'not-allowed' : 'pointer', minHeight: '44px',
+            }}
+          >
+            {/* Facebook SVG */}
+            <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+              <path fill="#fff" d="M22 12.07C22 6.48 17.52 2 11.93 2 6.34 2 1.86 6.48 1.86 12.07c0 4.99 3.66 9.13 8.44 9.86v-6.98H8.07v-2.88h2.23V9.41c0-2.21 1.31-3.43 3.32-3.43.96 0 1.97.17 1.97.17v2.17h-1.11c-1.09 0-1.43.68-1.43 1.37v1.66h2.44l-.39 2.88h-2.05v6.98c4.78-.73 8.44-4.87 8.44-9.86z"/>
+            </svg>
+            {loadingFacebook ? '⏳ Redirigiendo...' : 'Continuar con Facebook'}
+          </button>
+
         </div>
 
         {/* Mensaje de éxito */}
