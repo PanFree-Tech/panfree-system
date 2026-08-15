@@ -1,20 +1,6 @@
-/**
- * 📁 UBICACIÓN: src/components/ProductCard.js
- * 📅 ACTUALIZADO: 2026-03-07
- * 📌 CAMBIOS:
- *  - Carrusel automático: imagen_url + imagenes_urls[]
- *  - Auto-avance cada 3 segundos, pausa al hover
- *  - Fade crossfade — sin controles (grilla compacta)
- *  - Si solo hay 1 imagen: comportamiento idéntico al original
- *  - Todos los hooks SIEMPRE antes de cualquier return condicional
- *  - ✅ NUEVO: Animación de vuelo al agregar al carrito
- *  - ✅ NUEVO: Toast notification
- *  - ✅ NUEVO: Integración con carrito global (window.__PANFREE_CART)
- */
-
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import styles from './ProductCard.module.css'
 
@@ -22,7 +8,7 @@ import styles from './ProductCard.module.css'
 const WA_NUMBER = '595984589845'
 
 // ============================================
-// CARRUSEL INTERNO (sin cambios)
+// CARRUSEL INTERNO
 // ============================================
 function CarruselCard({ imagenes = [], nombre = '', imagenAlt = '' }) {
   const [indice, setIndice] = useState(0)
@@ -94,7 +80,6 @@ function CarruselCard({ imagenes = [], nombre = '', imagenAlt = '' }) {
 function ensureCart() {
   if (typeof window === 'undefined') return null
   if (!window.__PANFREE_CART) {
-    // Inicialización mínima (será sobrescrita por FloatingCartButton si existe)
     window.__PANFREE_CART = {
       items: [],
       listeners: new EventTarget(),
@@ -162,18 +147,17 @@ function ensureCart() {
 }
 
 // ============================================
-// PRODUCT CARD PRINCIPAL (MEJORADO)
+// PRODUCT CARD PRINCIPAL
 // ============================================
-export default function ProductCard({ 
-  producto, 
-  onAddToCart, 
-  disponible = true, 
-  requiereAnticipacion = false 
+export default function ProductCard({
+  producto,
+  onAddToCart,
+  disponible = true,
+  requiereAnticipacion = false
 }) {
   const [cantidad, setCantidad] = useState(1)
   const imgRef = useRef(null)
 
-  // Si no hay producto, no renderizar
   if (!producto) return null
 
   const agotado = !disponible
@@ -183,13 +167,9 @@ export default function ProductCard({
     ...(Array.isArray(producto.imagenes_urls) ? producto.imagenes_urls.filter(Boolean) : []),
   ]
 
-  // ============================================
-  // MANEJAR AGREGAR AL CARRITO (CON ANIMACIÓN)
-  // ============================================
   const manejarAgregar = useCallback(() => {
     if (agotado) return
 
-    // 1. Agregar al carrito usando el singleton global
     const cart = ensureCart()
     if (cart) {
       cart.addItem({
@@ -201,13 +181,11 @@ export default function ProductCard({
       })
     }
 
-    // 2. Llamar al callback original (si existe)
     onAddToCart?.({ ...producto, cantidad, subtotal: producto.precio_venta * cantidad })
 
-    // 3. ANIMACIÓN DE VUELO
     const imgEl = imgRef.current
-    const target = document.getElementById('floating-cart-button') || 
-                   document.querySelector('[data-cart-target]') || 
+    const target = document.getElementById('floating-cart-button') ||
+                   document.querySelector('[data-cart-target]') ||
                    document.body
 
     if (imgEl && target) {
@@ -243,22 +221,17 @@ export default function ProductCard({
           flyImg.remove()
         }, 750)
       } catch (err) {
-        // Si falla la animación, ignorar
+        // ignorar
       }
     }
 
-    // 4. MOSTRAR TOAST
     if (cart) {
       cart.showToast(`✅ ${producto.nombre} agregado al carrito`)
     }
 
-    // 5. Resetear cantidad
     setCantidad(1)
   }, [agotado, onAddToCart, producto, cantidad])
 
-  // ============================================
-  // MANEJAR PEDIDO POR WHATSAPP
-  // ============================================
   const manejarPedidoEspecial = useCallback(() => {
     const msg = encodeURIComponent(
       `¡Hola PanFree! 🍞 Me gustaría encargar el siguiente producto:\n\n` +
