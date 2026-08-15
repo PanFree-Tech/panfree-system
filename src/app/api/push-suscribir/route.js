@@ -1,13 +1,14 @@
 /**
  * 📁 UBICACIÓN: src/app/api/push-suscribir/route.js
- * 📅 ACTUALIZADO: 2026-08-15 (PROTEGIDO CON AUTENTICACIÓN)
+ * 📅 ACTUALIZADO: 2026-08-15
  * 📌 DESCRIPCIÓN: Registra cliente para notificaciones push.
- *    CAMBIO CRÍTICO: Ahora requiere JWT válido.
+ *    Ahora verifica duplicados antes de insertar.
  */
 
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+
 export const dynamic = 'force-dynamic'
 
 export async function POST(request) {
@@ -43,18 +44,52 @@ export async function POST(request) {
       )
     }
 
+    const endpoint = subscription.endpoint.trim()
+
     // ============================================
-    // GUARDAR EN BASE DE DATOS
+    // VERIFICAR SI YA EXISTE (PREVENIR DUPLICADOS)
     // ============================================
-    // Asumiendo que existe tabla 'push_subscriptions'
+    const { data: existing, error: selectError } = await supabase
+      .from('push_subscriptions')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .eq('endpoint', endpoint)
+      .limit(1)
+
+    if (selectError) {
+      console.error('Error verificando suscripción existente:', selectError)
+      throw selectError
+    }
+
+    if (existing?.length > 0) {
+      // Actualizar claves si cambiaron
+      await supabase
+        .from('push_subscriptions')
+        .update({
+          p256dh: subscription.keys?.p256dh || null,
+          auth: subscription.keys?.auth || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existing[0].id)
+
+      return NextResponse.json({
+        success: true,
+        message: 'Ya suscrito a notificaciones push',
+      })
+    }
+
+    // ============================================
+    // GUARDAR NUEVA SUSCRIPCIÓN
+    // ============================================
     const { error: insertError } = await supabase
       .from('push_subscriptions')
-      .upsert({
+      .insert({
         user_id: session.user.id,
-        endpoint: subscription.endpoint,
-        p256dh: subscription.keys?.p256dh,
-        auth: subscription.keys?.auth,
+        endpoint: endpoint,
+        p256dh: subscription.keys?.p256dh || null,
+        auth: subscription.keys?.auth || null,
         created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
 
     if (insertError) {
@@ -67,8 +102,9 @@ export async function POST(request) {
     // ============================================
     return NextResponse.json({
       success: true,
-      mensaje: 'Suscripción registrada para notificaciones push',
+      message: 'Suscripción registrada para notificaciones push',
     })
+
   } catch (error) {
     console.error('Error en /api/push-suscribir:', error)
     return NextResponse.json(

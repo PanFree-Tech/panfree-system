@@ -1,17 +1,5 @@
-/**
- * 📁 UBICACIÓN: src/context/CartContext.js
- * 📅 ACTUALIZADO: 2026-08-15 (REFACTORIZACIÓN UNIFICADA)
- * 📌 DESCRIPCIÓN: Context API global para el carrito de compras.
- *    CAMBIO CRÍTICO: Ahora es la ÚNICA fuente de verdad para el carrito.
- *    - Mantiene API actual (agregarAlCarrito, eliminarDelCarrito, etc.)
- *    - Mantiene localStorage key actual ('panfree-carrito')
- *    - Añade sincronización con window.__PANFREE_CART para compatibilidad
- *    - Dispatch eventos para FloatingCartButton, SlideCart, ToastNotification
- * ⚠️  EN CASO DE MODIFICACIÓN SIGNIFICATIVA, actualizar este comentario.
- */
-
 'use client'
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useAuth } from './AuthContext'
 
 const CartContext = createContext()
@@ -21,83 +9,130 @@ export function CartProvider({ children }) {
   const [visible, setVisible] = useState(false)
   const { estaAutenticado, abrirModal } = useAuth()
 
-  // ============================================
-  // INICIALIZAR CARRITO DESDE LOCALSTORAGE
-  // ============================================
+  const STORAGE_KEY = 'panfree_cart_v1' // UNIFICADO: usar la key común
+
+  // Inicializar carrito desde localStorage o desde window.__PANFREE_CART si ya existe
   useEffect(() => {
     try {
-      const guardado = localStorage.getItem('panfree-carrito')
-      if (guardado) {
-        const parsed = JSON.parse(guardado)
+      if (typeof window === 'undefined') return
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
         setCarrito(Array.isArray(parsed) ? parsed : [])
+        return
       }
+      // Si no hay localStorage pero existe window.__PANFREE_CART, tomar sus items
+      if (window.__PANFREE_CART?.getItems) {
+        const items = window.__PANFREE_CART.getItems()
+        setCarrito(Array.isArray(items) ? items : [])
+        return
+      }
+      // fallback vacío
+      setCarrito([])
     } catch (err) {
-      console.error('Error al cargar carrito desde localStorage:', err)
+      console.error('Error al cargar carrito desde localStorage o window:', err)
       setCarrito([])
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ============================================
-  // PERSISTIR EN LOCALSTORAGE
-  // ============================================
+  // Persistir en localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('panfree-carrito', JSON.stringify(carrito))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(carrito))
     } catch (err) {
       console.error('Error al guardar carrito en localStorage:', err)
     }
   }, [carrito])
 
-  // ============================================
-  // SINCRONIZAR CON window.__PANFREE_CART (COMPATIBILIDAD)
-  // ============================================
+  // Sincronizar con window.__PANFREE_CART para compatibilidad con código antiguo
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    // Inicializar window.__PANFREE_CART si no existe
     if (!window.__PANFREE_CART) {
+      // Creamos una fachada mínima que otros scripts esperan
+      const listeners = new EventTarget()
+      const toastListeners = new EventTarget()
+      const itemsLocal = carrito || []
+
       window.__PANFREE_CART = {
-        items: carrito,
-        listeners: new EventTarget(),
-        toastListeners: new EventTarget(),
+        items: itemsLocal,
+        listeners,
+        toastListeners,
         isOpen: false,
+        getItems: () => [...(window.__PANFREE_CART.items || [])],
+        getCount: () => (window.__PANFREE_CART.items || []).reduce((s, it) => s + (it.quantity || 1), 0),
+        getTotal: () => (window.__PANFREE_CART.items || []).reduce((s, it) => s + (it.quantity || 1) * (it.price || 0), 0),
+        addItem: (product) => {
+          // delegar a context
+          const event = new CustomEvent('__from_legacy_add', { detail: product })
+          listeners.dispatchEvent(event)
+        },
+        updateQuantity: (id, q) => {
+          const event = new CustomEvent('__from_legacy_update', { detail: { id, q } })
+          listeners.dispatchEvent(event)
+        },
+        removeItem: (id) => {
+          const event = new CustomEvent('__from_legacy_remove', { detail: { id } })
+          listeners.dispatchEvent(event)
+        },
+        clear: () => {
+          const event = new CustomEvent('__from_legacy_clear')
+          listeners.dispatchEvent(event)
+        },
+        showToast: (msg) => {
+          toastListeners.dispatchEvent(new CustomEvent('toast', { detail: msg }))
+        },
+        onToast: (fn) => toastListeners.addEventListener('toast', fn),
+        offToast: (fn) => toastListeners.removeEventListener('toast', fn),
       }
     }
 
-    // Sincronizar items
+    // Actualizar items y getters
     window.__PANFREE_CART.items = carrito
-
-    // Actualizar métodos getters
     window.__PANFREE_CART.getItems = () => [...carrito]
     window.__PANFREE_CART.getCount = () =>
-      carrito.reduce((s, item) => s + (item.cantidad || 1), 0)
+      carrito.reduce((s, item) => s + (item.cantidad || item.quantity || 1), 0)
     window.__PANFREE_CART.getTotal = () =>
-      carrito.reduce((s, item) => s + item.subtotal, 0)
+      carrito.reduce((s, item) => s + (item.subtotal || (item.price || item.precio_venta) * (item.cantidad || item.quantity || 1) || 0), 0)
 
-    // Dispatch evento 'update' para escuchadores externos
-    if (window.__PANFREE_CART.listeners) {
-      window.__PANFREE_CART.listeners.dispatchEvent(
-        new CustomEvent('update', { detail: carrito })
-      )
+    // Emitir evento update para listeners externos
+    try {
+      window.__PANFREE_CART.listeners?.dispatchEvent(new CustomEvent('update', { detail: carrito }))
+    } catch (err) {
+      // ignore
+    }
+
+    // Listeners para mensajes legacy -> delegar en el context
+    const legacyAdd = (e) => {
+      const p = e.detail
+      addItemToCart(p)
+    }
+    const legacyUpdate = (e) => {
+      const { id, q } = e.detail
+      updateItemQuantity(id, q)
+    }
+    const legacyRemove = (e) => {
+      const { id } = e.detail
+      removeItemFromCart(id)
+    }
+    const legacyClear = () => vaciarCarrito()
+
+    window.__PANFREE_CART.listeners?.addEventListener('__from_legacy_add', legacyAdd)
+    window.__PANFREE_CART.listeners?.addEventListener('__from_legacy_update', legacyUpdate)
+    window.__PANFREE_CART.listeners?.addEventListener('__from_legacy_remove', legacyRemove)
+    window.__PANFREE_CART.listeners?.addEventListener('__from_legacy_clear', legacyClear)
+
+    return () => {
+      window.__PANFREE_CART.listeners?.removeEventListener('__from_legacy_add', legacyAdd)
+      window.__PANFREE_CART.listeners?.removeEventListener('__from_legacy_update', legacyUpdate)
+      window.__PANFREE_CART.listeners?.removeEventListener('__from_legacy_remove', legacyRemove)
+      window.__PANFREE_CART.listeners?.removeEventListener('__from_legacy_clear', legacyClear)
     }
   }, [carrito])
 
-  // ============================================
-  // AGREGAR PRODUCTO (CON VERIFICACIÓN DE AUTH)
-  // ============================================
-  const agregarAlCarrito = (producto) => {
-    if (!estaAutenticado) {
-      // Abrir modal de login con la acción pendiente
-      abrirModal(() => _agregarProducto(producto))
-      return
-    }
-    _agregarProducto(producto)
-  }
-
-  // ============================================
-  // LÓGICA INTERNA DE AGREGAR (SIN VERIFICACIÓN DE AUTH)
-  // ============================================
-  const _agregarProducto = (producto) => {
+  // Operaciones del carrito (mantengo nombres públicos)
+  const _agregarProducto = useCallback((producto) => {
     setCarrito(prev => {
       const existente = prev.find(p => p.id === producto.id)
       if (existente) {
@@ -105,10 +140,10 @@ export function CartProvider({ children }) {
           p.id === producto.id
             ? {
                 ...p,
-                cantidad: p.cantidad + (producto.cantidad || 1),
+                cantidad: (p.cantidad || p.quantity || 1) + (producto.cantidad || producto.quantity || 1),
                 subtotal:
-                  (p.subtotal || p.precio_venta * p.cantidad) +
-                  (producto.subtotal || producto.precio_venta * (producto.cantidad || 1)),
+                  (p.subtotal || (p.precio_venta || p.price || 0) * (p.cantidad || p.quantity || 1)) +
+                  (producto.subtotal || (producto.precio_venta || producto.price || 0) * (producto.cantidad || producto.quantity || 1)),
               }
             : p
         )
@@ -116,26 +151,27 @@ export function CartProvider({ children }) {
       return [...prev, producto]
     })
     setVisible(true)
+    // showToast a través de API del context (si alguien quiere)
+    try {
+      if (typeof window !== 'undefined' && window.__PANFREE_CART?.showToast) {
+        window.__PANFREE_CART.showToast(`✅ ${producto.nombre || producto.name} agregado al carrito`)
+      }
+    } catch {}
+  }, [])
 
-    // Mostrar toast si window.__PANFREE_CART existe
-    if (typeof window !== 'undefined' && window.__PANFREE_CART?.showToast) {
-      window.__PANFREE_CART.showToast(
-        `✅ ${producto.nombre} agregado al carrito`
-      )
+  const agregarAlCarrito = useCallback((producto) => {
+    if (!estaAutenticado) {
+      abrirModal(() => _agregarProducto(producto))
+      return
     }
-  }
+    _agregarProducto(producto)
+  }, [_agregarProducto, abrirModal, estaAutenticado])
 
-  // ============================================
-  // ELIMINAR DEL CARRITO
-  // ============================================
-  const eliminarDelCarrito = (productoId) => {
+  const eliminarDelCarrito = useCallback((productoId) => {
     setCarrito(prev => prev.filter(p => p.id !== productoId))
-  }
+  }, [])
 
-  // ============================================
-  // ACTUALIZAR CANTIDAD
-  // ============================================
-  const actualizarCantidad = (productoId, nuevaCantidad) => {
+  const actualizarCantidad = useCallback((productoId, nuevaCantidad) => {
     if (nuevaCantidad < 1) {
       eliminarDelCarrito(productoId)
       return
@@ -146,56 +182,51 @@ export function CartProvider({ children }) {
           ? {
               ...p,
               cantidad: nuevaCantidad,
-              subtotal: p.precio_venta * nuevaCantidad,
+              subtotal: (p.precio_venta || p.price || 0) * nuevaCantidad,
             }
           : p
       )
     )
-  }
+  }, [eliminarDelCarrito])
 
-  // ============================================
-  // VACIAR CARRITO
-  // ============================================
-  const vaciarCarrito = () => {
+  const vaciarCarrito = useCallback(() => {
     setCarrito([])
-  }
+  }, [])
 
-  // ============================================
-  // CALCULAR TOTALES
-  // ============================================
-  const total = carrito.reduce((sum, item) => sum + (item.subtotal || 0), 0)
-  const cantidadItems = carrito.reduce(
-    (sum, item) => sum + (item.cantidad || 1),
-    0
-  )
-
-  // ============================================
-  // MÉTODOS PARA COMPATIBILIDAD CON window.__PANFREE_CART
-  // ============================================
-  const addItemToCart = (product) => {
+  // Métodos de compatibilidad (expuestos)
+  const addItemToCart = useCallback((product) => {
     _agregarProducto({
       id: product.id || product.slug || Date.now().toString(),
       nombre: product.name || product.nombre,
       precio_venta: product.price || product.precio_venta || 0,
       imagen_url: product.image || product.imagen_url || '',
-      cantidad: product.quantity || 1,
+      cantidad: product.quantity || product.cantidad || 1,
       subtotal:
-        (product.quantity || 1) * (product.price || product.precio_venta || 0),
-      categoria: product.categoria || '',
+        (product.quantity || product.cantidad || 1) * (product.price || product.precio_venta || 0),
+      categoria: product.categoria || product.category || '',
     })
-  }
+  }, [_agregarProducto])
 
-  const updateItemQuantity = (productId, quantity) => {
+  const updateItemQuantity = useCallback((productId, quantity) => {
     actualizarCantidad(productId, quantity)
-  }
+  }, [actualizarCantidad])
 
-  const removeItemFromCart = (productId) => {
+  const removeItemFromCart = useCallback((productId) => {
     eliminarDelCarrito(productId)
-  }
+  }, [eliminarDelCarrito])
 
-  // ============================================
-  // PROVIDER
-  // ============================================
+  const showToast = useCallback((msg) => {
+    try {
+      if (typeof window !== 'undefined' && window.__PANFREE_CART?.showToast) {
+        window.__PANFREE_CART.showToast(msg)
+      }
+      // también podríamos integrar un sistema de toasts local aquí si existe
+    } catch {}
+  }, [])
+
+  const total = carrito.reduce((sum, item) => sum + (item.subtotal || (item.precio_venta || item.price || 0) * (item.cantidad || item.quantity || 1) || 0), 0)
+  const cantidadItems = carrito.reduce((sum, item) => sum + (item.cantidad || item.quantity || 1), 0)
+
   return (
     <CartContext.Provider
       value={{
@@ -208,10 +239,11 @@ export function CartProvider({ children }) {
         vaciarCarrito,
         total,
         cantidadItems,
-        // Métodos para compatibilidad con window.__PANFREE_CART
+        // compatibilidad
         addItemToCart,
         updateItemQuantity,
         removeItemFromCart,
+        showToast,
       }}
     >
       {children}
