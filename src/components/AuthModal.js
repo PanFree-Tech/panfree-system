@@ -152,8 +152,8 @@ export default function AuthModal() {
         provider,
         options: { 
           redirectTo,
-          // Supabase automáticamente redirigirá a la URL configurada en
-          // Authentication → URL Configuration
+          // ✅ Ahora solicita email y public_profile automáticamente
+          // Supabase usa los scopes por defecto: email, public_profile
         }
       })
       
