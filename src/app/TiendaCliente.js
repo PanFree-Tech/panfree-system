@@ -8,15 +8,27 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
+import {
+  Sparkles,
+  WheatOff,
+  CakeSlice,
+  Sandwich,
+  PartyPopper,
+  ShieldCheck,
+  Truck,
+  Search,
+  X,
+  Gift,
+} from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import ProductCard from '../components/ProductCard'
 
 const CATEGORIAS = [
-  { id: 'todos', label: 'Todos', icon: '✨' },
-  { id: 'panes', label: 'Panes', icon: '🍞' },
-  { id: 'dulces', label: 'Dulces', icon: '🧁' },
-  { id: 'salados', label: 'Salados', icon: '🥪' },
-  { id: 'eventos', label: 'Eventos', icon: '🎉' },
+  { id: 'todos', label: 'Todos', Icon: Sparkles },
+  { id: 'panes', label: 'Panes', Icon: Wheat },
+  { id: 'dulces', label: 'Dulces', Icon: CakeSlice },
+  { id: 'salados', label: 'Salados', Icon: Sandwich },
+  { id: 'eventos', label: 'Eventos', Icon: PartyPopper },
 ]
 
 export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
@@ -91,7 +103,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
               letterSpacing: '0.3px',
             }}
           >
-            <span>🌾</span> 100% Sin Gluten
+            <WheatOff size={16} /> 100% Sin Gluten
           </div>
 
           {/* Título Principal */}
@@ -148,7 +160,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
                 color: '#334c2b',
               }}
             >
-              <span>🛡️</span> Apto Celíacos
+              <ShieldCheck size={16} color="#334c2b" /> Apto Celíacos
             </div>
 
             <div
@@ -165,7 +177,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
                 color: '#334c2b',
               }}
             >
-              <span>🥖</span> Artesanal
+              <Wheat size={16} color="#334c2b" /> Artesanal
             </div>
 
             <div
@@ -182,7 +194,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
                 color: '#334c2b',
               }}
             >
-              <span>🚚</span> Delivery Encarnación
+              <Truck size={16} color="#334c2b" /> Delivery Encarnación
             </div>
           </div>
         </div>
@@ -208,12 +220,13 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
               style={{
                 position: 'absolute',
                 left: '12px',
-                fontSize: '1rem',
+                display: 'flex',
+                alignItems: 'center',
                 color: '#8f9a44',
                 pointerEvents: 'none',
               }}
             >
-              🔍
+              <Search size={18} />
             </span>
             <input
               id="search-products-input"
@@ -248,9 +261,11 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
                   fontSize: '1rem',
                   cursor: 'pointer',
                   padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
                 }}
               >
-                ✕
+                <X size={16} />
               </button>
             )}
           </div>
@@ -271,6 +286,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
         >
           {CATEGORIAS.map((cat) => {
             const activo = cat.id === categoriaActiva
+            const IconComponent = cat.Icon
             return (
               <button
                 key={cat.id}
@@ -290,12 +306,12 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
                   flexShrink: 0,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '5px',
+                  gap: '6px',
                   transition: 'all 0.15s ease',
                   minHeight: '38px',
                 }}
               >
-                <span>{cat.icon}</span>
+                <IconComponent size={18} color={activo ? '#eee6d9' : '#334c2b'} />
                 <span>{cat.label}</span>
               </button>
             )
@@ -319,7 +335,9 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
               border: '1px solid #e0d5c5',
             }}
           >
-            <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🥖</p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+              <Wheat size={32} color="#334c2b" />
+            </div>
             <p style={{ fontSize: '1rem', fontWeight: 600 }}>
               {busqueda
                 ? `No se encontraron productos para "${busqueda}".`
@@ -375,14 +393,14 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
           border: '1px solid #b7996b',
         }}
       >
-        <h3 style={{ margin: '0 0 0.5rem 0', color: '#334c2b', fontSize: '1.05rem', fontWeight: 700 }}>
-          🚚 Envíos a Domicilio en Encarnación
+        <h3 style={{ margin: '0 0 0.5rem 0', color: '#334c2b', fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <Truck size={20} color="#334c2b" /> Envíos a Domicilio en Encarnación
         </h3>
         <p style={{ color: '#4a5d3f', marginBottom: '0.4rem', fontSize: '0.9rem', lineHeight: 1.4 }}>
           Entregas en Encarnación y Gran Encarnación. Consultá tiempos y zonas por WhatsApp.
         </p>
-        <p style={{ color: '#2e7d32', fontWeight: 700, fontSize: '0.95rem', margin: 0 }}>
-          🎁 Envío gratis en compras superiores a ₲ 50.000
+        <p style={{ color: '#2e7d32', fontWeight: 700, fontSize: '0.95rem', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <Gift size={18} color="#2e7d32" /> Envío gratis en compras superiores a ₲ 50.000
         </p>
       </section>
 
