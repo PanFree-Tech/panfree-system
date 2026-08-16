@@ -20,6 +20,9 @@
  * CAMBIOS 2026-08-15:
  *  - ✅ NUEVO: ErrorBoundary envuelve <main>{children}</main>
  *  - ❌ ELIMINADO: CartInitializer (causaba doble inicialización del carrito)
+ * CAMBIOS 2026-08-16:
+ *  - ✅ NUEVO: UserGreeting (saludo personalizado "Hola, [nombre]" con avatar)
+ *  - ✅ Reemplaza el bloque "Mi cuenta" / "Ingresar" por componente modular
  */
 
 'use client'
@@ -29,6 +32,7 @@ import { CartProvider, useCart } from '../context/CartContext'
 import CartSidebar from '../components/CartSidebar'
 import AuthModal from '../components/AuthModal'
 import ErrorBoundary from '../components/ErrorBoundary'
+import { UserGreeting } from '@/components/UserGreeting'
 
 // ✅ Componentes del carrito flotante
 import FloatingCartButton from '@/components/FloatingCartButton'
@@ -117,7 +121,6 @@ function BannerEnvioGratis() {
 // ─── Header ────────────────────────────────────────────────────────────────────
 function Header() {
   const { cantidadItems, setVisible } = useCart()
-  const { usuario, abrirModal }       = useAuth()
 
   return (
     <header style={{
@@ -188,26 +191,8 @@ function Header() {
             Inicio
           </a>
 
-          {/* Mi Cuenta */}
-          {usuario ? (
-            <a href="/perfil" title="Mi cuenta"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#334c2b', fontWeight: '600', fontSize: '0.9rem', padding: '0.4rem 0.7rem', borderRadius: '4px', textDecoration: 'none', minHeight: '44px', border: '1px solid #b7996b', backgroundColor: 'rgba(183,153,107,0.12)' }}
-              onMouseOver={e => e.currentTarget.style.backgroundColor = 'rgba(183,153,107,0.25)'}
-              onMouseOut={e => e.currentTarget.style.backgroundColor = 'rgba(183,153,107,0.12)'}
-            >
-              <span style={{ fontSize: '1rem' }}>👤</span>
-              <span className="header-cuenta-texto">Mi cuenta</span>
-            </a>
-          ) : (
-            <button onClick={() => abrirModal()} title="Iniciar sesión"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', backgroundColor: 'transparent', color: '#334c2b', fontWeight: '600', fontSize: '0.9rem', padding: '0.4rem 0.7rem', borderRadius: '4px', border: '1px solid #b7996b', cursor: 'pointer', fontFamily: 'inherit', minHeight: '44px' }}
-              onMouseOver={e => e.currentTarget.style.backgroundColor = 'rgba(183,153,107,0.15)'}
-              onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              <span style={{ fontSize: '1rem' }}>👤</span>
-              <span className="header-cuenta-texto">Ingresar</span>
-            </button>
-          )}
+          {/* ✅ NUEVO: UserGreeting - Saludo personalizado con avatar */}
+          <UserGreeting />
 
           {/* Carrito */}
           <button onClick={() => setVisible(true)} aria-label={`Carrito, ${cantidadItems} productos`}
