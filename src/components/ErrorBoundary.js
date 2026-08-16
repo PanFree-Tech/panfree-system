@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react';
+import { AlertCircle } from 'lucide-react';
 
 export default function ErrorBoundary({ children, fallback }) {
   const [error, setError] = useState(null)
@@ -19,7 +20,9 @@ export default function ErrorBoundary({ children, fallback }) {
         borderRadius: '8px',
         color: '#c00',
       }}>
-        <h3>❌ Algo salió mal</h3>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 0.5rem 0' }}>
+          <AlertCircle size={20} color="#c00" /> Algo salió mal
+        </h3>
         <p>{error.message}</p>
         <button
           onClick={() => setError(null)}

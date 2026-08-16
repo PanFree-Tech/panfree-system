@@ -2,6 +2,14 @@
 
 import React, { useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
+import {
+  ShoppingCart,
+  Wheat,
+  CheckCircle,
+  Mail,
+  Star,
+  Clock,
+} from 'lucide-react'
 import styles from './ProductCard.module.css'
 import { useCart } from '../context/CartContext'
 
@@ -38,7 +46,7 @@ export default function ProductCard({
     agregarAlCarrito(payload)
     onAddToCart?.(payload)
 
-    showToast?.(`✅ ${producto.nombre} agregado al carrito`)
+    showToast?.(`${producto.nombre} agregado al carrito`)
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 1400)
     setCantidad(1)
@@ -77,7 +85,9 @@ export default function ProductCard({
       {/* Badges superiores */}
       {producto.destacado && (
         <div className={styles.badgeTopLeft}>
-          <span>⭐ Destacado</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <Star size={13} fill="currentColor" /> Destacado
+          </span>
         </div>
       )}
 
@@ -95,7 +105,7 @@ export default function ProductCard({
             />
           ) : (
             <div className={styles.imageFallback}>
-              <span style={{ fontSize: '2rem' }}>🍞</span>
+              <Wheat size={32} color="#334c2b" />
             </div>
           )}
         </div>
@@ -120,7 +130,8 @@ export default function ProductCard({
         {/* Badge de anticipación si requiere */}
         {!agotado && requiereAnticipacion && (
           <div className={styles.anticipacionNotice}>
-            ⏰ Pedido con 24h de anticipación
+            <Clock size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
+            Pedido con 24h de anticipación
           </div>
         )}
 
@@ -174,9 +185,13 @@ export default function ProductCard({
                 aria-label={`Agregar ${cantidad} ${producto.nombre} al carrito`}
               >
                 {isAdded ? (
-                  <span>✅ ¡Agregado!</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                    <CheckCircle size={16} /> ¡Agregado!
+                  </span>
                 ) : (
-                  <span>🛒 Agregar</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                    <ShoppingCart size={16} /> Agregar
+                  </span>
                 )}
               </button>
             </div>
@@ -187,7 +202,9 @@ export default function ProductCard({
               className={styles.whatsappOrderBtn}
               aria-label={`Encargar ${producto.nombre} por WhatsApp`}
             >
-              <span>✉️ Encargar</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                <Mail size={16} /> Encargar
+              </span>
             </button>
           )}
         </div>

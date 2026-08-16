@@ -9,6 +9,7 @@
  *    - UTM tracking para saber qué clicks vienen de Instagram
  */
 import { createClient } from '@supabase/supabase-js'
+import { MapPin, ShoppingCart, Wheat, Phone } from 'lucide-react'
 
 const supabaseUrl     = process.env.NEXT_PUBLIC_SUPABASE_URL     || 'https://gbdrcaumghykiipqgbty.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjczNjIsImV4cCI6MjA4NzgwMzM2Mn0.OydRQxa51Ql42zvscWnQkEKJuU_3yeCS4qPQQoP6TuM'
@@ -83,7 +84,9 @@ export default async function BioInstagram() {
 </h1>
         <p style={{ color: '#666', fontSize: '0.88rem', margin: 0, lineHeight: 1.5 }}>
           Panificados artesanales sin gluten<br/>
-          📍 Encarnación, Paraguay
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <MapPin size={14} color="#666" /> Encarnación, Paraguay
+          </span>
         </p>
       </header>
 
@@ -115,7 +118,7 @@ Pedir por WhatsApp
         target="_blank"
         rel="noopener noreferrer"
         style={{
-          display: 'block',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
           backgroundColor: '#334c2b', color: '#eee6d9',
           padding: '12px 24px', borderRadius: '12px',
           textAlign: 'center', textDecoration: 'none',
@@ -124,7 +127,8 @@ Pedir por WhatsApp
           border: '2px solid #b7996b',
         }}
       >
-        🛒 Ver todos los productos
+        <ShoppingCart size={18} />
+        <span>Ver todos los productos</span>
       </a>
 
       {/* Separador */}
@@ -157,7 +161,7 @@ Pedir por WhatsApp
               {producto.imagen_url
                 ? <img src={producto.imagen_url} alt={producto.imagen_alt || producto.nombre}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <span style={{ fontSize: '1.8rem' }}>🍞</span>
+                : <Wheat size={28} color="#b7996b" />
               }
             </div>
 
@@ -182,9 +186,13 @@ Pedir por WhatsApp
         paddingTop: '20px', borderTop: '1px solid #d4c5b0',
         color: '#888', fontSize: '0.8rem', lineHeight: 2,
       }}>
-        <p>📍 Encarnación, Paraguay</p>
-        <p>📞 +595 984 589845</p>
-        <p>
+        <p style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', margin: '4px 0' }}>
+          <MapPin size={14} color="#888" /> Encarnación, Paraguay
+        </p>
+        <p style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', margin: '4px 0' }}>
+          <Phone size={14} color="#888" /> +595 984 589845
+        </p>
+        <p style={{ margin: '4px 0' }}>
           <a href="https://panfree.fit" style={{ color: '#334c2b', fontWeight: '600' }}>
             panfree.fit
           </a>

@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import { CheckCircle } from 'lucide-react';
 import styles from './ToastNotification.module.css';
 
 function ensureCart() {
@@ -38,7 +39,9 @@ export default function ToastNotification() {
     <div className={styles.container} aria-live="polite" aria-atomic="true">
       {toasts.map(t => (
         <div key={t.id} className={styles.toast}>
-          <div className={styles.icon}>✅</div>
+          <div className={styles.icon} style={{ display: 'flex', alignItems: 'center' }}>
+            <CheckCircle size={20} color="#2e7d32" />
+          </div>
           <div className={styles.message}>{t.message}</div>
         </div>
       ))}

@@ -11,6 +11,16 @@
  */
 'use client'
 import React, { useState } from 'react';
+import {
+  Lock,
+  UserPlus,
+  X,
+  Mail,
+  Send,
+  CheckCircle,
+  AlertCircle,
+  ShieldCheck,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 
@@ -80,7 +90,7 @@ export default function AuthModal() {
         email,
       })
       if (error) throw error
-      setMensaje('📧 Email de confirmación reenviado. Revisá tu bandeja de entrada y spam.')
+      setMensaje('Email de confirmación reenviado. Revisá tu bandeja de entrada y spam.')
     } catch (err) {
       setError('No se pudo reenviar el email. Intentá de nuevo en unos minutos.')
     } finally { setLoadingReenvio(false) }
@@ -111,7 +121,7 @@ export default function AuthModal() {
       }
 
       // Si requiere confirmación de email → avisar y pasar a login
-      setMensaje('✅ ¡Cuenta creada! Te enviamos un email de confirmación a ' + email + '. Confirmá tu cuenta para activarla — mientras tanto podés seguir comprando.')
+      setMensaje('¡Cuenta creada! Te enviamos un email de confirmación a ' + email + '. Confirmá tu cuenta para activarla — mientras tanto podés seguir comprando.')
       setModo('login')
 
     } catch (err) {
@@ -212,19 +222,29 @@ export default function AuthModal() {
         {/* Cabecera */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
           <div>
-            <h2 style={{ margin: 0, color: '#334c2b', fontSize: '1.2rem' }}>
-              {modo === 'login' ? '🔐 Iniciar Sesión' : '📝 Crear Cuenta'}
+            <h2 style={{ margin: 0, color: '#334c2b', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {modo === 'login' ? (
+                <>
+                  <Lock size={20} color="#334c2b" /> Iniciar Sesión
+                </>
+              ) : (
+                <>
+                  <UserPlus size={20} color="#334c2b" /> Crear Cuenta
+                </>
+              )}
             </h2>
             <p style={{ margin: '0.3rem 0 0', color: '#8f9a44', fontSize: '0.85rem' }}>
               {modo === 'login' ? 'Para continuar con tu compra' : 'Registrate para comprar en PanFree'}
             </p>
           </div>
           <button onClick={cerrarModal} style={{
-            background: 'none', border: 'none', fontSize: '1.6rem',
+            background: 'none', border: 'none',
             cursor: 'pointer', color: '#999', lineHeight: 1,
             minWidth: '44px', minHeight: '44px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>×</button>
+          }}>
+            <X size={24} />
+          </button>
         </div>
 
         {/* Tabs */}
@@ -257,7 +277,7 @@ export default function AuthModal() {
             <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
               <path fill="#EA4335" d="M12 11.5v2.9h4.3c-.2 1.2-1.1 3.4-4.3 3.4-2.6 0-4.8-2.1-4.8-4.8s2.2-4.8 4.8-4.8c1.5 0 2.5.6 3.1 1.1l2.1-2.1C16.9 6 15.1 5 12 5 7.6 5 4 8.6 4 13s3.6 8 8 8c4.6 0 7.6-3.2 7.6-7.7 0-.6-.1-1-.2-1.4H12z"/>
             </svg>
-            {loadingGoogle ? '⏳ Redirigiendo...' : 'Continuar con Google'}
+            {loadingGoogle ? 'Redirigiendo...' : 'Continuar con Google'}
           </button>
 
           <button
@@ -274,30 +294,32 @@ export default function AuthModal() {
             <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
               <path fill="#fff" d="M22 12.07C22 6.48 17.52 2 11.93 2 6.34 2 1.86 6.48 1.86 12.07c0 4.99 3.66 9.13 8.44 9.86v-6.98H8.07v-2.88h2.23V9.41c0-2.21 1.31-3.43 3.32-3.43.96 0 1.97.17 1.97.17v2.17h-1.11c-1.09 0-1.43.68-1.43 1.37v1.66h2.44l-.39 2.88h-2.05v6.98c4.78-.73 8.44-4.87 8.44-9.86z"/>
             </svg>
-            {loadingFacebook ? '⏳ Redirigiendo...' : 'Continuar con Facebook'}
+            {loadingFacebook ? 'Redirigiendo...' : 'Continuar con Facebook'}
           </button>
 
         </div>
 
         {/* Mensaje de éxito */}
         {mensaje && (
-          <div style={{ backgroundColor: '#e8f5e9', border: '1px solid #2e7d32', borderRadius: '4px', padding: '0.7rem', marginBottom: '1rem', color: '#2e7d32', fontSize: '0.88rem' }}>
-            {mensaje}
+          <div style={{ backgroundColor: '#e8f5e9', border: '1px solid #2e7d32', borderRadius: '4px', padding: '0.7rem', marginBottom: '1rem', color: '#2e7d32', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircle size={18} color="#2e7d32" style={{ flexShrink: 0 }} />
+            <span>{mensaje}</span>
           </div>
         )}
 
         {/* Error normal */}
         {error && errorTipo !== 'no_confirmado' && (
-          <div style={{ backgroundColor: '#fdecea', border: '1px solid #c62828', borderRadius: '4px', padding: '0.7rem', marginBottom: '1rem', color: '#c62828', fontSize: '0.88rem' }}>
-            ⚠️ {error}
+          <div style={{ backgroundColor: '#fdecea', border: '1px solid #c62828', borderRadius: '4px', padding: '0.7rem', marginBottom: '1rem', color: '#c62828', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <AlertCircle size={18} color="#c62828" style={{ flexShrink: 0 }} />
+            <span>{error}</span>
           </div>
         )}
 
         {/* Error especial: email no confirmado */}
         {errorTipo === 'no_confirmado' && (
           <div style={{ backgroundColor: '#fff8e1', border: '1px solid #f9a825', borderRadius: '4px', padding: '0.85rem', marginBottom: '1rem', fontSize: '0.88rem' }}>
-            <p style={{ color: '#e65100', fontWeight: '600', margin: '0 0 0.5rem' }}>
-              📧 Tu cuenta no está confirmada todavía
+            <p style={{ color: '#e65100', fontWeight: '600', margin: '0 0 0.5rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Mail size={16} color="#e65100" /> Tu cuenta no está confirmada todavía
             </p>
             <p style={{ color: '#555', margin: '0 0 0.75rem', lineHeight: '1.5' }}>
               Revisá tu casilla <strong>{email}</strong> (incluyendo spam). Si no recibiste el email, podés reenviarlo.
@@ -312,9 +334,13 @@ export default function AuthModal() {
                 fontSize: '0.88rem', fontWeight: '600',
                 cursor: loadingReenvio ? 'not-allowed' : 'pointer',
                 fontFamily: 'inherit',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
               }}
             >
-              {loadingReenvio ? '⏳ Enviando...' : '📤 Reenviar email de confirmación'}
+              <Send size={16} /> {loadingReenvio ? 'Enviando...' : 'Reenviar email de confirmación'}
             </button>
           </div>
         )}
@@ -332,7 +358,7 @@ export default function AuthModal() {
               color: '#fff', border: 'none', borderRadius: '4px', fontSize: '1rem',
               fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
             }}>
-              {loading ? '⏳ Ingresando...' : 'Ingresar'}
+              {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
           </form>
         )}
@@ -352,13 +378,13 @@ export default function AuthModal() {
               color: '#fff', border: 'none', borderRadius: '4px', fontSize: '1rem',
               fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
             }}>
-              {loading ? '⏳ Creando cuenta...' : ' Crear Cuenta '}
+              {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
             </button>
           </form>
         )}
 
-        <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.78rem', color: '#aaa' }}>
-          🔒 Tus datos están seguros. Solo usamos tu email para gestionar tus pedidos.
+        <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.78rem', color: '#aaa', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <ShieldCheck size={14} color="#8f9a44" /> Tus datos están seguros. Solo usamos tu email para gestionar tus pedidos.
         </p>
       </div>
     </>

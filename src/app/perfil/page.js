@@ -24,6 +24,26 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import {
+  User,
+  MapPin,
+  Lock,
+  Mail,
+  Key,
+  Package,
+  ShoppingCart,
+  CheckCircle,
+  AlertCircle,
+  Phone,
+  FileText,
+  Truck,
+  Store,
+  Save,
+  Building2,
+  Banknote,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react'
 
 const formatPYG   = n => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
 const formatFecha = f => f
@@ -163,7 +183,7 @@ export default function PaginaPerfil() {
       if (error) throw error
       setPerfilOriginal({ ...perfil })
       setPerfilDirty(false)
-      setMensajePerfil({ tipo: 'ok', texto: '✅ Datos actualizados correctamente.' })
+      setMensajePerfil({ tipo: 'ok', texto: 'Datos actualizados correctamente.' })
     } catch {
       setMensajePerfil({ tipo: 'err', texto: 'Error al guardar. Intentá de nuevo.' })
     } finally { setGuardandoPerfil(false) }
@@ -175,7 +195,7 @@ export default function PaginaPerfil() {
     try {
       const { error } = await supabase.auth.resend({ type: 'signup', email: usuario.email })
       if (error) throw error
-      setMensajeConfirm({ tipo: 'ok', texto: '📧 Email reenviado. Revisá tu bandeja y spam.' })
+      setMensajeConfirm({ tipo: 'ok', texto: 'Email reenviado. Revisá tu bandeja y spam.' })
     } catch {
       setMensajeConfirm({ tipo: 'err', texto: 'No se pudo reenviar. Intentá en unos minutos.' })
     } finally { setEnviandoConfirm(false) }
@@ -190,7 +210,7 @@ export default function PaginaPerfil() {
     try {
       const { error } = await supabase.auth.updateUser({ password: passNueva })
       if (error) throw error
-      setMensajePass({ tipo: 'ok', texto: '✅ Contraseña actualizada correctamente.' })
+      setMensajePass({ tipo: 'ok', texto: 'Contraseña actualizada correctamente.' })
       setPassNueva(''); setPassRepeat('')
     } catch (err) {
       setMensajePass({ tipo: 'err', texto: err.message?.includes('same password') ? 'La nueva contraseña debe ser diferente a la actual.' : 'Error al cambiar contraseña.' })
@@ -252,7 +272,9 @@ export default function PaginaPerfil() {
     return (
       <div style={{ ...S.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <p style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔒</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <Lock size={48} color="#334c2b" />
+          </div>
           <p style={{ color: '#334c2b', fontSize: '1.1rem', marginBottom: '1.5rem' }}>Necesitás iniciar sesión para ver tu cuenta.</p>
           <button style={S.btnNaranja} onClick={() => abrirModal()}>Iniciar sesión</button>
         </div>
@@ -266,7 +288,9 @@ export default function PaginaPerfil() {
 
       {/* Hero */}
       <div style={S.hero}>
-        <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>👤</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+          <User size={48} color="#eee6d9" />
+        </div>
         <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700' }}>Mi Cuenta</h1>
         <p style={{ margin: '0.4rem 0 0', color: '#b7996b', fontSize: '0.95rem' }}>
           {perfil.nombre_completo || usuario.email}
@@ -277,12 +301,15 @@ export default function PaginaPerfil() {
 
         {/* ── 1. Información personal ── */}
         <div style={S.card}>
-          <div style={S.cardHead}>👤 Información personal</div>
+          <div style={S.cardHead}>
+            <User size={18} /> Información personal
+          </div>
           <div style={S.cardBody}>
 
             {mensajePerfil && (
-              <div style={{ ...S.alert, ...(mensajePerfil.tipo === 'ok' ? S.ok : S.err) }}>
-                {mensajePerfil.texto}
+              <div style={{ ...S.alert, ...(mensajePerfil.tipo === 'ok' ? S.ok : S.err), display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                {mensajePerfil.tipo === 'ok' ? <CheckCircle size={16} color="#2e7d32" /> : <AlertCircle size={16} color="#c62828" />}
+                <span>{mensajePerfil.texto}</span>
               </div>
             )}
 
@@ -297,12 +324,22 @@ export default function PaginaPerfil() {
             <label style={S.label}>Email</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.95rem', color: '#333' }}>{usuario.email}</span>
-              <span style={{ ...S.badge, backgroundColor: emailConfirmado ? '#e8f5e9' : '#fff3e0', color: emailConfirmado ? '#2e7d32' : '#e65100' }}>
-                {emailConfirmado ? '✅ Confirmado' : '⚠️ Sin confirmar'}
+              <span style={{ ...S.badge, backgroundColor: emailConfirmado ? '#e8f5e9' : '#fff3e0', color: emailConfirmado ? '#2e7d32' : '#e65100', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                {emailConfirmado ? (
+                  <>
+                    <CheckCircle size={13} /> Confirmado
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle size={13} /> Sin confirmar
+                  </>
+                )}
               </span>
             </div>
 
-            <label style={S.label}>📱 Teléfono</label>
+            <label style={{ ...S.label, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Phone size={14} /> Teléfono
+            </label>
             <input
               style={S.input}
               type="tel"
@@ -320,7 +357,9 @@ export default function PaginaPerfil() {
 
         {/* ── 2. Dirección de entrega ── */}
         <div style={S.card}>
-          <div style={S.cardHead}>📍 Dirección de entrega</div>
+          <div style={S.cardHead}>
+            <MapPin size={18} /> Dirección de entrega
+          </div>
           <div style={S.cardBody}>
 
             <div style={{ ...S.row, gridTemplateColumns: '1fr auto' }}>
@@ -358,7 +397,9 @@ export default function PaginaPerfil() {
               </div>
             </div>
 
-            <label style={S.label}>📝 Referencia / Notas de entrega</label>
+            <label style={{ ...S.label, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <FileText size={14} /> Referencia / Notas de entrega
+            </label>
             <textarea
               style={{ ...S.input, minHeight: '80px', resize: 'vertical' }}
               value={perfil.notas_cliente}
@@ -372,19 +413,24 @@ export default function PaginaPerfil() {
                 <input type="checkbox" checked={perfil.prefiere_delivery}
                   onChange={e => actualizarPerfil('prefiere_delivery', e.target.checked)}
                   style={{ accentColor: '#f46e15', width: '18px', height: '18px', minHeight: 'unset' }} />
-                🛵 Delivery a domicilio
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Truck size={16} color="#334c2b" /> Delivery a domicilio
+                </span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.95rem', color: '#334c2b', fontWeight: perfil.prefiere_retiro ? '700' : '400' }}>
                 <input type="checkbox" checked={perfil.prefiere_retiro}
                   onChange={e => actualizarPerfil('prefiere_retiro', e.target.checked)}
                   style={{ accentColor: '#f46e15', width: '18px', height: '18px', minHeight: 'unset' }} />
-                🏪 Retiro en local
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Store size={16} color="#334c2b" /> Retiro en local
+                </span>
               </label>
             </div>
 
-            <button style={{ ...S.btnVerde, opacity: perfilDirty ? 1 : 0.5 }}
+            <button style={{ ...S.btnVerde, opacity: perfilDirty ? 1 : 0.5, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
               onClick={guardarPerfil} disabled={guardandoPerfil || !perfilDirty}>
-              {guardandoPerfil ? 'Guardando…' : '💾 Guardar datos'}
+              <Save size={16} />
+              <span>{guardandoPerfil ? 'Guardando…' : 'Guardar datos'}</span>
             </button>
             {!perfilDirty && !guardandoPerfil && (
               <span style={{ marginLeft: '0.75rem', fontSize: '0.85rem', color: '#999' }}>Sin cambios pendientes</span>
@@ -395,21 +441,25 @@ export default function PaginaPerfil() {
         {/* ── 3. Email sin confirmar (condicional) ── */}
         {!emailConfirmado && (
           <div style={{ ...S.card, border: '2px solid #ffcc02' }}>
-            <div style={{ ...S.cardHead, backgroundColor: '#e65100' }}>⚠️ Email sin confirmar</div>
+            <div style={{ ...S.cardHead, backgroundColor: '#e65100' }}>
+              <AlertCircle size={18} /> Email sin confirmar
+            </div>
             <div style={S.cardBody}>
               <div style={{ ...S.alert, ...S.warn }}>
                 Tu email <strong>{usuario.email}</strong> todavía no fue confirmado.
               </div>
               {mensajeConfirm && (
-                <div style={{ ...S.alert, ...(mensajeConfirm.tipo === 'ok' ? S.ok : S.err) }}>
-                  {mensajeConfirm.texto}
+                <div style={{ ...S.alert, ...(mensajeConfirm.tipo === 'ok' ? S.ok : S.err), display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  {mensajeConfirm.tipo === 'ok' ? <CheckCircle size={16} color="#2e7d32" /> : <AlertCircle size={16} color="#c62828" />}
+                  <span>{mensajeConfirm.texto}</span>
                 </div>
               )}
               <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
                 Revisá tu carpeta de spam o reenviá el email de confirmación.
               </p>
-              <button style={S.btnNaranja} onClick={reenviarConfirmacion} disabled={enviandoConfirm}>
-                {enviandoConfirm ? 'Enviando…' : '📧 Reenviar confirmación'}
+              <button style={{ ...S.btnNaranja, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }} onClick={reenviarConfirmacion} disabled={enviandoConfirm}>
+                <Mail size={16} />
+                <span>{enviandoConfirm ? 'Enviando…' : 'Reenviar confirmación'}</span>
               </button>
             </div>
           </div>
@@ -417,11 +467,14 @@ export default function PaginaPerfil() {
 
         {/* ── 4. Cambiar contraseña ── */}
         <div style={S.card}>
-          <div style={S.cardHead}>🔑 Cambiar contraseña</div>
+          <div style={S.cardHead}>
+            <Key size={18} /> Cambiar contraseña
+          </div>
           <div style={S.cardBody}>
             {mensajePass && (
-              <div style={{ ...S.alert, ...(mensajePass.tipo === 'ok' ? S.ok : S.err) }}>
-                {mensajePass.texto}
+              <div style={{ ...S.alert, ...(mensajePass.tipo === 'ok' ? S.ok : S.err), display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                {mensajePass.tipo === 'ok' ? <CheckCircle size={16} color="#2e7d32" /> : <AlertCircle size={16} color="#c62828" />}
+                <span>{mensajePass.texto}</span>
               </div>
             )}
             <form onSubmit={cambiarPassword}>
@@ -446,13 +499,17 @@ export default function PaginaPerfil() {
 
         {/* ── 5. Historial de pedidos ── */}
         <div style={S.card}>
-          <div style={S.cardHead}>📦 Mis pedidos</div>
+          <div style={S.cardHead}>
+            <Package size={18} /> Mis pedidos
+          </div>
           <div style={S.cardBody}>
             {cargandoPedidos ? (
               <p style={{ color: '#666', textAlign: 'center', padding: '1rem' }}>Cargando pedidos…</p>
             ) : pedidos.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-                <p style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🛒</p>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                  <ShoppingCart size={40} color="#334c2b" />
+                </div>
                 <p style={{ color: '#666' }}>Todavía no realizaste ningún pedido.</p>
                 <a href="/" style={{ ...S.btnNaranja, display: 'inline-block', marginTop: '1rem', textDecoration: 'none' }}>
                   Ver productos
@@ -485,7 +542,9 @@ export default function PaginaPerfil() {
                         <span style={{ ...S.badge, backgroundColor: est.bg, color: est.text }}>
                           {pedido.estado}
                         </span>
-                        <span style={{ color: '#b7996b', fontSize: '0.8rem' }}>{expandido ? '▲' : '▼'}</span>
+                        <span style={{ color: '#b7996b', fontSize: '0.8rem', display: 'flex', alignItems: 'center' }}>
+                          {expandido ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </span>
                       </div>
                     </div>
 
@@ -518,19 +577,23 @@ export default function PaginaPerfil() {
 
                         {/* Info extra */}
                         <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', fontSize: '0.82rem', color: '#888' }}>
-                          <span>{pedido.metodo_entrega === 'delivery' ? '🛵 Delivery' : '🏪 Retiro'}</span>
-                          <span>{pedido.metodo_pago === 'transferencia' ? '🏦 Transferencia' : '💵 Efectivo'}</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            {pedido.metodo_entrega === 'delivery' ? <><Truck size={14} /> Delivery</> : <><Store size={14} /> Retiro</>}
+                          </span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            {pedido.metodo_pago === 'transferencia' ? <><Building2 size={14} /> Transferencia</> : <><Banknote size={14} /> Efectivo</>}
+                          </span>
                           <span style={{
                             fontWeight: '700',
                             color: pedido.estado_pago === 'aprobado' ? '#2e7d32' : '#e65100',
                           }}>
-                            {pedido.estado_pago === 'aprobado' ? '✓ Pago confirmado' : '⏳ Pago pendiente'}
+                            {pedido.estado_pago === 'aprobado' ? '✓ Pago confirmado' : 'Pago pendiente'}
                           </span>
                         </div>
 
                         {pedido.metodo_entrega === 'delivery' && pedido.entrega_direccion && (
-                          <div style={{ marginTop: '0.4rem', fontSize: '0.82rem', color: '#888' }}>
-                            📍 {pedido.entrega_direccion}
+                          <div style={{ marginTop: '0.4rem', fontSize: '0.82rem', color: '#888', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <MapPin size={14} /> {pedido.entrega_direccion}
                           </div>
                         )}
                       </div>
