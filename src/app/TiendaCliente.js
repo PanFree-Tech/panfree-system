@@ -11,6 +11,7 @@ import React, { useState, useMemo } from 'react'
 import {
   Sparkles,
   WheatOff,
+  Wheat,  // ✅ AGREGADO
   CakeSlice,
   Sandwich,
   PartyPopper,
@@ -25,7 +26,7 @@ import ProductCard from '../components/ProductCard'
 
 const CATEGORIAS = [
   { id: 'todos', label: 'Todos', Icon: Sparkles },
-  { id: 'panes', label: 'Panes', Icon: Wheat },
+  { id: 'panes', label: 'Panes', Icon: Wheat },  // ✅ Usa Wheat
   { id: 'dulces', label: 'Dulces', Icon: CakeSlice },
   { id: 'salados', label: 'Salados', Icon: Sandwich },
   { id: 'eventos', label: 'Eventos', Icon: PartyPopper },
@@ -103,7 +104,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
               letterSpacing: '0.3px',
             }}
           >
-            <WheatOff size={16} /> 100% Sin Gluten
+            <WheatOff size={16} /> 100% Sin Gluten  {/* ✅ Usa WheatOff */}
           </div>
 
           {/* Título Principal */}
@@ -177,7 +178,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
                 color: '#334c2b',
               }}
             >
-              <Wheat size={16} color="#334c2b" /> Artesanal
+              <Wheat size={16} color="#334c2b" /> Artesanal  {/* ✅ Usa Wheat */}
             </div>
 
             <div
@@ -336,7 +337,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-              <Wheat size={32} color="#334c2b" />
+              <Wheat size={32} color="#334c2b" />  {/* ✅ Usa Wheat */}
             </div>
             <p style={{ fontSize: '1rem', fontWeight: 600 }}>
               {busqueda
