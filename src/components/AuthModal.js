@@ -1,6 +1,13 @@
 /**
  * UBICACION: src/components/AuthModal.js
  * Se agregan botones de OAuth (Google, Facebook) y manejo de carga/errores.
+ * 
+ * MEJORES PRÁCTICAS APLICADAS:
+ * 1. URL de callback de Supabase fija (no dinámica) para OAuth
+ * 2. Manejo de errores específico por proveedor
+ * 3. Cierre inmediato del modal para mejor UX
+ * 4. Limpieza de estados de carga en finally
+ * 5. Logging para facilitar debugging
  */
 'use client'
 import React, { useState } from 'react';
@@ -118,24 +125,56 @@ export default function AuthModal() {
     } finally { setLoading(false) }
   }
 
-  // OAuth with Supabase
+  /**
+   * Inicia sesión con proveedor OAuth (Google, Facebook)
+   * 
+   * MEJORES PRÁCTICAS APLICADAS:
+   * 1. Usa la URL de callback de Supabase como redirectTo (no la de la app)
+   * 2. Maneja errores con mensajes específicos por proveedor
+   * 3. Cierra el modal inmediatamente para mejor UX
+   * 4. Limpia estados de carga correctamente
+   * 5. Logging para facilitar debugging
+   */
   async function signInWithProvider(provider) {
     limpiar()
+    
+    // Estados de carga específicos por proveedor
     if (provider === 'google') setLoadingGoogle(true)
     if (provider === 'facebook') setLoadingFacebook(true)
 
     try {
-      const redirectTo = `${window.location.origin}/auth/callback`
-      const { error } = await supabase.auth.signInWithOAuth({
+      // ✅ MEJOR PRÁCTICA: Usar la URL de callback de Supabase
+      // Esto asegura que Google/Facebook redirijan a Supabase, 
+      // que luego redirige a tu app
+      const redirectTo = 'https://gbdrcaumghykiipqgbty.supabase.co/auth/v1/callback'
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo }
+        options: { 
+          redirectTo,
+          // Supabase automáticamente redirigirá a la URL configurada en
+          // Authentication → URL Configuration
+        }
       })
+      
       if (error) throw error
-      // Al iniciar OAuth Supabase redirige al proveedor; cerramos modal para UX suave
+      
+      // Mejor práctica: cerrar modal inmediatamente para mejor UX
+      // El usuario será redirigido al proveedor, no necesita ver el modal
       cerrarModal()
+      
     } catch (err) {
-      setError('No se pudo iniciar sesión con ' + provider + '. Intentá de nuevo.')
+      console.error(`Error en login con ${provider}:`, err)
+      
+      // Mensajes específicos por proveedor
+      const mensajes = {
+        google: 'No se pudo iniciar sesión con Google. Verificá tu conexión e intentá de nuevo.',
+        facebook: 'No se pudo iniciar sesión con Facebook. Verificá tu conexión e intentá de nuevo.'
+      }
+      
+      setError(mensajes[provider] || 'Error al iniciar sesión. Intentá de nuevo.')
     } finally {
+      // Siempre limpiar estados de carga
       if (provider === 'google') setLoadingGoogle(false)
       if (provider === 'facebook') setLoadingFacebook(false)
     }
