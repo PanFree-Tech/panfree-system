@@ -1,42 +1,23 @@
 /**
  * UBICACION: src/app/layout-client.js
- * OPTIMIZACIONES MOBILE:
- *  - Header con padding reducido en móvil (clase header-inner)
- *  - Logo con clase para ocultar texto en pantallas muy pequeñas
- *  - Botón carrito con área táctil mínima de 44px
- *  - Footer con clase footer-inner para padding responsive
- * CAMBIOS 2026-03-03:
- *  - SVG logos de WhatsApp e Instagram embebidos inline (sin dependencias externas)
- *  - Header: iconos de WhatsApp e Instagram como links de contacto
- *  - Footer: links a WhatsApp e Instagram con logos + texto
- *  - CartSidebar: botón WhatsApp con logo SVG oficial
- * CAMBIOS 2026-03-04:
- *  - Header: integración de useAuth para mostrar "Mi cuenta" o "Ingresar"
- *  - Header: botón de cuenta con clase .header-cuenta-texto para ocultar en móvil (<480px)
- * CAMBIOS 2026-03-07:
- *  - ✅ NUEVO: FloatingCartButton (botón flotante en móvil)
- *  - ✅ NUEVO: SlideCart (carrito deslizable)
- *  - ✅ NUEVO: ToastNotification (notificaciones emergentes)
- * CAMBIOS 2026-08-15:
- *  - ✅ NUEVO: ErrorBoundary envuelve <main>{children}</main>
- *  - ❌ ELIMINADO: CartInitializer (causaba doble inicialización del carrito)
- * CAMBIOS 2026-08-16:
- *  - ✅ NUEVO: UserGreeting (saludo personalizado "Hola, [nombre]" con avatar)
- *  - ✅ Reemplaza el bloque "Mi cuenta" / "Ingresar" por componente modular
+ * OPTIMIZACIONES VISUALES Y ESTRUCTURALES:
+ *  - Unificación de Carrito en un único CartSidebar (eliminado SlideCart y FloatingCartButton duplicados)
+ *  - Navegación inferior fija en móvil (BottomNav) con 4 accesos: Inicio, Buscar, Carrito, WhatsApp
+ *  - Regla 60-30-10 estricta en Header y Footer
+ *  - Header limpio con acceso rápido a catálogo, WhatsApp, usuario y carrito
  */
 
 'use client'
+
+import React from 'react'
 import { usePathname } from 'next/navigation'
-import { AuthProvider, useAuth } from '../context/AuthContext'
+import { AuthProvider } from '../context/AuthContext'
 import { CartProvider, useCart } from '../context/CartContext'
 import CartSidebar from '../components/CartSidebar'
 import AuthModal from '../components/AuthModal'
 import ErrorBoundary from '../components/ErrorBoundary'
 import { UserGreeting } from '@/components/UserGreeting'
-
-// ✅ Componentes del carrito flotante
-import FloatingCartButton from '@/components/FloatingCartButton'
-import SlideCart from '@/components/SlideCart'
+import BottomNav from '@/components/BottomNav'
 import ToastNotification from '@/components/ToastNotification'
 
 // ─── SVG logos oficiales inline ───────────────────────────────────────────────
@@ -87,13 +68,19 @@ export default function LayoutClient({ children }) {
         <ErrorBoundary>
           <main>{children}</main>
         </ErrorBoundary>
+        
+        {/* Carrito Unificado */}
         <CartSidebar />
+        
+        {/* Modal de autenticación */}
         <AuthModal />
+        
         <Footer />
 
-        {/* ✅ Componentes del carrito flotante */}
-        <FloatingCartButton />
-        <SlideCart />
+        {/* Navegación inferior fija en móvil */}
+        <BottomNav />
+        
+        {/* Notificaciones */}
         <ToastNotification />
       </CartProvider>
     </AuthProvider>
@@ -106,9 +93,13 @@ function BannerEnvioGratis() {
   if (pathname?.startsWith('/admin') || pathname === '/checkout') return null
   return (
     <div style={{
-      backgroundColor: '#334c2b', color: '#eee6d9',
-      textAlign: 'center', padding: '0.45rem 1rem',
-      fontSize: '0.875rem', fontWeight: '600', letterSpacing: '0.3px',
+      backgroundColor: '#334c2b',
+      color: '#eee6d9',
+      textAlign: 'center',
+      padding: '0.45rem 1rem',
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      letterSpacing: '0.3px',
       borderBottom: '2px solid #b7996b',
     }}>
       🎁 <strong>Envío gratis</strong> en compras desde{' '}
@@ -126,8 +117,8 @@ function Header() {
     <header style={{
       backgroundColor: '#eee6d9',
       color: '#334c2b',
-      boxShadow: '0 2px 8px rgba(51,76,43,0.15)',
-      borderBottom: '3px solid #334c2b',
+      boxShadow: '0 2px 8px rgba(51,76,43,0.12)',
+      borderBottom: '2px solid #b7996b',
       position: 'sticky',
       top: 0,
       zIndex: 100,
@@ -148,66 +139,105 @@ function Header() {
             className="header-logo-img"
             src="/images/logo-panfree.svg"
             alt="PanFree"
-            width={80} height={80}
+            width={54} height={54}
             style={{ objectFit: 'contain', display: 'block' }}
             onError={e => { e.target.style.display = 'none' }}
           />
           <div className="header-logo-text">
-            <div style={{ fontWeight: '700', fontSize: '1rem', color: '#334c2b', lineHeight: '1.3' }}>
-              Panificados Sin Gluten
+            <div style={{ fontWeight: '800', fontSize: '1.05rem', color: '#334c2b', lineHeight: '1.2' }}>
+              PanFree
             </div>
-            <div style={{ fontSize: '0.8rem', color: '#8f9a44', fontStyle: 'italic' }}>
-              El placer de volver a comer libremente
+            <div style={{ fontSize: '0.78rem', color: '#8f9a44', fontWeight: 600 }}>
+              100% Sin Gluten · Encarnación
             </div>
           </div>
         </a>
 
-        {/* Nav */}
+        {/* Nav Escritorio */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
 
           {/* WhatsApp */}
           <a href={WA_URL} target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp" title="WhatsApp"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px', borderRadius: '4px', padding: '0.3rem', transition: 'opacity 0.2s' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px', borderRadius: '6px', padding: '0.3rem', transition: 'opacity 0.2s' }}
             onMouseOver={e => e.currentTarget.style.opacity = '0.75'}
             onMouseOut={e => e.currentTarget.style.opacity = '1'}
           >
-            <IconWhatsApp size={28} />
+            <IconWhatsApp size={26} />
           </a>
 
           {/* Instagram */}
           <a href={IG_URL} target="_blank" rel="noopener noreferrer" aria-label="Seguinos en Instagram" title="Instagram @panfree.py"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px', borderRadius: '4px', padding: '0.3rem', transition: 'opacity 0.2s' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px', borderRadius: '6px', padding: '0.3rem', transition: 'opacity 0.2s' }}
             onMouseOver={e => e.currentTarget.style.opacity = '0.75'}
             onMouseOut={e => e.currentTarget.style.opacity = '1'}
           >
-            <IconInstagram size={28} />
+            <IconInstagram size={26} />
           </a>
 
           {/* Separador */}
-          <div style={{ width: '1px', height: '28px', backgroundColor: '#b7996b', margin: '0 0.25rem' }} />
+          <div style={{ width: '1px', height: '24px', backgroundColor: '#b7996b', margin: '0 0.25rem' }} />
 
           {/* Inicio */}
-          <a href="/" style={{ color: '#334c2b', fontWeight: '600', fontSize: '0.95rem', padding: '0.4rem 0.6rem', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', minHeight: '44px' }}>
-            Inicio
+          <a href="/" style={{ color: '#334c2b', fontWeight: '700', fontSize: '0.92rem', padding: '0.4rem 0.6rem', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', minHeight: '44px' }}>
+            Catálogo
           </a>
 
-          {/* ✅ NUEVO: UserGreeting - Saludo personalizado con avatar */}
+          {/* UserGreeting */}
           <UserGreeting />
 
-          {/* Carrito */}
-          <button onClick={() => setVisible(true)} aria-label={`Carrito, ${cantidadItems} productos`}
-            style={{ backgroundColor: '#334c2b', color: '#eee6d9', border: '2px solid #b7996b', borderRadius: '4px', padding: '0.5rem 1rem', cursor: 'pointer', fontFamily: 'inherit', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', position: 'relative', minHeight: '44px', minWidth: '44px' }}
+          {/* Botón Carrito Header */}
+          <button
+            onClick={() => setVisible(true)}
+            aria-label={`Carrito, ${cantidadItems} productos`}
+            style={{
+              backgroundColor: '#334c2b',
+              color: '#eee6d9',
+              border: '1.5px solid #b7996b',
+              borderRadius: '6px',
+              padding: '0.5rem 0.9rem',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontWeight: '700',
+              fontSize: '0.95rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              position: 'relative',
+              minHeight: '44px',
+              minWidth: '44px',
+              transition: 'background-color 0.2s ease',
+            }}
           >
-            🛒
+            <span>🛒</span>
+            <span style={{ display: 'inline' }}>Carrito</span>
             {cantidadItems > 0 && (
-              <span style={{ position: 'absolute', top: '-8px', right: '-8px', backgroundColor: '#c62828', color: '#fff', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '700', border: '2px solid #eee6d9' }}>
+              <span style={{
+                backgroundColor: '#c62828',
+                color: '#ffffff',
+                borderRadius: '10px',
+                minWidth: '20px',
+                height: '20px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.72rem',
+                fontWeight: '700',
+                padding: '0 5px',
+                marginLeft: '2px',
+              }}>
                 {cantidadItems}
               </span>
             )}
           </button>
 
-          {/* Link admin oculto */}
-          <a href="/admin/login" style={{ color: 'rgba(51,76,43,0.35)', fontSize: '1.1rem', textDecoration: 'none', display: 'flex', alignItems: 'center', minHeight: '44px', padding: '0 0.3rem' }}>🍀</a>
+          {/* Link admin sutil */}
+          <a
+            href="/admin/login"
+            aria-label="Panel de administración"
+            style={{ color: 'rgba(51,76,43,0.25)', fontSize: '1rem', textDecoration: 'none', display: 'flex', alignItems: 'center', minHeight: '44px', padding: '0 0.2rem' }}
+          >
+            🍀
+          </a>
 
         </nav>
       </div>
@@ -218,27 +248,29 @@ function Header() {
 // ─── Footer ────────────────────────────────────────────────────────────────────
 function Footer() {
   return (
-    <footer style={{ backgroundColor: '#334c2b', color: '#eee6d9', marginTop: '3rem' }}>
-      <div className="footer-inner" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <footer style={{ backgroundColor: '#334c2b', color: '#eee6d9', marginTop: '3.5rem', borderTop: '2px solid #b7996b' }}>
+      <div className="footer-inner" style={{ padding: '2.5rem 2rem', maxWidth: '1200px', margin: '0 auto' }}>
 
         {/* Fila principal */}
         <div style={{
           display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between',
-          alignItems: 'flex-start', gap: '1.5rem', marginBottom: '1.5rem'
+          alignItems: 'flex-start', gap: '2rem', marginBottom: '2rem'
         }}>
 
           {/* Marca */}
-          <div>
-            <p style={{ fontWeight: '700', fontSize: '1.1rem', marginBottom: '0.4rem' }}>PanFree Encarnación</p>
-            <p style={{ color: '#8f9a44', fontSize: '0.85rem', fontStyle: 'italic' }}>
-              El placer de volver a comer libremente
+          <div style={{ maxWidth: '320px' }}>
+            <p style={{ fontWeight: '800', fontSize: '1.2rem', marginBottom: '0.35rem', color: '#eee6d9' }}>
+              PanFree Encarnación
+            </p>
+            <p style={{ color: '#d0c5b4', fontSize: '0.88rem', lineHeight: '1.5' }}>
+              El placer de volver a comer libremente. Panificados, dulces y salados 100% artesanales sin gluten.
             </p>
           </div>
 
           {/* Contacto */}
           <div>
-            <p style={{ fontWeight: '600', fontSize: '0.85rem', color: '#b7996b', marginBottom: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Contacto
+            <p style={{ fontWeight: '700', fontSize: '0.85rem', color: '#b7996b', marginBottom: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              Ubicación & Pedidos
             </p>
             <p style={{ color: '#eee6d9', fontSize: '0.9rem', marginBottom: '0.4rem' }}>
               📍 Encarnación, Paraguay
@@ -253,10 +285,10 @@ function Footer() {
 
           {/* Redes sociales */}
           <div>
-            <p style={{ fontWeight: '600', fontSize: '0.85rem', color: '#b7996b', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Seguinos
+            <p style={{ fontWeight: '700', fontSize: '0.85rem', color: '#b7996b', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              Atención Directa
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
 
               {/* WhatsApp */}
               <a
@@ -271,8 +303,8 @@ function Footer() {
                 onMouseOver={e => e.currentTarget.style.color = '#25D366'}
                 onMouseOut={e => e.currentTarget.style.color = '#eee6d9'}
               >
-                <IconWhatsApp size={22} color="#25D366" />
-                WhatsApp
+                <IconWhatsApp size={20} color="#25D366" />
+                WhatsApp Encargos
               </a>
 
               {/* Instagram */}
@@ -288,7 +320,7 @@ function Footer() {
                 onMouseOver={e => e.currentTarget.style.opacity = '0.75'}
                 onMouseOut={e => e.currentTarget.style.opacity = '1'}
               >
-                <IconInstagram size={22} />
+                <IconInstagram size={20} />
                 @panfree.py
               </a>
 
@@ -297,9 +329,9 @@ function Footer() {
         </div>
 
         {/* Línea separadora */}
-        <div style={{ borderTop: '1px solid rgba(183,153,107,0.3)', paddingTop: '1rem', textAlign: 'center' }}>
-          <p style={{ color: '#8f9a44', fontSize: '0.75rem' }}>
-            © 2026 PanFree. Todos los derechos reservados.
+        <div style={{ borderTop: '1px solid rgba(183,153,107,0.3)', paddingTop: '1.25rem', textAlign: 'center' }}>
+          <p style={{ color: '#b7996b', fontSize: '0.8rem' }}>
+            © 2026 PanFree. Panadería Artesanal Libre de Gluten. Todos los derechos reservados.
           </p>
         </div>
       </div>

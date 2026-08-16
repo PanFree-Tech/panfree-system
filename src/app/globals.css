@@ -1,11 +1,11 @@
 /**
  * UBICACION: src/app/globals.css
- * OPTIMIZACIONES MOBILE:
- *  - Media queries para pantallas pequeñas
- *  - Touch targets mínimos de 44px (WCAG)
- *  - Texto legible sin zoom (mínimo 16px en inputs)
- *  - Scroll suave nativo
- *  - Prevenir highlight azul en tap (mobile)
+ * OPTIMIZACIONES VISUALES Y MOBILE:
+ *  - Regla 60-30-10 estricta
+ *  - Grilla de 2 columnas en mobile (>360px)
+ *  - Navegación inferior fija en mobile con safe area
+ *  - Touch targets mínimos de 44px
+ *  - Sin zoom forzado en iOS
  */
 
 :root {
@@ -15,10 +15,9 @@
   --muted: #f9f5f0;
   --danger: #c62828;
   --surface: #ffffff;
-  --shadow: 0 2px 8px rgba(62,39,35,0.08);
+  --shadow: 0 2px 8px rgba(51,76,43,0.08);
   --radius: 8px;
   --gap: 0.75rem;
-  --font-stack: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   
   --color-crema:   #eee6d9;
   --color-verde:   #334c2b;
@@ -48,10 +47,17 @@ html {
 }
 
 html, body {
-  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
   background-color: #ffffff;
   color: #334c2b;
   overflow-x: hidden;
+}
+
+/* Espacio inferior en móvil para la barra de navegación fija */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 70px;
+  }
 }
 
 /* Touch targets mínimos accesibles */
@@ -60,12 +66,11 @@ button, a, input, select {
   touch-action: manipulation;
 }
 
-/* Inputs sin zoom en iOS (requiere font-size >= 16px) */
+/* Inputs sin zoom en iOS */
 input, select, textarea {
   font-size: 16px !important;
 }
 
-/* Imagen responsive por defecto */
 img {
   max-width: 100%;
   height: auto;
@@ -77,31 +82,32 @@ img {
     display: none !important;
   }
   .header-logo-img {
-    width: 48px !important;
-    height: 48px !important;
+    width: 44px !important;
+    height: 44px !important;
   }
   .header-inner {
-    padding: 0.5rem 1rem !important;
+    padding: 0.5rem 0.85rem !important;
   }
 }
 
-/* ===== GRILLA DE PRODUCTOS RESPONSIVE ===== */
+/* ===== GRILLA DE PRODUCTOS RESPONSIVE (2 COLUMNAS EN MÓVIL) ===== */
 .products-grid {
   display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .products-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
   }
 }
 
-@media (min-width: 641px) and (max-width: 900px) {
+@media (max-width: 360px) {
   .products-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 }
 
@@ -112,40 +118,27 @@ img {
   margin: 0 auto;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .page-container {
-    padding: 1rem 0.85rem;
+    padding: 1rem 0.75rem;
   }
 }
 
 /* ===== HERO SECTION ===== */
 .hero-title {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
 }
 
 @media (max-width: 640px) {
   .hero-title {
-    font-size: 1.6rem;
+    font-size: 1.45rem;
   }
   .hero-subtitle {
-    font-size: 1rem !important;
+    font-size: 0.95rem !important;
   }
-  .hero-section {
-    padding: 1.5rem 0 !important;
-  }
-}
-
-/* ===== PRODUCT CARD ===== */
-.product-card {
-  max-width: 100%;
-}
-
-@media (max-width: 640px) {
-  .product-card {
-    padding: 1rem !important;
-  }
-  .product-card-image {
-    height: 160px !important;
+  #hero-section {
+    padding: 1.5rem 1rem !important;
+    margin-bottom: 1.5rem !important;
   }
 }
 
@@ -170,10 +163,24 @@ img {
   .footer-inner {
     padding: 1.5rem 1rem !important;
   }
-}
-
-@media (max-width: 480px) {
   .header-cuenta-texto {
     display: none;
+  }
+}
+
+/* ===== OCULTAR BOTTOM NAV EN ESCRITORIO ===== */
+@media (min-width: 769px) {
+  .mobile-bottom-nav-container {
+    display: none !important;
+  }
+}
+
+/* Animación sutil de entrada */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
