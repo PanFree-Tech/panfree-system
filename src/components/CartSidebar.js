@@ -1,17 +1,11 @@
-/**
- * UBICACION: src/components/CartSidebar.js
- * ACTUALIZADO: 2026-03-03
- * CAMBIOS:
- *  - Botón principal: "Finalizar compra" → /checkout
- *  - Botón secundario: WhatsApp (mantiene flujo anterior como alternativa)
- *  - Si no está autenticado al hacer checkout → abre modal de login primero
- *  - Post-login redirige a /checkout automáticamente
- */
 'use client'
+
+import React, { useEffect, useCallback } from 'react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 
 const WHATSAPP_NUMERO = '595984589845'
+const META_ENVIO_GRATIS = 50000 // ₲ 50.000
 
 function IconWhatsApp({ size = 20 }) {
   return (
@@ -28,10 +22,30 @@ export default function CartSidebar() {
   const { carrito, visible, setVisible, eliminarDelCarrito, actualizarCantidad, total, vaciarCarrito } = useCart()
   const { estaAutenticado, abrirModal, usuario } = useAuth()
 
-  const formatPYG = n => `₲ ${Number(n).toLocaleString('es-PY')}`
+  const formatPYG = (n) => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
 
-  // ── Ir al checkout (CTA principal) ───────────────────────────────────────
-  function irAlCheckout() {
+  // Cerrar con Escape y bloquear scroll
+  useEffect(() => {
+    if (!visible) return
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setVisible(false)
+      }
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [visible, setVisible])
+
+  // Checkout (CTA Principal)
+  const irAlCheckout = useCallback(() => {
     if (!estaAutenticado) {
       abrirModal(() => {
         setVisible(false)
@@ -41,10 +55,10 @@ export default function CartSidebar() {
     }
     setVisible(false)
     window.location.href = '/checkout'
-  }
+  }, [estaAutenticado, abrirModal, setVisible])
 
-  // ── WhatsApp (opción alternativa) ────────────────────────────────────────
-  function confirmarPorWhatsApp() {
+  // Pedido por WhatsApp
+  const confirmarPorWhatsApp = useCallback(() => {
     if (carrito.length === 0) return
     if (!estaAutenticado) {
       abrirModal(() => confirmarPorWhatsApp())
@@ -62,212 +76,437 @@ export default function CartSidebar() {
       `Email: ${usuario?.email || ''}\n\n` +
       `Por favor confirmame disponibilidad y método de entrega. ¡Gracias!`
     window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensaje)}`, '_blank', 'noopener,noreferrer')
-  }
+  }, [carrito, estaAutenticado, abrirModal, usuario, total])
 
   if (!visible) return null
 
+  const faltanteEnvio = Math.max(0, META_ENVIO_GRATIS - total)
+  const porcentajeEnvio = Math.min(100, Math.round((total / META_ENVIO_GRATIS) * 100))
+
   return (
     <>
-      {/* Overlay */}
+      {/* Backdrop */}
       <div
+        id="cart-drawer-backdrop"
         onClick={() => setVisible(false)}
+        aria-hidden="true"
         style={{
-          position: 'fixed', inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          zIndex: 200, cursor: 'pointer',
-          WebkitTapHighlightColor: 'transparent',
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(51, 76, 43, 0.45)',
+          backdropFilter: 'blur(2px)',
+          WebkitBackdropFilter: 'blur(2px)',
+          zIndex: 200,
+          cursor: 'pointer',
+          animation: 'fadeIn 0.2s ease-out forwards',
         }}
       />
 
-      {/* Panel lateral */}
-      <div
+      {/* Drawer Panel */}
+      <aside
+        id="cart-drawer-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Carrito de compras"
         className="cart-sidebar"
         style={{
-          position: 'fixed', top: 0, right: 0, bottom: 0,
-          width: '100%', maxWidth: '420px',
-          backgroundColor: '#fff', zIndex: 201,
-          display: 'flex', flexDirection: 'column',
-          boxShadow: '-4px 0 20px rgba(51,76,43,0.2)',
-          borderLeft: '3px solid #b7996b',
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: '100%',
+          maxWidth: '430px',
+          backgroundColor: '#ffffff',
+          zIndex: 201,
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '-6px 0 24px rgba(51, 76, 43, 0.2)',
+          borderLeft: '1px solid #e0d5c5',
         }}
       >
         {/* Header */}
-        <div style={{
-          padding: '1rem 1.25rem',
-          backgroundColor: '#334c2b', color: '#eee6d9',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          borderBottom: '3px solid #b7996b',
-          flexShrink: 0,
-        }}>
-          <h2 style={{ margin: 0, fontSize: '1.1rem' }}>🛒 Tu Carrito</h2>
+        <div
+          style={{
+            padding: '1.1rem 1.25rem',
+            backgroundColor: '#334c2b',
+            color: '#eee6d9',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexShrink: 0,
+            borderBottom: '2px solid #b7996b',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '1.25rem' }}>🛒</span>
+            <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#eee6d9' }}>
+              Tu Carrito
+            </h2>
+          </div>
           <button
+            id="cart-close-btn"
             onClick={() => setVisible(false)}
             aria-label="Cerrar carrito"
             style={{
-              background: 'none', border: 'none', color: '#eee6d9',
-              fontSize: '1.8rem', cursor: 'pointer', lineHeight: 1,
-              minWidth: '44px', minHeight: '44px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'transparent',
+              border: 'none',
+              color: '#eee6d9',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              lineHeight: 1,
+              width: '44px',
+              height: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '4px',
+              transition: 'background-color 0.2s ease',
             }}
-          >×</button>
+          >
+            ✕
+          </button>
         </div>
 
-        {/* Lista de items */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0.75rem', WebkitOverflowScrolling: 'touch' }}>
+        {/* Barra de Progreso de Envío Gratis */}
+        <div
+          id="free-shipping-bar-container"
+          style={{
+            backgroundColor: '#f9f5f0',
+            borderBottom: '1px solid #eee6d9',
+            padding: '0.85rem 1.25rem',
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334c2b' }}>
+              {faltanteEnvio > 0 ? (
+                <>Te faltan <strong>{formatPYG(faltanteEnvio)}</strong> para <strong>Envío Gratis</strong></>
+              ) : (
+                <span style={{ color: '#2e7d32', fontWeight: 700 }}>🎉 ¡Tenés Envío Gratis en tu compra!</span>
+              )}
+            </span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#8f9a44' }}>
+              {porcentajeEnvio}%
+            </span>
+          </div>
+
+          <div
+            style={{
+              width: '100%',
+              height: '7px',
+              backgroundColor: '#e5dec9',
+              borderRadius: '4px',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                width: `${porcentajeEnvio}%`,
+                height: '100%',
+                backgroundColor: faltanteEnvio === 0 ? '#2e7d32' : '#8f9a44',
+                borderRadius: '4px',
+                transition: 'width 0.4s ease, background-color 0.4s ease',
+              }}
+            />
+          </div>
+          <p style={{ margin: '0.35rem 0 0', fontSize: '0.75rem', color: '#6b7a5a' }}>
+            Válido para Encarnación y Gran Encarnación (meta {formatPYG(META_ENVIO_GRATIS)})
+          </p>
+        </div>
+
+        {/* Lista de Items */}
+        <div
+          id="cart-items-container"
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '1rem 1.25rem',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
           {carrito.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#999' }}>
-              <p style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🛒</p>
-              <p style={{ fontSize: '1rem' }}>Tu carrito está vacío</p>
+            <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#666' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🥖</div>
+              <h3 style={{ margin: '0 0 0.5rem', color: '#334c2b', fontSize: '1.15rem' }}>
+                Tu carrito está vacío
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: '#777', lineHeight: 1.5 }}>
+                Descubrí nuestros deliciosos panificados y dulces 100% libres de gluten.
+              </p>
               <button
+                id="cart-empty-cta"
                 onClick={() => setVisible(false)}
                 style={{
-                  marginTop: '1rem', backgroundColor: '#f46e15', color: '#fff',
-                  border: 'none', padding: '0.65rem 1.25rem', borderRadius: '4px',
-                  cursor: 'pointer', fontFamily: 'inherit', fontWeight: '700', fontSize: '0.9rem',
+                  marginTop: '1.5rem',
+                  backgroundColor: '#f46e15',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  boxShadow: '0 2px 8px rgba(244, 110, 21, 0.25)',
                 }}
               >
-                Ver productos
+                Ver Catálogo
               </button>
             </div>
           ) : (
-            carrito.map(item => (
-              <div key={item.id} style={{
-                display: 'flex', gap: '0.75rem', padding: '0.75rem 0',
-                borderBottom: '1px solid #eee6d9', alignItems: 'center',
-              }}>
-                {/* Imagen o placeholder */}
-                <div style={{
-                  width: '52px', height: '52px', flexShrink: 0,
-                  borderRadius: '4px', overflow: 'hidden',
-                  backgroundColor: '#f5f0ea', border: '1px solid #e0d5c5',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  {item.imagen_url
-                    ? <img src={item.imagen_url} alt={item.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none' }} />
-                    : <span style={{ fontSize: '1.5rem' }}>🍞</span>
-                  }
-                </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              {carrito.map((item) => (
+                <div
+                  key={item.id}
+                  id={`cart-item-${item.id}`}
+                  style={{
+                    display: 'flex',
+                    gap: '0.85rem',
+                    padding: '0.75rem',
+                    backgroundColor: '#fdfbf8',
+                    borderRadius: '8px',
+                    border: '1px solid #eee6d9',
+                    alignItems: 'center',
+                  }}
+                >
+                  {/* Foto o icono */}
+                  <div
+                    style={{
+                      width: '56px',
+                      height: '56px',
+                      flexShrink: 0,
+                      borderRadius: '6px',
+                      overflow: 'hidden',
+                      backgroundColor: '#eee6d9',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '1px solid #e0d5c5',
+                    }}
+                  >
+                    {item.imagen_url || item.image ? (
+                      <img
+                        src={item.imagen_url || item.image}
+                        alt={item.nombre || item.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                        }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: '1.4rem' }}>🍞</span>
+                    )}
+                  </div>
 
-                {/* Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontWeight: 600, color: '#334c2b', fontSize: '0.9rem', lineHeight: '1.3' }}>
-                    {item.nombre}
-                  </p>
-                  <p style={{ margin: '0.2rem 0 0', color: '#f46e15', fontWeight: 700, fontSize: '0.95rem' }}>
-                    {formatPYG(item.subtotal)}
-                  </p>
-                  <p style={{ margin: '0.1rem 0 0', color: '#999', fontSize: '0.78rem' }}>
-                    {formatPYG(item.precio_venta)} c/u
-                  </p>
-                </div>
+                  {/* Detalle */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h4
+                      style={{
+                        margin: 0,
+                        fontWeight: 600,
+                        color: '#334c2b',
+                        fontSize: '0.92rem',
+                        lineHeight: '1.3',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {item.nombre || item.name}
+                    </h4>
+                    <p style={{ margin: '0.2rem 0 0', color: '#334c2b', fontWeight: 700, fontSize: '0.95rem' }}>
+                      {formatPYG(item.subtotal || (item.precio_venta || item.price || 0) * item.cantidad)}
+                    </p>
+                    <p style={{ margin: '0.1rem 0 0', color: '#888', fontSize: '0.78rem' }}>
+                      {formatPYG(item.precio_venta || item.price)} c/u
+                    </p>
+                  </div>
 
-                {/* Controles cantidad */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0 }}>
-                  <button
-                    onClick={() => actualizarCantidad(item.id, item.cantidad - 1)}
-                    aria-label="Reducir cantidad"
-                    style={{
-                      width: 36, height: 36, border: '2px solid #b7996b',
-                      borderRadius: 4, cursor: 'pointer', background: '#f9f5f0',
-                      fontWeight: 700, fontSize: '1.1rem', color: '#334c2b',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}
-                  >−</button>
-                  <span style={{ minWidth: 24, textAlign: 'center', fontWeight: 600, fontSize: '1rem', color: '#334c2b' }}>
-                    {item.cantidad}
-                  </span>
-                  <button
-                    onClick={() => actualizarCantidad(item.id, item.cantidad + 1)}
-                    aria-label="Aumentar cantidad"
-                    style={{
-                      width: 36, height: 36, border: '2px solid #b7996b',
-                      borderRadius: 4, cursor: 'pointer', background: '#f9f5f0',
-                      fontWeight: 700, fontSize: '1.1rem', color: '#334c2b',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}
-                  >+</button>
-                  <button
-                    onClick={() => eliminarDelCarrito(item.id)}
-                    aria-label="Eliminar producto"
-                    style={{
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      color: '#c62828', fontSize: '1.1rem',
-                      minWidth: '36px', minHeight: '36px',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}
-                  >🗑</button>
+                  {/* Controles de cantidad */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
+                    <button
+                      onClick={() => actualizarCantidad(item.id, item.cantidad - 1)}
+                      aria-label={`Reducir cantidad de ${item.nombre}`}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        border: '1px solid #b7996b',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        background: '#ffffff',
+                        fontWeight: 700,
+                        fontSize: '1rem',
+                        color: '#334c2b',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      −
+                    </button>
+                    <span
+                      style={{
+                        minWidth: '24px',
+                        textAlign: 'center',
+                        fontWeight: 600,
+                        fontSize: '0.92rem',
+                        color: '#334c2b',
+                      }}
+                    >
+                      {item.cantidad}
+                    </span>
+                    <button
+                      onClick={() => actualizarCantidad(item.id, item.cantidad + 1)}
+                      aria-label={`Aumentar cantidad de ${item.nombre}`}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        border: '1px solid #b7996b',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        background: '#ffffff',
+                        fontWeight: 700,
+                        fontSize: '1rem',
+                        color: '#334c2b',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      +
+                    </button>
+                    <button
+                      onClick={() => eliminarDelCarrito(item.id)}
+                      aria-label={`Eliminar ${item.nombre} del carrito`}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#c62828',
+                        fontSize: '1rem',
+                        width: '32px',
+                        height: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginLeft: '0.15rem',
+                      }}
+                    >
+                      🗑
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
 
-        {/* Footer con total y botones */}
+        {/* Footer con Total y Acciones */}
         {carrito.length > 0 && (
-          <div style={{
-            padding: '1rem 1.25rem',
-            borderTop: '2px solid #b7996b',
-            backgroundColor: '#f9f5f0',
-            flexShrink: 0,
-          }}>
-
-            {/* Total */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <span style={{ fontWeight: 700, color: '#334c2b', fontSize: '1rem' }}>Total</span>
-              <span style={{ fontWeight: 800, color: '#334c2b', fontSize: '1.3rem' }}>
+          <div
+            id="cart-drawer-footer"
+            style={{
+              padding: '1.1rem 1.25rem',
+              borderTop: '1px solid #e0d5c5',
+              backgroundColor: '#fdfbf8',
+              flexShrink: 0,
+            }}
+          >
+            {/* Fila Subtotal / Total */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1rem',
+              }}
+            >
+              <div>
+                <span style={{ fontWeight: 600, color: '#334c2b', fontSize: '0.95rem', display: 'block' }}>
+                  Subtotal
+                </span>
+                <span style={{ fontSize: '0.78rem', color: '#777' }}>
+                  (Impuestos incluidos)
+                </span>
+              </div>
+              <span style={{ fontWeight: 800, color: '#334c2b', fontSize: '1.35rem' }}>
                 {formatPYG(total)}
               </span>
             </div>
 
-            {/* CTA principal: Finalizar compra */}
+            {/* CTA Principal Exclusivo Naranja: Finalizar compra */}
             <button
+              id="cart-checkout-btn"
               onClick={irAlCheckout}
               style={{
-                width: '100%', padding: '0.9rem 1rem',
-                backgroundColor: '#f46e15', color: '#fff',
-                border: 'none', borderRadius: '4px',
-                cursor: 'pointer', fontFamily: 'inherit',
-                fontWeight: '800', fontSize: '1.05rem',
-                marginBottom: '0.6rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                width: '100%',
+                padding: '0.95rem 1.25rem',
+                backgroundColor: '#f46e15',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontWeight: 800,
+                fontSize: '1.05rem',
+                marginBottom: '0.65rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 3px 10px rgba(244, 110, 21, 0.3)',
+                transition: 'transform 0.15s ease, background-color 0.2s ease',
               }}
             >
-              ✅ Finalizar compra
+              <span>✅</span> Finalizar Compra
             </button>
 
             {/* Secundario: WhatsApp */}
             <button
+              id="cart-whatsapp-btn"
               onClick={confirmarPorWhatsApp}
               style={{
-                width: '100%', padding: '0.7rem 1rem',
-                backgroundColor: '#25D366', color: '#fff',
-                border: 'none', borderRadius: '4px',
-                cursor: 'pointer', fontFamily: 'inherit',
-                fontWeight: '700', fontSize: '0.9rem',
+                width: '100%',
+                padding: '0.75rem 1.25rem',
+                backgroundColor: '#2e7d32',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontWeight: 600,
+                fontSize: '0.9rem',
                 marginBottom: '0.6rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                transition: 'opacity 0.2s ease',
               }}
             >
-              <IconWhatsApp size={18} /> Consultar por WhatsApp
+              <IconWhatsApp size={18} /> Pedir por WhatsApp
             </button>
 
             {/* Vaciar carrito */}
-            <button
-              onClick={vaciarCarrito}
-              style={{
-                width: '100%', padding: '0.5rem',
-                background: 'none', border: 'none',
-                color: '#999', cursor: 'pointer',
-                fontFamily: 'inherit', fontSize: '0.82rem',
-                textDecoration: 'underline',
-              }}
-            >
-              Vaciar carrito
-            </button>
-
+            <div style={{ textAlign: 'center' }}>
+              <button
+                id="cart-clear-btn"
+                onClick={vaciarCarrito}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#888',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  textDecoration: 'underline',
+                  padding: '0.3rem',
+                }}
+              >
+                Vaciar carrito
+              </button>
+            </div>
           </div>
         )}
-      </div>
+      </aside>
     </>
   )
 }

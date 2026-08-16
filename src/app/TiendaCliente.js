@@ -2,92 +2,351 @@
  * UBICACION: src/app/TiendaCliente.js
  * CREADO: 2026-03-06
  * DESCRIPCION:
- *  - Client Component que recibe datos pre-cargados del servidor
- *  - Maneja filtros de categoría, carrito e interactividad
- *  - Mismo patrón que layout-client.js
- *  - Los datos ya vienen cacheados desde page.js (revalidate: 300)
+ *  - Client Component con Hero de alta conversión, badges de confianza,
+ *    búsqueda en tiempo real y filtros ordenados sin desorden visual.
  */
 'use client'
-import { useState } from 'react'
+
+import React, { useState, useMemo } from 'react'
 import { useCart } from '../context/CartContext'
 import ProductCard from '../components/ProductCard'
 
-const CATEGORIAS = ['todos', 'panes', 'dulces', 'salados', 'eventos']
+const CATEGORIAS = [
+  { id: 'todos', label: 'Todos', icon: '✨' },
+  { id: 'panes', label: 'Panes', icon: '🍞' },
+  { id: 'dulces', label: 'Dulces', icon: '🧁' },
+  { id: 'salados', label: 'Salados', icon: '🥪' },
+  { id: 'eventos', label: 'Eventos', icon: '🎉' },
+]
 
-export default function TiendaCliente({ productos, disponibilidad }) {
+export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
   const [categoriaActiva, setCategoriaActiva] = useState('todos')
+  const [busqueda, setBusqueda] = useState('')
   const { agregarAlCarrito } = useCart()
 
-  const productosFiltrados =
-    categoriaActiva === 'todos'
-      ? productos
-      : productos.filter(p => p.categoria?.toLowerCase() === categoriaActiva)
+  // Filtro combinado de categoría y texto de búsqueda
+  const productosFiltrados = useMemo(() => {
+    return productos.filter((p) => {
+      const matchCategoria =
+        categoriaActiva === 'todos' ||
+        p.categoria?.toLowerCase() === categoriaActiva.toLowerCase()
+
+      const matchBusqueda =
+        !busqueda.trim() ||
+        p.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+        p.descripcion?.toLowerCase().includes(busqueda.toLowerCase()) ||
+        p.categoria?.toLowerCase().includes(busqueda.toLowerCase())
+
+      return matchCategoria && matchBusqueda
+    })
+  }, [productos, categoriaActiva, busqueda])
+
+  // Producto destacado para el hero si existe
+  const productoHero = useMemo(() => {
+    return productos.find(p => p.is_featured || p.destacado) || productos[0] || null
+  }, [productos])
 
   return (
-    <div className="page-container">
+    <div className="page-container" id="catalogo">
 
-      {/* === HERO SECTION === */}
-      <section className="hero-section" style={{ textAlign: 'center', padding: '3rem 0', marginBottom: '2rem' }}>
-        <h1 className="hero-title" style={{ margin: '0 0 1rem 0', color: '#334c2b' }}>
-          Panificados Sin Gluten de Calidad
-        </h1>
-        <p className="hero-subtitle" style={{
-          fontSize: '1.2rem', color: '#334c2b',
-          maxWidth: '600px', margin: '0 auto', lineHeight: '1.6', textAlign: 'center'
-        }}>
-          Elaborados artesanalmente en Paraguay.
-        </p>
-        <p style={{
-          fontSize: '1.1rem', color: '#334c2b',
-          maxWidth: '600px', margin: '0.5rem auto 0', lineHeight: '1.6', textAlign: 'center'
-        }}>
-          Delivery a domicilio en Encarnación y Gran Encarnación.
-        </p>
+      {/* ============================================================ */}
+      {/* 1. HERO SECTION ORDENADO Y DE ALTA CONVERSIÓN */}
+      {/* ============================================================ */}
+      <section
+        id="hero-section"
+        style={{
+          backgroundColor: '#fdfbf8',
+          border: '1px solid #e0d5c5',
+          borderRadius: '12px',
+          padding: '2rem 1.5rem',
+          marginBottom: '2rem',
+          boxShadow: '0 2px 8px rgba(51, 76, 43, 0.04)',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: '850px',
+            margin: '0 auto',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          {/* Badge Destacado 100% Sin Gluten */}
+          <div
+            id="hero-gluten-free-badge"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: '#334c2b',
+              color: '#eee6d9',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              padding: '6px 14px',
+              borderRadius: '24px',
+              border: '1px solid #b7996b',
+              marginBottom: '1rem',
+              letterSpacing: '0.3px',
+            }}
+          >
+            <span>🌾</span> 100% Sin Gluten
+          </div>
+
+          {/* Título Principal */}
+          <h1
+            className="hero-title"
+            style={{
+              margin: '0 0 0.75rem 0',
+              color: '#334c2b',
+              fontWeight: 800,
+              lineHeight: 1.25,
+            }}
+          >
+            Panificados y Repostería Sin Gluten
+          </h1>
+
+          {/* Subtítulo Conciso */}
+          <p
+            className="hero-subtitle"
+            style={{
+              fontSize: '1.05rem',
+              color: '#4a5d3f',
+              maxWidth: '580px',
+              margin: '0 0 1.5rem 0',
+              lineHeight: 1.5,
+            }}
+          >
+            Elaboración artesanal en Encarnación con ingredientes seleccionados y la máxima seguridad para celíacos.
+          </p>
+
+          {/* Badges de Confianza en Línea Horizontal */}
+          <div
+            id="trust-badges-row"
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: '0.75rem',
+              width: '100%',
+              paddingTop: '0.5rem',
+              borderTop: '1px solid #eee6d9',
+            }}
+          >
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #b7996b',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                color: '#334c2b',
+              }}
+            >
+              <span>🛡️</span> Apto Celíacos
+            </div>
+
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #b7996b',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                color: '#334c2b',
+              }}
+            >
+              <span>🥖</span> Artesanal
+            </div>
+
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #b7996b',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                color: '#334c2b',
+              }}
+            >
+              <span>🚚</span> Delivery Encarnación
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* === FILTROS === */}
-      <section style={{ marginBottom: '2rem' }}>
-        <div style={{
-          display: 'flex', gap: '0.5rem', overflowX: 'auto',
-          paddingBottom: '0.5rem', justifyContent: 'flex-start',
-          WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none',
-        }}>
-          {CATEGORIAS.map(cat => {
-            const activo = cat === categoriaActiva
-            return (
+      {/* ============================================================ */}
+      {/* 2. BÚSQUEDA Y FILTROS ORDENADOS */}
+      {/* ============================================================ */}
+      <section
+        id="catalog-filters-section"
+        style={{ marginBottom: '1.5rem' }}
+      >
+        {/* Barra de búsqueda */}
+        <div style={{ marginBottom: '1rem', maxWidth: '500px' }}>
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <span
+              style={{
+                position: 'absolute',
+                left: '12px',
+                fontSize: '1rem',
+                color: '#8f9a44',
+                pointerEvents: 'none',
+              }}
+            >
+              🔍
+            </span>
+            <input
+              id="search-products-input"
+              type="text"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar panes, dulces, salados..."
+              style={{
+                width: '100%',
+                padding: '0.65rem 2.2rem 0.65rem 2.4rem',
+                border: '1px solid #b7996b',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff',
+                color: '#334c2b',
+                fontFamily: 'inherit',
+                fontSize: '0.95rem',
+                outline: 'none',
+                transition: 'border-color 0.2s ease',
+              }}
+            />
+            {busqueda && (
               <button
-                key={cat}
-                onClick={() => setCategoriaActiva(cat)}
+                type="button"
+                onClick={() => setBusqueda('')}
+                aria-label="Limpiar búsqueda"
                 style={{
-                  padding: '0.5rem 1.25rem', border: '2px solid #8c9937',
-                  borderRadius: '20px',
-                  background: activo ? '#8c9937' : 'transparent',
-                  color: activo ? '#eee6d9' : '#8c9937',
-                  cursor: 'pointer', textTransform: 'capitalize',
-                  fontWeight: '600', fontSize: '0.9rem', fontFamily: 'inherit',
-                  whiteSpace: 'nowrap', flexShrink: 0, minHeight: '44px',
+                  position: 'absolute',
+                  right: '10px',
+                  background: 'none',
+                  border: 'none',
+                  color: '#888',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  padding: '4px',
                 }}
               >
-                {cat}
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Chips de Categorías (Sin naranja, 60-30-10 estricto) */}
+        <div
+          id="category-chips-bar"
+          style={{
+            display: 'flex',
+            gap: '0.5rem',
+            overflowX: 'auto',
+            paddingBottom: '0.4rem',
+            justifyContent: 'flex-start',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+          }}
+        >
+          {CATEGORIAS.map((cat) => {
+            const activo = cat.id === categoriaActiva
+            return (
+              <button
+                key={cat.id}
+                id={`filter-btn-${cat.id}`}
+                onClick={() => setCategoriaActiva(cat.id)}
+                style={{
+                  padding: '0.45rem 1rem',
+                  border: activo ? '1.5px solid #334c2b' : '1px solid #d0c5b4',
+                  borderRadius: '20px',
+                  backgroundColor: activo ? '#334c2b' : '#ffffff',
+                  color: activo ? '#eee6d9' : '#334c2b',
+                  cursor: 'pointer',
+                  fontWeight: activo ? 700 : 600,
+                  fontSize: '0.85rem',
+                  fontFamily: 'inherit',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  transition: 'all 0.15s ease',
+                  minHeight: '38px',
+                }}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
               </button>
             )
           })}
         </div>
       </section>
 
-      {/* === GRILLA DE PRODUCTOS === */}
-      <section className="products-grid">
+      {/* ============================================================ */}
+      {/* 3. GRILLA DE PRODUCTOS (2 COLUMNAS EN MÓVIL) */}
+      {/* ============================================================ */}
+      <section className="products-grid" id="products-grid-container">
         {productosFiltrados.length === 0 ? (
-          <p style={{
-            textAlign: 'center', color: '#334c2b',
-            gridColumn: '1 / -1', fontSize: '1.1rem', padding: '2rem 0'
-          }}>
-            {categoriaActiva === 'todos'
-              ? 'No hay productos disponibles en este momento.'
-              : `No hay productos en la categoría "${categoriaActiva}".`}
-          </p>
+          <div
+            style={{
+              textAlign: 'center',
+              color: '#334c2b',
+              gridColumn: '1 / -1',
+              padding: '3rem 1rem',
+              backgroundColor: '#fdfbf8',
+              borderRadius: '8px',
+              border: '1px solid #e0d5c5',
+            }}
+          >
+            <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🥖</p>
+            <p style={{ fontSize: '1rem', fontWeight: 600 }}>
+              {busqueda
+                ? `No se encontraron productos para "${busqueda}".`
+                : `No hay productos disponibles en la categoría "${categoriaActiva}".`}
+            </p>
+            <button
+              onClick={() => {
+                setCategoriaActiva('todos')
+                setBusqueda('')
+              }}
+              style={{
+                marginTop: '0.75rem',
+                background: 'none',
+                border: '1px solid #334c2b',
+                color: '#334c2b',
+                padding: '0.4rem 1rem',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+              }}
+            >
+              Restablecer filtros
+            </button>
+          </div>
         ) : (
-          productosFiltrados.map(producto => {
+          productosFiltrados.map((producto) => {
             const disp = disponibilidad[producto.id]
             return (
               <ProductCard
@@ -102,19 +361,27 @@ export default function TiendaCliente({ productos, disponibilidad }) {
         )}
       </section>
 
-      {/* === SECCIÓN DELIVERY === */}
-      <section style={{
-        marginTop: '3rem', padding: '1.5rem',
-        backgroundColor: '#eee6d9', borderRadius: '8px',
-        textAlign: 'center', border: '2px solid #8c9937'
-      }}>
-        <h3 style={{ margin: '0 0 0.75rem 0', color: '#334c2b', fontSize: '1.1rem' }}>
-          🚚 Envíos a Domicilio
+      {/* ============================================================ */}
+      {/* 4. BANNER INFORMATIVO DE DELIVERY */}
+      {/* ============================================================ */}
+      <section
+        id="home-delivery-info-section"
+        style={{
+          marginTop: '2.5rem',
+          padding: '1.25rem 1.5rem',
+          backgroundColor: '#f9f5f0',
+          borderRadius: '8px',
+          textAlign: 'center',
+          border: '1px solid #b7996b',
+        }}
+      >
+        <h3 style={{ margin: '0 0 0.5rem 0', color: '#334c2b', fontSize: '1.05rem', fontWeight: 700 }}>
+          🚚 Envíos a Domicilio en Encarnación
         </h3>
-        <p style={{ color: '#334c2b', marginBottom: '0.5rem', fontSize: '0.95rem' }}>
-          Delivery en Encarnación y Gran Encarnación. Consultá el costo según tu ubicación.
+        <p style={{ color: '#4a5d3f', marginBottom: '0.4rem', fontSize: '0.9rem', lineHeight: 1.4 }}>
+          Entregas en Encarnación y Gran Encarnación. Consultá tiempos y zonas por WhatsApp.
         </p>
-        <p style={{ color: '#8c9937', fontWeight: 'bold', fontSize: '1rem' }}>
+        <p style={{ color: '#2e7d32', fontWeight: 700, fontSize: '0.95rem', margin: 0 }}>
           🎁 Envío gratis en compras superiores a ₲ 50.000
         </p>
       </section>
