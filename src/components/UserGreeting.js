@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext'
 import Image from 'next/image'
 import Link from 'next/link'
 import { memo } from 'react'
+import { User } from 'lucide-react'
 
 /**
  * Componente que muestra un saludo personalizado cuando el usuario está autenticado
@@ -47,7 +48,7 @@ function UserGreetingComponent() {
           e.currentTarget.style.backgroundColor = 'transparent'
         }}
       >
-        <span aria-hidden="true">👤</span>
+        <User size={18} color="#334c2b" aria-hidden="true" />
         <span className="header-cuenta-texto">Ingresar</span>
       </button>
     )
@@ -110,19 +111,12 @@ function UserGreetingComponent() {
           }}
           onError={(e) => {
             e.currentTarget.style.display = 'none'
-            // Mostrar icono fallback
-            const parent = e.currentTarget.parentElement
-            const fallbackIcon = document.createElement('span')
-            fallbackIcon.textContent = '👤'
-            fallbackIcon.style.fontSize = '1.2rem'
-            if (parent) {
-              parent.insertBefore(fallbackIcon, e.currentTarget)
-              e.currentTarget.remove()
-            }
           }}
         />
       ) : (
-        <span style={{ fontSize: '1.2rem', padding: '0 2px' }} aria-hidden="true">👤</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0 2px' }} aria-hidden="true">
+          <User size={18} color="#334c2b" />
+        </span>
       )}
       
       {/* Saludo */}

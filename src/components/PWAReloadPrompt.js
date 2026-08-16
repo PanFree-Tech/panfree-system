@@ -1,6 +1,7 @@
 //📁 src/components/PWAReloadPrompt.js
 'use client'
 import React, { useState, useEffect } from 'react';
+import { Sparkles } from 'lucide-react';
 
 export default function PWAReloadPrompt() {
   const [waitingWorker, setWaitingWorker] = useState(null)
@@ -48,8 +49,8 @@ export default function PWAReloadPrompt() {
       width: '90%',
       textAlign: 'center',
     }}>
-      <p style={{ margin: '0 0 1rem' }}>
-        🚀 ¡Nueva versión disponible!
+      <p style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+        <Sparkles size={18} color="#b7996b" /> ¡Nueva versión disponible!
       </p>
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
         <button

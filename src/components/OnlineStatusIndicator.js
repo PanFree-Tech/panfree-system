@@ -1,6 +1,7 @@
 //📁 src/components/OnlineStatusIndicator.js
 'use client'
 import React, { useState, useEffect } from 'react';
+import { Wifi, WifiOff } from 'lucide-react';
 
 export default function OnlineStatusIndicator() {
   const [isOnline, setIsOnline] = useState(true)
@@ -52,6 +53,10 @@ export default function OnlineStatusIndicator() {
       fontWeight: '600',
       boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
       animation: 'fadeInOut 3s ease',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '8px',
     }}>
       <style jsx>{`
         @keyframes fadeInOut {
@@ -62,7 +67,17 @@ export default function OnlineStatusIndicator() {
         }
       `}</style>
       
-      {isOnline ? '🟢 Conexión restablecida' : '🔴 Sin conexión - Modo offline'}
+      {isOnline ? (
+        <>
+          <Wifi size={18} />
+          <span>Conexión restablecida</span>
+        </>
+      ) : (
+        <>
+          <WifiOff size={18} />
+          <span>Sin conexión - Modo offline</span>
+        </>
+      )}
     </div>
   )
 }

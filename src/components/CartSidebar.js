@@ -1,6 +1,14 @@
 'use client'
 
 import React, { useEffect, useCallback } from 'react'
+import {
+  ShoppingCart,
+  X,
+  PartyPopper,
+  Wheat,
+  Trash2,
+  CheckCircle,
+} from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 
@@ -137,8 +145,8 @@ export default function CartSidebar() {
             borderBottom: '2px solid #b7996b',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '1.25rem' }}>🛒</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <ShoppingCart size={22} color="#eee6d9" />
             <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#eee6d9' }}>
               Tu Carrito
             </h2>
@@ -163,7 +171,7 @@ export default function CartSidebar() {
               transition: 'background-color 0.2s ease',
             }}
           >
-            ✕
+            <X size={22} />
           </button>
         </div>
 
@@ -182,7 +190,9 @@ export default function CartSidebar() {
               {faltanteEnvio > 0 ? (
                 <>Te faltan <strong>{formatPYG(faltanteEnvio)}</strong> para <strong>Envío Gratis</strong></>
               ) : (
-                <span style={{ color: '#2e7d32', fontWeight: 700 }}>🎉 ¡Tenés Envío Gratis en tu compra!</span>
+                <span style={{ color: '#2e7d32', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <PartyPopper size={16} color="#2e7d32" /> ¡Tenés Envío Gratis en tu compra!
+                </span>
               )}
             </span>
             <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#8f9a44' }}>
@@ -226,7 +236,9 @@ export default function CartSidebar() {
         >
           {carrito.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#666' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🥖</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                <Wheat size={48} color="#334c2b" />
+              </div>
               <h3 style={{ margin: '0 0 0.5rem', color: '#334c2b', fontSize: '1.15rem' }}>
                 Tu carrito está vacío
               </h3>
@@ -293,7 +305,7 @@ export default function CartSidebar() {
                         }}
                       />
                     ) : (
-                      <span style={{ fontSize: '1.4rem' }}>🍞</span>
+                      <Wheat size={24} color="#334c2b" />
                     )}
                   </div>
 
@@ -391,7 +403,7 @@ export default function CartSidebar() {
                         marginLeft: '0.15rem',
                       }}
                     >
-                      🗑
+                      <Trash2 size={16} color="#c62828" />
                     </button>
                   </div>
                 </div>
@@ -457,7 +469,7 @@ export default function CartSidebar() {
                 transition: 'transform 0.15s ease, background-color 0.2s ease',
               }}
             >
-              <span>✅</span> Finalizar Compra
+              <CheckCircle size={18} /> Finalizar Compra
             </button>
 
             {/* Secundario: WhatsApp */}

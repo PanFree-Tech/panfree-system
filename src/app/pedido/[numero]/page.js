@@ -15,17 +15,36 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../../../lib/supabase'
+import {
+  Inbox,
+  CheckCircle,
+  ChefHat,
+  Package,
+  PackageCheck,
+  PartyPopper,
+  XCircle,
+  Wheat,
+  Search,
+  AlertCircle,
+  FileText,
+  Truck,
+  Store,
+  MapPin,
+  Building2,
+  Banknote,
+  Sparkles
+} from 'lucide-react'
 
 // ── Configuración de estados ──────────────────────────────────────────────────
 const ESTADOS = [
-  { key: 'pendiente',      label: 'Recibido',       emoji: '📥', desc: 'Tu pedido fue recibido y está esperando confirmación.' },
-  { key: 'confirmado',     label: 'Confirmado',      emoji: '✅', desc: 'Confirmamos tu pedido. Pronto comenzamos la preparación.' },
-  { key: 'en_produccion',  label: 'En preparación',  emoji: '👩‍🍳', desc: 'Estamos horneando tu pedido con mucho cariño.' },
-  { key: 'listo',          label: 'Listo',            emoji: '📦', desc: 'Tu pedido está listo para entregar o retirar.' },
-  { key: 'entregado',      label: 'Entregado',        emoji: '🎉', desc: '¡Tu pedido fue entregado! Gracias por elegirnos.' },
+  { key: 'pendiente',      label: 'Recibido',       Icon: Inbox,        desc: 'Tu pedido fue recibido y está esperando confirmación.' },
+  { key: 'confirmado',     label: 'Confirmado',      Icon: CheckCircle,  desc: 'Confirmamos tu pedido. Pronto comenzamos la preparación.' },
+  { key: 'en_produccion',  label: 'En preparación',  Icon: ChefHat,      desc: 'Estamos horneando tu pedido con mucho cariño.' },
+  { key: 'listo',          label: 'Listo',            Icon: PackageCheck, desc: 'Tu pedido está listo para entregar o retirar.' },
+  { key: 'entregado',      label: 'Entregado',        Icon: PartyPopper,  desc: '¡Tu pedido fue entregado! Gracias por elegirnos.' },
 ]
 
-const ESTADO_CANCELADO = { key: 'cancelado', label: 'Cancelado', emoji: '❌', desc: 'Este pedido fue cancelado. Contactanos por WhatsApp si tenés dudas.' }
+const ESTADO_CANCELADO = { key: 'cancelado', label: 'Cancelado', Icon: XCircle, desc: 'Este pedido fue cancelado. Contactanos por WhatsApp si tenés dudas.' }
 
 const COLORES = {
   pendiente     : { bg: '#fff8e1', text: '#e65100', border: '#ffe082' },
@@ -66,9 +85,10 @@ const S = {
 // ── Barra de progreso de estados ──────────────────────────────────────────────
 function BarraEstado({ estadoActual }) {
   if (estadoActual === 'cancelado') {
+    const CancelIcon = ESTADO_CANCELADO.Icon
     return (
       <div style={{ ...S.alert('err'), display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1rem' }}>
-        <span style={{ fontSize: '1.5rem' }}>{ESTADO_CANCELADO.emoji}</span>
+        <CancelIcon size={28} color="#c62828" style={{ flexShrink: 0 }} />
         <div>
           <div style={{ fontWeight: '700' }}>Pedido cancelado</div>
           <div style={{ fontSize: '0.85rem', marginTop: '0.2rem' }}>{ESTADO_CANCELADO.desc}</div>
@@ -79,12 +99,13 @@ function BarraEstado({ estadoActual }) {
 
   const idxActual = ESTADOS.findIndex(e => e.key === estadoActual)
   const estadoInfo = ESTADOS[idxActual] || ESTADOS[0]
+  const InfoIcon = estadoInfo.Icon
 
   return (
     <div>
       {/* Alerta del estado actual */}
       <div style={{ ...S.alert('ok'), display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', fontSize: '0.95rem' }}>
-        <span style={{ fontSize: '1.75rem' }}>{estadoInfo.emoji}</span>
+        <InfoIcon size={28} color="#2e7d32" style={{ flexShrink: 0 }} />
         <div>
           <div style={{ fontWeight: '800', fontSize: '1rem' }}>{estadoInfo.label}</div>
           <div style={{ fontSize: '0.85rem', marginTop: '0.2rem', opacity: 0.85 }}>{estadoInfo.desc}</div>
@@ -96,6 +117,7 @@ function BarraEstado({ estadoActual }) {
         {ESTADOS.map((e, idx) => {
           const completado = idx <= idxActual
           const esActual   = idx === idxActual
+          const StepIcon   = e.Icon
           return (
             <div key={e.key} style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
               {/* Círculo */}
@@ -108,14 +130,12 @@ function BarraEstado({ estadoActual }) {
                   display       : 'flex',
                   alignItems    : 'center',
                   justifyContent: 'center',
-                  fontSize      : esActual ? '1rem' : '0.8rem',
-                  fontWeight    : '700',
                   color         : completado ? '#fff' : '#999',
                   boxShadow     : esActual ? '0 0 0 3px #b7996b' : 'none',
                   transition    : 'all 0.3s',
                   zIndex        : 1,
                 }}>
-                  {completado && !esActual ? '✓' : e.emoji}
+                  {completado && !esActual ? '✓' : <StepIcon size={esActual ? 18 : 14} />}
                 </div>
               </div>
               {/* Línea conectora */}
@@ -194,19 +214,23 @@ function PantallaVerificacion({ numero, onVerificado }) {
   return (
     <div style={S.page}>
       <div style={S.header}>
-        <a href="/" style={{ color: '#fff', textDecoration: 'none', fontSize: '1.5rem' }}>🍞</a>
+        <a href="/" style={{ color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+          <Wheat size={24} color="#fff" />
+        </a>
         <h1 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700' }}>Seguimiento de pedido</h1>
       </div>
       <div style={S.wrap}>
         <div style={S.card}>
-          <div style={S.head}>🔍 Verificar identidad</div>
+          <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Search size={18} /> Verificar identidad
+          </div>
           <div style={S.body}>
             <p style={{ color: '#666', fontSize: '0.9rem', marginTop: 0 }}>
               Para proteger tu privacidad, confirmá el email con el que realizaste el pedido.
             </p>
 
-            <div style={{ ...S.alert('warn'), marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
-              <span>📦</span>
+            <div style={{ ...S.alert('warn'), marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Package size={16} color="#e65100" />
               <span>Pedido <strong>{numero}</strong></span>
             </div>
 
@@ -222,15 +246,24 @@ function PantallaVerificacion({ numero, onVerificado }) {
             />
 
             {error && (
-              <div style={{ ...S.alert('err'), marginTop: '0.75rem' }}>⚠️ {error}</div>
+              <div style={{ ...S.alert('err'), marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <AlertCircle size={16} color="#c62828" /> {error}
+              </div>
             )}
 
             <button
-              style={{ ...S.btnVerde, marginTop: '1rem', opacity: verificando ? 0.7 : 1 }}
+              style={{ ...S.btnVerde, marginTop: '1rem', opacity: verificando ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
               onClick={verificar}
               disabled={verificando}
             >
-              {verificando ? '⏳ Verificando…' : '🔍 Ver mi pedido'}
+              {verificando ? (
+                'Verificando…'
+              ) : (
+                <>
+                  <Search size={18} />
+                  <span>Ver mi pedido</span>
+                </>
+              )}
             </button>
 
             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.82rem', color: '#999' }}>
@@ -307,7 +340,9 @@ function DetallePedido({ pedidoInicial, numero }) {
     <div style={S.page}>
       {/* Header */}
       <div style={S.header}>
-        <a href="/" style={{ color: '#fff', textDecoration: 'none', fontSize: '1.5rem' }}>🍞</a>
+        <a href="/" style={{ color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+          <Wheat size={24} color="#fff" />
+        </a>
         <div>
           <div style={{ fontWeight: '700', fontSize: '1rem' }}>Seguimiento de pedido</div>
           <div style={{ fontSize: '0.82rem', opacity: 0.8 }}>{pedido.numero_pedido}</div>
@@ -332,7 +367,9 @@ function DetallePedido({ pedidoInicial, numero }) {
 
         {/* Info del pedido */}
         <div style={S.card}>
-          <div style={S.head}>📋 Detalles del pedido</div>
+          <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <FileText size={18} /> Detalles del pedido
+          </div>
           <div style={S.body}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
               <div>
@@ -345,17 +382,35 @@ function DetallePedido({ pedidoInicial, numero }) {
               </div>
               <div>
                 <div style={{ fontSize: '0.75rem', color: '#888', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Entrega</div>
-                <div style={{ fontWeight: '600', color: '#334c2b' }}>
-                  {pedido.metodo_entrega === 'delivery' ? '🛵 Delivery' : '🏪 Retiro en local'}
+                <div style={{ fontWeight: '600', color: '#334c2b', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  {pedido.metodo_entrega === 'delivery' ? (
+                    <>
+                      <Truck size={16} color="#334c2b" /> Delivery
+                    </>
+                  ) : (
+                    <>
+                      <Store size={16} color="#334c2b" /> Retiro en local
+                    </>
+                  )}
                 </div>
                 {pedido.entrega_direccion && (
-                  <div style={{ fontSize: '0.82rem', color: '#666', marginTop: '0.2rem' }}>📍 {pedido.entrega_direccion}</div>
+                  <div style={{ fontSize: '0.82rem', color: '#666', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <MapPin size={14} color="#666" /> {pedido.entrega_direccion}
+                  </div>
                 )}
               </div>
               <div>
                 <div style={{ fontSize: '0.75rem', color: '#888', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pago</div>
-                <div style={{ fontWeight: '600', color: '#334c2b' }}>
-                  {pedido.metodo_pago === 'transferencia' ? '🏦 Transferencia' : '💵 Efectivo'}
+                <div style={{ fontWeight: '600', color: '#334c2b', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  {pedido.metodo_pago === 'transferencia' ? (
+                    <>
+                      <Building2 size={16} color="#334c2b" /> Transferencia
+                    </>
+                  ) : (
+                    <>
+                      <Banknote size={16} color="#334c2b" /> Efectivo
+                    </>
+                  )}
                 </div>
                 <div style={{
                   display: 'inline-block', marginTop: '0.2rem',
@@ -363,7 +418,7 @@ function DetallePedido({ pedidoInicial, numero }) {
                   backgroundColor: pedido.estado_pago === 'aprobado' ? '#e8f5e9' : '#fff8e1',
                   color: pedido.estado_pago === 'aprobado' ? '#2e7d32' : '#e65100',
                 }}>
-                  {pedido.estado_pago === 'aprobado' ? '✓ Confirmado' : '⏳ Pendiente'}
+                  {pedido.estado_pago === 'aprobado' ? '✓ Confirmado' : 'Pendiente'}
                 </div>
               </div>
             </div>
@@ -395,7 +450,10 @@ function DetallePedido({ pedidoInicial, numero }) {
                 )}
                 {Number(pedido.entrega_costo) === 0 && pedido.metodo_entrega === 'delivery' && (
                   <div style={{ ...S.fila, color: '#2e7d32', fontSize: '0.88rem' }}>
-                    <span>Envío</span><span>🎁 Gratis</span>
+                    <span>Envío</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Sparkles size={14} color="#2e7d32" /> Gratis
+                    </span>
                   </div>
                 )}
                 <div style={{ ...S.fila, fontWeight: '800', fontSize: '1.1rem', color: '#334c2b', marginTop: '0.25rem' }}>
@@ -450,13 +508,17 @@ export default function PaginaSeguimientoPedido({ params }) {
     return (
       <div style={S.page}>
         <div style={S.header}>
-          <a href="/" style={{ color: '#fff', textDecoration: 'none' }}>🍞</a>
+          <a href="/" style={{ color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <Wheat size={24} color="#fff" />
+          </a>
           <h1 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700' }}>Seguimiento de pedido</h1>
         </div>
         <div style={S.wrap}>
           <div style={{ ...S.card, ...S.body }}>
             <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#c62828' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>❓</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                <AlertCircle size={48} color="#c62828" />
+              </div>
               <p style={{ fontWeight: '700' }}>Número de pedido inválido.</p>
               <p style={{ fontSize: '0.88rem', color: '#666' }}>El formato correcto es PF-2026-0001</p>
               <a href="/" style={{ color: '#f46e15', textDecoration: 'none', fontWeight: '600' }}>← Volver a la tienda</a>

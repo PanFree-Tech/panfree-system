@@ -22,6 +22,25 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
+import {
+  PartyPopper,
+  ShoppingCart,
+  FileText,
+  Truck,
+  Store,
+  MapPin,
+  Phone,
+  Building2,
+  Banknote,
+  AlertCircle,
+  Search,
+  Lock,
+  User,
+  CheckCircle,
+  XCircle,
+  CreditCard,
+  Sparkles
+} from 'lucide-react'
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 const formatPYG = n => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
@@ -107,7 +126,9 @@ function PantallaExito({ pedido }) {
 
       {/* Header éxito */}
       <div style={{ backgroundColor: '#2e7d32', color: '#fff', padding: '2.5rem 1.5rem', textAlign: 'center', borderBottom: '3px solid #b7996b' }}>
-        <div style={{ fontSize: '3.5rem', marginBottom: '0.5rem' }}>🎉</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+          <PartyPopper size={56} color="#fff" />
+        </div>
         <h1 style={{ margin: 0, fontSize: '1.7rem', fontWeight: '800' }}>¡Pedido confirmado!</h1>
         <p style={{ margin: '0.5rem 0 0', fontSize: '1rem', opacity: 0.9 }}>
           Pedido <strong>{pedido.numeroPedido}</strong> · {pedido.nombre}
@@ -118,7 +139,9 @@ function PantallaExito({ pedido }) {
 
         {/* Resumen */}
         <div style={S.card}>
-          <div style={S.head}>📋 Resumen del pedido</div>
+          <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <FileText size={18} /> Resumen del pedido
+          </div>
           <div style={S.body}>
             {pedido.items.map((item, i) => (
               <div key={i} style={{ ...S.fila, borderBottom: i < pedido.items.length - 1 ? '1px solid #f0ebe4' : 'none' }}>
@@ -132,7 +155,9 @@ function PantallaExito({ pedido }) {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
                 <span>Envío</span>
-                <span>{pedido.costoDelivery > 0 ? formatPYG(pedido.costoDelivery) : '🎁 Gratis'}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  {pedido.costoDelivery > 0 ? formatPYG(pedido.costoDelivery) : <><Sparkles size={14} color="#2e7d32" /> Gratis</>}
+                </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '1.15rem', color: '#334c2b', marginTop: '0.5rem' }}>
                 <span>TOTAL</span><span style={{ color: '#f46e15' }}>{formatPYG(pedido.totalFinal)}</span>
@@ -143,21 +168,51 @@ function PantallaExito({ pedido }) {
 
         {/* Datos de entrega */}
         <div style={S.card}>
-          <div style={S.head}>🚚 Datos de entrega</div>
+          <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Truck size={18} /> Datos de entrega
+          </div>
           <div style={S.body}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.95rem', color: '#444' }}>
-              <div><strong>Método:</strong> {pedido.metodoEntrega === 'delivery' ? '🛵 Delivery a domicilio' : '🏪 Retiro en local'}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <strong>Método:</strong>
+                {pedido.metodoEntrega === 'delivery' ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <Truck size={16} color="#334c2b" /> Delivery a domicilio
+                  </span>
+                ) : (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <Store size={16} color="#334c2b" /> Retiro en local
+                  </span>
+                )}
+              </div>
               {pedido.metodoEntrega === 'delivery' && pedido.direccion && (
-                <div><strong>Dirección:</strong> {pedido.direccion}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <strong>Dirección:</strong> {pedido.direccion}
+                </div>
               )}
               {pedido.metodoEntrega === 'retiro' && (
                 <div style={{ backgroundColor: '#e8f5e9', border: '1px solid #a5d6a7', borderRadius: '6px', padding: '0.75rem', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                  📍 <strong>Vení a buscarlo a:</strong><br />
-                  Encarnación, Paraguay<br />
-                  📞 +595 984 589845 — Te avisamos cuando esté listo
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: '700' }}>
+                    <MapPin size={16} color="#2e7d32" /> Vení a buscarlo a:
+                  </div>
+                  <div>Encarnación, Paraguay</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
+                    <Phone size={14} color="#2e7d32" /> +595 984 589845 — Te avisamos cuando esté listo
+                  </div>
                 </div>
               )}
-              <div style={{ marginTop: '0.25rem' }}><strong>Pago:</strong> {esTransferencia ? '🏦 Transferencia bancaria' : '💵 Efectivo al entregar'}</div>
+              <div style={{ marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <strong>Pago:</strong>
+                {esTransferencia ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <Building2 size={16} color="#334c2b" /> Transferencia bancaria
+                  </span>
+                ) : (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <Banknote size={16} color="#334c2b" /> Efectivo al entregar
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -165,7 +220,9 @@ function PantallaExito({ pedido }) {
         {/* Datos bancarios (solo si es transferencia) */}
         {esTransferencia && (
           <div style={{ ...S.card, border: '2px solid #f46e15' }}>
-            <div style={{ ...S.head, backgroundColor: '#f46e15' }}>🏦 Datos para la transferencia</div>
+            <div style={{ ...S.head, backgroundColor: '#f46e15', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Building2 size={18} /> Datos para la transferencia
+            </div>
             <div style={S.body}>
               <div style={{ backgroundColor: '#fff8f4', border: '1px solid #fddcbc', borderRadius: '6px', padding: '1rem', marginBottom: '1rem' }}>
                 {filasBancarias.map(([k, v]) => (
@@ -175,8 +232,9 @@ function PantallaExito({ pedido }) {
                   </div>
                 ))}
               </div>
-              <div style={{ backgroundColor: '#fff3e0', border: '1px solid #ffb74d', borderRadius: '6px', padding: '0.75rem', fontSize: '0.88rem', color: '#e65100', lineHeight: '1.5' }}>
-                ⚠️ Usá <strong>{pedido.numeroPedido}</strong> como referencia. Después envianos el comprobante por WhatsApp.
+              <div style={{ backgroundColor: '#fff3e0', border: '1px solid #ffb74d', borderRadius: '6px', padding: '0.75rem', fontSize: '0.88rem', color: '#e65100', lineHeight: '1.5', display: 'flex', alignItems: 'flex-start', gap: '0.4rem' }}>
+                <AlertCircle size={18} color="#e65100" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span>Usá <strong>{pedido.numeroPedido}</strong> como referencia. Después envianos el comprobante por WhatsApp.</span>
               </div>
             </div>
           </div>
@@ -184,7 +242,7 @@ function PantallaExito({ pedido }) {
 
         {/* Link de seguimiento */}
         <div style={{ ...S.alert, ...S.info, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span>🔍</span>
+          <Search size={16} color="#1565c0" style={{ flexShrink: 0 }} />
           <span>
             Seguí tu pedido en{' '}
             <a href={`/pedido/${pedido.numeroPedido}`} style={{ color: '#1565c0', fontWeight: '700', textDecoration: 'none' }}>
@@ -446,7 +504,7 @@ export default function PaginaCheckout() {
   if (authLoading) {
     return (
       <div style={{ ...S.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: '#334c2b', fontSize: '1.1rem' }}>⏳ Cargando…</p>
+        <p style={{ color: '#334c2b', fontSize: '1.1rem' }}>Cargando…</p>
       </div>
     )
   }
@@ -456,7 +514,9 @@ export default function PaginaCheckout() {
     return (
       <div style={{ ...S.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <p style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔒</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <Lock size={48} color="#334c2b" />
+          </div>
           <p style={{ color: '#334c2b', fontSize: '1.1rem', marginBottom: '1.5rem' }}>
             Necesitás iniciar sesión para finalizar tu compra.
           </p>
@@ -477,7 +537,9 @@ export default function PaginaCheckout() {
     return (
       <div style={{ ...S.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <p style={{ fontSize: '3rem', marginBottom: '1rem' }}>🛒</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <ShoppingCart size={48} color="#334c2b" />
+          </div>
           <p style={{ color: '#334c2b', fontSize: '1.1rem', marginBottom: '1.5rem' }}>
             Tu carrito está vacío.
           </p>
@@ -509,7 +571,9 @@ export default function PaginaCheckout() {
 
         {/* ── RESUMEN DEL PEDIDO ──────────────────────────────────────── */}
         <div style={S.card}>
-          <div style={S.head}>🛒 Tu pedido ({items.length} {items.length === 1 ? 'producto' : 'productos'})</div>
+          <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <ShoppingCart size={18} /> Tu pedido ({items.length} {items.length === 1 ? 'producto' : 'productos'})
+          </div>
           <div style={S.body}>
             {items.map((item, i) => (
               <div key={i} style={{ ...S.fila, borderBottom: i < items.length - 1 ? '1px solid #f0ebe4' : 'none' }}>
@@ -527,11 +591,11 @@ export default function PaginaCheckout() {
                   {metodoEntrega === 'retiro'
                     ? '—'
                     : calculandoEnvio
-                      ? '⏳ calculando...'
+                      ? 'calculando...'
                       : deliveryInfo?.disponible
-                        ? (costoDelivery === 0 ? '🎁 Gratis' : formatPYG(costoDelivery))
+                        ? (costoDelivery === 0 ? 'Gratis' : formatPYG(costoDelivery))
                         : deliveryInfo?.disponible === false
-                          ? '❌ Fuera de zona'
+                          ? 'Fuera de zona'
                           : 'ingresá tu dirección'}
                 </span>
               </div>
@@ -545,10 +609,12 @@ export default function PaginaCheckout() {
 
         {/* ── DATOS PERSONALES ────────────────────────────────────────── */}
         <div style={S.card}>
-          <div style={S.head}>👤 Tus datos</div>
+          <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <User size={18} /> Tus datos
+          </div>
           <div style={S.body}>
             {cargandoPerfil && (
-              <p style={{ color: '#888', fontSize: '0.85rem', marginBottom: '0.75rem' }}>⏳ Cargando tus datos…</p>
+              <p style={{ color: '#888', fontSize: '0.85rem', marginBottom: '0.75rem' }}>Cargando tus datos…</p>
             )}
             <div>
               <label style={S.label}>Nombre completo *</label>
@@ -588,13 +654,17 @@ export default function PaginaCheckout() {
 
         {/* ── MÉTODO DE ENTREGA ────────────────────────────────────────── */}
         <div style={S.card}>
-          <div style={S.head}>🚚 Método de entrega</div>
+          <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Truck size={18} /> Método de entrega
+          </div>
           <div style={S.body}>
 
             <div style={S.opcion(metodoEntrega === 'retiro')} onClick={() => setMetodoEntrega('retiro')}>
               <div style={S.radio(metodoEntrega === 'retiro')} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: '700', color: '#334c2b', fontSize: '0.95rem' }}>🏪 Retiro en local — Gratis</div>
+                <div style={{ fontWeight: '700', color: '#334c2b', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Store size={16} color="#334c2b" /> Retiro en local — Gratis
+                </div>
                 <div style={{ fontSize: '0.83rem', color: '#666', marginTop: '0.2rem' }}>
                   Encarnación, Paraguay · Te avisamos cuando esté listo
                 </div>
@@ -604,11 +674,11 @@ export default function PaginaCheckout() {
             <div style={S.opcion(metodoEntrega === 'delivery')} onClick={() => setMetodoEntrega('delivery')}>
               <div style={S.radio(metodoEntrega === 'delivery')} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: '700', color: '#334c2b', fontSize: '0.95rem' }}>
-                  🛵 Delivery a domicilio
+                <div style={{ fontWeight: '700', color: '#334c2b', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Truck size={16} color="#334c2b" /> Delivery a domicilio
                   {deliveryInfo?.disponible && (
                     <span style={{ marginLeft: '0.5rem', fontWeight: '600', color: deliveryInfo.costo === 0 ? '#2e7d32' : '#f46e15' }}>
-                      — {deliveryInfo.costo === 0 ? '🎁 Gratis' : formatPYG(deliveryInfo.costo)}
+                      — {deliveryInfo.costo === 0 ? 'Gratis' : formatPYG(deliveryInfo.costo)}
                     </span>
                   )}
                 </div>
@@ -638,25 +708,28 @@ export default function PaginaCheckout() {
                   />
                   {/* Feedback del cálculo */}
                   {calculandoEnvio && (
-                    <div style={{ ...S.alert, ...S.info, marginTop: '-0.5rem', marginBottom: '0.75rem' }}>
-                      📍 Calculando distancia y costo de envío…
+                    <div style={{ ...S.alert, ...S.info, marginTop: '-0.5rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <MapPin size={16} color="#1565c0" /> Calculando distancia y costo de envío…
                     </div>
                   )}
                   {!calculandoEnvio && deliveryInfo?.disponible === true && (
-                    <div style={{ ...S.alert, ...S.ok, marginTop: '-0.5rem', marginBottom: '0.75rem' }}>
-                      ✅ {deliveryInfo.mensaje}
-                      {deliveryInfo.costo > 0 && <strong> — Envío: {formatPYG(deliveryInfo.costo)}</strong>}
-                      {deliveryInfo.costo === 0 && <strong> — 🎁 ¡Envío gratis!</strong>}
+                    <div style={{ ...S.alert, ...S.ok, marginTop: '-0.5rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <CheckCircle size={16} color="#2e7d32" />
+                      <span>
+                        {deliveryInfo.mensaje}
+                        {deliveryInfo.costo > 0 && <strong> — Envío: {formatPYG(deliveryInfo.costo)}</strong>}
+                        {deliveryInfo.costo === 0 && <strong> — ¡Envío gratis!</strong>}
+                      </span>
                     </div>
                   )}
                   {!calculandoEnvio && deliveryInfo?.disponible === false && (
-                    <div style={{ ...S.alert, ...S.err, marginTop: '-0.5rem', marginBottom: '0.75rem' }}>
-                      ❌ {deliveryInfo.mensaje}
+                    <div style={{ ...S.alert, ...S.err, marginTop: '-0.5rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <XCircle size={16} color="#c62828" /> {deliveryInfo.mensaje}
                     </div>
                   )}
                   {!calculandoEnvio && errorDelivery && (
-                    <div style={{ ...S.alert, ...S.warn, marginTop: '-0.5rem', marginBottom: '0.75rem' }}>
-                      ⚠️ {errorDelivery}
+                    <div style={{ ...S.alert, ...S.warn, marginTop: '-0.5rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <AlertCircle size={16} color="#e65100" /> {errorDelivery}
                     </div>
                   )}
                 </div>
@@ -677,13 +750,17 @@ export default function PaginaCheckout() {
 
         {/* ── MÉTODO DE PAGO ───────────────────────────────────────────── */}
         <div style={S.card}>
-          <div style={S.head}>💳 Método de pago</div>
+          <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <CreditCard size={18} /> Método de pago
+          </div>
           <div style={S.body}>
 
             <div style={S.opcion(metodoPago === 'transferencia')} onClick={() => setMetodoPago('transferencia')}>
               <div style={S.radio(metodoPago === 'transferencia')} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: '700', color: '#334c2b', fontSize: '0.95rem' }}>🏦 Transferencia bancaria</div>
+                <div style={{ fontWeight: '700', color: '#334c2b', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Building2 size={16} color="#334c2b" /> Transferencia bancaria
+                </div>
                 <div style={{ fontSize: '0.83rem', color: '#666', marginTop: '0.2rem' }}>
                   Ueno Bank — Confirmamos al recibir el comprobante por WhatsApp
                 </div>
@@ -693,9 +770,11 @@ export default function PaginaCheckout() {
             <div style={S.opcion(metodoPago === 'efectivo')} onClick={() => setMetodoPago('efectivo')}>
               <div style={S.radio(metodoPago === 'efectivo')} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: '700', color: '#334c2b', fontSize: '0.95rem' }}>💵 Efectivo al entregar</div>
+                <div style={{ fontWeight: '700', color: '#334c2b', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Banknote size={16} color="#334c2b" /> Efectivo al entregar
+                </div>
                 <div style={{ fontSize: '0.83rem', color: '#666', marginTop: '0.2rem' }}>
-                  Pagás cuando recibís · Tener el monto exacto ayuda 🙏
+                  Pagás cuando recibís · Tener el monto exacto ayuda
                 </div>
               </div>
             </div>
@@ -704,15 +783,26 @@ export default function PaginaCheckout() {
         </div>
 
         {/* Error */}
-        {error && <div style={{ ...S.alert, ...S.err }}>⚠️ {error}</div>}
+        {error && (
+          <div style={{ ...S.alert, ...S.err, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <AlertCircle size={16} color="#c62828" /> {error}
+          </div>
+        )}
 
         {/* Botón confirmar */}
         <button
-          style={{ ...S.btnVerde, opacity: enviando ? 0.7 : 1, cursor: enviando ? 'not-allowed' : 'pointer', marginBottom: '0.75rem' }}
+          style={{ ...S.btnVerde, opacity: enviando ? 0.7 : 1, cursor: enviando ? 'not-allowed' : 'pointer', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
           onClick={confirmarPedido}
           disabled={enviando}
         >
-          {enviando ? '⏳ Procesando pedido…' : `✅ Confirmar pedido — ${formatPYG(totalFinal)}`}
+          {enviando ? (
+            'Procesando pedido…'
+          ) : (
+            <>
+              <CheckCircle size={20} />
+              <span>Confirmar pedido — {formatPYG(totalFinal)}</span>
+            </>
+          )}
         </button>
 
         <p style={{ textAlign: 'center', fontSize: '0.8rem', color: '#999' }}>
