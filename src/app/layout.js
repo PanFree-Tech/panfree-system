@@ -15,13 +15,16 @@
  *   - ✅ NUEVO: ToastNotification (notificaciones emergentes)
  * CAMBIOS 2026-08-15:
  *   - ✅ FIX: Mover CartInitializer a layout-client.js (Client Component)
+ * CAMBIOS 2026-08-16:
+ *   - ✅ NUEVO: Metaetiqueta de verificación de dominio de Facebook
+ *     facebook-domain-verification: b1zdu5wmi3jvuvzewn9incwwy4uavo
  */
 
 import './globals.css'
 import LayoutClient from './layout-client'
 
 // ============================================
-// METADATOS (SEO) - SIN CAMBIOS
+// METADATOS (SEO) - CON VERIFICACIÓN DE FACEBOOK
 // ============================================
 export const metadata = {
   metadataBase: new URL('https://panfree.fit'),
@@ -36,6 +39,11 @@ export const metadata = {
   creator:   'PanFree',
   publisher: 'PanFree',
   manifest:  '/manifest.json',
+
+  // ✅ VERIFICACIÓN DE DOMINIO PARA FACEBOOK
+  verification: {
+    facebook: 'b1zdu5wmi3jvuvzewn9incwwy4uavo',
+  },
 
   appleWebApp: {
     capable:         true,
