@@ -5,6 +5,7 @@
  * - Mantiene React state para todos los componentes que usan useCart()
  * - Expo métodos en window.__PANFREE_CART para compatibilidad con código legacy
  * - SIEMPRE reasigna los métodos en cada render para asegurar que apunten a React state
+ * - FIX: useEffect de sincronización movido al FINAL para evitar TDZ (Temporal Dead Zone)
  */
 
 'use client'
@@ -21,8 +22,10 @@ export function CartProvider({ children }) {
   const STORAGE_KEY = 'panfree_cart_v1'
 
   // ============================================
-  // INICIALIZAR DESDE localStorage
+  // INICIALIZACIÓN (efectos tempranos)
   // ============================================
+
+  // Inicializar carrito desde localStorage o desde window.__PANFREE_CART si ya existe
   useEffect(() => {
     try {
       if (typeof window === 'undefined') return
@@ -51,50 +54,7 @@ export function CartProvider({ children }) {
   }, [carrito])
 
   // ============================================
-  // Sincronizar con window.__PANFREE_CART - REASIGNAR SIEMPRE
-  // ============================================
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    // Crear objeto base si no existe
-    if (!window.__PANFREE_CART) {
-      const listeners = new EventTarget()
-      const toastListeners = new EventTarget()
-      window.__PANFREE_CART = { 
-        items: carrito, 
-        listeners, 
-        toastListeners, 
-        isOpen: false 
-      }
-    }
-
-    const cart = window.__PANFREE_CART
-
-    // ✅ REASIGNAR SIEMPRE - así aunque otro código haya creado el objeto,
-    //    estos métodos apuntan a React state
-    cart.items = carrito
-    cart.getItems = () => [...carrito]
-    cart.getCount = () => carrito.reduce((s, i) => s + (i.cantidad || i.quantity || 1), 0)
-    cart.getTotal = () => carrito.reduce((s, i) => s + (i.subtotal || (i.precio_venta || i.price || 0) * (i.cantidad || i.quantity || 1) || 0), 0)
-    
-    // ✅ Estos métodos DELEGAN a React state via las funciones del Provider
-    cart.addItem = (product) => addItemToCart(product)
-    cart.updateQuantity = (id, q) => updateItemQuantity(id, q)
-    cart.removeItem = (id) => removeItemFromCart(id)
-    cart.clear = () => vaciarCarrito()
-    cart.open = () => { cart.isOpen = true; setVisible(true) }
-    cart.close = () => { cart.isOpen = false; setVisible(false) }
-    cart.showToast = (msg) => cart.toastListeners.dispatchEvent(new CustomEvent('toast', { detail: msg }))
-    cart.onToast = (fn) => cart.toastListeners.addEventListener('toast', fn)
-    cart.offToast = (fn) => cart.toastListeners.removeEventListener('toast', fn)
-
-    // Notificar a listeners legacy
-    cart.listeners.dispatchEvent(new CustomEvent('update', { detail: carrito }))
-
-  }, [carrito, addItemToCart, updateItemQuantity, removeItemFromCart, vaciarCarrito, setVisible])
-
-  // ============================================
-  // OPERACIONES DEL CARRITO
+  // FUNCIONES DEL CARRITO (declaradas PRIMERO)
   // ============================================
 
   const _agregarProducto = useCallback((producto) => {
@@ -180,6 +140,95 @@ export function CartProvider({ children }) {
 
   const total = carrito.reduce((sum, item) => sum + (item.subtotal || (item.precio_venta || item.price || 0) * (item.cantidad || item.quantity || 1) || 0), 0)
   const cantidadItems = carrito.reduce((sum, item) => sum + (item.cantidad || item.quantity || 1), 0)
+
+  // ============================================
+  // SINCRONIZACIÓN CON window.__PANFREE_CART
+  // (MOVIDO AQUÍ - DESPUÉS DE DECLARAR TODAS LAS FUNCIONES)
+  // ============================================
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    if (!window.__PANFREE_CART) {
+      // Creamos una fachada mínima que otros scripts esperan
+      const listeners = new EventTarget()
+      const toastListeners = new EventTarget()
+      const itemsLocal = carrito || []
+
+      window.__PANFREE_CART = {
+        items: itemsLocal,
+        listeners,
+        toastListeners,
+        isOpen: false,
+        getItems: () => [...(window.__PANFREE_CART.items || [])],
+        getCount: () => (window.__PANFREE_CART.items || []).reduce((s, it) => s + (it.quantity || 1), 0),
+        getTotal: () => (window.__PANFREE_CART.items || []).reduce((s, it) => s + (it.quantity || 1) * (it.price || 0), 0),
+        addItem: (product) => {
+          // delegar a context
+          const event = new CustomEvent('__from_legacy_add', { detail: product })
+          listeners.dispatchEvent(event)
+        },
+        updateQuantity: (id, q) => {
+          const event = new CustomEvent('__from_legacy_update', { detail: { id, q } })
+          listeners.dispatchEvent(event)
+        },
+        removeItem: (id) => {
+          const event = new CustomEvent('__from_legacy_remove', { detail: { id } })
+          listeners.dispatchEvent(event)
+        },
+        clear: () => {
+          const event = new CustomEvent('__from_legacy_clear')
+          listeners.dispatchEvent(event)
+        },
+        showToast: (msg) => {
+          toastListeners.dispatchEvent(new CustomEvent('toast', { detail: msg }))
+        },
+        onToast: (fn) => toastListeners.addEventListener('toast', fn),
+        offToast: (fn) => toastListeners.removeEventListener('toast', fn),
+      }
+    }
+
+    // Actualizar items y getters
+    window.__PANFREE_CART.items = carrito
+    window.__PANFREE_CART.getItems = () => [...carrito]
+    window.__PANFREE_CART.getCount = () =>
+      carrito.reduce((s, item) => s + (item.cantidad || item.quantity || 1), 0)
+    window.__PANFREE_CART.getTotal = () =>
+      carrito.reduce((s, item) => s + (item.subtotal || (item.price || item.precio_venta) * (item.cantidad || item.quantity || 1) || 0), 0)
+
+    // Emitir evento update para listeners externos
+    try {
+      window.__PANFREE_CART.listeners?.dispatchEvent(new CustomEvent('update', { detail: carrito }))
+    } catch (err) {
+      // ignore
+    }
+
+    // Listeners para mensajes legacy -> delegar en el context
+    const legacyAdd = (e) => {
+      const p = e.detail
+      addItemToCart(p)
+    }
+    const legacyUpdate = (e) => {
+      const { id, q } = e.detail
+      updateItemQuantity(id, q)
+    }
+    const legacyRemove = (e) => {
+      const { id } = e.detail
+      removeItemFromCart(id)
+    }
+    const legacyClear = () => vaciarCarrito()
+
+    window.__PANFREE_CART.listeners?.addEventListener('__from_legacy_add', legacyAdd)
+    window.__PANFREE_CART.listeners?.addEventListener('__from_legacy_update', legacyUpdate)
+    window.__PANFREE_CART.listeners?.addEventListener('__from_legacy_remove', legacyRemove)
+    window.__PANFREE_CART.listeners?.addEventListener('__from_legacy_clear', legacyClear)
+
+    return () => {
+      window.__PANFREE_CART.listeners?.removeEventListener('__from_legacy_add', legacyAdd)
+      window.__PANFREE_CART.listeners?.removeEventListener('__from_legacy_update', legacyUpdate)
+      window.__PANFREE_CART.listeners?.removeEventListener('__from_legacy_remove', legacyRemove)
+      window.__PANFREE_CART.listeners?.removeEventListener('__from_legacy_clear', legacyClear)
+    }
+  }, [carrito, addItemToCart, updateItemQuantity, removeItemFromCart, vaciarCarrito])
 
   // ============================================
   // PROVIDER
