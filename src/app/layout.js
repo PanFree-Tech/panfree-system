@@ -42,7 +42,7 @@ export const metadata = {
 
   // ✅ VERIFICACIÓN DE DOMINIO PARA FACEBOOK
   verification: {
-    facebook: 'b1zdu5wmi3jvuvzewn9incwwy4uavo',
+    facebook: 'e74odtvc4c40a654s1hw4jl1rkdcep',
   },
 
   appleWebApp: {
