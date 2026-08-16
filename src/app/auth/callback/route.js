@@ -6,11 +6,12 @@
  *    `clientes` si no existe, y redirige al usuario al home.
  *  - Se usa una página intermedia porque Supabase necesita ejecutar código
  *    en el navegador para intercambiar el código por la sesión.
+ *  - FIX: Agregar punto y coma después de los returns para evitar error de sintaxis
  */
 
 export async function GET(request) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
   const html = `<!doctype html>
 <html>
@@ -34,90 +35,104 @@ export async function GET(request) {
     </div>
 
     <script type="module">
-      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-      const SUPABASE_URL = ${JSON.stringify(supabaseUrl)}
-      const SUPABASE_ANON_KEY = ${JSON.stringify(supabaseAnonKey)}
+      const SUPABASE_URL = ${JSON.stringify(supabaseUrl)};
+      const SUPABASE_ANON_KEY = ${JSON.stringify(supabaseAnonKey)};
 
       if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-        console.error('Faltan variables de entorno NEXT_PUBLIC_SUPABASE_*')
-        document.getElementById('homeLink').textContent = 'Volver al inicio'
+        console.error('Faltan variables de entorno NEXT_PUBLIC_SUPABASE_*');
+        document.getElementById('homeLink').textContent = 'Volver al inicio';
       } else {
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        (async function handleOAuthCallback(){
+        (async function handleOAuthCallback() {
           try {
             // Intercambia el código por la sesión y almacena localmente
-            const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true })
+            const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
+            
             if (error) {
-              console.error('Error al obtener sesión desde URL:', error)
-              // Redirigir al home aun en error
+              console.error('Error al obtener sesión desde URL:', error);
               window.location.replace('/');
-              return
+              return;
             }
 
-            const session = data?.session
-            const user = session?.user
+            const session = data?.session;
+            const user = session?.user;
+            
             if (!user) {
-              // Nada que hacer
               window.location.replace('/');
-              return
+              return;
             }
 
-            // Crear perfil en tabla `clientes` si no existe, con fallback si columnas extras no existen
+            // Crear perfil en tabla clientes si no existe
             try {
-              const { data: existing } = await supabase.from('clientes').select('id').eq('user_id', user.id).limit(1)
+              const { data: existing } = await supabase
+                .from('clientes')
+                .select('id')
+                .eq('user_id', user.id)
+                .limit(1);
+
               if (!existing || existing.length === 0) {
-                const nombre = user.user_metadata?.full_name || user.user_metadata?.name || (user.email ? user.email.split('@')[0] : null)
-                const avatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || null
+                const nombre = user.user_metadata?.full_name || 
+                              user.user_metadata?.name || 
+                              (user.email ? user.email.split('@')[0] : null);
+                const avatar = user.user_metadata?.avatar_url || 
+                              user.user_metadata?.picture || 
+                              null;
 
                 // Intento principal: con role + avatar
                 try {
-                  const { error: insertError } = await supabase.from('clientes').insert({
-                    nombre_completo: nombre,
-                    email: user.email,
-                    user_id: user.id,
-                    is_active: true,
-                    role: 'cliente',
-                    avatar
-                  })
-                  if (insertError) throw insertError
-                } catch (insertErr) {
-                  console.warn('Inserción con role/avatar falló, reintentando sin esos campos:', insertErr)
-                  try {
-                    const { error: fallbackErr } = await supabase.from('clientes').insert({
+                  const { error: insertError } = await supabase
+                    .from('clientes')
+                    .insert({
                       nombre_completo: nombre,
                       email: user.email,
                       user_id: user.id,
-                      is_active: true
-                    })
-                    if (fallbackErr) throw fallbackErr
+                      is_active: true,
+                      role: 'cliente',
+                      avatar: avatar
+                    });
+
+                  if (insertError) throw insertError;
+                } catch (insertErr) {
+                  console.warn('Inserción con role/avatar falló, reintentando sin esos campos:', insertErr);
+                  
+                  try {
+                    const { error: fallbackErr } = await supabase
+                      .from('clientes')
+                      .insert({
+                        nombre_completo: nombre,
+                        email: user.email,
+                        user_id: user.id,
+                        is_active: true
+                      });
+
+                    if (fallbackErr) throw fallbackErr;
                   } catch (finalErr) {
-                    console.error('No se pudo crear el perfil de cliente ni con fallback:', finalErr)
-                    // No bloqueamos la redirección; solo logueamos
+                    console.error('No se pudo crear el perfil de cliente ni con fallback:', finalErr);
                   }
                 }
               }
             } catch (insertErr) {
-              console.error('No se pudo crear/validar perfil en clientes:', insertErr)
-              // No bloqueamos la redirección por este error
+              console.error('No se pudo crear/validar perfil en clientes:', insertErr);
             }
 
-            // Redirigir al home (o se podría leer un parámetro redirect_to)
-            window.location.replace('/')
+            // Redirigir al home
+            window.location.replace('/');
 
           } catch (err) {
-            console.error('Error inesperado en callback OAuth:', err)
-            window.location.replace('/')
+            console.error('Error inesperado en callback OAuth:', err);
+            window.location.replace('/');
           }
-        })()
+        })();
       }
     </script>
   </body>
-</html>`
+</html>`;
 
   return new Response(html, {
     status: 200,
     headers: { 'content-type': 'text/html; charset=utf-8' }
-  })
+  });
 }
