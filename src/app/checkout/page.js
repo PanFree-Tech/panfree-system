@@ -8,6 +8,7 @@
  *    - Se mantiene la opción de login para usuarios registrados, pero no es obligatorio.
  *  - ✅ FIX VISUAL: botón confirmar naranja, radios verdes.
  *  - ✅ VALIDACIÓN DE TELÉFONO: formato paraguayo con feedback en tiempo real.
+ *  - ✅ INTEGRACIÓN N8N: Envío de datos del pedido y cliente a webhook de n8n.
  */
 
 'use client'
@@ -73,8 +74,6 @@ const S = {
   warn:     { backgroundColor: '#fff8e1', border: '1px solid #ffe082', color: '#e65100' },
   fila:     { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0', borderBottom: '1px solid #f0ebe4', fontSize: '0.92rem' },
 }
-
-// ── Número de pedido generado automáticamente por trigger en Supabase ────────
 
 // ── Validación de teléfono paraguayo ──────────────────────────────────────
 const validarTelefonoParaguayo = (telefono) => {
@@ -305,7 +304,7 @@ export default function PaginaCheckout() {
   // ── Estado del formulario ─────────────────────────────────────────────────
   const [datos, setDatos] = useState({
     nombre: '', email: '', telefono: '',
-    direccion: '', referencia: '',
+    direccion: '', referencia: '', zona: '',
   })
   const [metodoEntrega, setMetodoEntrega] = useState('retiro')
   const [metodoPago,    setMetodoPago]    = useState('efectivo')
@@ -367,7 +366,7 @@ export default function PaginaCheckout() {
       setErrorDelivery(null)
       return
     }
-    if (!datos.direccion || datos.direccion.trim().length < 6) {
+    if (!datos.zona) {
       setDeliveryInfo(null)
       setErrorDelivery(null)
       return
@@ -381,7 +380,7 @@ export default function PaginaCheckout() {
         const res = await fetch('/api/calcular-delivery', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ direccion: datos.direccion, subtotal: total }),
+          body:    JSON.stringify({ zona: datos.zona, direccion: datos.direccion, subtotal: total }),
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Error calculando delivery')
@@ -393,7 +392,7 @@ export default function PaginaCheckout() {
       }
     }, 800)
     return () => clearTimeout(debounceRef.current)
-  }, [datos.direccion, metodoEntrega, total])
+  }, [datos.zona, datos.direccion, metodoEntrega, total])
 
   // ── Cambiar campo ─────────────────────────────────────────────────────────
   function cambiar(campo, valor) {
@@ -432,7 +431,7 @@ export default function PaginaCheckout() {
       return setError('El número de teléfono no es válido. Usá +595 9XX XXX XXX o 09XX XXX XXX.')
     }
     if (metodoEntrega === 'delivery') {
-      if (!datos.direccion.trim()) return setError('Ingresá la dirección de entrega.')
+      if (!datos.zona) return setError('Seleccioná tu zona de entrega.')
       if (calculandoEnvio) return setError('Esperá mientras calculamos el costo de envío.')
       if (!deliveryInfo?.disponible) return setError('La dirección ingresada está fuera de la zona de delivery. Verificá que esté dentro de Encarnación.')
     }
@@ -535,6 +534,38 @@ export default function PaginaCheckout() {
       })
       vaciarCarrito()
 
+      // ── Enviar datos a n8n ────────────────────────────────────────────────
+      const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || 'https://panfree-bot.app.n8n.cloud/webhook/pedido'
+
+      try {
+        await fetch(N8N_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pedido: {
+              numero: numeroPedido,
+              total: totalFinal,
+              metodoPago: metodoPago,
+              metodoEntrega: metodoEntrega,
+              items: items.map(i => ({
+                nombre: i.nombre,
+                cantidad: i.cantidad,
+                precio: i.precio_venta,
+              })),
+            },
+            cliente: {
+              nombre: datos.nombre,
+              email: datos.email,
+              telefono: datos.telefono,
+              direccion: datos.direccion,
+            },
+          }),
+        })
+        console.log('✅ Pedido enviado a n8n')
+      } catch (err) {
+        console.error('❌ Error al enviar a n8n:', err)
+      }
+
     } catch (err) {
       console.error('Error al crear pedido:', err)
       setError('Ocurrió un error al procesar el pedido. Intentá de nuevo o contactanos por WhatsApp.')
@@ -553,9 +584,6 @@ export default function PaginaCheckout() {
       </div>
     )
   }
-
-  // ❌ ELIMINADO: if (!usuario) { ... mostrar bloqueo de login }
-  // AHORA PERMITIMOS INVITADOS
 
   // Carrito vacío
   if (items.length === 0 && !pedidoExito) {
