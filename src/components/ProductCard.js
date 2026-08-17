@@ -4,11 +4,12 @@ import React, { useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import {
   ShoppingCart,
-  Wheat,
+  Package,
   CheckCircle,
   Mail,
   Star,
   Clock,
+  WheatOff,
 } from 'lucide-react'
 import styles from './ProductCard.module.css'
 import { useCart } from '../context/CartContext'
@@ -82,14 +83,66 @@ export default function ProductCard({
       role="article"
       aria-labelledby={`product-title-${productId}`}
     >
-      {/* Badges superiores */}
-      {producto.destacado && (
-        <div className={styles.badgeTopLeft}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            <Star size={13} fill="currentColor" /> Destacado
-          </span>
-        </div>
-      )}
+      {/* Badges superiores: Destacado (izquierda) */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '8px',
+          left: '8px',
+          zIndex: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px',
+          pointerEvents: 'none',
+        }}
+      >
+        {producto.destacado && (
+          <div className={styles.badgeTopLeft}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Star size={13} fill="currentColor" /> Destacado
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Badge Sin Gluten - Fondo verde con ícono dorado y reflejo (derecha) */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '8px',
+          right: '8px',
+          zIndex: 2,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          backgroundColor: '#334c2b',
+          border: '1px solid #b7996b',
+          borderRadius: '16px',
+          padding: '4px 10px 4px 6px',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+          pointerEvents: 'none',
+        }}
+      >
+        <WheatOff
+          size={16}
+          strokeWidth={2.5}
+          color="#f7d875"
+          style={{
+            filter: 'drop-shadow(0 0 6px rgba(255,215,0,0.5)) drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
+          }}
+        />
+        <span
+          style={{
+            color: '#eee6d9',
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            letterSpacing: '0.3px',
+            textTransform: 'uppercase',
+          }}
+        >
+          Sin Gluten
+        </span>
+      </div>
 
       {/* 1. IMAGEN */}
       <a href={slugUrl} className={styles.imageLink} aria-label={`Ver detalle de ${producto.nombre}`}>
@@ -105,7 +158,7 @@ export default function ProductCard({
             />
           ) : (
             <div className={styles.imageFallback}>
-              <Wheat size={32} color="#334c2b" />
+              <Package size={32} color="#334c2b" />
             </div>
           )}
         </div>
@@ -120,7 +173,7 @@ export default function ProductCard({
           </span>
         )}
 
-        {/* 2. TÍTULO */}
+        {/* 3. TÍTULO */}
         <a href={slugUrl} className={styles.titleLink}>
           <h3 id={`product-title-${productId}`} className={styles.title}>
             {producto.nombre}
@@ -135,7 +188,7 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* 3. PRECIO (DESTACADO Y EN NEGRITA) */}
+        {/* 4. PRECIO */}
         <div className={styles.priceRow}>
           <div className={styles.priceContainer}>
             <span className={styles.currencySymbol}>₲</span>
@@ -148,11 +201,10 @@ export default function ProductCard({
           )}
         </div>
 
-        {/* 4. BOTÓN DE COMPRA Y SELECTOR DE CANTIDAD */}
+        {/* 5. BOTÓN DE COMPRA */}
         <div className={styles.actionRow}>
           {!agotado ? (
             <div className={styles.purchaseControls}>
-              {/* Selector de cantidad compacto */}
               <div className={styles.qtyBox}>
                 <button
                   type="button"
@@ -175,7 +227,6 @@ export default function ProductCard({
                 </button>
               </div>
 
-              {/* Botón CTA EXCLUSIVO NARANJA #f46e15 */}
               <button
                 type="button"
                 id={`add-to-cart-btn-${productId}`}

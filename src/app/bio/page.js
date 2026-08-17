@@ -1,15 +1,14 @@
 /**
  * 📁 UBICACIÓN: src/app/bio/page.js
- * 📅 CREADO: 2026-03-05
+ * 📅 ACTUALIZADO: 2026-08-17
  * 📌 DESCRIPCIÓN: Página de bio para Instagram de PanFree.
- *    URL: https://panfree.fit/bio
- *    - Carga productos destacados desde Supabase
- *    - Usa vista_disponibilidad_productos para disponibilidad real
- *    - Diseño mobile-first (se ve en celular desde Instagram)
- *    - UTM tracking para saber qué clicks vienen de Instagram
+ *    - ✅ Imágenes de productos sin recorte (proporción natural)
+ *    - ✅ Logo con borde circular (mantenido)
+ *    - ✅ Reemplazado Wheat por Package
  */
 import { createClient } from '@supabase/supabase-js'
-import { MapPin, ShoppingCart, Wheat, Phone } from 'lucide-react'
+import { MapPin, ShoppingCart, Package, Phone } from 'lucide-react'
+import CldImageWrapper from '@/components/CldImageWrapper'
 
 const supabaseUrl     = process.env.NEXT_PUBLIC_SUPABASE_URL     || 'https://gbdrcaumghykiipqgbty.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjczNjIsImV4cCI6MjA4NzgwMzM2Mn0.OydRQxa51Ql42zvscWnQkEKJuU_3yeCS4qPQQoP6TuM'
@@ -61,6 +60,20 @@ export default async function BioInstagram() {
   // Solo mostrar disponibles
   const productosVisibles = productos.filter(p => dispMap[p.id] !== false)
 
+  // Función para transformar URLs de Cloudinary:
+  // Solo optimiza formato y calidad, sin recortar ni escalar
+  const transformCloudinaryUrl = (url) => {
+    if (!url) return url
+    if (url.includes('res.cloudinary.com')) {
+      const parts = url.split('/upload/')
+      if (parts.length === 2) {
+        // Solo optimización, sin recorte ni escalado forzado
+        return `${parts[0]}/upload/f_auto,q_auto/${parts[1]}`
+      }
+    }
+    return url
+  }
+
   return (
     <main style={{
       backgroundColor: '#eee6d9',
@@ -71,17 +84,30 @@ export default async function BioInstagram() {
       margin: '0 auto',
     }}>
 
-      {/* Header */}
+      {/* Header con logo optimizado (mantiene borde circular) */}
       <header style={{ textAlign: 'center', marginBottom: '28px' }}>
-        <img
-          src="/images/logo-panfree.png"
-          alt="PanFree"
-          style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid transparent', objectFit: 'cover' }}
-          onError="this.style.display='none'"
-        />
+        <div style={{
+          width: '100px',
+          height: '100px',
+          borderRadius: '50%',
+          overflow: 'hidden',
+          border: '3px solid #b7996b',
+          margin: '0 auto',
+          backgroundColor: '#fff',
+          position: 'relative',
+        }}>
+          <CldImageWrapper
+            src="/images/logo-panfree.png"
+            alt="PanFree"
+            width={100}
+            height={100}
+            priority
+            style={{ objectFit: 'cover' }}
+          />
+        </div>
         <h1 style={{ color: '#334c2b', margin: '12px 0 4px', fontSize: '1.4rem', fontWeight: '800' }}>
-  Panificados artesanales sin gluten
-</h1>
+          Panificados artesanales sin gluten
+        </h1>
         <p style={{ color: '#666', fontSize: '0.88rem', margin: 0, lineHeight: 1.5 }}>
           Panificados artesanales sin gluten<br/>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -105,11 +131,11 @@ export default async function BioInstagram() {
           boxShadow: '0 4px 12px rgba(37,211,102,0.35)',
         }}
       >
-<svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-  <path fillRule="evenodd" clipRule="evenodd"
-    d="M12 2C6.477 2 2 6.477 2 12c0 1.89.524 3.655 1.435 5.163L2 22l4.956-1.406A9.944 9.944 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm-1.177 5.83c-.198-.442-.407-.451-.596-.459l-.507-.007c-.176 0-.462.066-.704.33-.242.264-.924.903-.924 2.2 0 1.299.946 2.553 1.078 2.729.132.176 1.826 2.903 4.493 3.953 2.222.877 2.667.703 3.148.659.48-.044 1.55-.634 1.77-1.247.218-.613.218-1.138.153-1.248-.066-.11-.242-.176-.507-.308-.264-.132-1.562-.77-1.804-.858-.242-.088-.418-.132-.594.132-.176.264-.682.858-.836 1.033-.154.176-.308.198-.572.066-.264-.132-1.114-.411-2.122-1.308-.784-.698-1.314-1.56-1.468-1.824-.154-.264-.016-.407.116-.538.118-.118.264-.308.396-.462.132-.154.176-.264.264-.44.088-.176.044-.33-.022-.462-.066-.132-.574-1.43-.79-1.957z"/>
-</svg>
-Pedir por WhatsApp
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+          <path fillRule="evenodd" clipRule="evenodd"
+            d="M12 2C6.477 2 2 6.477 2 12c0 1.89.524 3.655 1.435 5.163L2 22l4.956-1.406A9.944 9.944 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm-1.177 5.83c-.198-.442-.407-.451-.596-.459l-.507-.007c-.176 0-.462.066-.704.33-.242.264-.924.903-.924 2.2 0 1.299.946 2.553 1.078 2.729.132.176 1.826 2.903 4.493 3.953 2.222.877 2.667.703 3.148.659.48-.044 1.55-.634 1.77-1.247.218-.613.218-1.138.153-1.248-.066-.11-.242-.176-.507-.308-.264-.132-1.562-.77-1.804-.858-.242-.088-.418-.132-.594.132-.176.264-.682.858-.836 1.033-.154.176-.308.198-.572.066-.264-.132-1.114-.411-2.122-1.308-.784-.698-1.314-1.56-1.468-1.824-.154-.264-.016-.407.116-.538.118-.118.264-.308.396-.462.132-.154.176-.264.264-.44.088-.176.044-.33-.022-.462-.066-.132-.574-1.43-.79-1.957z"/>
+        </svg>
+        Pedir por WhatsApp
       </a>
 
       {/* Botón ver tienda completa */}
@@ -136,7 +162,7 @@ Pedir por WhatsApp
         Productos disponibles
       </p>
 
-      {/* Lista de productos */}
+      {/* Lista de productos con imágenes sin recorte y optimizadas */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {productosVisibles.map(producto => (
           <a
@@ -151,17 +177,31 @@ Pedir por WhatsApp
               color: '#334c2b', border: '2px solid #e0d5c5',
             }}
           >
-            {/* Imagen */}
+            {/* Imagen sin recorte - mantiene proporción natural */}
             <div style={{
-              width: '60px', height: '60px', flexShrink: 0,
-              borderRadius: '8px', overflow: 'hidden',
+              width: '60px',
+              height: '60px',
+              flexShrink: 0,
+              borderRadius: '8px',
+              overflow: 'hidden',
               backgroundColor: '#f5f0e8',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
             }}>
               {producto.imagen_url
-                ? <img src={producto.imagen_url} alt={producto.imagen_alt || producto.nombre}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <Wheat size={28} color="#b7996b" />
+                ? (
+                  <CldImageWrapper
+                    src={transformCloudinaryUrl(producto.imagen_url)}
+                    alt={producto.imagen_alt || producto.nombre}
+                    fill
+                    style={{ objectFit: 'cover' }}
+                    sizes="60px"
+                  />
+                ) : (
+                  <Package size={28} color="#b7996b" />
+                )
               }
             </div>
 

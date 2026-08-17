@@ -5,7 +5,7 @@ import {
   ShoppingCart,
   X,
   PartyPopper,
-  Wheat,
+  ShoppingBag,
   Trash2,
   CheckCircle,
 } from 'lucide-react'
@@ -32,7 +32,6 @@ export default function CartSidebar() {
 
   const formatPYG = (n) => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
 
-  // Cerrar con Escape y bloquear scroll
   useEffect(() => {
     if (!visible) return
 
@@ -52,7 +51,6 @@ export default function CartSidebar() {
     }
   }, [visible, setVisible])
 
-  // Checkout (CTA Principal)
   const irAlCheckout = useCallback(() => {
     if (!estaAutenticado) {
       abrirModal(() => {
@@ -65,7 +63,6 @@ export default function CartSidebar() {
     window.location.href = '/checkout'
   }, [estaAutenticado, abrirModal, setVisible])
 
-  // Pedido por WhatsApp
   const confirmarPorWhatsApp = useCallback(() => {
     if (carrito.length === 0) return
     if (!estaAutenticado) {
@@ -237,7 +234,7 @@ export default function CartSidebar() {
           {carrito.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#666' }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
-                <Wheat size={48} color="#334c2b" />
+                <ShoppingBag size={48} color="#334c2b" />
               </div>
               <h3 style={{ margin: '0 0 0.5rem', color: '#334c2b', fontSize: '1.15rem' }}>
                 Tu carrito está vacío
@@ -305,7 +302,7 @@ export default function CartSidebar() {
                         }}
                       />
                     ) : (
-                      <Wheat size={24} color="#334c2b" />
+                      <ShoppingBag size={24} color="#334c2b" />
                     )}
                   </div>
 
@@ -472,21 +469,21 @@ export default function CartSidebar() {
               <CheckCircle size={18} /> Finalizar Compra
             </button>
 
-            {/* Secundario: WhatsApp */}
+            {/* Secundario: WhatsApp - ESTILO OUTLINE */}
             <button
               id="cart-whatsapp-btn"
               onClick={confirmarPorWhatsApp}
               style={{
                 width: '100%',
-                padding: '0.75rem 1.25rem',
-                backgroundColor: '#2e7d32',
-                color: '#ffffff',
-                border: 'none',
+                padding: '0.5rem 1rem',
+                backgroundColor: 'transparent',
+                color: '#334c2b',
+                border: '2px solid #b7996b',
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontFamily: 'inherit',
                 fontWeight: 600,
-                fontSize: '0.9rem',
+                fontSize: '0.85rem',
                 marginBottom: '0.6rem',
                 display: 'flex',
                 alignItems: 'center',
