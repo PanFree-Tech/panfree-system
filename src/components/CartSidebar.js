@@ -325,8 +325,12 @@ export default function CartSidebar() {
                     <p style={{ margin: '0.2rem 0 0', color: '#334c2b', fontWeight: 700, fontSize: '0.95rem' }}>
                       {formatPYG(item.subtotal || (item.precio_venta || item.price || 0) * item.cantidad)}
                     </p>
+                    {/* 👇 NUEVO: mostrar unidad de medida junto al precio unitario */}
                     <p style={{ margin: '0.1rem 0 0', color: '#888', fontSize: '0.78rem' }}>
-                      {formatPYG(item.precio_venta || item.price)} c/u
+                      {formatPYG(item.precio_venta || item.price)}
+                      {item.unidad_medida && item.unidad_medida !== 'unidad'
+                        ? ` / ${item.unidad_medida}`
+                        : ' c/u'}
                     </p>
                   </div>
 

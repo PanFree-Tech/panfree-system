@@ -7,6 +7,7 @@
  * - SIEMPRE reasigna los métodos en cada render para asegurar que apunten a React state
  * - FIX: useEffect de sincronización movido al FINAL para evitar TDZ (Temporal Dead Zone)
  * - ✅ FIX AUDITORÍA CONVERSIÓN: eliminada la obligación de estar autenticado para agregar al carrito
+ * - ✅ AGREGADO: campo unidad_medida en los items del carrito
  */
 
 'use client'
@@ -73,7 +74,12 @@ export function CartProvider({ children }) {
             : p
         )
       }
-      return [...prev, producto]
+      // 👇 NUEVO: asegurar que el nuevo producto tenga unidad_medida
+      const nuevoProducto = {
+        ...producto,
+        unidad_medida: producto.unidad_medida || null,
+      }
+      return [...prev, nuevoProducto]
     })
     setVisible(true)
   }, [])
@@ -123,6 +129,7 @@ export function CartProvider({ children }) {
       cantidad: product.quantity || product.cantidad || 1,
       subtotal: (product.quantity || product.cantidad || 1) * (product.price || product.precio_venta || 0),
       categoria: product.categoria || product.category || '',
+      unidad_medida: product.unidad_medida || null, // 👈 NUEVO
     })
   }, [_agregarProducto])
 

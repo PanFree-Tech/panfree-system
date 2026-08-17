@@ -5,6 +5,7 @@
  *    - ✅ Imágenes de productos sin recorte (proporción natural)
  *    - ✅ Logo con borde circular (mantenido)
  *    - ✅ Reemplazado Wheat por Package
+ *    - ✅ AGREGADA unidad de medida junto al precio
  */
 import { createClient } from '@supabase/supabase-js'
 import { MapPin, ShoppingCart, Package, Phone } from 'lucide-react'
@@ -32,7 +33,7 @@ export default async function BioInstagram() {
   // Productos destacados con disponibilidad real
   const { data: destacados } = await supabase
     .from('productos')
-    .select('id, nombre, slug, precio_venta, imagen_url, imagen_alt, is_featured')
+    .select('id, nombre, slug, precio_venta, unidad_medida, imagen_url, imagen_alt, is_featured')
     .eq('is_active', true)
     .eq('is_featured', true)
     .order('nombre', { ascending: true })
@@ -50,7 +51,7 @@ export default async function BioInstagram() {
   const { data: todos } = !destacados?.length
     ? await supabase
         .from('productos')
-        .select('id, nombre, slug, precio_venta, imagen_url, imagen_alt')
+        .select('id, nombre, slug, precio_venta, unidad_medida, imagen_url, imagen_alt')
         .eq('is_active', true)
         .order('nombre', { ascending: true })
         .limit(6)
@@ -210,8 +211,19 @@ export default async function BioInstagram() {
               <div style={{ fontWeight: '700', fontSize: '0.92rem', lineHeight: 1.3, marginBottom: '3px' }}>
                 {producto.nombre}
               </div>
+              {/* 👇 PRECIO CON UNIDAD DE MEDIDA */}
               <div style={{ color: '#f46e15', fontWeight: '800', fontSize: '0.95rem' }}>
                 {formatPYG(producto.precio_venta)}
+                {producto.unidad_medida && producto.unidad_medida !== 'unidad' && (
+                  <span style={{
+                    fontSize: '0.7rem',
+                    color: '#888',
+                    fontWeight: 400,
+                    marginLeft: '4px',
+                  }}>
+                    / {producto.unidad_medida}
+                  </span>
+                )}
               </div>
             </div>
 
