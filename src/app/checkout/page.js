@@ -442,7 +442,7 @@ export default function PaginaCheckout() {
     if (!datos.email.trim()) return setError('Ingresá tu email para recibir la confirmación.')
     if (!datos.telefono.trim()) return setError('Ingresá tu número de teléfono.')
 	if (!telefonoValido && datos.telefono.trim()) {
-  const resultado = validarTelefonoParaguayo(datos.telefono)
+  const resultado = validarTelefono(datos.telefono)
   return setError(resultado.mensaje)
 	}
     if (metodoEntrega === 'delivery') {
