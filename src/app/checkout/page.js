@@ -423,7 +423,7 @@ export default function PaginaCheckout() {
       return
     }
     
-    const resultado = validarTelefonoParaguayo(valor)
+    const resultado = validarTelefono(valor)
     if (resultado.valido) {
       setErrorTelefono(null)
       setTelefonoValido(true)
@@ -435,7 +435,8 @@ export default function PaginaCheckout() {
 
   // ── Confirmar pedido (CON MODO INVITADO Y VALIDACIÓN DE TELÉFONO) ──────
   async function confirmarPedido() {
-    setError(null)
+  console.log('confirmarPedido se ejecutó')
+  setError(null)
 
     // Validaciones
     if (!datos.nombre.trim()) return setError('Ingresá tu nombre completo.')
