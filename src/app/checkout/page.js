@@ -1,12 +1,13 @@
 /**
  * 📁 UBICACIÓN: src/app/checkout/page.js
- * 📅 ACTUALIZADO: 2026-08-16
+ * 📅 ACTUALIZADO: 2026-08-17
  * 📌 CAMBIOS:
  *  - ✅ FIX AUDITORÍA CONVERSIÓN: ahora permite comprar como invitado (sin login).
  *    - Eliminado el bloqueo "Necesitás iniciar sesión".
  *    - El cliente se crea/actualiza por email, sin necesidad de user_id.
  *    - Se mantiene la opción de login para usuarios registrados, pero no es obligatorio.
  *  - ✅ FIX VISUAL: botón confirmar naranja, radios verdes.
+ *  - ✅ VALIDACIÓN DE TELÉFONO: formato paraguayo con feedback en tiempo real.
  */
 
 'use client'
@@ -75,8 +76,37 @@ const S = {
 
 // ── Número de pedido generado automáticamente por trigger en Supabase ────────
 
+// ── Validación de teléfono paraguayo ──────────────────────────────────────
+const validarTelefonoParaguayo = (telefono) => {
+  // Eliminar espacios, guiones y paréntesis
+  const limpio = telefono.replace(/[\s\-\(\)]/g, '')
+  
+  // Formato 1: +595XXXXXXXXX (con código de país)
+  if (/^\+595\d{9}$/.test(limpio)) {
+    return { valido: true, mensaje: 'Número válido' }
+  }
+  
+  // Formato 2: 09XX XXXXXX (con el 0 del código de área)
+  if (/^09\d{8}$/.test(limpio)) {
+    return { valido: true, mensaje: 'Número válido' }
+  }
+  
+  // Formato 3: 984XXXXXX (sin el 0 inicial)
+  if (/^\d{9}$/.test(limpio) && !limpio.startsWith('09')) {
+    return { 
+      valido: false, 
+      mensaje: 'Agregá el 0 delante: 0' + limpio 
+    }
+  }
+  
+  return { 
+    valido: false, 
+    mensaje: 'Formato incorrecto. Usá +595 9XX XXX XXX o 09XX XXX XXX' 
+  }
+}
+
 // ════════════════════════════════════════════════════════════════════════════
-// PANTALLA DE ÉXITO (sin cambios, solo se muestra)
+// PANTALLA DE ÉXITO
 // ════════════════════════════════════════════════════════════════════════════
 function PantallaExito({ pedido }) {
   const esTransferencia = pedido.metodoPago === 'transferencia'
@@ -265,7 +295,7 @@ function PantallaExito({ pedido }) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// PÁGINA PRINCIPAL DE CHECKOUT (MODO INVITADO)
+// PÁGINA PRINCIPAL DE CHECKOUT
 // ════════════════════════════════════════════════════════════════════════════
 export default function PaginaCheckout() {
   const router = useRouter()
@@ -283,6 +313,10 @@ export default function PaginaCheckout() {
   const [error,         setError]         = useState(null)
   const [pedidoExito,   setPedidoExito]   = useState(null)
   const [cargandoPerfil, setCargandoPerfil] = useState(false)
+
+  // ── Estado de validación de teléfono ─────────────────────────────────────
+  const [errorTelefono, setErrorTelefono] = useState(null)
+  const [telefonoValido, setTelefonoValido] = useState(false)
 
   // ── Estado de cálculo de delivery ─────────────────────────────────────────
   const [deliveryInfo,    setDeliveryInfo]    = useState(null)
@@ -366,7 +400,27 @@ export default function PaginaCheckout() {
     setDatos(prev => ({ ...prev, [campo]: valor }))
   }
 
-  // ── Confirmar pedido (CON MODO INVITADO) ──────────────────────────────────
+  // ── Manejar cambio de teléfono con validación ────────────────────────────
+  const manejarCambioTelefono = (valor) => {
+    cambiar('telefono', valor)
+    
+    if (valor.trim() === '') {
+      setErrorTelefono(null)
+      setTelefonoValido(false)
+      return
+    }
+    
+    const resultado = validarTelefonoParaguayo(valor)
+    if (resultado.valido) {
+      setErrorTelefono(null)
+      setTelefonoValido(true)
+    } else {
+      setErrorTelefono(resultado.mensaje)
+      setTelefonoValido(false)
+    }
+  }
+
+  // ── Confirmar pedido (CON MODO INVITADO Y VALIDACIÓN DE TELÉFONO) ──────
   async function confirmarPedido() {
     setError(null)
 
@@ -374,6 +428,9 @@ export default function PaginaCheckout() {
     if (!datos.nombre.trim()) return setError('Ingresá tu nombre completo.')
     if (!datos.email.trim()) return setError('Ingresá tu email para recibir la confirmación.')
     if (!datos.telefono.trim()) return setError('Ingresá tu número de teléfono.')
+    if (!telefonoValido && datos.telefono.trim()) {
+      return setError('El número de teléfono no es válido. Usá +595 9XX XXX XXX o 09XX XXX XXX.')
+    }
     if (metodoEntrega === 'delivery') {
       if (!datos.direccion.trim()) return setError('Ingresá la dirección de entrega.')
       if (calculandoEnvio) return setError('Esperá mientras calculamos el costo de envío.')
@@ -399,7 +456,6 @@ export default function PaginaCheckout() {
           .update({
             nombre_completo: datos.nombre.trim(),
             telefono:        datos.telefono.trim() || null,
-            // Si está logueado y no tenía user_id, se lo asignamos
             user_id:         usuario?.id || null,
             updated_at:      new Date().toISOString(),
           })
@@ -412,7 +468,7 @@ export default function PaginaCheckout() {
             nombre_completo: datos.nombre.trim(),
             email:           datos.email.trim(),
             telefono:        datos.telefono.trim() || null,
-            user_id:         usuario?.id || null, // null para invitados
+            user_id:         usuario?.id || null,
             direccion_ciudad: 'Encarnación',
             direccion_provincia: 'Itapúa',
             is_active: true,
@@ -444,7 +500,7 @@ export default function PaginaCheckout() {
           total_final:           totalFinal,
           estado_pago:           'pendiente',
           metodo_pago:           metodoPago,
-          creado_por:            usuario?.id || null, // null para invitados
+          creado_por:            usuario?.id || null,
         })
         .select('id, numero_pedido')
         .single()
@@ -572,7 +628,7 @@ export default function PaginaCheckout() {
                         ? (costoDelivery === 0 ? 'Gratis' : formatPYG(costoDelivery))
                         : deliveryInfo?.disponible === false
                           ? 'Fuera de zona'
-                          : 'ingresá tu dirección'}
+                          : 'seleccioná una zona'}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '1.15rem', color: '#334c2b', marginTop: '0.5rem' }}>
@@ -618,13 +674,45 @@ export default function PaginaCheckout() {
               <div>
                 <label style={S.label}>Teléfono *</label>
                 <input
-                  style={S.input}
+                  style={{
+                    ...S.input,
+                    borderColor: errorTelefono ? '#c62828' 
+                      : telefonoValido ? '#2e7d32' 
+                      : '#ddd',
+                    backgroundColor: errorTelefono ? '#fff5f5' : '#fff',
+                  }}
                   type="tel"
                   value={datos.telefono}
-                  onChange={e => cambiar('telefono', e.target.value)}
+                  onChange={e => manejarCambioTelefono(e.target.value)}
                   placeholder="+595 984 000000"
                   autoComplete="tel"
                 />
+                {errorTelefono && (
+                  <div style={{ 
+                    color: '#c62828', 
+                    fontSize: '0.8rem', 
+                    marginTop: '-0.3rem',
+                    marginBottom: '0.5rem',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '4px'
+                  }}>
+                    <span>⚠️</span> {errorTelefono}
+                  </div>
+                )}
+                {telefonoValido && datos.telefono && (
+                  <div style={{ 
+                    color: '#2e7d32', 
+                    fontSize: '0.8rem', 
+                    marginTop: '-0.3rem',
+                    marginBottom: '0.5rem',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '4px'
+                  }}>
+                    <span>✅</span> Número válido
+                  </div>
+                )}
               </div>
             </div>
             {esInvitado && (
@@ -635,14 +723,17 @@ export default function PaginaCheckout() {
           </div>
         </div>
 
-        {/* ── MÉTODO DE ENTREGA (sin cambios) ────────────────────────── */}
+        {/* ── MÉTODO DE ENTREGA ────────────────────────────────────────── */}
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Truck size={18} /> Método de entrega
           </div>
           <div style={S.body}>
-            {/* ... (igual que antes, sin cambios) ... */}
-            <div style={S.opcion(metodoEntrega === 'retiro')} onClick={() => setMetodoEntrega('retiro')}>
+            <div style={S.opcion(metodoEntrega === 'retiro')} onClick={() => {
+              setMetodoEntrega('retiro')
+              setDeliveryInfo(null)
+              setErrorDelivery(null)
+            }}>
               <div style={S.radio(metodoEntrega === 'retiro')} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: '700', color: '#334c2b', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
@@ -654,7 +745,11 @@ export default function PaginaCheckout() {
               </div>
             </div>
 
-            <div style={S.opcion(metodoEntrega === 'delivery')} onClick={() => setMetodoEntrega('delivery')}>
+            <div style={S.opcion(metodoEntrega === 'delivery')} onClick={() => {
+              setMetodoEntrega('delivery')
+              setDeliveryInfo(null)
+              setErrorDelivery(null)
+            }}>
               <div style={S.radio(metodoEntrega === 'delivery')} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: '700', color: '#334c2b', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
@@ -666,57 +761,82 @@ export default function PaginaCheckout() {
                   )}
                 </div>
                 <div style={{ fontSize: '0.83rem', color: '#666', marginTop: '0.2rem' }}>
-                  Encarnación y Gran Encarnación · Costo según distancia
+                  Encarnación y Gran Encarnación · Costo según zona
                 </div>
               </div>
             </div>
 
-            {/* Campos de dirección (solo si delivery) */}
+            {/* Campos de zona y dirección (solo si delivery) */}
             {metodoEntrega === 'delivery' && (
               <div style={{ marginTop: '0.5rem', padding: '1rem', backgroundColor: '#fafafa', borderRadius: '6px', border: '1px solid #eee' }}>
                 <div>
-                  <label style={S.label}>Dirección completa *</label>
-                  <input
+                  <label style={S.label}>Zona de entrega *</label>
+                  <select
                     style={{
                       ...S.input,
                       borderColor: deliveryInfo?.disponible === false ? '#c62828'
-                        : deliveryInfo?.disponible === true  ? '#2e7d32'
+                        : deliveryInfo?.disponible === true ? '#2e7d32'
                         : undefined,
                     }}
+                    value={datos.zona || ''}
+                    onChange={(e) => {
+                      cambiar('zona', e.target.value)
+                      setDeliveryInfo(null)
+                      setErrorDelivery(null)
+                    }}
+                  >
+                    <option value="">Seleccioná tu zona</option>
+                    <option value="zona1">📍 Encarnación (Centro y alrededores)</option>
+                    <option value="zona2">📍 Gran Encarnación (Cambyretá, Capitán Miranda, San Juan del Paraná)</option>
+                  </select>
+
+                  {/* Feedback del cálculo */}
+                  {datos.zona && (
+                    <>
+                      {calculandoEnvio && (
+                        <div style={{ ...S.alert, ...S.info, marginTop: '-0.5rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <MapPin size={16} color="#1565c0" /> Calculando costo de envío…
+                        </div>
+                      )}
+                      {!calculandoEnvio && deliveryInfo?.disponible === true && (
+                        <div style={{ ...S.alert, ...S.ok, marginTop: '-0.5rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <CheckCircle size={16} color="#2e7d32" />
+                          <span>
+                            {deliveryInfo.mensaje}
+                            {deliveryInfo.costo > 0 && <strong> — Envío: {formatPYG(deliveryInfo.costo)}</strong>}
+                            {deliveryInfo.costo === 0 && <strong> — ¡Envío gratis! 🎁</strong>}
+                          </span>
+                        </div>
+                      )}
+                      {!calculandoEnvio && deliveryInfo?.disponible === false && (
+                        <div style={{ ...S.alert, ...S.err, marginTop: '-0.5rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <XCircle size={16} color="#c62828" /> ❌ No realizamos envíos a esta zona
+                        </div>
+                      )}
+                      {errorDelivery && (
+                        <div style={{ ...S.alert, ...S.warn, marginTop: '-0.5rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <AlertCircle size={16} color="#e65100" /> {errorDelivery}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+                
+                <div style={{ marginTop: '0.5rem' }}>
+                  <label style={S.label}>Dirección completa (opcional - para el repartidor)</label>
+                  <input
+                    style={{ ...S.input, marginBottom: 0 }}
                     type="text"
                     value={datos.direccion}
                     onChange={e => cambiar('direccion', e.target.value)}
-                    placeholder="Calle, número, barrio — Ej: Av. García 1234, Villa Alegre"
-                    autoComplete="street-address"
+                    placeholder="Calle, número, referencia — Ej: Av. García 1234, Villa Alegre"
                   />
-                  {/* Feedback del cálculo */}
-                  {calculandoEnvio && (
-                    <div style={{ ...S.alert, ...S.info, marginTop: '-0.5rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <MapPin size={16} color="#1565c0" /> Calculando distancia y costo de envío…
-                    </div>
-                  )}
-                  {!calculandoEnvio && deliveryInfo?.disponible === true && (
-                    <div style={{ ...S.alert, ...S.ok, marginTop: '-0.5rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <CheckCircle size={16} color="#2e7d32" />
-                      <span>
-                        {deliveryInfo.mensaje}
-                        {deliveryInfo.costo > 0 && <strong> — Envío: {formatPYG(deliveryInfo.costo)}</strong>}
-                        {deliveryInfo.costo === 0 && <strong> — ¡Envío gratis!</strong>}
-                      </span>
-                    </div>
-                  )}
-                  {!calculandoEnvio && deliveryInfo?.disponible === false && (
-                    <div style={{ ...S.alert, ...S.err, marginTop: '-0.5rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <XCircle size={16} color="#c62828" /> {deliveryInfo.mensaje}
-                    </div>
-                  )}
-                  {!calculandoEnvio && errorDelivery && (
-                    <div style={{ ...S.alert, ...S.warn, marginTop: '-0.5rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <AlertCircle size={16} color="#e65100" /> {errorDelivery}
-                    </div>
-                  )}
+                  <small style={{ fontSize: '0.7rem', color: '#999', display: 'block', marginTop: '0.3rem' }}>
+                    Esto ayuda al repartidor a encontrarte más fácil
+                  </small>
                 </div>
-                <div>
+                
+                <div style={{ marginTop: '0.5rem' }}>
                   <label style={S.label}>Referencias / instrucciones (opcional)</label>
                   <input
                     style={{ ...S.input, marginBottom: 0 }}
@@ -731,7 +851,7 @@ export default function PaginaCheckout() {
           </div>
         </div>
 
-        {/* ── MÉTODO DE PAGO (sin cambios) ───────────────────────────── */}
+        {/* ── MÉTODO DE PAGO ───────────────────────────────────────────── */}
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <CreditCard size={18} /> Método de pago
