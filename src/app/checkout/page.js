@@ -6,11 +6,11 @@
  *  - ✅ FIX VISUAL: botón confirmar naranja, radios verdes.
  *  - ✅ VALIDACIÓN DE TELÉFONO: internacional con feedback en tiempo real.
  *  - ✅ INTEGRACIÓN N8N: Envío de datos del pedido y cliente a webhook de n8n.
- *  - ✅ FIX: captura de error en UPDATE de cliente y console.logs de debug.
+ *  - ✅ FIX DEFINITIVO: uso de useCallback + window.confirmarPedido + logs de debug.
  */
 
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
@@ -396,7 +396,8 @@ export default function PaginaCheckout() {
     }
   }
 
-  async function confirmarPedido() {
+  // ── Confirmar pedido ──────────────────────────────────────────────────────
+  const confirmarPedido = useCallback(async () => {
     console.log('🚀 confirmarPedido se ejecutó')
     setError(null)
 
@@ -558,7 +559,19 @@ export default function PaginaCheckout() {
     } finally {
       setEnviando(false)
     }
-  }
+  }, [datos, metodoEntrega, metodoPago, items, total, totalFinal, deliveryInfo, usuario, vaciarCarrito])
+
+  // ✅ EXPONER LA FUNCIÓN EN EL ÁMBITO GLOBAL (SOLUCIÓN DEFINITIVA)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.confirmarPedido = confirmarPedido
+      console.log('✅ window.confirmarPedido expuesto globalmente')
+      console.log('🔍 typeof window.confirmarPedido:', typeof window.confirmarPedido)
+    }
+  }, [confirmarPedido])
+
+  // ✅ Verificar que la función existe (debug)
+  console.log('🔍 confirmarPedido definida:', typeof confirmarPedido)
 
   if (authLoading) {
     return (
@@ -890,7 +903,10 @@ export default function PaginaCheckout() {
 
         <button
           style={{ ...S.btnNaranja, opacity: enviando ? 0.7 : 1, cursor: enviando ? 'not-allowed' : 'pointer', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-          onClick={() => confirmarPedido()}
+          onClick={() => {
+            console.log('🟢 Botón clickeado - directo')
+            confirmarPedido()
+          }}
           disabled={enviando}
         >
           {enviando ? (
