@@ -7,7 +7,7 @@
  *    - El cliente se crea/actualiza por email, sin necesidad de user_id.
  *    - Se mantiene la opción de login para usuarios registrados, pero no es obligatorio.
  *  - ✅ FIX VISUAL: botón confirmar naranja, radios verdes.
- *  - ✅ VALIDACIÓN DE TELÉFONO: formato paraguayo con feedback en tiempo real.
+ *  - ✅ VALIDACIÓN DE TELÉFONO: internacional con feedback en tiempo real.
  *  - ✅ INTEGRACIÓN N8N: Envío de datos del pedido y cliente a webhook de n8n.
  */
 
@@ -433,29 +433,29 @@ export default function PaginaCheckout() {
     }
   }
 
-  // ── Confirmar pedido (CON MODO INVITADO Y VALIDACIÓN DE TELÉFONO) ──────
+  // ── Confirmar pedido ──────────────────────────────────────────────────────
   async function confirmarPedido() {
-  console.log('confirmarPedido se ejecutó')
-  setError(null)
+    console.log('🚀 confirmarPedido se ejecutó')
+    setError(null)
 
     // Validaciones
     if (!datos.nombre.trim()) return setError('Ingresá tu nombre completo.')
     if (!datos.email.trim()) return setError('Ingresá tu email para recibir la confirmación.')
     if (!datos.telefono.trim()) return setError('Ingresá tu número de teléfono.')
-	if (!telefonoValido && datos.telefono.trim()) {
-  const resultado = validarTelefono(datos.telefono)
-  return setError(resultado.mensaje)
-	}
+    if (!telefonoValido && datos.telefono.trim()) {
+      const resultado = validarTelefono(datos.telefono)
+      return setError(resultado.mensaje)
+    }
     if (metodoEntrega === 'delivery') {
       if (!datos.zona) return setError('Seleccioná tu zona de entrega.')
       if (calculandoEnvio) return setError('Esperá mientras calculamos el costo de envío.')
-      if (!deliveryInfo?.disponible) return setError('La dirección ingresada está fuera de la zona de delivery. Verificá que esté dentro de Encarnación.')
+      if (!deliveryInfo?.disponible) return setError('La dirección ingresada está fuera de la zona de delivery.')
     }
     if (items.length === 0) return setError('Tu carrito está vacío.')
 
     setEnviando(true)
     try {
-      // 1. Buscar o crear cliente por EMAIL (no por user_id)
+      // 1. Buscar o crear cliente por EMAIL
       let clienteId = null
       const { data: clienteExistente } = await supabase
         .from('clientes')
@@ -465,7 +465,6 @@ export default function PaginaCheckout() {
 
       if (clienteExistente) {
         clienteId = clienteExistente.id
-        // Actualizar datos del cliente (nombre, teléfono, dirección)
         await supabase
           .from('clientes')
           .update({
@@ -476,7 +475,6 @@ export default function PaginaCheckout() {
           })
           .eq('id', clienteId)
       } else {
-        // Crear cliente nuevo (sin user_id si es invitado)
         const { data: nuevoCliente, error: errCliente } = await supabase
           .from('clientes')
           .insert({
@@ -499,7 +497,7 @@ export default function PaginaCheckout() {
         ? [datos.direccion.trim(), datos.referencia.trim()].filter(Boolean).join(' — ')
         : null
 
-      // 3. Crear pedido — numero_pedido lo genera el trigger automáticamente
+      // 3. Crear pedido
       const { data: pedidoDB, error: errPedido } = await supabase
         .from('pedidos')
         .insert({
@@ -523,7 +521,7 @@ export default function PaginaCheckout() {
 
       const numeroPedido = pedidoDB.numero_pedido
 
-      // 4. Crear detalle del pedido (items)
+      // 4. Crear detalle del pedido
       const detalles = items.map(item => ({
         pedido_id:       pedidoDB.id,
         producto_id:     item.id,
@@ -535,7 +533,7 @@ export default function PaginaCheckout() {
         .insert(detalles)
       if (errDetalle) throw errDetalle
 
-      // 5. ✅ Éxito — vaciar carrito y mostrar pantalla de confirmación
+      // 5. ✅ Éxito
       setPedidoExito({
         numeroPedido,
         metodoPago,
@@ -550,9 +548,8 @@ export default function PaginaCheckout() {
       })
       vaciarCarrito()
 
-      // ── Enviar datos a n8n ────────────────────────────────────────────────
+      // ── Enviar a n8n ──────────────────────────────────────────────────────
       const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || 'https://panfree-bot.app.n8n.cloud/webhook/pedido'
-
       try {
         await fetch(N8N_WEBHOOK_URL, {
           method: 'POST',
@@ -591,8 +588,6 @@ export default function PaginaCheckout() {
   }
 
   // ── Guards de renderizado ─────────────────────────────────────────────────
-
-  // Cargando sesión
   if (authLoading) {
     return (
       <div style={{ ...S.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -601,7 +596,6 @@ export default function PaginaCheckout() {
     )
   }
 
-  // Carrito vacío
   if (items.length === 0 && !pedidoExito) {
     return (
       <div style={{ ...S.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -620,16 +614,12 @@ export default function PaginaCheckout() {
     )
   }
 
-  // Pantalla de éxito
   if (pedidoExito) return <PantallaExito pedido={pedidoExito} />
 
-  // ── Formulario principal (ahora con invitados) ─────────────────────────────
   const esInvitado = !usuario
 
   return (
     <div style={S.page}>
-
-      {/* Header */}
       <div style={S.hero}>
         <div style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
           <a href="/" style={{ color: '#b7996b', textDecoration: 'none', fontSize: '0.9rem', flexShrink: 0 }}>← Seguir comprando</a>
@@ -644,8 +634,7 @@ export default function PaginaCheckout() {
       </div>
 
       <div style={S.main}>
-
-        {/* ── RESUMEN DEL PEDIDO ──────────────────────────────────────── */}
+        {/* RESUMEN DEL PEDIDO */}
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <ShoppingCart size={18} /> Tu pedido ({items.length} {items.length === 1 ? 'producto' : 'productos'})
@@ -683,7 +672,7 @@ export default function PaginaCheckout() {
           </div>
         </div>
 
-        {/* ── DATOS PERSONALES ────────────────────────────────────────── */}
+        {/* DATOS PERSONALES */}
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <User size={18} /> {esInvitado ? 'Tus datos (invitado)' : 'Tus datos'}
@@ -767,7 +756,7 @@ export default function PaginaCheckout() {
           </div>
         </div>
 
-        {/* ── MÉTODO DE ENTREGA ────────────────────────────────────────── */}
+        {/* MÉTODO DE ENTREGA */}
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Truck size={18} /> Método de entrega
@@ -810,7 +799,7 @@ export default function PaginaCheckout() {
               </div>
             </div>
 
-            {/* Campos de zona y dirección (solo si delivery) */}
+            {/* Campos de zona y dirección */}
             {metodoEntrega === 'delivery' && (
               <div style={{ marginTop: '0.5rem', padding: '1rem', backgroundColor: '#fafafa', borderRadius: '6px', border: '1px solid #eee' }}>
                 <div>
@@ -834,7 +823,6 @@ export default function PaginaCheckout() {
                     <option value="zona2">📍 Gran Encarnación (Cambyretá, Capitán Miranda, San Juan del Paraná)</option>
                   </select>
 
-                  {/* Feedback del cálculo */}
                   {datos.zona && (
                     <>
                       {calculandoEnvio && (
@@ -867,7 +855,7 @@ export default function PaginaCheckout() {
                 </div>
                 
                 <div style={{ marginTop: '0.5rem' }}>
-                  <label style={S.label}>Dirección completa (opcional - para el repartidor)</label>
+                  <label style={S.label}>Dirección completa (opcional)</label>
                   <input
                     style={{ ...S.input, marginBottom: 0 }}
                     type="text"
@@ -895,7 +883,7 @@ export default function PaginaCheckout() {
           </div>
         </div>
 
-        {/* ── MÉTODO DE PAGO ───────────────────────────────────────────── */}
+        {/* MÉTODO DE PAGO */}
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <CreditCard size={18} /> Método de pago
@@ -934,10 +922,10 @@ export default function PaginaCheckout() {
           </div>
         )}
 
-        {/* Botón confirmar */}
+        {/* ✅ BOTÓN CONFIRMAR - CORREGIDO */}
         <button
           style={{ ...S.btnNaranja, opacity: enviando ? 0.7 : 1, cursor: enviando ? 'not-allowed' : 'pointer', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-          onClick={confirmarPedido}
+          onClick={() => confirmarPedido()}
           disabled={enviando}
         >
           {enviando ? (
@@ -953,7 +941,6 @@ export default function PaginaCheckout() {
         <p style={{ textAlign: 'center', fontSize: '0.8rem', color: '#999' }}>
           Al confirmar aceptás nuestros <a href="/terminos-y-condiciones" style={{ color: '#b7996b', textDecoration: 'none' }}>términos y condiciones</a>.
         </p>
-
       </div>
     </div>
   )
