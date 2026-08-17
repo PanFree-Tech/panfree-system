@@ -3,12 +3,10 @@
  * 📅 ACTUALIZADO: 2026-08-17
  * 📌 CAMBIOS:
  *  - ✅ FIX AUDITORÍA CONVERSIÓN: ahora permite comprar como invitado (sin login).
- *    - Eliminado el bloqueo "Necesitás iniciar sesión".
- *    - El cliente se crea/actualiza por email, sin necesidad de user_id.
- *    - Se mantiene la opción de login para usuarios registrados, pero no es obligatorio.
  *  - ✅ FIX VISUAL: botón confirmar naranja, radios verdes.
  *  - ✅ VALIDACIÓN DE TELÉFONO: internacional con feedback en tiempo real.
  *  - ✅ INTEGRACIÓN N8N: Envío de datos del pedido y cliente a webhook de n8n.
+ *  - ✅ FIX: captura de error en UPDATE de cliente y console.logs de debug.
  */
 
 'use client'
@@ -77,39 +75,18 @@ const S = {
 
 // ── Validación de teléfono (internacional) ──────────────────────────────
 const validarTelefono = (telefono) => {
-  // Eliminar espacios, guiones, paréntesis y puntos
   const limpio = telefono.replace(/[\s\-\(\)\.]/g, '')
   
-  // FORMATOS VÁLIDOS:
-  // 1. Con código de país: +XX XXXXXXXXX (ej. +595 981 234 567)
-  // 2. Sin código de país: 0XX XXX XXX (ej. 0981 234 567)
-  // 3. Números de 10+ dígitos (internacionales)
-  
-  // Formato 1: +XX... (código de país de 1-3 dígitos)
   if (/^\+\d{1,3}\d{6,15}$/.test(limpio)) {
-    return { 
-      valido: true, 
-      mensaje: 'Número válido',
-      pais: 'internacional'
-    }
+    return { valido: true, mensaje: 'Número válido', pais: 'internacional' }
   }
   
-  // Formato 2: 0XX... (sin código de país, ej. Paraguay, Argentina)
   if (/^0\d{6,15}$/.test(limpio) && limpio.length >= 9) {
-    return { 
-      valido: true, 
-      mensaje: 'Número válido',
-      pais: 'local'
-    }
+    return { valido: true, mensaje: 'Número válido', pais: 'local' }
   }
   
-  // Formato 3: Número de 10+ dígitos (sin código de país)
   if (/^\d{10,15}$/.test(limpio)) {
-    return { 
-      valido: true, 
-      mensaje: 'Número válido',
-      pais: 'internacional_sin_codigo'
-    }
+    return { valido: true, mensaje: 'Número válido', pais: 'internacional_sin_codigo' }
   }
   
   return { 
@@ -155,7 +132,6 @@ function PantallaExito({ pedido }) {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#eee6d9', fontFamily: '"Segoe UI", sans-serif', paddingBottom: '3rem' }}>
-      {/* Header éxito */}
       <div style={{ backgroundColor: '#2e7d32', color: '#fff', padding: '2.5rem 1.5rem', textAlign: 'center', borderBottom: '3px solid #b7996b' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
           <PartyPopper size={56} color="#fff" />
@@ -167,7 +143,6 @@ function PantallaExito({ pedido }) {
       </div>
 
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '1.5rem 1rem' }}>
-        {/* Resumen */}
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <FileText size={18} /> Resumen del pedido
@@ -196,7 +171,6 @@ function PantallaExito({ pedido }) {
           </div>
         </div>
 
-        {/* Datos de entrega */}
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Truck size={18} /> Datos de entrega
@@ -247,7 +221,6 @@ function PantallaExito({ pedido }) {
           </div>
         </div>
 
-        {/* Datos bancarios (solo si es transferencia) */}
         {esTransferencia && (
           <div style={{ ...S.card, border: '2px solid #f46e15' }}>
             <div style={{ ...S.head, backgroundColor: '#f46e15', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -270,7 +243,6 @@ function PantallaExito({ pedido }) {
           </div>
         )}
 
-        {/* Link de seguimiento */}
         <div style={{ ...S.alert, ...S.info, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Search size={16} color="#1565c0" style={{ flexShrink: 0 }} />
           <span>
@@ -282,7 +254,6 @@ function PantallaExito({ pedido }) {
           </span>
         </div>
 
-        {/* Botón WhatsApp */}
         <a
           href={`https://wa.me/${WA_NUMBER}?text=${msgWA}`}
           target="_blank"
@@ -315,7 +286,6 @@ export default function PaginaCheckout() {
   const { usuario, loading: authLoading, abrirModal } = useAuth()
   const { carrito, total, vaciarCarrito } = useCart()
 
-  // ── Estado del formulario ─────────────────────────────────────────────────
   const [datos, setDatos] = useState({
     nombre: '', email: '', telefono: '',
     direccion: '', referencia: '', zona: '',
@@ -327,17 +297,14 @@ export default function PaginaCheckout() {
   const [pedidoExito,   setPedidoExito]   = useState(null)
   const [cargandoPerfil, setCargandoPerfil] = useState(false)
 
-  // ── Estado de validación de teléfono ─────────────────────────────────────
   const [errorTelefono, setErrorTelefono] = useState(null)
   const [telefonoValido, setTelefonoValido] = useState(false)
 
-  // ── Estado de cálculo de delivery ─────────────────────────────────────────
   const [deliveryInfo,    setDeliveryInfo]    = useState(null)
   const [calculandoEnvio, setCalculandoEnvio] = useState(false)
   const [errorDelivery,   setErrorDelivery]   = useState(null)
   const debounceRef = useRef(null)
 
-  // ── Calcular totales ──────────────────────────────────────────────────────
   const costoDelivery = (() => {
     if (metodoEntrega !== 'delivery') return 0
     if (deliveryInfo?.disponible && deliveryInfo?.costo !== undefined) return deliveryInfo.costo
@@ -346,7 +313,6 @@ export default function PaginaCheckout() {
   const totalFinal = total + costoDelivery
   const items = carrito
 
-  // ── Pre-rellenar datos del cliente desde Supabase (si está logueado) ─────
   useEffect(() => {
     if (!usuario) return
     setCargandoPerfil(true)
@@ -373,7 +339,6 @@ export default function PaginaCheckout() {
       })
   }, [usuario])
 
-  // ── Calcular delivery con debounce al escribir dirección ─────────────────
   useEffect(() => {
     if (metodoEntrega !== 'delivery') {
       setDeliveryInfo(null)
@@ -408,12 +373,10 @@ export default function PaginaCheckout() {
     return () => clearTimeout(debounceRef.current)
   }, [datos.zona, datos.direccion, metodoEntrega, total])
 
-  // ── Cambiar campo ─────────────────────────────────────────────────────────
   function cambiar(campo, valor) {
     setDatos(prev => ({ ...prev, [campo]: valor }))
   }
 
-  // ── Manejar cambio de teléfono con validación ────────────────────────────
   const manejarCambioTelefono = (valor) => {
     cambiar('telefono', valor)
     
@@ -433,12 +396,10 @@ export default function PaginaCheckout() {
     }
   }
 
-  // ── Confirmar pedido ──────────────────────────────────────────────────────
   async function confirmarPedido() {
     console.log('🚀 confirmarPedido se ejecutó')
     setError(null)
 
-    // Validaciones
     if (!datos.nombre.trim()) return setError('Ingresá tu nombre completo.')
     if (!datos.email.trim()) return setError('Ingresá tu email para recibir la confirmación.')
     if (!datos.telefono.trim()) return setError('Ingresá tu número de teléfono.')
@@ -455,7 +416,7 @@ export default function PaginaCheckout() {
 
     setEnviando(true)
     try {
-      // 1. Buscar o crear cliente por EMAIL
+      console.log('📌 1. Buscando cliente por email:', datos.email.trim())
       let clienteId = null
       const { data: clienteExistente } = await supabase
         .from('clientes')
@@ -464,8 +425,9 @@ export default function PaginaCheckout() {
         .maybeSingle()
 
       if (clienteExistente) {
+        console.log('📌 2. Cliente encontrado:', clienteExistente.id)
         clienteId = clienteExistente.id
-        await supabase
+        const { error: updateError } = await supabase
           .from('clientes')
           .update({
             nombre_completo: datos.nombre.trim(),
@@ -474,7 +436,14 @@ export default function PaginaCheckout() {
             updated_at:      new Date().toISOString(),
           })
           .eq('id', clienteId)
+        
+        if (updateError) {
+          console.error('❌ Error al actualizar cliente:', updateError)
+          throw updateError
+        }
+        console.log('✅ Cliente actualizado:', clienteId)
       } else {
+        console.log('📌 2. Cliente no encontrado, creando nuevo...')
         const { data: nuevoCliente, error: errCliente } = await supabase
           .from('clientes')
           .insert({
@@ -490,14 +459,14 @@ export default function PaginaCheckout() {
           .single()
         if (errCliente) throw errCliente
         clienteId = nuevoCliente.id
+        console.log('✅ Cliente creado:', clienteId)
       }
 
-      // 2. Armar dirección completa
       const direccionCompleta = metodoEntrega === 'delivery'
         ? [datos.direccion.trim(), datos.referencia.trim()].filter(Boolean).join(' — ')
         : null
 
-      // 3. Crear pedido
+      console.log('📌 3. Creando pedido...')
       const { data: pedidoDB, error: errPedido } = await supabase
         .from('pedidos')
         .insert({
@@ -517,11 +486,15 @@ export default function PaginaCheckout() {
         })
         .select('id, numero_pedido')
         .single()
-      if (errPedido) throw errPedido
+      if (errPedido) {
+        console.error('❌ Error al crear pedido:', errPedido)
+        throw errPedido
+      }
 
       const numeroPedido = pedidoDB.numero_pedido
+      console.log('✅ Pedido creado:', numeroPedido)
 
-      // 4. Crear detalle del pedido
+      console.log('📌 4. Creando detalle del pedido...')
       const detalles = items.map(item => ({
         pedido_id:       pedidoDB.id,
         producto_id:     item.id,
@@ -532,8 +505,8 @@ export default function PaginaCheckout() {
         .from('detalle_pedido')
         .insert(detalles)
       if (errDetalle) throw errDetalle
+      console.log('✅ Detalle creado')
 
-      // 5. ✅ Éxito
       setPedidoExito({
         numeroPedido,
         metodoPago,
@@ -548,7 +521,7 @@ export default function PaginaCheckout() {
       })
       vaciarCarrito()
 
-      // ── Enviar a n8n ──────────────────────────────────────────────────────
+      console.log('📌 5. Enviando a n8n...')
       const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || 'https://panfree-bot.app.n8n.cloud/webhook/pedido'
       try {
         await fetch(N8N_WEBHOOK_URL, {
@@ -580,14 +553,13 @@ export default function PaginaCheckout() {
       }
 
     } catch (err) {
-      console.error('Error al crear pedido:', err)
+      console.error('❌ Error al crear pedido:', err)
       setError('Ocurrió un error al procesar el pedido. Intentá de nuevo o contactanos por WhatsApp.')
     } finally {
       setEnviando(false)
     }
   }
 
-  // ── Guards de renderizado ─────────────────────────────────────────────────
   if (authLoading) {
     return (
       <div style={{ ...S.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -634,7 +606,6 @@ export default function PaginaCheckout() {
       </div>
 
       <div style={S.main}>
-        {/* RESUMEN DEL PEDIDO */}
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <ShoppingCart size={18} /> Tu pedido ({items.length} {items.length === 1 ? 'producto' : 'productos'})
@@ -672,7 +643,6 @@ export default function PaginaCheckout() {
           </div>
         </div>
 
-        {/* DATOS PERSONALES */}
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <User size={18} /> {esInvitado ? 'Tus datos (invitado)' : 'Tus datos'}
@@ -756,7 +726,6 @@ export default function PaginaCheckout() {
           </div>
         </div>
 
-        {/* MÉTODO DE ENTREGA */}
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Truck size={18} /> Método de entrega
@@ -799,7 +768,6 @@ export default function PaginaCheckout() {
               </div>
             </div>
 
-            {/* Campos de zona y dirección */}
             {metodoEntrega === 'delivery' && (
               <div style={{ marginTop: '0.5rem', padding: '1rem', backgroundColor: '#fafafa', borderRadius: '6px', border: '1px solid #eee' }}>
                 <div>
@@ -883,7 +851,6 @@ export default function PaginaCheckout() {
           </div>
         </div>
 
-        {/* MÉTODO DE PAGO */}
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <CreditCard size={18} /> Método de pago
@@ -915,14 +882,12 @@ export default function PaginaCheckout() {
           </div>
         </div>
 
-        {/* Error */}
         {error && (
           <div style={{ ...S.alert, ...S.err, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <AlertCircle size={16} color="#c62828" /> {error}
           </div>
         )}
 
-        {/* ✅ BOTÓN CONFIRMAR - CORREGIDO */}
         <button
           style={{ ...S.btnNaranja, opacity: enviando ? 0.7 : 1, cursor: enviando ? 'not-allowed' : 'pointer', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
           onClick={() => confirmarPedido()}
