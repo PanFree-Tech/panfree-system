@@ -4,6 +4,7 @@
  * DESCRIPCION:
  *  - Client Component con Hero de alta conversión, badges de confianza,
  *    búsqueda en tiempo real y filtros ordenados sin desorden visual.
+ *  - ✅ ELIMINADA sección de testimonios (eran falsos). Los enlaces a redes ya están en header/footer.
  */
 'use client'
 
@@ -11,7 +12,7 @@ import React, { useState, useMemo } from 'react'
 import {
   Sparkles,
   WheatOff,
-  Wheat,  // ✅ AGREGADO
+  Wheat,
   CakeSlice,
   Sandwich,
   PartyPopper,
@@ -26,7 +27,7 @@ import ProductCard from '../components/ProductCard'
 
 const CATEGORIAS = [
   { id: 'todos', label: 'Todos', Icon: Sparkles },
-  { id: 'panes', label: 'Panes', Icon: Wheat },  // ✅ Usa Wheat
+  { id: 'panes', label: 'Panes', Icon: Wheat },
   { id: 'dulces', label: 'Dulces', Icon: CakeSlice },
   { id: 'salados', label: 'Salados', Icon: Sandwich },
   { id: 'eventos', label: 'Eventos', Icon: PartyPopper },
@@ -104,7 +105,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
               letterSpacing: '0.3px',
             }}
           >
-            <WheatOff size={16} /> 100% Sin Gluten  {/* ✅ Usa WheatOff */}
+            <WheatOff size={16} /> 100% Sin Gluten
           </div>
 
           {/* Título Principal */}
@@ -178,7 +179,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
                 color: '#334c2b',
               }}
             >
-              <Wheat size={16} color="#334c2b" /> Artesanal  {/* ✅ Usa Wheat */}
+              <Wheat size={16} color="#334c2b" /> Artesanal
             </div>
 
             <div
@@ -337,7 +338,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-              <Wheat size={32} color="#334c2b" />  {/* ✅ Usa Wheat */}
+              <Wheat size={32} color="#334c2b" />
             </div>
             <p style={{ fontSize: '1rem', fontWeight: 600 }}>
               {busqueda

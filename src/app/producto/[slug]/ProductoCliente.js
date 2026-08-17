@@ -1,6 +1,6 @@
 /**
  * 📁 UBICACIÓN: src/app/producto/[slug]/ProductoCliente.js
- * 📅 ACTUALIZADO: 2026-03-07
+ * 📅 ACTUALIZADO: 2026-08-16
  * 📌 CAMBIOS:
  *  - Carrusel de imágenes: imagen_url + imagenes_urls[]
  *  - Auto-avance cada 4 segundos, pausa al hover
@@ -8,11 +8,17 @@
  *  - Flechas prev/next + puntos indicadores pill
  *  - Swipe táctil en mobile
  *  - Si solo hay 1 imagen: comportamiento idéntico al original
+ *  - ✅ FIX AUDITORÍA DISEÑO: badge "Sin Gluten" usaba emoji 🌾 (espiga de
+ *    grano) — contradictorio para una marca sin gluten. Reemplazado por
+ *    ícono WheatOff (trigo tachado) de Lucide.
+ *  - ✅ FIX AUDITORÍA DISEÑO: badge "Destacado" usaba emoji ⭐ en vez del
+ *    ícono Star de Lucide (que sí se usa en ProductCard.js) — unificado.
  */
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { WheatOff, Star } from 'lucide-react'
 import { useCart } from '../../../context/CartContext'
 
 const formatPYG = n => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
@@ -216,12 +222,12 @@ export default function PaginaProductoCliente({ producto, relacionados, disponib
           {/* Badges sobre el carrusel */}
           <div style={{ position: 'absolute', top: '1rem', left: '1rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', zIndex: 3 }}>
             {producto.is_featured && (
-              <span style={{ backgroundColor: '#f46e15', color: '#fff', padding: '0.3rem 0.7rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
-                ⭐ Destacado
+              <span style={{ backgroundColor: '#f46e15', color: '#fff', padding: '0.3rem 0.7rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                <Star size={14} fill="currentColor" /> Destacado
               </span>
             )}
-            <span style={{ backgroundColor: '#334c2b', color: '#eee6d9', padding: '0.3rem 0.7rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
-              🌾 Sin Gluten
+            <span style={{ backgroundColor: '#334c2b', color: '#eee6d9', padding: '0.3rem 0.7rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+              <WheatOff size={16} /> Sin Gluten
             </span>
           </div>
         </div>

@@ -6,18 +6,20 @@
  * - Expo métodos en window.__PANFREE_CART para compatibilidad con código legacy
  * - SIEMPRE reasigna los métodos en cada render para asegurar que apunten a React state
  * - FIX: useEffect de sincronización movido al FINAL para evitar TDZ (Temporal Dead Zone)
+ * - ✅ FIX AUDITORÍA CONVERSIÓN: eliminada la obligación de estar autenticado para agregar al carrito
  */
 
 'use client'
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { useAuth } from './AuthContext'
+// Ya no necesitamos useAuth para el carrito
+// import { useAuth } from './AuthContext'
 
 const CartContext = createContext()
 
 export function CartProvider({ children }) {
   const [carrito, setCarrito] = useState([])
   const [visible, setVisible] = useState(false)
-  const { estaAutenticado, abrirModal } = useAuth()
+  // const { estaAutenticado, abrirModal } = useAuth()  // ← ELIMINADO
 
   const STORAGE_KEY = 'panfree_cart_v1'
 
@@ -25,7 +27,7 @@ export function CartProvider({ children }) {
   // INICIALIZACIÓN (efectos tempranos)
   // ============================================
 
-  // Inicializar carrito desde localStorage o desde window.__PANFREE_CART si ya existe
+  // Inicializar carrito desde localStorage
   useEffect(() => {
     try {
       if (typeof window === 'undefined') return
@@ -54,7 +56,7 @@ export function CartProvider({ children }) {
   }, [carrito])
 
   // ============================================
-  // FUNCIONES DEL CARRITO (declaradas PRIMERO)
+  // FUNCIONES DEL CARRITO
   // ============================================
 
   const _agregarProducto = useCallback((producto) => {
@@ -76,13 +78,11 @@ export function CartProvider({ children }) {
     setVisible(true)
   }, [])
 
+  // ✅ AHORA NO BLOQUEA POR AUTENTICACIÓN
   const agregarAlCarrito = useCallback((producto) => {
-    if (!estaAutenticado) {
-      abrirModal(() => _agregarProducto(producto))
-      return
-    }
+    // ❌ ELIMINADO: if (!estaAutenticado) { abrirModal(...); return; }
     _agregarProducto(producto)
-  }, [_agregarProducto, abrirModal, estaAutenticado])
+  }, [_agregarProducto])
 
   const eliminarDelCarrito = useCallback((productoId) => {
     setCarrito(prev => prev.filter(p => p.id !== productoId))
@@ -111,7 +111,7 @@ export function CartProvider({ children }) {
   }, [])
 
   // ============================================
-  // MÉTODOS DE COMPATIBILIDAD (usados por window.__PANFREE_CART)
+  // MÉTODOS DE COMPATIBILIDAD (window.__PANFREE_CART)
   // ============================================
 
   const addItemToCart = useCallback((product) => {
@@ -143,13 +143,11 @@ export function CartProvider({ children }) {
 
   // ============================================
   // SINCRONIZACIÓN CON window.__PANFREE_CART
-  // (MOVIDO AQUÍ - DESPUÉS DE DECLARAR TODAS LAS FUNCIONES)
   // ============================================
   useEffect(() => {
     if (typeof window === 'undefined') return
 
     if (!window.__PANFREE_CART) {
-      // Creamos una fachada mínima que otros scripts esperan
       const listeners = new EventTarget()
       const toastListeners = new EventTarget()
       const itemsLocal = carrito || []
@@ -163,7 +161,6 @@ export function CartProvider({ children }) {
         getCount: () => (window.__PANFREE_CART.items || []).reduce((s, it) => s + (it.quantity || 1), 0),
         getTotal: () => (window.__PANFREE_CART.items || []).reduce((s, it) => s + (it.quantity || 1) * (it.price || 0), 0),
         addItem: (product) => {
-          // delegar a context
           const event = new CustomEvent('__from_legacy_add', { detail: product })
           listeners.dispatchEvent(event)
         },
@@ -187,7 +184,6 @@ export function CartProvider({ children }) {
       }
     }
 
-    // Actualizar items y getters
     window.__PANFREE_CART.items = carrito
     window.__PANFREE_CART.getItems = () => [...carrito]
     window.__PANFREE_CART.getCount = () =>
@@ -195,14 +191,12 @@ export function CartProvider({ children }) {
     window.__PANFREE_CART.getTotal = () =>
       carrito.reduce((s, item) => s + (item.subtotal || (item.price || item.precio_venta) * (item.cantidad || item.quantity || 1) || 0), 0)
 
-    // Emitir evento update para listeners externos
     try {
       window.__PANFREE_CART.listeners?.dispatchEvent(new CustomEvent('update', { detail: carrito }))
     } catch (err) {
       // ignore
     }
 
-    // Listeners para mensajes legacy -> delegar en el context
     const legacyAdd = (e) => {
       const p = e.detail
       addItemToCart(p)
@@ -246,7 +240,6 @@ export function CartProvider({ children }) {
         vaciarCarrito,
         total,
         cantidadItems,
-        // Métodos de compatibilidad
         addItemToCart,
         updateItemQuantity,
         removeItemFromCart,

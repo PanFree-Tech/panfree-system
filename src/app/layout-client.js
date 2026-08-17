@@ -5,6 +5,9 @@
  *  - Navegación inferior fija en móvil (BottomNav) con 4 accesos: Inicio, Buscar, Carrito, WhatsApp
  *  - Regla 60-30-10 estricta en Header y Footer
  *  - Header limpio con acceso rápido a catálogo, WhatsApp, usuario y carrito
+ *  - ✅ AGREGADO: enlaces legales en el footer (Política de Privacidad, Eliminar Datos, Términos y Condiciones)
+ *  - ✅ AGREGADO: enlace a Certificado Oficial SIN GLUTEN (DINAPI) en el footer
+ *  - ✅ AGREGADO: enlace a Sobre Nosotros en el footer
  */
 
 'use client'
@@ -329,8 +332,64 @@ function Footer() {
         </div>
 
         {/* Línea separadora */}
-        <div style={{ borderTop: '1px solid rgba(183,153,107,0.3)', paddingTop: '1.25rem', textAlign: 'center' }}>
-          <p style={{ color: '#b7996b', fontSize: '0.8rem' }}>
+        <div style={{ borderTop: '1px solid rgba(183,153,107,0.3)', paddingTop: '1.25rem' }}>
+          {/* Enlaces legales */}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            gap: '1.5rem',
+            marginBottom: '1rem',
+            fontSize: '0.85rem',
+          }}>
+            <a
+              href="/politica-de-privacidad"
+              style={{ color: '#b7996b', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseOver={e => e.currentTarget.style.color = '#eee6d9'}
+              onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
+            >
+              Política de Privacidad
+            </a>
+            <a
+              href="/eliminar-datos"
+              style={{ color: '#b7996b', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseOver={e => e.currentTarget.style.color = '#eee6d9'}
+              onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
+            >
+              Eliminar Datos
+            </a>
+            <a
+              href="/terminos-y-condiciones"
+              style={{ color: '#b7996b', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseOver={e => e.currentTarget.style.color = '#eee6d9'}
+              onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
+            >
+              Términos y Condiciones
+            </a>
+            {/* NUEVO: Sobre Nosotros */}
+            <a
+              href="/sobre-nosotros"
+              style={{ color: '#b7996b', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseOver={e => e.currentTarget.style.color = '#eee6d9'}
+              onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
+            >
+              Sobre Nosotros
+            </a>
+            {/* NUEVO: Certificado Oficial */}
+            <a
+              href="https://www.dinapi.gov.py/portal/v3/noticias/detalle-noticia?idNoticia=261"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#b7996b', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseOver={e => e.currentTarget.style.color = '#eee6d9'}
+              onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
+            >
+              🏅 Certificado Oficial SIN GLUTEN
+            </a>
+          </div>
+
+          {/* Copyright */}
+          <p style={{ color: '#b7996b', fontSize: '0.8rem', textAlign: 'center', margin: 0 }}>
             © 2026 PanFree. Panadería Artesanal Libre de Gluten. Todos los derechos reservados.
           </p>
         </div>
