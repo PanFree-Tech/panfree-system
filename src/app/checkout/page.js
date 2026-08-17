@@ -439,9 +439,10 @@ export default function PaginaCheckout() {
     if (!datos.nombre.trim()) return setError('Ingresá tu nombre completo.')
     if (!datos.email.trim()) return setError('Ingresá tu email para recibir la confirmación.')
     if (!datos.telefono.trim()) return setError('Ingresá tu número de teléfono.')
-    if (!telefonoValido && datos.telefono.trim()) {
-      return setError('El número de teléfono no es válido. Usá +595 9XX XXX XXX o 09XX XXX XXX.')
-    }
+	if (!telefonoValido && datos.telefono.trim()) {
+  const resultado = validarTelefonoParaguayo(datos.telefono)
+  return setError(resultado.mensaje)
+	}
     if (metodoEntrega === 'delivery') {
       if (!datos.zona) return setError('Seleccioná tu zona de entrega.')
       if (calculandoEnvio) return setError('Esperá mientras calculamos el costo de envío.')
