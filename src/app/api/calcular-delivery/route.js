@@ -1,16 +1,17 @@
 /**
  * 📁 UBICACIÓN: src/app/api/calcular-delivery/route.js
- * 📅 ACTUALIZADO: 2026-08-15 (PROTEGIDO CON AUTENTICACIÓN)
+ * 📅 ACTUALIZADO: 2026-08-17
  * 📌 DESCRIPCIÓN: Calcula el costo de envío según ubicación.
- *    CAMBIO CRÍTICO: Ahora requiere JWT válido en Authorization header.
  *    - Verifica token de Supabase
- *    - Solo usuarios autenticados pueden calcular delivery
+ *    - ✅ AGREGADO: lógica de envío gratis cuando subtotal >= 50000
  */
 
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
+
+const UMBRAL_ENVIO_GRATIS = 50000 // ₲ 50.000
 
 export async function POST(request) {
   try {
@@ -36,7 +37,7 @@ export async function POST(request) {
     // OBTENER DATOS DEL REQUEST
     // ============================================
     const body = await request.json()
-    const { zona, peso = 0, distancia = 0 } = body
+    const { zona, peso = 0, distancia = 0, subtotal = 0 } = body
 
     if (!zona) {
       return NextResponse.json(
@@ -48,12 +49,11 @@ export async function POST(request) {
     // ============================================
     // LÓGICA DE CÁLCULO DE DELIVERY
     // ============================================
-    // Mantener la lógica original exactamente igual
     const costos = {
       zona1: 15000, // ₲ 15.000
       zona2: 25000, // ₲ 25.000
       zona3: 35000, // ₲ 35.000
-      retirar: 0, // Retiro en tienda
+      retirar: 0,   // Retiro en tienda
     }
 
     const costoBase = costos[zona] || 20000
@@ -61,7 +61,12 @@ export async function POST(request) {
     // Costo adicional por peso (opcional)
     const costoAdicionalPorPeso = peso > 0 ? (peso - 1) * 2000 : 0
 
-    const costoFinal = costoBase + costoAdicionalPorPeso
+    let costoFinal = costoBase + costoAdicionalPorPeso
+
+    // ✅ Si el subtotal supera el umbral, envío gratis
+    if (subtotal >= UMBRAL_ENVIO_GRATIS) {
+      costoFinal = 0
+    }
 
     // ============================================
     // DEVOLVER RESULTADO
@@ -71,6 +76,8 @@ export async function POST(request) {
       costo: costoFinal,
       costo_base: costoBase,
       costo_adicional_peso: costoAdicionalPorPeso,
+      subtotal: subtotal,
+      envío_gratis: costoFinal === 0 && subtotal >= UMBRAL_ENVIO_GRATIS,
       tiempo_entrega: '24-48 horas',
       disponible: true,
     })
