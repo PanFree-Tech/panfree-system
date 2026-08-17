@@ -75,44 +75,46 @@ const S = {
   fila:     { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0', borderBottom: '1px solid #f0ebe4', fontSize: '0.92rem' },
 }
 
-// ── Validación de teléfono paraguayo ──────────────────────────────────────
-const validarTelefonoParaguayo = (telefono) => {
+// ── Validación de teléfono (internacional) ──────────────────────────────
+const validarTelefono = (telefono) => {
   // Eliminar espacios, guiones, paréntesis y puntos
   const limpio = telefono.replace(/[\s\-\(\)\.]/g, '')
   
   // FORMATOS VÁLIDOS:
-  // 1. +595XXXXXXXXX (con código de país, 9 dígitos)
-  // 2. 09XXXXXXXX (con 0, 9 dígitos)
-  // 3. 09XX XXX XXX (con espacios, 9 dígitos)
-  // 4. 098XXXXXXXX (con 0, 9 dígitos)
-  // 5. 595XXXXXXXX (sin +, 9 dígitos)
+  // 1. Con código de país: +XX XXXXXXXXX (ej. +595 981 234 567)
+  // 2. Sin código de país: 0XX XXX XXX (ej. 0981 234 567)
+  // 3. Números de 10+ dígitos (internacionales)
   
-  // Formato 1: +595XXXXXXXXX (con código de país)
-  if (/^\+595\d{9}$/.test(limpio)) {
-    return { valido: true, mensaje: 'Número válido' }
-  }
-  
-  // Formato 2: 595XXXXXXXX (sin +, con código de país)
-  if (/^595\d{9}$/.test(limpio)) {
-    return { valido: true, mensaje: 'Número válido' }
-  }
-  
-  // Formato 3: 09XXXXXXXX (con 0, 9 dígitos)
-  if (/^09\d{8}$/.test(limpio)) {
-    return { valido: true, mensaje: 'Número válido' }
-  }
-  
-  // Formato 4: 9XXXXXXXX (sin 0 ni código, 9 dígitos)
-  if (/^\d{9}$/.test(limpio) && !limpio.startsWith('09') && !limpio.startsWith('595')) {
+  // Formato 1: +XX... (código de país de 1-3 dígitos)
+  if (/^\+\d{1,3}\d{6,15}$/.test(limpio)) {
     return { 
-      valido: false, 
-      mensaje: 'Agregá el 0 delante: 0' + limpio 
+      valido: true, 
+      mensaje: 'Número válido',
+      pais: 'internacional'
+    }
+  }
+  
+  // Formato 2: 0XX... (sin código de país, ej. Paraguay, Argentina)
+  if (/^0\d{6,15}$/.test(limpio) && limpio.length >= 9) {
+    return { 
+      valido: true, 
+      mensaje: 'Número válido',
+      pais: 'local'
+    }
+  }
+  
+  // Formato 3: Número de 10+ dígitos (sin código de país)
+  if (/^\d{10,15}$/.test(limpio)) {
+    return { 
+      valido: true, 
+      mensaje: 'Número válido',
+      pais: 'internacional_sin_codigo'
     }
   }
   
   return { 
     valido: false, 
-    mensaje: 'Formato incorrecto. Usá +595 9XX XXX XXX, 09XX XXX XXX o 098XXXXXXX' 
+    mensaje: 'El número no es válido. Incluí el código de país (ej. +595 981 234 567 para Paraguay, +54 9 11 2345 6789 para Argentina)' 
   }
 }
 
