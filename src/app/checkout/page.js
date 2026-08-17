@@ -77,21 +77,33 @@ const S = {
 
 // ── Validación de teléfono paraguayo ──────────────────────────────────────
 const validarTelefonoParaguayo = (telefono) => {
-  // Eliminar espacios, guiones y paréntesis
-  const limpio = telefono.replace(/[\s\-\(\)]/g, '')
+  // Eliminar espacios, guiones, paréntesis y puntos
+  const limpio = telefono.replace(/[\s\-\(\)\.]/g, '')
+  
+  // FORMATOS VÁLIDOS:
+  // 1. +595XXXXXXXXX (con código de país, 9 dígitos)
+  // 2. 09XXXXXXXX (con 0, 9 dígitos)
+  // 3. 09XX XXX XXX (con espacios, 9 dígitos)
+  // 4. 098XXXXXXXX (con 0, 9 dígitos)
+  // 5. 595XXXXXXXX (sin +, 9 dígitos)
   
   // Formato 1: +595XXXXXXXXX (con código de país)
   if (/^\+595\d{9}$/.test(limpio)) {
     return { valido: true, mensaje: 'Número válido' }
   }
   
-  // Formato 2: 09XX XXXXXX (con el 0 del código de área)
+  // Formato 2: 595XXXXXXXX (sin +, con código de país)
+  if (/^595\d{9}$/.test(limpio)) {
+    return { valido: true, mensaje: 'Número válido' }
+  }
+  
+  // Formato 3: 09XXXXXXXX (con 0, 9 dígitos)
   if (/^09\d{8}$/.test(limpio)) {
     return { valido: true, mensaje: 'Número válido' }
   }
   
-  // Formato 3: 984XXXXXX (sin el 0 inicial)
-  if (/^\d{9}$/.test(limpio) && !limpio.startsWith('09')) {
+  // Formato 4: 9XXXXXXXX (sin 0 ni código, 9 dígitos)
+  if (/^\d{9}$/.test(limpio) && !limpio.startsWith('09') && !limpio.startsWith('595')) {
     return { 
       valido: false, 
       mensaje: 'Agregá el 0 delante: 0' + limpio 
@@ -100,7 +112,7 @@ const validarTelefonoParaguayo = (telefono) => {
   
   return { 
     valido: false, 
-    mensaje: 'Formato incorrecto. Usá +595 9XX XXX XXX o 09XX XXX XXX' 
+    mensaje: 'Formato incorrecto. Usá +595 9XX XXX XXX, 09XX XXX XXX o 098XXXXXXX' 
   }
 }
 
