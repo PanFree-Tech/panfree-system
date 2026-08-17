@@ -42,6 +42,7 @@ export default function ProductCard({
       cantidad,
       subtotal: precioVenta * cantidad,
       categoria: producto.categoria || '',
+      unidad_medida: producto.unidad_medida || null, // ← NUEVO: guardar unidad
     }
 
     agregarAlCarrito(payload)
@@ -188,13 +189,24 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* 4. PRECIO */}
+        {/* 4. PRECIO CON UNIDAD DE MEDIDA */}
         <div className={styles.priceRow}>
           <div className={styles.priceContainer}>
             <span className={styles.currencySymbol}>₲</span>
             <span className={`${styles.priceAmount} ${agotado ? styles.priceAgotado : ''}`}>
               {precioFormateado}
             </span>
+            {/* 👇 NUEVO: mostrar unidad de medida si existe y no es 'unidad' */}
+            {producto.unidad_medida && producto.unidad_medida !== 'unidad' && (
+              <span style={{
+                fontSize: '0.7rem',
+                color: '#888',
+                marginLeft: '4px',
+                fontWeight: 400,
+              }}>
+                / {producto.unidad_medida}
+              </span>
+            )}
           </div>
           {agotado && (
             <span className={styles.stockOutTag}>Sin stock</span>
