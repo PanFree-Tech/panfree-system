@@ -4,97 +4,123 @@
  * ÚNICA fuente de verdad para el carrito.
  * - Mantiene React state para todos los componentes que usan useCart()
  * - Expo métodos en window.__PANFREE_CART para compatibilidad con código legacy
- * - SIEMPRE reasigna los métodos en cada render para asegurar que apunten a React state
- * - FIX: useEffect de sincronización movido al FINAL para evitar TDZ (Temporal Dead Zone)
+ * - ✅ FIX: bandera "cargado" para evitar carrera entre carga y guardado
  * - ✅ FIX AUDITORÍA CONVERSIÓN: eliminada la obligación de estar autenticado para agregar al carrito
  * - ✅ AGREGADO: campo unidad_medida en los items del carrito
  */
 
 'use client'
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-// Ya no necesitamos useAuth para el carrito
-// import { useAuth } from './AuthContext'
 
 const CartContext = createContext()
 
 export function CartProvider({ children }) {
   const [carrito, setCarrito] = useState([])
   const [visible, setVisible] = useState(false)
-  // const { estaAutenticado, abrirModal } = useAuth()  // ← ELIMINADO
+  const [cargado, setCargado] = useState(false) // 👈 NUEVO: bandera para evitar guardado prematuro
 
   const STORAGE_KEY = 'panfree_cart_v1'
 
   // ============================================
-  // INICIALIZACIÓN (efectos tempranos)
+  // INICIALIZACIÓN - CARGAR DESDE localStorage
   // ============================================
-
-  // Inicializar carrito desde localStorage
   useEffect(() => {
     try {
       if (typeof window === 'undefined') return
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
         const parsed = JSON.parse(saved)
+        console.log('🔄 Carrito cargado desde localStorage:', parsed)
         setCarrito(Array.isArray(parsed) ? parsed : [])
-        return
+      } else {
+        console.log('🔄 No hay carrito guardado, iniciando vacío')
+        setCarrito([])
       }
-      setCarrito([])
     } catch (err) {
       console.error('Error al cargar carrito:', err)
       setCarrito([])
+    } finally {
+      setCargado(true) // 👈 Recién ahora está permitido persistir
     }
   }, [])
 
   // ============================================
-  // PERSISTIR EN localStorage
+  // PERSISTIR EN localStorage - SOLO DESPUÉS DE CARGAR
   // ============================================
   useEffect(() => {
+    if (!cargado) {
+      console.log('⏳ Persistencia en espera (cargando...)')
+      return // 👈 Evita sobreescribir con el estado inicial []
+    }
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(carrito))
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(carrito))
+        console.log('💾 Carrito guardado en localStorage:', carrito)
+      }
     } catch (err) {
       console.error('Error al guardar carrito:', err)
     }
-  }, [carrito])
+  }, [carrito, cargado])
 
   // ============================================
   // FUNCIONES DEL CARRITO
   // ============================================
 
   const _agregarProducto = useCallback((producto) => {
+    console.log('🛒 _agregarProducto recibió:', producto)
+    
     setCarrito(prev => {
+      console.log('📦 Carrito actual (prev):', prev)
+      
       const existente = prev.find(p => p.id === producto.id)
       if (existente) {
-        return prev.map(p =>
+        console.log('✅ Producto ya existe, actualizando cantidad')
+        const nuevoCarrito = prev.map(p =>
           p.id === producto.id
             ? {
                 ...p,
-                cantidad: (p.cantidad || p.quantity || 1) + (producto.cantidad || producto.quantity || 1),
-                subtotal: (p.subtotal || (p.precio_venta || p.price || 0) * (p.cantidad || p.quantity || 1)) + (producto.subtotal || (producto.precio_venta || producto.price || 0) * (producto.cantidad || producto.quantity || 1)),
+                cantidad: (p.cantidad || 1) + (producto.cantidad || 1),
+                subtotal: (p.precio_venta || 0) * ((p.cantidad || 1) + (producto.cantidad || 1)),
               }
             : p
         )
+        console.log('📦 Carrito actualizado (existente):', nuevoCarrito)
+        return nuevoCarrito
       }
-      // 👇 NUEVO: asegurar que el nuevo producto tenga unidad_medida
+      
+      // Nuevo producto
+      console.log('✅ Producto nuevo, agregando al carrito')
       const nuevoProducto = {
         ...producto,
+        cantidad: producto.cantidad || 1,
+        subtotal: producto.subtotal || (producto.precio_venta || 0) * (producto.cantidad || 1),
         unidad_medida: producto.unidad_medida || null,
       }
-      return [...prev, nuevoProducto]
+      
+      const nuevoCarrito = [...prev, nuevoProducto]
+      console.log('📦 Carrito actualizado (nuevo):', nuevoCarrito)
+      return nuevoCarrito
     })
     setVisible(true)
   }, [])
 
   // ✅ AHORA NO BLOQUEA POR AUTENTICACIÓN
   const agregarAlCarrito = useCallback((producto) => {
-    // ❌ ELIMINADO: if (!estaAutenticado) { abrirModal(...); return; }
+    console.log('🛒 agregarAlCarrito llamado con:', producto)
+    if (!producto || !producto.id) {
+      console.error('❌ Producto inválido:', producto)
+      return
+    }
     _agregarProducto(producto)
   }, [_agregarProducto])
 
   const eliminarDelCarrito = useCallback((productoId) => {
+    console.log('🗑️ Eliminando producto:', productoId)
     setCarrito(prev => prev.filter(p => p.id !== productoId))
   }, [])
 
   const actualizarCantidad = useCallback((productoId, nuevaCantidad) => {
+    console.log('🔄 Actualizando cantidad:', productoId, nuevaCantidad)
     if (nuevaCantidad < 1) {
       eliminarDelCarrito(productoId)
       return
@@ -105,7 +131,7 @@ export function CartProvider({ children }) {
           ? {
               ...p,
               cantidad: nuevaCantidad,
-              subtotal: (p.precio_venta || p.price || 0) * nuevaCantidad,
+              subtotal: (p.precio_venta || 0) * nuevaCantidad,
             }
           : p
       )
@@ -113,6 +139,7 @@ export function CartProvider({ children }) {
   }, [eliminarDelCarrito])
 
   const vaciarCarrito = useCallback(() => {
+    console.log('🗑️ Vaciando carrito')
     setCarrito([])
   }, [])
 
@@ -121,6 +148,7 @@ export function CartProvider({ children }) {
   // ============================================
 
   const addItemToCart = useCallback((product) => {
+    console.log('🔄 addItemToCart (legacy) llamado con:', product)
     _agregarProducto({
       id: product.id || product.slug || Date.now().toString(),
       nombre: product.name || product.nombre,
@@ -129,7 +157,7 @@ export function CartProvider({ children }) {
       cantidad: product.quantity || product.cantidad || 1,
       subtotal: (product.quantity || product.cantidad || 1) * (product.price || product.precio_venta || 0),
       categoria: product.categoria || product.category || '',
-      unidad_medida: product.unidad_medida || null, // 👈 NUEVO
+      unidad_medida: product.unidad_medida || null,
     })
   }, [_agregarProducto])
 
@@ -145,8 +173,8 @@ export function CartProvider({ children }) {
   // CÁLCULO DE TOTALES
   // ============================================
 
-  const total = carrito.reduce((sum, item) => sum + (item.subtotal || (item.precio_venta || item.price || 0) * (item.cantidad || item.quantity || 1) || 0), 0)
-  const cantidadItems = carrito.reduce((sum, item) => sum + (item.cantidad || item.quantity || 1), 0)
+  const total = carrito.reduce((sum, item) => sum + (item.subtotal || (item.precio_venta || 0) * (item.cantidad || 1) || 0), 0)
+  const cantidadItems = carrito.reduce((sum, item) => sum + (item.cantidad || 1), 0)
 
   // ============================================
   // SINCRONIZACIÓN CON window.__PANFREE_CART
@@ -194,9 +222,9 @@ export function CartProvider({ children }) {
     window.__PANFREE_CART.items = carrito
     window.__PANFREE_CART.getItems = () => [...carrito]
     window.__PANFREE_CART.getCount = () =>
-      carrito.reduce((s, item) => s + (item.cantidad || item.quantity || 1), 0)
+      carrito.reduce((s, item) => s + (item.cantidad || 1), 0)
     window.__PANFREE_CART.getTotal = () =>
-      carrito.reduce((s, item) => s + (item.subtotal || (item.price || item.precio_venta) * (item.cantidad || item.quantity || 1) || 0), 0)
+      carrito.reduce((s, item) => s + (item.subtotal || (item.price || item.precio_venta) * (item.cantidad || 1) || 0), 0)
 
     try {
       window.__PANFREE_CART.listeners?.dispatchEvent(new CustomEvent('update', { detail: carrito }))

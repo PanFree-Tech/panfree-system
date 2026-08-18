@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation' // 👈 NUEVO: importar router
 import {
   ShoppingCart,
   X,
@@ -27,6 +28,7 @@ function IconWhatsApp({ size = 20 }) {
 }
 
 export default function CartSidebar() {
+  const router = useRouter() // 👈 NUEVO: instanciar router
   const { carrito, visible, setVisible, eliminarDelCarrito, actualizarCantidad, total, vaciarCarrito } = useCart()
   const { estaAutenticado, abrirModal, usuario } = useAuth()
 
@@ -51,17 +53,22 @@ export default function CartSidebar() {
     }
   }, [visible, setVisible])
 
+  // ============================================
+  // IR AL CHECKOUT - CON ROUTER.PUSH (SIN FULL RELOAD)
+  // ============================================
   const irAlCheckout = useCallback(() => {
+    console.log('🛒 Navegando a checkout con router.push()')
+    
     if (!estaAutenticado) {
       abrirModal(() => {
         setVisible(false)
-        window.location.href = '/checkout'
+        router.push('/checkout') // ✅ Navegación SPA, sin remount
       })
       return
     }
     setVisible(false)
-    window.location.href = '/checkout'
-  }, [estaAutenticado, abrirModal, setVisible])
+    router.push('/checkout') // ✅ Navegación SPA, sin remount
+  }, [estaAutenticado, abrirModal, setVisible, router])
 
   const confirmarPorWhatsApp = useCallback(() => {
     if (carrito.length === 0) return
@@ -325,7 +332,6 @@ export default function CartSidebar() {
                     <p style={{ margin: '0.2rem 0 0', color: '#334c2b', fontWeight: 700, fontSize: '0.95rem' }}>
                       {formatPYG(item.subtotal || (item.precio_venta || item.price || 0) * item.cantidad)}
                     </p>
-                    {/* 👇 NUEVO: mostrar unidad de medida junto al precio unitario */}
                     <p style={{ margin: '0.1rem 0 0', color: '#888', fontSize: '0.78rem' }}>
                       {formatPYG(item.precio_venta || item.price)}
                       {item.unidad_medida && item.unidad_medida !== 'unidad'

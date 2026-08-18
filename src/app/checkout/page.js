@@ -4,9 +4,9 @@
  * 📌 CAMBIOS:
  *  - ✅ FIX AUDITORÍA CONVERSIÓN: ahora permite comprar como invitado (sin login).
  *  - ✅ FIX VISUAL: botón confirmar naranja, radios verdes.
- *  - ✅ VALIDACIÓN DE TELÉFONO: internacional con feedback en tiempo real.
+ *  - ✅ VALIDACIÓN DE TELÉFONO: simplificada y sin dependencia de estado.
  *  - ✅ INTEGRACIÓN N8N: Envío de datos del pedido y cliente a webhook de n8n.
- *  - ✅ FIX DEFINITIVO: uso de useCallback + window.confirmarPedido + logs de debug.
+ *  - ✅ FIX DEFINITIVO: validación en tiempo real, dependencias corregidas.
  */
 
 'use client'
@@ -73,25 +73,26 @@ const S = {
   fila:     { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0', borderBottom: '1px solid #f0ebe4', fontSize: '0.92rem' },
 }
 
-// ── Validación de teléfono (internacional) ──────────────────────────────
+// ── Validación de teléfono simplificada ──────────────────────────────
 const validarTelefono = (telefono) => {
+  if (!telefono || telefono.trim() === '') {
+    return { valido: false, mensaje: 'El teléfono es obligatorio.' }
+  }
+
   const limpio = telefono.replace(/[\s\-\(\)\.]/g, '')
   
-  if (/^\+\d{1,3}\d{6,15}$/.test(limpio)) {
+  // Validación flexible: acepta números con o sin código de país
+  if (/^\+\d{1,3}\d{7,15}$/.test(limpio)) {
     return { valido: true, mensaje: 'Número válido', pais: 'internacional' }
   }
   
-  if (/^0\d{6,15}$/.test(limpio) && limpio.length >= 9) {
+  if (/^\d{8,15}$/.test(limpio)) {
     return { valido: true, mensaje: 'Número válido', pais: 'local' }
-  }
-  
-  if (/^\d{10,15}$/.test(limpio)) {
-    return { valido: true, mensaje: 'Número válido', pais: 'internacional_sin_codigo' }
   }
   
   return { 
     valido: false, 
-    mensaje: 'El número no es válido. Incluí el código de país (ej. +595 981 234 567 para Paraguay, +54 9 11 2345 6789 para Argentina)' 
+    mensaje: 'Ingresá un número válido (mínimo 8 dígitos). Ej: 0981123456 o +595981123456'
   }
 }
 
@@ -313,6 +314,7 @@ export default function PaginaCheckout() {
   const totalFinal = total + costoDelivery
   const items = carrito
 
+  // ── Cargar perfil si usuario logueado ──────────────────────────────────────
   useEffect(() => {
     if (!usuario) return
     setCargandoPerfil(true)
@@ -339,6 +341,7 @@ export default function PaginaCheckout() {
       })
   }, [usuario])
 
+  // ── Calcular delivery ──────────────────────────────────────────────────────
   useEffect(() => {
     if (metodoEntrega !== 'delivery') {
       setDeliveryInfo(null)
@@ -373,6 +376,7 @@ export default function PaginaCheckout() {
     return () => clearTimeout(debounceRef.current)
   }, [datos.zona, datos.direccion, metodoEntrega, total])
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
   function cambiar(campo, valor) {
     setDatos(prev => ({ ...prev, [campo]: valor }))
   }
@@ -401,29 +405,53 @@ export default function PaginaCheckout() {
     console.log('🚀 confirmarPedido se ejecutó')
     setError(null)
 
-    if (!datos.nombre.trim()) return setError('Ingresá tu nombre completo.')
-    if (!datos.email.trim()) return setError('Ingresá tu email para recibir la confirmación.')
-    if (!datos.telefono.trim()) return setError('Ingresá tu número de teléfono.')
-    if (!telefonoValido && datos.telefono.trim()) {
-      const resultado = validarTelefono(datos.telefono)
-      return setError(resultado.mensaje)
+    // ✅ VALIDACIÓN SIMPLIFICADA - SIN DEPENDER DEL ESTADO telefonoValido
+    if (!datos.nombre.trim()) {
+      return setError('Ingresá tu nombre completo.')
     }
+    if (!datos.email.trim()) {
+      return setError('Ingresá tu email para recibir la confirmación.')
+    }
+    if (!datos.telefono.trim()) {
+      return setError('Ingresá tu número de teléfono.')
+    }
+
+    // Validación de teléfono en tiempo real (sin depender del estado)
+    const telefonoLimpio = datos.telefono.replace(/[\s\-\(\)\.]/g, '')
+    console.log('📞 Teléfono limpio:', telefonoLimpio)
+
+    if (telefonoLimpio.length < 8) {
+      return setError('El número de teléfono debe tener al menos 8 dígitos. Ej: 0981123456 o +595981123456')
+    }
+
+    console.log('✅ Validación de teléfono pasada')
+
+    // Validación de delivery
     if (metodoEntrega === 'delivery') {
       if (!datos.zona) return setError('Seleccioná tu zona de entrega.')
       if (calculandoEnvio) return setError('Esperá mientras calculamos el costo de envío.')
       if (!deliveryInfo?.disponible) return setError('La dirección ingresada está fuera de la zona de delivery.')
     }
-    if (items.length === 0) return setError('Tu carrito está vacío.')
+
+    if (items.length === 0) {
+      return setError('Tu carrito está vacío.')
+    }
 
     setEnviando(true)
     try {
       console.log('📌 1. Buscando cliente por email:', datos.email.trim())
       let clienteId = null
-      const { data: clienteExistente } = await supabase
+
+      const { data: clienteExistente, error: errClienteExistente } = await supabase
         .from('clientes')
         .select('id')
         .eq('email', datos.email.trim())
         .maybeSingle()
+
+      if (errClienteExistente) {
+        console.error('❌ Error buscando cliente:', errClienteExistente)
+        throw errClienteExistente
+      }
 
       if (clienteExistente) {
         console.log('📌 2. Cliente encontrado:', clienteExistente.id)
@@ -487,6 +515,7 @@ export default function PaginaCheckout() {
         })
         .select('id, numero_pedido')
         .single()
+
       if (errPedido) {
         console.error('❌ Error al crear pedido:', errPedido)
         throw errPedido
@@ -559,19 +588,23 @@ export default function PaginaCheckout() {
     } finally {
       setEnviando(false)
     }
-  }, [datos, metodoEntrega, metodoPago, items, total, totalFinal, deliveryInfo, usuario, vaciarCarrito])
+  }, [datos, metodoEntrega, metodoPago, items, total, totalFinal, deliveryInfo, usuario, vaciarCarrito, calculandoEnvio, costoDelivery])
 
-  // ✅ EXPONER LA FUNCIÓN EN EL ÁMBITO GLOBAL (SOLUCIÓN DEFINITIVA)
+  // ✅ EXPONER LA FUNCIÓN EN EL ÁMBITO GLOBAL (para debug)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.confirmarPedido = confirmarPedido
       console.log('✅ window.confirmarPedido expuesto globalmente')
-      console.log('🔍 typeof window.confirmarPedido:', typeof window.confirmarPedido)
     }
   }, [confirmarPedido])
 
-  // ✅ Verificar que la función existe (debug)
-  console.log('🔍 confirmarPedido definida:', typeof confirmarPedido)
+  // ── Debug ──────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    console.log('🔄 Componente Checkout montado')
+    console.log('📦 Items:', items.length)
+    console.log('💰 Total:', total)
+    console.log('👤 Usuario:', usuario?.email || 'Invitado')
+  }, [])
 
   if (authLoading) {
     return (
@@ -902,11 +935,9 @@ export default function PaginaCheckout() {
         )}
 
         <button
-          style={{ ...S.btnNaranja, opacity: enviando ? 0.7 : 1, cursor: enviando ? 'not-allowed' : 'pointer', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-          onClick={() => {
-            console.log('🟢 Botón clickeado - directo')
-            confirmarPedido()
-          }}
+          type="button"
+          style={{ ...S.btnNaranja, opacity: enviando ? 0.7 : 1, cursor: enviando ? 'not-allowed' : 'pointer', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', pointerEvents: 'auto' }}
+          onClick={confirmarPedido}
           disabled={enviando}
         >
           {enviando ? (
