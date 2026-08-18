@@ -12,7 +12,8 @@ import React, { useState, useMemo } from 'react'
 import {
   Sparkles,
   WheatOff,
-  Wheat,
+  Croissant,      // ✅ Pan (sin gluten)
+  ChefHat,        // ✅ Chef (artesanal)
   CakeSlice,
   Sandwich,
   PartyPopper,
@@ -27,7 +28,7 @@ import ProductCard from '../components/ProductCard'
 
 const CATEGORIAS = [
   { id: 'todos', label: 'Todos', Icon: Sparkles },
-  { id: 'panes', label: 'Panes', Icon: Wheat },
+  { id: 'panes', label: 'Panes', Icon: Croissant },  // ✅ Pan en lugar de trigo
   { id: 'dulces', label: 'Dulces', Icon: CakeSlice },
   { id: 'salados', label: 'Salados', Icon: Sandwich },
   { id: 'eventos', label: 'Eventos', Icon: PartyPopper },
@@ -179,7 +180,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
                 color: '#334c2b',
               }}
             >
-              <Wheat size={16} color="#334c2b" /> Artesanal
+              <ChefHat size={16} color="#334c2b" /> Artesanal
             </div>
 
             <div
@@ -338,7 +339,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-              <Wheat size={32} color="#334c2b" />
+              <Croissant size={32} color="#334c2b" />
             </div>
             <p style={{ fontSize: '1rem', fontWeight: 600 }}>
               {busqueda
