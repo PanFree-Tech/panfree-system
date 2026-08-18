@@ -1,15 +1,15 @@
 /**
- * ЁЯУБ UBICACI├УN: src/app/pedido/[numero]/page.js
- * ЁЯУЕ CREADO: 2026-03-12
- * ЁЯУМ DESCRIPCI├УN: Tracking p├║blico de pedido para el cliente.
- *    - Acceso por n├║mero de pedido + verificaci├│n de email (seguridad m├нnima)
- *    - Actualizaci├│n en tiempo real con Supabase Realtime
+ * з█?здз╪з▓? UBICACIз┌зе?N: src/app/pedido/[numero]/page.js
+ * з█?здз╪з▓? CREADO: 2026-03-12
+ * з█?здз╪з▓? DESCRIPCIз┌зе?N: Tracking pз┘зжбьblico de pedido para el cliente.
+ *    - Acceso por nз┘зжбьmero de pedido + verificaciз┌??n de email (seguridad mз█з╡зиnima)
+ *    - Actualizaciз┌??n en tiempo real con Supabase Realtime
  *    - Muestra progreso visual de estados
- *    - Detalle de productos, total, m├йtodo de entrega y pago
- *    - Sin login requerido (acceso p├║blico verificado)
+ *    - Detalle de productos, total, mз┌зозжtodo de entrega y pago
+ *    - Sin login requerido (acceso pз┘зжбьblico verificado)
  *
  *    URL: /pedido/PF-2026-0001
- * тЪая╕П  En caso de modificaci├│n significativa, actualizar este comentario.
+ * з█зк?з┘знзжз┘?зп  En caso de modificaciз┌??n significativa, actualizar este comentario.
  */
 'use client'
 
@@ -23,7 +23,7 @@ import {
   PackageCheck,
   PartyPopper,
   XCircle,
-  Wheat,
+  Croissant,      // ? Pan (sin gluten)
   Search,
   AlertCircle,
   FileText,
@@ -35,16 +35,16 @@ import {
   Sparkles
 } from 'lucide-react'
 
-// тФАтФА Configuraci├│n de estados тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+// з█зк?з╙зг?з█зк?з╙зг? Configuraciз┌??n de estados з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?
 const ESTADOS = [
-  { key: 'pendiente',      label: 'Recibido',       Icon: Inbox,        desc: 'Tu pedido fue recibido y est├б esperando confirmaci├│n.' },
-  { key: 'confirmado',     label: 'Confirmado',      Icon: CheckCircle,  desc: 'Confirmamos tu pedido. Pronto comenzamos la preparaci├│n.' },
-  { key: 'en_produccion',  label: 'En preparaci├│n',  Icon: ChefHat,      desc: 'Estamos horneando tu pedido con mucho cari├▒o.' },
-  { key: 'listo',          label: 'Listo',            Icon: PackageCheck, desc: 'Tu pedido est├б listo para entregar o retirar.' },
-  { key: 'entregado',      label: 'Entregado',        Icon: PartyPopper,  desc: '┬бTu pedido fue entregado! Gracias por elegirnos.' },
+  { key: 'pendiente',      label: 'Recibido',       Icon: Inbox,        desc: 'Tu pedido fue recibido y estз┌б▐? esperando confirmaciз┌??n.' },
+  { key: 'confirmado',     label: 'Confirmado',      Icon: CheckCircle,  desc: 'Confirmamos tu pedido. Pronto comenzamos la preparaciз┌??n.' },
+  { key: 'en_produccion',  label: 'En preparaciз┌??n',  Icon: ChefHat,      desc: 'Estamos horneando tu pedido con mucho cariз╓??o.' },
+  { key: 'listo',          label: 'Listo',            Icon: PackageCheck, desc: 'Tu pedido estз┌б▐? listo para entregar o retirar.' },
+  { key: 'entregado',      label: 'Entregado',        Icon: PartyPopper,  desc: 'з█з╝зиTu pedido fue entregado! Gracias por elegirnos.' },
 ]
 
-const ESTADO_CANCELADO = { key: 'cancelado', label: 'Cancelado', Icon: XCircle, desc: 'Este pedido fue cancelado. Contactanos por WhatsApp si ten├йs dudas.' }
+const ESTADO_CANCELADO = { key: 'cancelado', label: 'Cancelado', Icon: XCircle, desc: 'Este pedido fue cancelado. Contactanos por WhatsApp si tenз┌зозжs dudas.' }
 
 const COLORES = {
   pendiente     : { bg: '#fff8e1', text: '#e65100', border: '#ffe082' },
@@ -56,14 +56,14 @@ const COLORES = {
 }
 
 const WA_NUM   = '595984589845'
-const formatPYG = n => `тВ▓ ${Math.round(Number(n || 0)).toLocaleString('es-PY')}`
+const formatPYG = n => `з█зк??${Math.round(Number(n || 0)).toLocaleString('es-PY')}`
 const formatFecha = s => {
-  if (!s) return 'тАФ'
+  if (!s) return 'з█зк??
   const d = new Date(s)
   return d.toLocaleDateString('es-PY', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-// тФАтФА Estilos тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+// з█зк?з╙зг?з█зк?з╙зг? Estilos з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?
 const S = {
   page  : { minHeight: '100vh', backgroundColor: '#eee6d9', fontFamily: '"Segoe UI", sans-serif', paddingBottom: '3rem' },
   header: { backgroundColor: '#334c2b', color: '#fff', padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' },
@@ -82,7 +82,7 @@ const S = {
   btnWA  : { display: 'block', width: '100%', padding: '0.75rem', backgroundColor: '#25d366', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', fontFamily: '"Segoe UI", sans-serif', marginBottom: '0.5rem' },
 }
 
-// тФАтФА Barra de progreso de estados тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+// з█зк?з╙зг?з█зк?з╙зг? Barra de progreso de estados з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?
 function BarraEstado({ estadoActual }) {
   if (estadoActual === 'cancelado') {
     const CancelIcon = ESTADO_CANCELADO.Icon
@@ -112,7 +112,7 @@ function BarraEstado({ estadoActual }) {
         </div>
       </div>
 
-      {/* L├нnea de progreso */}
+      {/* Lз█з╡зиnea de progreso */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: '0.5rem' }}>
         {ESTADOS.map((e, idx) => {
           const completado = idx <= idxActual
@@ -120,7 +120,7 @@ function BarraEstado({ estadoActual }) {
           const StepIcon   = e.Icon
           return (
             <div key={e.key} style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-              {/* C├нrculo */}
+              {/* Cз█з╡зиrculo */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '0 0 auto' }}>
                 <div style={{
                   width         : esActual ? '36px' : '28px',
@@ -135,10 +135,10 @@ function BarraEstado({ estadoActual }) {
                   transition    : 'all 0.3s',
                   zIndex        : 1,
                 }}>
-                  {completado && !esActual ? 'тЬУ' : <StepIcon size={esActual ? 18 : 14} />}
+                  {completado && !esActual ? 'з█злзв? : <StepIcon size={esActual ? 18 : 14} />}
                 </div>
               </div>
-              {/* L├нnea conectora */}
+              {/* Lз█з╡зиnea conectora */}
               {idx < ESTADOS.length - 1 && (
                 <div style={{
                   flex            : 1,
@@ -170,14 +170,14 @@ function BarraEstado({ estadoActual }) {
   )
 }
 
-// тФАтФА Pantalla de verificaci├│n тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+// з█зк?з╙зг?з█зк?з╙зг? Pantalla de verificaciз┌??n з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?
 function PantallaVerificacion({ numero, onVerificado }) {
   const [email,       setEmail]       = useState('')
   const [verificando, setVerificando] = useState(false)
   const [error,       setError]       = useState(null)
 
   async function verificar() {
-    if (!email.trim()) { setError('Ingres├б tu email.'); return }
+    if (!email.trim()) { setError('Ingresз┌б▐? tu email.'); return }
     setVerificando(true)
     setError(null)
     try {
@@ -192,20 +192,20 @@ function PantallaVerificacion({ numero, onVerificado }) {
         .single()
 
       if (err || !data) {
-        setError('No encontramos ese n├║mero de pedido.')
+        setError('No encontramos ese nз┘зжбьmero de pedido.')
         return
       }
 
       // Verificar que el email coincide con el del cliente
       const emailCliente = data.clientes?.email?.toLowerCase()
       if (emailCliente !== email.trim().toLowerCase()) {
-        setError('El email no coincide con el pedido. Verific├б los datos.')
+        setError('El email no coincide con el pedido. Verificз┌б▐? los datos.')
         return
       }
 
       onVerificado(data)
     } catch {
-      setError('Error al verificar. Intent├б de nuevo.')
+      setError('Error al verificar. Intentз┌б▐? de nuevo.')
     } finally {
       setVerificando(false)
     }
@@ -215,7 +215,7 @@ function PantallaVerificacion({ numero, onVerificado }) {
     <div style={S.page}>
       <div style={S.header}>
         <a href="/" style={{ color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-          <Wheat size={24} color="#fff" />
+          <Croissant size={24} color="#fff" />
         </a>
         <h1 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700' }}>Seguimiento de pedido</h1>
       </div>
@@ -226,7 +226,7 @@ function PantallaVerificacion({ numero, onVerificado }) {
           </div>
           <div style={S.body}>
             <p style={{ color: '#666', fontSize: '0.9rem', marginTop: 0 }}>
-              Para proteger tu privacidad, confirm├б el email con el que realizaste el pedido.
+              Para proteger tu privacidad, confirmз┌б▐? el email con el que realizaste el pedido.
             </p>
 
             <div style={{ ...S.alert('warn'), marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -257,7 +257,7 @@ function PantallaVerificacion({ numero, onVerificado }) {
               disabled={verificando}
             >
               {verificando ? (
-                'VerificandoтАж'
+                'Verificandoз█зк??
               ) : (
                 <>
                   <Search size={18} />
@@ -267,7 +267,7 @@ function PantallaVerificacion({ numero, onVerificado }) {
             </button>
 
             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.82rem', color: '#999' }}>
-              ┬┐Problemas para acceder?{' '}
+              з█??Problemas para acceder?{' '}
               <a href={'https://wa.me/' + WA_NUM + '?text=' + encodeURIComponent('Hola! Quiero consultar sobre mi pedido ' + numero)}
                 style={{ color: '#f46e15', textDecoration: 'none', fontWeight: '600' }}>
                 Contactanos por WhatsApp
@@ -280,7 +280,7 @@ function PantallaVerificacion({ numero, onVerificado }) {
   )
 }
 
-// тФАтФА Pantalla de detalle de pedido тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+// з█зк?з╙зг?з█зк?з╙зг? Pantalla de detalle de pedido з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?
 function DetallePedido({ pedidoInicial, numero }) {
   const [pedido,   setPedido]   = useState(pedidoInicial)
   const [detalles, setDetalles] = useState([])
@@ -341,7 +341,7 @@ function DetallePedido({ pedidoInicial, numero }) {
       {/* Header */}
       <div style={S.header}>
         <a href="/" style={{ color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-          <Wheat size={24} color="#fff" />
+          <Croissant size={24} color="#fff" />
         </a>
         <div>
           <div style={{ fontWeight: '700', fontSize: '1rem' }}>Seguimiento de pedido</div>
@@ -354,7 +354,7 @@ function DetallePedido({ pedidoInicial, numero }) {
         {/* Badge Realtime */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem', fontSize: '0.78rem', color: '#2e7d32' }}>
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#2e7d32', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-          Actualizaci├│n en tiempo real
+          Actualizaciз┌??n en tiempo real
         </div>
 
         {/* Progreso */}
@@ -373,7 +373,7 @@ function DetallePedido({ pedidoInicial, numero }) {
           <div style={S.body}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#888', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>N┬░ Pedido</div>
+                <div style={{ fontSize: '0.75rem', color: '#888', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Nз╪з░б▌ Pedido</div>
                 <div style={{ fontWeight: '800', color: '#334c2b', fontSize: '1rem' }}>{pedido.numero_pedido}</div>
               </div>
               <div>
@@ -418,7 +418,7 @@ function DetallePedido({ pedidoInicial, numero }) {
                   backgroundColor: pedido.estado_pago === 'aprobado' ? '#e8f5e9' : '#fff8e1',
                   color: pedido.estado_pago === 'aprobado' ? '#2e7d32' : '#e65100',
                 }}>
-                  {pedido.estado_pago === 'aprobado' ? 'тЬУ Confirmado' : 'Pendiente'}
+                  {pedido.estado_pago === 'aprobado' ? 'з█злзв?Confirmado' : 'Pendiente'}
                 </div>
               </div>
             </div>
@@ -432,7 +432,7 @@ function DetallePedido({ pedidoInicial, numero }) {
               ) : (
                 detalles.map((d, i) => (
                   <div key={d.id} style={{ ...S.fila, borderBottom: i < detalles.length - 1 ? '1px solid #f0ebe4' : 'none', fontSize: '0.88rem' }}>
-                    <span style={{ color: '#555' }}>{d.cantidad}├Ч {d.productos?.nombre || 'тАФ'}</span>
+                    <span style={{ color: '#555' }}>{d.cantidad}з┌зеб▌ {d.productos?.nombre || 'з█зк??}</span>
                     <span style={{ fontWeight: '600' }}>{formatPYG(d.subtotal)}</span>
                   </div>
                 ))
@@ -445,12 +445,12 @@ function DetallePedido({ pedidoInicial, numero }) {
                 </div>
                 {Number(pedido.entrega_costo) > 0 && (
                   <div style={{ ...S.fila, color: '#666', fontSize: '0.88rem' }}>
-                    <span>Env├нo</span><span>{formatPYG(pedido.entrega_costo)}</span>
+                    <span>Envз█з╡зиo</span><span>{formatPYG(pedido.entrega_costo)}</span>
                   </div>
                 )}
                 {Number(pedido.entrega_costo) === 0 && pedido.metodo_entrega === 'delivery' && (
                   <div style={{ ...S.fila, color: '#2e7d32', fontSize: '0.88rem' }}>
-                    <span>Env├нo</span>
+                    <span>Envз█з╡зиo</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <Sparkles size={14} color="#2e7d32" /> Gratis
                     </span>
@@ -478,10 +478,10 @@ function DetallePedido({ pedidoInicial, numero }) {
         </a>
 
         <a href="/" style={{ display: 'block', textAlign: 'center', color: '#b7996b', fontSize: '0.88rem', textDecoration: 'none' }}>
-          тЖР Volver a la tienda
+          з█зк??Volver a la tienda
         </a>
 
-        {/* CSS para animaci├│n del dot Realtime */}
+        {/* CSS para animaciз┌??n del dot Realtime */}
         <style>{`
           @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
@@ -493,7 +493,7 @@ function DetallePedido({ pedidoInicial, numero }) {
   )
 }
 
-// тФАтФА P├бgina principal тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+// з█зк?з╙зг?з█зк?з╙зг? Pз┌б▐?gina principal з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?з█зк?з╙зг?
 export default function PaginaSeguimientoPedido({ params }) {
   const numero = params?.numero?.toUpperCase() || ''
 
@@ -501,7 +501,7 @@ export default function PaginaSeguimientoPedido({ params }) {
   const [pedido,     setPedido]     = useState(null)
   const [noExiste,   setNoExiste]   = useState(false)
 
-  // Verificar si el n├║mero tiene formato v├бlido PF-YYYY-XXXX
+  // Verificar si el nз┘зжбьmero tiene formato vз┌б▐?lido PF-YYYY-XXXX
   const formatoValido = /^PF-\d{4}-\d{4}$/.test(numero)
 
   if (!formatoValido) {
@@ -509,7 +509,7 @@ export default function PaginaSeguimientoPedido({ params }) {
       <div style={S.page}>
         <div style={S.header}>
           <a href="/" style={{ color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-            <Wheat size={24} color="#fff" />
+            <Croissant size={24} color="#fff" />
           </a>
           <h1 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700' }}>Seguimiento de pedido</h1>
         </div>
@@ -519,9 +519,9 @@ export default function PaginaSeguimientoPedido({ params }) {
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
                 <AlertCircle size={48} color="#c62828" />
               </div>
-              <p style={{ fontWeight: '700' }}>N├║mero de pedido inv├бlido.</p>
+              <p style={{ fontWeight: '700' }}>Nз┘зжбьmero de pedido invз┌б▐?lido.</p>
               <p style={{ fontSize: '0.88rem', color: '#666' }}>El formato correcto es PF-2026-0001</p>
-              <a href="/" style={{ color: '#f46e15', textDecoration: 'none', fontWeight: '600' }}>тЖР Volver a la tienda</a>
+              <a href="/" style={{ color: '#f46e15', textDecoration: 'none', fontWeight: '600' }}>з█зк??Volver a la tienda</a>
             </div>
           </div>
         </div>
