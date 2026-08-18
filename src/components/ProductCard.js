@@ -1,6 +1,5 @@
 'use client'
-
-import React, { useState, useCallback, useRef } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import {
   ShoppingCart,
@@ -13,6 +12,7 @@ import {
 } from 'lucide-react'
 import styles from './ProductCard.module.css'
 import { useCart } from '../context/CartContext'
+import { useAnalytics } from '../hooks/useAnalytics'
 
 export default function ProductCard({
   producto,
@@ -23,8 +23,14 @@ export default function ProductCard({
   const [cantidad, setCantidad] = useState(1)
   const [isAdded, setIsAdded] = useState(false)
   const imgRef = useRef(null)
-
   const { agregarAlCarrito, showToast } = useCart()
+  const { viewItem, addToCart: trackAddToCart } = useAnalytics()
+
+  // GA4: registra view_item cuando la tarjeta del producto se monta
+  useEffect(() => {
+    if (producto?.id) viewItem(producto)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [producto?.id])
 
   const agotado = !disponible
 
@@ -47,12 +53,12 @@ export default function ProductCard({
 
     agregarAlCarrito(payload)
     onAddToCart?.(payload)
-
+    trackAddToCart(producto, cantidad) // ← GA4: add_to_cart
     showToast?.(`${producto.nombre} agregado al carrito`)
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 1400)
     setCantidad(1)
-  }, [agotado, producto, cantidad, agregarAlCarrito, onAddToCart, showToast])
+  }, [agotado, producto, cantidad, agregarAlCarrito, onAddToCart, showToast, trackAddToCart])
 
   const manejarPedidoEspecial = useCallback((e) => {
     e?.preventDefault?.()
@@ -238,7 +244,6 @@ export default function ProductCard({
                   +
                 </button>
               </div>
-
               <button
                 type="button"
                 id={`add-to-cart-btn-${productId}`}
