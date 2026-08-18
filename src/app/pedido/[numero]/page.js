@@ -1,15 +1,7 @@
 /**
- * §Û?§¤§Ø§²? UBICACI§Ú§¥?N: src/app/pedido/[numero]/page.js
- * §Û?§¤§Ø§²? CREADO: 2026-03-12
- * §Û?§¤§Ø§²? DESCRIPCI§Ú§¥?N: Tracking p§Ù§¦¡ìblico de pedido para el cliente.
- *    - Acceso por n§Ù§¦¡ìmero de pedido + verificaci§Ú??n de email (seguridad m§Û§µ§¨nima)
- *    - Actualizaci§Ú??n en tiempo real con Supabase Realtime
- *    - Muestra progreso visual de estados
- *    - Detalle de productos, total, m§Ú§®§¦todo de entrega y pago
- *    - Sin login requerido (acceso p§Ù§¦¡ìblico verificado)
- *
- *    URL: /pedido/PF-2026-0001
- * §Û§ª?§Ù§­§¦§Ù?§¯  En caso de modificaci§Ú??n significativa, actualizar este comentario.
+ * UBICACION: src/app/pedido/[numero]/page.js
+ * CREADO: 2026-03-12
+ * DESCRIPCION: Tracking publico de pedido para el cliente.
  */
 'use client'
 
@@ -23,7 +15,7 @@ import {
   PackageCheck,
   PartyPopper,
   XCircle,
-  Croissant,      // ? Pan (sin gluten)
+  Croissant,
   Search,
   AlertCircle,
   FileText,
@@ -35,54 +27,51 @@ import {
   Sparkles
 } from 'lucide-react'
 
-// §Û§ª?§Ó§£?§Û§ª?§Ó§£? Configuraci§Ú??n de estados §Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?
 const ESTADOS = [
-  { key: 'pendiente',      label: 'Recibido',       Icon: Inbox,        desc: 'Tu pedido fue recibido y est§Ú¡Þ? esperando confirmaci§Ú??n.' },
-  { key: 'confirmado',     label: 'Confirmado',      Icon: CheckCircle,  desc: 'Confirmamos tu pedido. Pronto comenzamos la preparaci§Ú??n.' },
-  { key: 'en_produccion',  label: 'En preparaci§Ú??n',  Icon: ChefHat,      desc: 'Estamos horneando tu pedido con mucho cari§Ö??o.' },
-  { key: 'listo',          label: 'Listo',            Icon: PackageCheck, desc: 'Tu pedido est§Ú¡Þ? listo para entregar o retirar.' },
-  { key: 'entregado',      label: 'Entregado',        Icon: PartyPopper,  desc: '§Û§¼§¨Tu pedido fue entregado! Gracias por elegirnos.' },
+  { key: 'pendiente', label: 'Recibido', Icon: Inbox, desc: 'Tu pedido fue recibido y esta esperando confirmacion.' },
+  { key: 'confirmado', label: 'Confirmado', Icon: CheckCircle, desc: 'Confirmamos tu pedido. Pronto comenzamos la preparacion.' },
+  { key: 'en_produccion', label: 'En preparacion', Icon: ChefHat, desc: 'Estamos horneando tu pedido con mucho cariÃ±o.' },
+  { key: 'listo', label: 'Listo', Icon: PackageCheck, desc: 'Tu pedido esta listo para entregar o retirar.' },
+  { key: 'entregado', label: 'Entregado', Icon: PartyPopper, desc: 'Tu pedido fue entregado! Gracias por elegirnos.' },
 ]
 
-const ESTADO_CANCELADO = { key: 'cancelado', label: 'Cancelado', Icon: XCircle, desc: 'Este pedido fue cancelado. Contactanos por WhatsApp si ten§Ú§®§¦s dudas.' }
+const ESTADO_CANCELADO = { key: 'cancelado', label: 'Cancelado', Icon: XCircle, desc: 'Este pedido fue cancelado.' }
 
 const COLORES = {
-  pendiente     : { bg: '#fff8e1', text: '#e65100', border: '#ffe082' },
-  confirmado    : { bg: '#e8f5e9', text: '#2e7d32', border: '#c8e6c9' },
-  en_produccion : { bg: '#e3f2fd', text: '#1565c0', border: '#bbdefb' },
-  listo         : { bg: '#f3e5f5', text: '#6a1b9a', border: '#e1bee7' },
-  entregado     : { bg: '#e8f5e9', text: '#1b5e20', border: '#a5d6a7' },
-  cancelado     : { bg: '#fde8e8', text: '#c62828', border: '#f5c6c6' },
+  pendiente: { bg: '#fff8e1', text: '#e65100', border: '#ffe082' },
+  confirmado: { bg: '#e8f5e9', text: '#2e7d32', border: '#c8e6c9' },
+  en_produccion: { bg: '#e3f2fd', text: '#1565c0', border: '#bbdefb' },
+  listo: { bg: '#f3e5f5', text: '#6a1b9a', border: '#e1bee7' },
+  entregado: { bg: '#e8f5e9', text: '#1b5e20', border: '#a5d6a7' },
+  cancelado: { bg: '#fde8e8', text: '#c62828', border: '#f5c6c6' },
 }
 
-const WA_NUM   = '595984589845'
-const formatPYG = n => `§Û§ª??${Math.round(Number(n || 0)).toLocaleString('es-PY')}`
+const WA_NUM = '595984589845'
+const formatPYG = n => `â‚² ${Math.round(Number(n || 0)).toLocaleString('es-PY')}`
 const formatFecha = s => {
-  if (!s) return '§Û§ª??
+  if (!s) return '-'
   const d = new Date(s)
   return d.toLocaleDateString('es-PY', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-// §Û§ª?§Ó§£?§Û§ª?§Ó§£? Estilos §Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?
 const S = {
-  page  : { minHeight: '100vh', backgroundColor: '#eee6d9', fontFamily: '"Segoe UI", sans-serif', paddingBottom: '3rem' },
+  page: { minHeight: '100vh', backgroundColor: '#eee6d9', fontFamily: '"Segoe UI", sans-serif', paddingBottom: '3rem' },
   header: { backgroundColor: '#334c2b', color: '#fff', padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' },
-  wrap  : { maxWidth: '680px', margin: '0 auto', padding: '1.25rem 1rem' },
-  card  : { backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e8dfd4', marginBottom: '1rem', overflow: 'hidden' },
-  head  : { backgroundColor: '#f5f0ea', padding: '0.75rem 1.25rem', fontWeight: '700', color: '#334c2b', fontSize: '0.95rem', borderBottom: '1px solid #e8dfd4' },
-  body  : { padding: '1.25rem' },
-  label : { display: 'block', fontSize: '0.82rem', fontWeight: '600', color: '#555', marginBottom: '0.3rem', marginTop: '0.75rem' },
-  input : { width: '100%', padding: '0.65rem 0.85rem', border: '1.5px solid #d4c9bb', borderRadius: '6px', fontSize: '0.92rem', fontFamily: '"Segoe UI", sans-serif', backgroundColor: '#fff', boxSizing: 'border-box', outline: 'none' },
-  fila  : { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.35rem 0', fontSize: '0.9rem' },
-  alert : (tipo) => {
+  wrap: { maxWidth: '680px', margin: '0 auto', padding: '1.25rem 1rem' },
+  card: { backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e8dfd4', marginBottom: '1rem', overflow: 'hidden' },
+  head: { backgroundColor: '#f5f0ea', padding: '0.75rem 1.25rem', fontWeight: '700', color: '#334c2b', fontSize: '0.95rem', borderBottom: '1px solid #e8dfd4' },
+  body: { padding: '1.25rem' },
+  label: { display: 'block', fontSize: '0.82rem', fontWeight: '600', color: '#555', marginBottom: '0.3rem', marginTop: '0.75rem' },
+  input: { width: '100%', padding: '0.65rem 0.85rem', border: '1.5px solid #d4c9bb', borderRadius: '6px', fontSize: '0.92rem', fontFamily: '"Segoe UI", sans-serif', backgroundColor: '#fff', boxSizing: 'border-box', outline: 'none' },
+  fila: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.35rem 0', fontSize: '0.9rem' },
+  alert: (tipo) => {
     const c = { ok: { bg: '#e8f5e9', text: '#2e7d32', border: '#c8e6c9' }, err: { bg: '#fde8e8', text: '#c62828', border: '#f5c6c6' }, warn: { bg: '#fff8e1', text: '#e65100', border: '#ffe082' } }[tipo]
     return { padding: '0.75rem 1rem', borderRadius: '6px', fontSize: '0.88rem', backgroundColor: c.bg, color: c.text, border: `1px solid ${c.border}` }
   },
-  btnVerde: { width: '100%', padding: '0.85rem', backgroundColor: '#334c2b', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.95rem', fontWeight: '700', cursor: 'pointer', fontFamily: '"Segoe UI", sans-serif' },
-  btnWA  : { display: 'block', width: '100%', padding: '0.75rem', backgroundColor: '#25d366', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', fontFamily: '"Segoe UI", sans-serif', marginBottom: '0.5rem' },
+  btnVerde: { width: '100%', padding: '0.85rem', backgroundColor: '#334c2b', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.95rem', fontWeight: '700', cursor: 'pointer' },
+  btnWA: { display: 'block', width: '100%', padding: '0.75rem', backgroundColor: '#25d366', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', marginBottom: '0.5rem' },
 }
 
-// §Û§ª?§Ó§£?§Û§ª?§Ó§£? Barra de progreso de estados §Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?
 function BarraEstado({ estadoActual }) {
   if (estadoActual === 'cancelado') {
     const CancelIcon = ESTADO_CANCELADO.Icon
@@ -103,7 +92,6 @@ function BarraEstado({ estadoActual }) {
 
   return (
     <div>
-      {/* Alerta del estado actual */}
       <div style={{ ...S.alert('ok'), display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', fontSize: '0.95rem' }}>
         <InfoIcon size={28} color="#2e7d32" style={{ flexShrink: 0 }} />
         <div>
@@ -111,55 +99,49 @@ function BarraEstado({ estadoActual }) {
           <div style={{ fontSize: '0.85rem', marginTop: '0.2rem', opacity: 0.85 }}>{estadoInfo.desc}</div>
         </div>
       </div>
-
-      {/* L§Û§µ§¨nea de progreso */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: '0.5rem' }}>
         {ESTADOS.map((e, idx) => {
           const completado = idx <= idxActual
-          const esActual   = idx === idxActual
-          const StepIcon   = e.Icon
+          const esActual = idx === idxActual
+          const StepIcon = e.Icon
           return (
             <div key={e.key} style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-              {/* C§Û§µ§¨rculo */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '0 0 auto' }}>
                 <div style={{
-                  width         : esActual ? '36px' : '28px',
-                  height        : esActual ? '36px' : '28px',
-                  borderRadius  : '50%',
+                  width: esActual ? '36px' : '28px',
+                  height: esActual ? '36px' : '28px',
+                  borderRadius: '50%',
                   backgroundColor: completado ? '#334c2b' : '#e0d8cf',
-                  display       : 'flex',
-                  alignItems    : 'center',
+                  display: 'flex',
+                  alignItems: 'center',
                   justifyContent: 'center',
-                  color         : completado ? '#fff' : '#999',
-                  boxShadow     : esActual ? '0 0 0 3px #b7996b' : 'none',
-                  transition    : 'all 0.3s',
-                  zIndex        : 1,
+                  color: completado ? '#fff' : '#999',
+                  boxShadow: esActual ? '0 0 0 3px #b7996b' : 'none',
+                  transition: 'all 0.3s',
+                  zIndex: 1,
                 }}>
-                  {completado && !esActual ? '§Û§«§¢? : <StepIcon size={esActual ? 18 : 14} />}
+                  {completado && !esActual ? 'âœ“' : <StepIcon size={esActual ? 18 : 14} />}
                 </div>
               </div>
-              {/* L§Û§µ§¨nea conectora */}
               {idx < ESTADOS.length - 1 && (
                 <div style={{
-                  flex            : 1,
-                  height          : '3px',
-                  backgroundColor : idx < idxActual ? '#334c2b' : '#e0d8cf',
-                  transition      : 'background-color 0.3s',
+                  flex: 1,
+                  height: '3px',
+                  backgroundColor: idx < idxActual ? '#334c2b' : '#e0d8cf',
+                  transition: 'background-color 0.3s',
                 }} />
               )}
             </div>
           )
         })}
       </div>
-
-      {/* Labels */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.35rem' }}>
         {ESTADOS.map((e, idx) => (
           <div key={e.key} style={{
-            flex      : 1,
-            textAlign : 'center',
-            fontSize  : '0.68rem',
-            color     : idx <= idxActual ? '#334c2b' : '#aaa',
+            flex: 1,
+            textAlign: 'center',
+            fontSize: '0.68rem',
+            color: idx <= idxActual ? '#334c2b' : '#aaa',
             fontWeight: idx === idxActual ? '700' : '400',
           }}>
             {e.label}
@@ -170,14 +152,13 @@ function BarraEstado({ estadoActual }) {
   )
 }
 
-// §Û§ª?§Ó§£?§Û§ª?§Ó§£? Pantalla de verificaci§Ú??n §Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?
 function PantallaVerificacion({ numero, onVerificado }) {
-  const [email,       setEmail]       = useState('')
+  const [email, setEmail] = useState('')
   const [verificando, setVerificando] = useState(false)
-  const [error,       setError]       = useState(null)
+  const [error, setError] = useState(null)
 
   async function verificar() {
-    if (!email.trim()) { setError('Ingres§Ú¡Þ? tu email.'); return }
+    if (!email.trim()) { setError('Ingresa tu email.'); return }
     setVerificando(true)
     setError(null)
     try {
@@ -192,20 +173,19 @@ function PantallaVerificacion({ numero, onVerificado }) {
         .single()
 
       if (err || !data) {
-        setError('No encontramos ese n§Ù§¦¡ìmero de pedido.')
+        setError('No encontramos ese numero de pedido.')
         return
       }
 
-      // Verificar que el email coincide con el del cliente
       const emailCliente = data.clientes?.email?.toLowerCase()
       if (emailCliente !== email.trim().toLowerCase()) {
-        setError('El email no coincide con el pedido. Verific§Ú¡Þ? los datos.')
+        setError('El email no coincide con el pedido.')
         return
       }
 
       onVerificado(data)
     } catch {
-      setError('Error al verificar. Intent§Ú¡Þ? de nuevo.')
+      setError('Error al verificar. Intenta de nuevo.')
     } finally {
       setVerificando(false)
     }
@@ -226,14 +206,12 @@ function PantallaVerificacion({ numero, onVerificado }) {
           </div>
           <div style={S.body}>
             <p style={{ color: '#666', fontSize: '0.9rem', marginTop: 0 }}>
-              Para proteger tu privacidad, confirm§Ú¡Þ? el email con el que realizaste el pedido.
+              Para proteger tu privacidad, confirma el email con el que realizaste el pedido.
             </p>
-
             <div style={{ ...S.alert('warn'), marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Package size={16} color="#e65100" />
               <span>Pedido <strong>{numero}</strong></span>
             </div>
-
             <label style={S.label}>Tu email *</label>
             <input
               style={S.input}
@@ -244,30 +222,25 @@ function PantallaVerificacion({ numero, onVerificado }) {
               autoComplete="email"
               onKeyDown={e => e.key === 'Enter' && verificar()}
             />
-
             {error && (
               <div style={{ ...S.alert('err'), marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <AlertCircle size={16} color="#c62828" /> {error}
               </div>
             )}
-
             <button
               style={{ ...S.btnVerde, marginTop: '1rem', opacity: verificando ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
               onClick={verificar}
               disabled={verificando}
             >
-              {verificando ? (
-                'Verificando§Û§ª??
-              ) : (
+              {verificando ? 'Verificando...' : (
                 <>
                   <Search size={18} />
                   <span>Ver mi pedido</span>
                 </>
               )}
             </button>
-
             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.82rem', color: '#999' }}>
-              §Û??Problemas para acceder?{' '}
+              Problemas para acceder?{' '}
               <a href={'https://wa.me/' + WA_NUM + '?text=' + encodeURIComponent('Hola! Quiero consultar sobre mi pedido ' + numero)}
                 style={{ color: '#f46e15', textDecoration: 'none', fontWeight: '600' }}>
                 Contactanos por WhatsApp
@@ -280,14 +253,12 @@ function PantallaVerificacion({ numero, onVerificado }) {
   )
 }
 
-// §Û§ª?§Ó§£?§Û§ª?§Ó§£? Pantalla de detalle de pedido §Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?
-function DetallePedido({ pedidoInicial, numero }) {
-  const [pedido,   setPedido]   = useState(pedidoInicial)
+function DetallePedido({ pedidoInicial }) {
+  const [pedido, setPedido] = useState(pedidoInicial)
   const [detalles, setDetalles] = useState([])
-  const [loading,  setLoading]  = useState(true)
+  const [loading, setLoading] = useState(true)
   const channelRef = useRef(null)
 
-  // Cargar detalle de productos
   useEffect(() => {
     async function cargarDetalle() {
       const { data } = await supabase
@@ -300,9 +271,7 @@ function DetallePedido({ pedidoInicial, numero }) {
     cargarDetalle()
   }, [pedido.id])
 
-  // Supabase Realtime: escuchar cambios de estado
   useEffect(() => {
-    // Limpiar canal anterior si existe
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current)
     }
@@ -312,9 +281,9 @@ function DetallePedido({ pedidoInicial, numero }) {
       .on(
         'postgres_changes',
         {
-          event : 'UPDATE',
+          event: 'UPDATE',
           schema: 'public',
-          table : 'pedidos',
+          table: 'pedidos',
           filter: `id=eq.${pedido.id}`,
         },
         payload => {
@@ -330,15 +299,12 @@ function DetallePedido({ pedidoInicial, numero }) {
     }
   }, [pedido.id])
 
-  const estadoColor = COLORES[pedido.estado] || COLORES.pendiente
-
   const msgWA = encodeURIComponent(
     `Hola! Quiero consultar sobre mi pedido *${pedido.numero_pedido}*.\n\nEstado actual: ${pedido.estado}`
   )
 
   return (
     <div style={S.page}>
-      {/* Header */}
       <div style={S.header}>
         <a href="/" style={{ color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
           <Croissant size={24} color="#fff" />
@@ -350,14 +316,11 @@ function DetallePedido({ pedidoInicial, numero }) {
       </div>
 
       <div style={S.wrap}>
-
-        {/* Badge Realtime */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem', fontSize: '0.78rem', color: '#2e7d32' }}>
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#2e7d32', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-          Actualizaci§Ú??n en tiempo real
+          Actualizacion en tiempo real
         </div>
 
-        {/* Progreso */}
         <div style={S.card}>
           <div style={S.head}>Estado del pedido</div>
           <div style={S.body}>
@@ -365,7 +328,6 @@ function DetallePedido({ pedidoInicial, numero }) {
           </div>
         </div>
 
-        {/* Info del pedido */}
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <FileText size={18} /> Detalles del pedido
@@ -373,7 +335,7 @@ function DetallePedido({ pedidoInicial, numero }) {
           <div style={S.body}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#888', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>N§Ø§°¡Ý Pedido</div>
+                <div style={{ fontSize: '0.75rem', color: '#888', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Numero Pedido</div>
                 <div style={{ fontWeight: '800', color: '#334c2b', fontSize: '1rem' }}>{pedido.numero_pedido}</div>
               </div>
               <div>
@@ -384,13 +346,9 @@ function DetallePedido({ pedidoInicial, numero }) {
                 <div style={{ fontSize: '0.75rem', color: '#888', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Entrega</div>
                 <div style={{ fontWeight: '600', color: '#334c2b', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                   {pedido.metodo_entrega === 'delivery' ? (
-                    <>
-                      <Truck size={16} color="#334c2b" /> Delivery
-                    </>
+                    <><Truck size={16} color="#334c2b" /> Delivery</>
                   ) : (
-                    <>
-                      <Store size={16} color="#334c2b" /> Retiro en local
-                    </>
+                    <><Store size={16} color="#334c2b" /> Retiro en local</>
                   )}
                 </div>
                 {pedido.entrega_direccion && (
@@ -403,13 +361,9 @@ function DetallePedido({ pedidoInicial, numero }) {
                 <div style={{ fontSize: '0.75rem', color: '#888', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pago</div>
                 <div style={{ fontWeight: '600', color: '#334c2b', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                   {pedido.metodo_pago === 'transferencia' ? (
-                    <>
-                      <Building2 size={16} color="#334c2b" /> Transferencia
-                    </>
+                    <><Building2 size={16} color="#334c2b" /> Transferencia</>
                   ) : (
-                    <>
-                      <Banknote size={16} color="#334c2b" /> Efectivo
-                    </>
+                    <><Banknote size={16} color="#334c2b" /> Efectivo</>
                   )}
                 </div>
                 <div style={{
@@ -418,12 +372,11 @@ function DetallePedido({ pedidoInicial, numero }) {
                   backgroundColor: pedido.estado_pago === 'aprobado' ? '#e8f5e9' : '#fff8e1',
                   color: pedido.estado_pago === 'aprobado' ? '#2e7d32' : '#e65100',
                 }}>
-                  {pedido.estado_pago === 'aprobado' ? '§Û§«§¢?Confirmado' : 'Pendiente'}
+                  {pedido.estado_pago === 'aprobado' ? 'Confirmado' : 'Pendiente'}
                 </div>
               </div>
             </div>
 
-            {/* Productos */}
             <div style={{ borderTop: '1px solid #eee6d9', paddingTop: '0.75rem', marginTop: '0.25rem' }}>
               {loading ? (
                 <div style={{ color: '#999', fontSize: '0.88rem', textAlign: 'center', padding: '0.75rem 0' }}>
@@ -432,25 +385,24 @@ function DetallePedido({ pedidoInicial, numero }) {
               ) : (
                 detalles.map((d, i) => (
                   <div key={d.id} style={{ ...S.fila, borderBottom: i < detalles.length - 1 ? '1px solid #f0ebe4' : 'none', fontSize: '0.88rem' }}>
-                    <span style={{ color: '#555' }}>{d.cantidad}§Ú§¥¡Ý {d.productos?.nombre || '§Û§ª??}</span>
+                    <span style={{ color: '#555' }}>{d.cantidad}x {d.productos?.nombre || '-'}</span>
                     <span style={{ fontWeight: '600' }}>{formatPYG(d.subtotal)}</span>
                   </div>
                 ))
               )}
 
-              {/* Totales */}
               <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '2px solid #eee6d9' }}>
                 <div style={{ ...S.fila, color: '#666', fontSize: '0.88rem' }}>
                   <span>Subtotal</span><span>{formatPYG(pedido.subtotal)}</span>
                 </div>
                 {Number(pedido.entrega_costo) > 0 && (
                   <div style={{ ...S.fila, color: '#666', fontSize: '0.88rem' }}>
-                    <span>Env§Û§µ§¨o</span><span>{formatPYG(pedido.entrega_costo)}</span>
+                    <span>Envio</span><span>{formatPYG(pedido.entrega_costo)}</span>
                   </div>
                 )}
                 {Number(pedido.entrega_costo) === 0 && pedido.metodo_entrega === 'delivery' && (
                   <div style={{ ...S.fila, color: '#2e7d32', fontSize: '0.88rem' }}>
-                    <span>Env§Û§µ§¨o</span>
+                    <span>Envio</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <Sparkles size={14} color="#2e7d32" /> Gratis
                     </span>
@@ -464,24 +416,19 @@ function DetallePedido({ pedidoInicial, numero }) {
           </div>
         </div>
 
-        {/* CTA WhatsApp */}
         <a
           href={`https://wa.me/${WA_NUM}?text=${msgWA}`}
           target="_blank"
           rel="noopener noreferrer"
           style={S.btnWA}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="white" style={{ verticalAlign: 'middle', marginRight: '6px' }}>
-            <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 1.89.524 3.655 1.435 5.163L2 22l4.956-1.406A9.944 9.944 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm-1.177 5.83c-.198-.442-.407-.451-.596-.459l-.507-.007c-.176 0-.462.066-.704.33-.242.264-.924.903-.924 2.2 0 1.299.946 2.553 1.078 2.729.132.176 1.826 2.903 4.493 3.953 2.222.877 2.667.703 3.148.659.48-.044 1.55-.634 1.77-1.247.218-.613.218-1.138.153-1.248-.066-.11-.242-.176-.507-.308-.264-.132-1.562-.77-1.804-.858-.242-.088-.418-.132-.594.132-.176.264-.682.857-.836 1.033-.154.176-.308.198-.572.066-.264-.132-1.114-.411-2.122-1.308-.784-.698-1.314-1.56-1.468-1.824-.154-.264-.016-.407.116-.538.118-.118.264-.308.396-.462.132-.154.176-.264.264-.44.088-.176.044-.33-.022-.462z"/>
-          </svg>
           Consultar por WhatsApp
         </a>
 
         <a href="/" style={{ display: 'block', textAlign: 'center', color: '#b7996b', fontSize: '0.88rem', textDecoration: 'none' }}>
-          §Û§ª??Volver a la tienda
+          Volver a la tienda
         </a>
 
-        {/* CSS para animaci§Ú??n del dot Realtime */}
         <style>{`
           @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
@@ -493,15 +440,11 @@ function DetallePedido({ pedidoInicial, numero }) {
   )
 }
 
-// §Û§ª?§Ó§£?§Û§ª?§Ó§£? P§Ú¡Þ?gina principal §Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?§Û§ª?§Ó§£?
 export default function PaginaSeguimientoPedido({ params }) {
   const numero = params?.numero?.toUpperCase() || ''
-
   const [verificado, setVerificado] = useState(false)
-  const [pedido,     setPedido]     = useState(null)
-  const [noExiste,   setNoExiste]   = useState(false)
+  const [pedido, setPedido] = useState(null)
 
-  // Verificar si el n§Ù§¦¡ìmero tiene formato v§Ú¡Þ?lido PF-YYYY-XXXX
   const formatoValido = /^PF-\d{4}-\d{4}$/.test(numero)
 
   if (!formatoValido) {
@@ -519,9 +462,9 @@ export default function PaginaSeguimientoPedido({ params }) {
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
                 <AlertCircle size={48} color="#c62828" />
               </div>
-              <p style={{ fontWeight: '700' }}>N§Ù§¦¡ìmero de pedido inv§Ú¡Þ?lido.</p>
+              <p style={{ fontWeight: '700' }}>Numero de pedido invalido.</p>
               <p style={{ fontSize: '0.88rem', color: '#666' }}>El formato correcto es PF-2026-0001</p>
-              <a href="/" style={{ color: '#f46e15', textDecoration: 'none', fontWeight: '600' }}>§Û§ª??Volver a la tienda</a>
+              <a href="/" style={{ color: '#f46e15', textDecoration: 'none', fontWeight: '600' }}>Volver a la tienda</a>
             </div>
           </div>
         </div>
@@ -538,5 +481,5 @@ export default function PaginaSeguimientoPedido({ params }) {
     return <PantallaVerificacion numero={numero} onVerificado={handleVerificado} />
   }
 
-  return <DetallePedido pedidoInicial={pedido} numero={numero} />
+  return <DetallePedido pedidoInicial={pedido} />
 }
