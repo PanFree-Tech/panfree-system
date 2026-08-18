@@ -23,6 +23,7 @@ import ToastNotification from '@/components/ToastNotification'
 // ─── NUEVO: Integración de Google Analytics 4 ───────────────────────────────
 import GAScript from '../components/GAScript'
 import { useAnalytics } from '../hooks/useAnalytics'
+import ClarityScript from '../components/ClarityScript'
 
 // ─── SVG logos oficiales inline ───────────────────────────────────────────────
 function IconWhatsApp({ size = 24, color = '#25D366' }) {
@@ -81,7 +82,7 @@ export default function LayoutClient({ children }) {
         {/* Google Analytics 4 — carga condicionada a consentimiento */}
         <GAScript />
         <AnalyticsPageTracker />
-
+        <ClarityScript />
         <Header />
         <BannerEnvioGratis />
         <ErrorBoundary>
