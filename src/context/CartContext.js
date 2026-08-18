@@ -7,6 +7,7 @@
  * - ✅ FIX: bandera "cargado" para evitar carrera entre carga y guardado
  * - ✅ FIX AUDITORÍA CONVERSIÓN: eliminada la obligación de estar autenticado para agregar al carrito
  * - ✅ AGREGADO: campo unidad_medida en los items del carrito
+ * - ✅ FIX: corrección de duplicación de cantidades (usar cantidad del producto, no sumar)
  */
 
 'use client'
@@ -17,7 +18,7 @@ const CartContext = createContext()
 export function CartProvider({ children }) {
   const [carrito, setCarrito] = useState([])
   const [visible, setVisible] = useState(false)
-  const [cargado, setCargado] = useState(false) // 👈 NUEVO: bandera para evitar guardado prematuro
+  const [cargado, setCargado] = useState(false)
 
   const STORAGE_KEY = 'panfree_cart_v1'
 
@@ -40,7 +41,7 @@ export function CartProvider({ children }) {
       console.error('Error al cargar carrito:', err)
       setCarrito([])
     } finally {
-      setCargado(true) // 👈 Recién ahora está permitido persistir
+      setCargado(true)
     }
   }, [])
 
@@ -50,7 +51,7 @@ export function CartProvider({ children }) {
   useEffect(() => {
     if (!cargado) {
       console.log('⏳ Persistencia en espera (cargando...)')
-      return // 👈 Evita sobreescribir con el estado inicial []
+      return
     }
     try {
       if (typeof window !== 'undefined') {
@@ -74,13 +75,14 @@ export function CartProvider({ children }) {
       
       const existente = prev.find(p => p.id === producto.id)
       if (existente) {
-        console.log('✅ Producto ya existe, actualizando cantidad')
+        // ✅ SIMPLEMENTE ACTUALIZAR (NO SUMAR)
+        console.log('✅ Producto ya existe, actualizando cantidad a:', producto.cantidad || 1)
         const nuevoCarrito = prev.map(p =>
           p.id === producto.id
             ? {
                 ...p,
-                cantidad: (p.cantidad || 1) + (producto.cantidad || 1),
-                subtotal: (p.precio_venta || 0) * ((p.cantidad || 1) + (producto.cantidad || 1)),
+                cantidad: producto.cantidad || 1,
+                subtotal: (p.precio_venta || 0) * (producto.cantidad || 1),
               }
             : p
         )
