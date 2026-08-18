@@ -12,6 +12,7 @@
 
 - [Descripción](#descripción)
 - [Tecnologías](#tecnologías)
+- [Google Analytics 4](#google-analytics-4)
 - [Estructura del Proyecto](#estructura-del-proyecto)
 - [Requisitos](#requisitos)
 - [Instalación](#instalación)
@@ -49,47 +50,69 @@ Panfree System es una plataforma de e-commerce para **panificados sin gluten**, 
 
 ---
 
-## 📁 Estructura del Proyecto
+## 📊 Google Analytics 4
+
+Panfree System utiliza **Google Analytics 4** para rastrear el comportamiento de los usuarios y eventos de comercio electrónico.
+
+### Eventos Implementados
+
+| Evento | Descripción | Disparo |
+|--------|-------------|---------|
+| `page_view` | Vista de página | Navegación SPA |
+| `view_item_list` | Vista de catálogo | Carga de productos / cambio de categoría |
+| `select_item` | Selección de producto | Clic en tarjeta de producto |
+| `view_item` | Vista de producto | Montaje de tarjeta de producto |
+| `add_to_cart` | Agregar al carrito | Clic en "Agregar" |
+| `remove_from_cart` | Eliminar del carrito | Reducir cantidad o eliminar |
+| `begin_checkout` | Inicio de checkout | Entrar a `/checkout` con productos |
+| `purchase` | Compra completada | Confirmación de pedido |
+
+### Configuración
+
+```env
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-QE8GQS3MSR
+Archivos de Implementación
+Archivo	Descripción
+src/hooks/useAnalytics.js	Hook con eventos GA4
+src/components/GAScript.jsx	Carga de gtag.js con next/script
+📖 Documentación completa: GA4-IMPLEMENTACION.md
+
+📁 Estructura del Proyecto
+text
 panfree-system/
 ├── src/
-│ ├── app/
-│ │ ├── checkout/ # Página de checkout
-│ │ ├── pedido/[numero]/ # Seguimiento de pedido
-│ │ ├── admin/ # Panel de administración
-│ │ ├── api/ # API routes
-│ │ └── page.js # Home
-│ ├── components/ # Componentes reutilizables
-│ ├── context/
-│ │ ├── CartContext.js # Carrito de compras
-│ │ └── AuthContext.js # Autenticación
-│ ├── lib/
-│ │ └── supabase.js # Cliente Supabase
-│ └── middleware.js # Protección de rutas
-├── public/ # Archivos estáticos
-├── README.md # Este archivo
-├── ARCHITECTURE.md # Arquitectura del sistema
-├── API.md # Documentación de API
-├── DATABASE.md # Esquema de base de datos
-├── DEPLOYMENT.md # Guía de despliegue
-└── CONTRIBUTING.md # Guía para contribuir
-
-
----
-
-## ⚙️ Requisitos
-
-| Requisito | Versión |
-|-----------|---------|
-| Node.js | 18.x o 20.x (LTS) |
-| npm | >= 9 |
-| Cuenta en Supabase | - |
-| Cuenta en Vercel | - |
-
----
-
-## 🚀 Instalación
-
-```bash
+│   ├── app/
+│   │   ├── checkout/         # Página de checkout
+│   │   ├── pedido/[numero]/  # Seguimiento de pedido
+│   │   ├── admin/            # Panel de administración
+│   │   ├── api/              # API routes
+│   │   └── page.js           # Home
+│   ├── components/           # Componentes reutilizables
+│   ├── context/
+│   │   ├── CartContext.js    # Carrito de compras
+│   │   └── AuthContext.js    # Autenticación
+│   ├── hooks/                # Hooks personalizados
+│   │   └── useAnalytics.js   # Hook de GA4
+│   ├── lib/
+│   │   └── supabase.js       # Cliente Supabase
+│   └── middleware.js         # Protección de rutas
+├── public/                   # Archivos estáticos
+├── README.md                 # Este archivo
+├── ARCHITECTURE.md           # Arquitectura del sistema
+├── API.md                    # Documentación de API
+├── DATABASE.md               # Esquema de base de datos
+├── DEPLOYMENT.md             # Guía de despliegue
+├── CONTRIBUTING.md           # Guía para contribuir
+├── GA4-IMPLEMENTACION.md     # Documentación de GA4
+└── CHANGELOG.md              # Registro de cambios
+⚙️ Requisitos
+Requisito	Versión
+Node.js	18.x o 20.x (LTS)
+npm	>= 9
+Cuenta en Supabase	-
+Cuenta en Vercel	-
+🚀 Instalación
+bash
 # 1. Clonar repositorio
 git clone https://github.com/PanFree-Tech/panfree-system.git
 cd panfree-system
@@ -105,9 +128,8 @@ cp .env.example .env.local
 npm run dev
 
 # 5. Abrir http://localhost:3000
-
 🔑 Variables de Entorno
-
+env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
@@ -121,6 +143,8 @@ NEXT_PUBLIC_N8N_WEBHOOK_URL=https://tu-webhook.n8n.cloud/webhook/pedido
 # WhatsApp (opcional)
 NEXT_PUBLIC_WHATSAPP_NUMBER=595984589845
 
+# Google Analytics 4
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-QE8GQS3MSR
 📦 Despliegue
 En Vercel (recomendado)
 bash
@@ -140,7 +164,8 @@ API.md	Documentación de endpoints
 DATABASE.md	Esquema de base de datos y RLS
 DEPLOYMENT.md	Guía de despliegue
 CONTRIBUTING.md	Guía para contribuir
-
+GA4-IMPLEMENTACION.md	Documentación de Google Analytics 4
+CHANGELOG.md	Registro de cambios
 🤝 Contribuir
 Fork del repositorio
 
@@ -161,3 +186,5 @@ Web: panfree.fit
 WhatsApp: +595 984 589845
 
 Última actualización: 2026-08-18
+
+text

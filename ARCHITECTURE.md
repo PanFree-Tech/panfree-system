@@ -1,3 +1,9 @@
+
+## 📄 `ARCHITECTURE.md` - COMPLETO
+
+**COPIA TODO ESTO (desde el inicio hasta el final):**
+
+```markdown
 # Panfree System — Arquitectura
 
 **Última revisión:** 2026-08-18
@@ -12,6 +18,7 @@ Panfree System es una aplicación web de **e‑commerce (tienda pública)** con 
 - **Frontend:** Next.js App Router (Next 14) con Server y Client Components
 - **Backend:** Supabase (Auth + Postgres)
 - **Integraciones:** Cloudinary, n8n (webhooks), WhatsApp, PWA, notificaciones push
+- **Analytics:** Google Analytics 4 (GA4) para tracking de usuarios y eventos de e-commerce
 
 ---
 
@@ -23,7 +30,7 @@ panfree-system/
 ├── src/
 │ ├── app/
 │ │ ├── layout.js # Root layout (Server Component) — metadata, viewport
-│ │ ├── layout-client.js # (Client) Provider wrapper, CartInitializer
+│ │ ├── layout-client.js # (Client) Provider wrapper, CartInitializer, GA4
 │ │ ├── page.js # Home (Server Component) — carga productos y disponibilidad
 │ │ ├── checkout/
 │ │ │ └── page.js # Checkout (Client Component) — lógica completa de compra
@@ -35,10 +42,13 @@ panfree-system/
 │ ├── components/ # Componentes reutilizables
 │ │ ├── ProductCard.js
 │ │ ├── CartSidebar.js
+│ │ ├── GAScript.jsx # Carga de Google Analytics 4
 │ │ └── ...
 │ ├── context/
 │ │ ├── CartContext.js # Carrito: localStorage, API legacy
 │ │ └── AuthContext.js # Autenticación con Supabase
+│ ├── hooks/ # Hooks personalizados
+│ │ └── useAnalytics.js # Hook de Google Analytics 4
 │ ├── lib/
 │ │ └── supabase.js # Cliente Supabase + helper
 │ ├── middleware.js # Protege rutas /admin/* (Supabase SSR)
@@ -51,6 +61,7 @@ panfree-system/
 │ └── og-image.jpg # Open Graph image
 └── README.md # Documentación del repo
 
+text
 
 ---
 
@@ -67,7 +78,7 @@ panfree-system/
 | Tipo | Uso | Ejemplos |
 |------|-----|----------|
 | **Server Components** | Fetch inicial, SEO, render estático | Home (`/`), Layout |
-| **Client Components** | Interactividad, eventos, localStorage | Checkout, CartSidebar, Providers |
+| **Client Components** | Interactividad, eventos, localStorage, hooks | Checkout, CartSidebar, Providers, useAnalytics |
 
 ### 3.3 Arquitectura "Backend-Lite"
 
@@ -93,6 +104,7 @@ La app escribe directamente a Supabase desde el cliente usando la **anon key**. 
 │ ┌──────────────────────────────────────────────────────┐ │
 │ │ Client Components (UI) │ │
 │ │ - Checkout - CartSidebar - TiendaCliente │ │
+│ │ - useAnalytics (GA4 eventos) - GAScript │ │
 │ └──────────────────────┬───────────────────────────────┘ │
 │ │ │
 │ ▼ │
@@ -113,9 +125,11 @@ La app escribe directamente a Supabase desde el cliente usando la **anon key**. 
 │ ┌──────────────────────────────────────────────────────┐ │
 │ │ INTEGRACIONES EXTERNAS │ │
 │ │ - n8n (webhooks) - WhatsApp (wa.me) - Cloudinary │ │
+│ │ - Google Analytics 4 (gtag.js) │ │
 │ └──────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 
+text
 
 ---
 
@@ -145,20 +159,63 @@ La app escribe directamente a Supabase desde el cliente usando la **anon key**. 
 | `pedidos` | INSERT validado | Solo con validaciones (subtotal > 0, etc.) |
 | `detalle_pedido` | INSERT con FK válido | Validar integridad de precios |
 
-### 5.4 ⚠️ Advertencias Críticas
+### 5.4 Google Analytics 4 (GA4)
 
-1. **Credenciales en código:** Revisar `src/lib/supabase.js` (fallback con JWT parcial)
-2. **Writes desde cliente:** El checkout escribe directamente en Supabase desde el cliente → **requiere RLS estrictas**
-3. **Webhook expuesto:** `NEXT_PUBLIC_N8N_WEBHOOK_URL` visible en cliente → mover a server-side
-4. **`window.*` expuestos:** `window.confirmarPedido` y `window.__PANFREE_CART` → remover en producción
+**Integración:** GA4 está implementado para tracking de usuarios y eventos de e-commerce.
 
----
+#### Componentes GA4
 
-## 6. Recomendaciones Inmediatas
+| Componente | Ubicación | Función |
+|------------|-----------|---------|
+| `GAScript.jsx` | `src/components/` | Carga gtag.js con `next/script` |
+| `useAnalytics.js` | `src/hooks/` | Hook con eventos GA4 |
 
-1. ✅ Revisar políticas RLS en Supabase (**prioritario**)
-2. ✅ Mover llamadas sensibles a API server-side
-3. ✅ Remover `window.confirmarPedido` en producción
-4. ✅ Rotar cualquier secreto expuesto en repo
-5. ✅ Añadir tests e2e para flujo de checkout
-6. ✅ Implementar rate limiting en endpoints públicos
+#### Eventos Implementados
+
+```javascript
+// Eventos de e-commerce estándar
+pageview(url)           // Vista de página
+viewItem(producto)      // Vista de producto
+viewItemList(productos) // Vista de catálogo
+selectItem(producto)    // Selección de producto
+addToCart(producto)     // Agregar al carrito
+removeFromCart(producto)// Eliminar del carrito
+beginCheckout(items)    // Inicio de checkout
+purchase(pedido)        // Compra completada
+Consentimiento
+javascript
+// Activar
+localStorage.setItem('panfree_ga_consent', 'granted');
+
+// Desactivar
+localStorage.setItem('panfree_ga_consent', 'denied');
+Variables de entorno
+env
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-QE8GQS3MSR
+Documentación completa: GA4-IMPLEMENTACION.md
+
+5.5 ⚠️ Advertencias Críticas
+Credenciales en código: Revisar src/lib/supabase.js (fallback con JWT parcial)
+
+Writes desde cliente: El checkout escribe directamente en Supabase desde el cliente → requiere RLS estrictas
+
+Webhook expuesto: NEXT_PUBLIC_N8N_WEBHOOK_URL visible en cliente → mover a server-side
+
+window.* expuestos: window.confirmarPedido y window.__PANFREE_CART → remover en producción
+
+6. Recomendaciones Inmediatas
+✅ Revisar políticas RLS en Supabase (prioritario)
+
+✅ Mover llamadas sensibles a API server-side
+
+✅ Remover window.confirmarPedido en producción
+
+✅ Rotar cualquier secreto expuesto en repo
+
+✅ Añadir tests e2e para flujo de checkout
+
+✅ Implementar rate limiting en endpoints públicos
+
+✅ Activar Google Analytics 4 DebugView para verificar eventos
+
+✅ Configurar conversiones en GA4 (purchase como objetivo)
