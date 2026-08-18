@@ -1,14 +1,13 @@
 /**
- * UBICACION: src/app/TiendaCliente.js
- * CREADO: 2026-03-06
- * DESCRIPCION:
- *  - Client Component con Hero de alta conversión, badges de confianza,
- *    búsqueda en tiempo real y filtros ordenados sin desorden visual.
- *  - ✅ ELIMINADA sección de testimonios (eran falsos). Los enlaces a redes ya están en header/footer.
- */
+UBICACION: src/app/TiendaCliente.js
+CREADO: 2026-03-06
+DESCRIPCION:
+Client Component con Hero de alta conversión, badges de confianza,
+búsqueda en tiempo real y filtros ordenados sin desorden visual.
+✅ ELIMINADA sección de testimonios (eran falsos). Los enlaces a redes ya están en header/footer.
+*/
 'use client'
-
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   Sparkles,
   WheatOff,
@@ -24,6 +23,7 @@ import {
   Gift,
 } from 'lucide-react'
 import { useCart } from '../context/CartContext'
+import { useAnalytics } from '../hooks/useAnalytics' // ← NUEVO: import de useAnalytics
 import ProductCard from '../components/ProductCard'
 
 const CATEGORIAS = [
@@ -38,6 +38,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
   const [categoriaActiva, setCategoriaActiva] = useState('todos')
   const [busqueda, setBusqueda] = useState('')
   const { agregarAlCarrito } = useCart()
+  const { viewItemList, selectItem } = useAnalytics() // ← NUEVO: hook de analytics
 
   // Filtro combinado de categoría y texto de búsqueda
   const productosFiltrados = useMemo(() => {
@@ -61,9 +62,19 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
     return productos.find(p => p.is_featured || p.destacado) || productos[0] || null
   }, [productos])
 
+  // GA4: view_item_list cada vez que cambia el listado filtrado (categoría/búsqueda)
+  useEffect(() => {
+    if (productosFiltrados.length > 0) {
+      const nombreLista = categoriaActiva === 'todos'
+        ? 'Catálogo completo'
+        : `Categoría: ${categoriaActiva}`
+      viewItemList(productosFiltrados, nombreLista)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productosFiltrados, categoriaActiva])
+
   return (
     <div className="page-container" id="catalogo">
-
       {/* ============================================================ */}
       {/* 1. HERO SECTION ORDENADO Y DE ALTA CONVERSIÓN */}
       {/* ============================================================ */}
@@ -108,7 +119,6 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
           >
             <WheatOff size={16} /> 100% Sin Gluten
           </div>
-
           {/* Título Principal */}
           <h1
             className="hero-title"
@@ -121,7 +131,6 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
           >
             Panificados y Repostería Sin Gluten
           </h1>
-
           {/* Subtítulo Conciso */}
           <p
             className="hero-subtitle"
@@ -135,7 +144,6 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
           >
             Elaboración artesanal en Encarnación con ingredientes seleccionados y la máxima seguridad para celíacos.
           </p>
-
           {/* Badges de Confianza en Línea Horizontal */}
           <div
             id="trust-badges-row"
@@ -165,7 +173,6 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
             >
               <ShieldCheck size={16} color="#334c2b" /> Apto Celíacos
             </div>
-
             <div
               style={{
                 display: 'inline-flex',
@@ -182,7 +189,6 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
             >
               <ChefHat size={16} color="#334c2b" /> Artesanal
             </div>
-
             <div
               style={{
                 display: 'inline-flex',
@@ -370,13 +376,20 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
           productosFiltrados.map((producto) => {
             const disp = disponibilidad[producto.id]
             return (
-              <ProductCard
+              // GA4: select_item al hacer click en cualquier parte de la tarjeta.
+              // display:'contents' evita romper el CSS grid (.products-grid).
+              <div
                 key={producto.id}
-                producto={producto}
-                disponible={disp?.disponible ?? true}
-                requiereAnticipacion={disp?.requiere_anticipacion ?? false}
-                onAddToCart={agregarAlCarrito}
-              />
+                style={{ display: 'contents' }}
+                onClickCapture={() => selectItem(producto, categoriaActiva)}
+              >
+                <ProductCard
+                  producto={producto}
+                  disponible={disp?.disponible ?? true}
+                  requiereAnticipacion={disp?.requiere_anticipacion ?? false}
+                  onAddToCart={agregarAlCarrito}
+                />
+              </div>
             )
           })
         )}
@@ -406,7 +419,6 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
           <Gift size={18} color="#2e7d32" /> Envío gratis en compras superiores a ₲ 50.000
         </p>
       </section>
-
     </div>
   )
 }

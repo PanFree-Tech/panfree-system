@@ -1,20 +1,21 @@
 /**
- * 📁 UBICACIÓN: src/app/checkout/page.js
- * 📅 ACTUALIZADO: 2026-08-17
- * 📌 CAMBIOS:
- *  - ✅ FIX AUDITORÍA CONVERSIÓN: ahora permite comprar como invitado (sin login).
- *  - ✅ FIX VISUAL: botón confirmar naranja, radios verdes.
- *  - ✅ VALIDACIÓN DE TELÉFONO: simplificada y sin dependencia de estado.
- *  - ✅ INTEGRACIÓN N8N: Envío de datos del pedido y cliente a webhook de n8n.
- *  - ✅ FIX DEFINITIVO: validación en tiempo real, dependencias corregidas.
- */
-
+📁 UBICACIÓN: src/app/checkout/page.js
+📅 ACTUALIZADO: 2026-08-18
+📌 CAMBIOS:
+✅ FIX AUDITORÍA CONVERSIÓN: ahora permite comprar como invitado (sin login).
+✅ FIX VISUAL: botón confirmar naranja, radios verdes.
+✅ VALIDACIÓN DE TELÉFONO: simplificada y sin dependencia de estado.
+✅ INTEGRACIÓN N8N: Envío de datos del pedido y cliente a webhook de n8n.
+✅ FIX DEFINITIVO: validación en tiempo real, dependencias corregidas.
+✅ GA4: Integración de eventos begin_checkout y purchase.
+*/
 'use client'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
+import { useAnalytics } from '../../hooks/useAnalytics' // ← NUEVO: import de useAnalytics
 import {
   PartyPopper,
   ShoppingCart,
@@ -38,7 +39,6 @@ import {
 // ── Constantes ────────────────────────────────────────────────────────────────
 const formatPYG = n => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
 const WA_NUMBER = '595984589845'
-
 const DATOS_BANCARIOS = {
   banco:    'Ueno Bank',
   titular:  'Luciana Noelia Da Silva',
@@ -78,20 +78,16 @@ const validarTelefono = (telefono) => {
   if (!telefono || telefono.trim() === '') {
     return { valido: false, mensaje: 'El teléfono es obligatorio.' }
   }
-
-  const limpio = telefono.replace(/[\s\-\(\)\.]/g, '')
-  
+  const limpio = telefono.replace(/[\s-().]/g, '')
   // Validación flexible: acepta números con o sin código de país
   if (/^\+\d{1,3}\d{7,15}$/.test(limpio)) {
     return { valido: true, mensaje: 'Número válido', pais: 'internacional' }
   }
-  
   if (/^\d{8,15}$/.test(limpio)) {
     return { valido: true, mensaje: 'Número válido', pais: 'local' }
   }
-  
-  return { 
-    valido: false, 
+  return {
+    valido: false,
     mensaje: 'Ingresá un número válido (mínimo 8 dígitos). Ej: 0981123456 o +595981123456'
   }
 }
@@ -101,11 +97,10 @@ const validarTelefono = (telefono) => {
 // ════════════════════════════════════════════════════════════════════════════
 function PantallaExito({ pedido }) {
   const esTransferencia = pedido.metodoPago === 'transferencia'
-
   const itemsTexto = pedido.items
-    .map(i => `  • ${i.cantidad}x ${i.nombre} — ${formatPYG(i.precio_venta * i.cantidad)}`)
+    .map(i => `• ${i.cantidad}x ${i.nombre} — ${formatPYG(i.precio_venta * i.cantidad)}`)
     .join('\n')
-
+  
   const msgWA = encodeURIComponent(
     `¡Hola PanFree! 👋 Acabo de hacer un pedido.\n\n` +
     `*N° Pedido:* ${pedido.numeroPedido}\n` +
@@ -142,7 +137,6 @@ function PantallaExito({ pedido }) {
           Pedido <strong>{pedido.numeroPedido}</strong> · {pedido.nombre}
         </p>
       </div>
-
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '1.5rem 1rem' }}>
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -171,7 +165,6 @@ function PantallaExito({ pedido }) {
             </div>
           </div>
         </div>
-
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Truck size={18} /> Datos de entrega
@@ -221,7 +214,6 @@ function PantallaExito({ pedido }) {
             </div>
           </div>
         </div>
-
         {esTransferencia && (
           <div style={{ ...S.card, border: '2px solid #f46e15' }}>
             <div style={{ ...S.head, backgroundColor: '#f46e15', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -243,7 +235,6 @@ function PantallaExito({ pedido }) {
             </div>
           </div>
         )}
-
         <div style={{ ...S.alert, ...S.info, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Search size={16} color="#1565c0" style={{ flexShrink: 0 }} />
           <span>
@@ -254,7 +245,6 @@ function PantallaExito({ pedido }) {
             {' '}— se actualiza en tiempo real.
           </span>
         </div>
-
         <a
           href={`https://wa.me/${WA_NUMBER}?text=${msgWA}`}
           target="_blank"
@@ -270,7 +260,6 @@ function PantallaExito({ pedido }) {
           <svg width={22} height={22} viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 1.89.524 3.655 1.435 5.163L2 22l4.956-1.406A9.944 9.944 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm-1.177 5.83c-.198-.442-.407-.451-.596-.459l-.507-.007c-.176 0-.462.066-.704.33-.242.264-.924.903-.924 2.2 0 1.299.946 2.553 1.078 2.729.132.176 1.826 2.903 4.493 3.953 2.222.877 2.667.703 3.148.659.48-.044 1.55-.634 1.77-1.247.218-.613.218-1.138.153-1.248-.066-.11-.242-.176-.507-.308-.264-.132-1.562-.77-1.804-.858-.242-.088-.418-.132-.594.132-.176.264-.682.857-.836 1.033-.154.176-.308.198-.572.066-.264-.132-1.114-.411-2.122-1.308-.784-.698-1.314-1.56-1.468-1.824-.154-.264-.016-.407.116-.538.118-.118.264-.308.396-.462.132-.154.176-.264.264-.44.088-.176.044-.33-.022-.462-.066-.132-.574-1.43-.79-1.957z"/></svg>
           {esTransferencia ? 'Enviar comprobante por WhatsApp' : 'Confirmar pedido por WhatsApp'}
         </a>
-
         <a href="/" style={{ display: 'block', textAlign: 'center', color: '#b7996b', fontSize: '0.9rem', textDecoration: 'none', marginTop: '0.5rem' }}>
           ← Volver a la tienda
         </a>
@@ -286,6 +275,8 @@ export default function PaginaCheckout() {
   const router = useRouter()
   const { usuario, loading: authLoading, abrirModal } = useAuth()
   const { carrito, total, vaciarCarrito } = useCart()
+  const { beginCheckout, purchase } = useAnalytics() // ← NUEVO: hook de analytics
+  const trackedCheckoutRef = useRef(false) // ← NUEVO: ref para evitar duplicados
 
   const [datos, setDatos] = useState({
     nombre: '', email: '', telefono: '',
@@ -297,22 +288,30 @@ export default function PaginaCheckout() {
   const [error,         setError]         = useState(null)
   const [pedidoExito,   setPedidoExito]   = useState(null)
   const [cargandoPerfil, setCargandoPerfil] = useState(false)
-
   const [errorTelefono, setErrorTelefono] = useState(null)
   const [telefonoValido, setTelefonoValido] = useState(false)
-
   const [deliveryInfo,    setDeliveryInfo]    = useState(null)
   const [calculandoEnvio, setCalculandoEnvio] = useState(false)
   const [errorDelivery,   setErrorDelivery]   = useState(null)
+  
   const debounceRef = useRef(null)
-
+  
   const costoDelivery = (() => {
     if (metodoEntrega !== 'delivery') return 0
     if (deliveryInfo?.disponible && deliveryInfo?.costo !== undefined) return deliveryInfo.costo
     return 0
   })()
+  
   const totalFinal = total + costoDelivery
   const items = carrito
+
+  // GA4: begin_checkout — una sola vez, cuando el usuario llega con productos
+  useEffect(() => {
+    if (items.length > 0 && !trackedCheckoutRef.current) {
+      beginCheckout(items, total)
+      trackedCheckoutRef.current = true
+    }
+  }, [items, total, beginCheckout])
 
   // ── Cargar perfil si usuario logueado ──────────────────────────────────────
   useEffect(() => {
@@ -380,16 +379,14 @@ export default function PaginaCheckout() {
   function cambiar(campo, valor) {
     setDatos(prev => ({ ...prev, [campo]: valor }))
   }
-
+  
   const manejarCambioTelefono = (valor) => {
     cambiar('telefono', valor)
-    
     if (valor.trim() === '') {
       setErrorTelefono(null)
       setTelefonoValido(false)
       return
     }
-    
     const resultado = validarTelefono(valor)
     if (resultado.valido) {
       setErrorTelefono(null)
@@ -404,7 +401,7 @@ export default function PaginaCheckout() {
   const confirmarPedido = useCallback(async () => {
     console.log('🚀 confirmarPedido se ejecutó')
     setError(null)
-
+    
     // ✅ VALIDACIÓN SIMPLIFICADA - SIN DEPENDER DEL ESTADO telefonoValido
     if (!datos.nombre.trim()) {
       return setError('Ingresá tu nombre completo.')
@@ -415,44 +412,41 @@ export default function PaginaCheckout() {
     if (!datos.telefono.trim()) {
       return setError('Ingresá tu número de teléfono.')
     }
-
+    
     // Validación de teléfono en tiempo real (sin depender del estado)
     const telefonoLimpio = datos.telefono.replace(/[\s\-\(\)\.]/g, '')
     console.log('📞 Teléfono limpio:', telefonoLimpio)
-
     if (telefonoLimpio.length < 8) {
       return setError('El número de teléfono debe tener al menos 8 dígitos. Ej: 0981123456 o +595981123456')
     }
-
     console.log('✅ Validación de teléfono pasada')
-
+    
     // Validación de delivery
     if (metodoEntrega === 'delivery') {
       if (!datos.zona) return setError('Seleccioná tu zona de entrega.')
       if (calculandoEnvio) return setError('Esperá mientras calculamos el costo de envío.')
       if (!deliveryInfo?.disponible) return setError('La dirección ingresada está fuera de la zona de delivery.')
     }
-
+    
     if (items.length === 0) {
       return setError('Tu carrito está vacío.')
     }
-
+    
     setEnviando(true)
     try {
       console.log('📌 1. Buscando cliente por email:', datos.email.trim())
       let clienteId = null
-
       const { data: clienteExistente, error: errClienteExistente } = await supabase
         .from('clientes')
         .select('id')
         .eq('email', datos.email.trim())
         .maybeSingle()
-
+      
       if (errClienteExistente) {
         console.error('❌ Error buscando cliente:', errClienteExistente)
         throw errClienteExistente
       }
-
+      
       if (clienteExistente) {
         console.log('📌 2. Cliente encontrado:', clienteExistente.id)
         clienteId = clienteExistente.id
@@ -486,15 +480,16 @@ export default function PaginaCheckout() {
           })
           .select('id')
           .single()
+        
         if (errCliente) throw errCliente
         clienteId = nuevoCliente.id
         console.log('✅ Cliente creado:', clienteId)
       }
-
+      
       const direccionCompleta = metodoEntrega === 'delivery'
         ? [datos.direccion.trim(), datos.referencia.trim()].filter(Boolean).join(' — ')
         : null
-
+      
       console.log('📌 3. Creando pedido...')
       const { data: pedidoDB, error: errPedido } = await supabase
         .from('pedidos')
@@ -515,28 +510,30 @@ export default function PaginaCheckout() {
         })
         .select('id, numero_pedido')
         .single()
-
+      
       if (errPedido) {
         console.error('❌ Error al crear pedido:', errPedido)
         throw errPedido
       }
-
+      
       const numeroPedido = pedidoDB.numero_pedido
       console.log('✅ Pedido creado:', numeroPedido)
-
       console.log('📌 4. Creando detalle del pedido...')
+      
       const detalles = items.map(item => ({
         pedido_id:       pedidoDB.id,
         producto_id:     item.id,
         cantidad:        item.cantidad,
         precio_unitario: item.precio_venta,
       }))
+      
       const { error: errDetalle } = await supabase
         .from('detalle_pedido')
         .insert(detalles)
+      
       if (errDetalle) throw errDetalle
       console.log('✅ Detalle creado')
-
+      
       setPedidoExito({
         numeroPedido,
         metodoPago,
@@ -550,6 +547,9 @@ export default function PaginaCheckout() {
         items:        [...items],
       })
       vaciarCarrito()
+
+      // GA4: purchase — con los datos reales de la orden ya creada
+      purchase({ numeroPedido, totalFinal, costoDelivery, items: [...items] })
 
       console.log('📌 5. Enviando a n8n...')
       const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || 'https://panfree-bot.app.n8n.cloud/webhook/pedido'
@@ -581,14 +581,13 @@ export default function PaginaCheckout() {
       } catch (err) {
         console.error('❌ Error al enviar a n8n:', err)
       }
-
     } catch (err) {
       console.error('❌ Error al crear pedido:', err)
       setError('Ocurrió un error al procesar el pedido. Intentá de nuevo o contactanos por WhatsApp.')
     } finally {
       setEnviando(false)
     }
-  }, [datos, metodoEntrega, metodoPago, items, total, totalFinal, deliveryInfo, usuario, vaciarCarrito, calculandoEnvio, costoDelivery])
+  }, [datos, metodoEntrega, metodoPago, items, total, totalFinal, deliveryInfo, usuario, vaciarCarrito, calculandoEnvio, costoDelivery, beginCheckout, purchase])
 
   // ✅ EXPONER LA FUNCIÓN EN EL ÁMBITO GLOBAL (para debug)
   useEffect(() => {
@@ -650,7 +649,6 @@ export default function PaginaCheckout() {
           )}
         </div>
       </div>
-
       <div style={S.main}>
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -688,7 +686,6 @@ export default function PaginaCheckout() {
             </div>
           </div>
         </div>
-
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <User size={18} /> {esInvitado ? 'Tus datos (invitado)' : 'Tus datos'}
@@ -771,7 +768,6 @@ export default function PaginaCheckout() {
             )}
           </div>
         </div>
-
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Truck size={18} /> Método de entrega
@@ -792,7 +788,6 @@ export default function PaginaCheckout() {
                 </div>
               </div>
             </div>
-
             <div style={S.opcion(metodoEntrega === 'delivery')} onClick={() => {
               setMetodoEntrega('delivery')
               setDeliveryInfo(null)
@@ -813,7 +808,6 @@ export default function PaginaCheckout() {
                 </div>
               </div>
             </div>
-
             {metodoEntrega === 'delivery' && (
               <div style={{ marginTop: '0.5rem', padding: '1rem', backgroundColor: '#fafafa', borderRadius: '6px', border: '1px solid #eee' }}>
                 <div>
@@ -836,7 +830,6 @@ export default function PaginaCheckout() {
                     <option value="zona1">📍 Encarnación (Centro y alrededores)</option>
                     <option value="zona2">📍 Gran Encarnación (Cambyretá, Capitán Miranda, San Juan del Paraná)</option>
                   </select>
-
                   {datos.zona && (
                     <>
                       {calculandoEnvio && (
@@ -867,7 +860,6 @@ export default function PaginaCheckout() {
                     </>
                   )}
                 </div>
-                
                 <div style={{ marginTop: '0.5rem' }}>
                   <label style={S.label}>Dirección completa (opcional)</label>
                   <input
@@ -881,7 +873,6 @@ export default function PaginaCheckout() {
                     Esto ayuda al repartidor a encontrarte más fácil
                   </small>
                 </div>
-                
                 <div style={{ marginTop: '0.5rem' }}>
                   <label style={S.label}>Referencias / instrucciones (opcional)</label>
                   <input
@@ -896,7 +887,6 @@ export default function PaginaCheckout() {
             )}
           </div>
         </div>
-
         <div style={S.card}>
           <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <CreditCard size={18} /> Método de pago
@@ -913,7 +903,6 @@ export default function PaginaCheckout() {
                 </div>
               </div>
             </div>
-
             <div style={S.opcion(metodoPago === 'efectivo')} onClick={() => setMetodoPago('efectivo')}>
               <div style={S.radio(metodoPago === 'efectivo')} />
               <div style={{ flex: 1 }}>
@@ -927,13 +916,11 @@ export default function PaginaCheckout() {
             </div>
           </div>
         </div>
-
         {error && (
           <div style={{ ...S.alert, ...S.err, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <AlertCircle size={16} color="#c62828" /> {error}
           </div>
         )}
-
         <button
           type="button"
           style={{ ...S.btnNaranja, opacity: enviando ? 0.7 : 1, cursor: enviando ? 'not-allowed' : 'pointer', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', pointerEvents: 'auto' }}
@@ -949,7 +936,6 @@ export default function PaginaCheckout() {
             </>
           )}
         </button>
-
         <p style={{ textAlign: 'center', fontSize: '0.8rem', color: '#999' }}>
           Al confirmar aceptás nuestros <a href="/terminos-y-condiciones" style={{ color: '#b7996b', textDecoration: 'none' }}>términos y condiciones</a>.
         </p>

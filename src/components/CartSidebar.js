@@ -1,7 +1,6 @@
 'use client'
-
 import React, { useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation' // 👈 NUEVO: importar router
+import { useRouter } from 'next/navigation'
 import {
   ShoppingCart,
   X,
@@ -12,9 +11,10 @@ import {
 } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
+import { useAnalytics } from '../hooks/useAnalytics'
 
 const WHATSAPP_NUMERO = '595984589845'
-const META_ENVIO_GRATIS = 50000 // ₲ 50.000
+const META_ENVIO_GRATIS = 50000
 
 function IconWhatsApp({ size = 20 }) {
   return (
@@ -28,46 +28,40 @@ function IconWhatsApp({ size = 20 }) {
 }
 
 export default function CartSidebar() {
-  const router = useRouter() // 👈 NUEVO: instanciar router
+  const router = useRouter()
   const { carrito, visible, setVisible, eliminarDelCarrito, actualizarCantidad, total, vaciarCarrito } = useCart()
   const { estaAutenticado, abrirModal, usuario } = useAuth()
+  const { removeFromCart } = useAnalytics()
 
   const formatPYG = (n) => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
 
   useEffect(() => {
     if (!visible) return
-
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setVisible(false)
       }
     }
-
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', handleKeyDown)
-
     return () => {
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [visible, setVisible])
 
-  // ============================================
-  // IR AL CHECKOUT - CON ROUTER.PUSH (SIN FULL RELOAD)
-  // ============================================
   const irAlCheckout = useCallback(() => {
     console.log('🛒 Navegando a checkout con router.push()')
-    
     if (!estaAutenticado) {
       abrirModal(() => {
         setVisible(false)
-        router.push('/checkout') // ✅ Navegación SPA, sin remount
+        router.push('/checkout')
       })
       return
     }
     setVisible(false)
-    router.push('/checkout') // ✅ Navegación SPA, sin remount
+    router.push('/checkout')
   }, [estaAutenticado, abrirModal, setVisible, router])
 
   const confirmarPorWhatsApp = useCallback(() => {
@@ -90,6 +84,21 @@ export default function CartSidebar() {
     window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensaje)}`, '_blank', 'noopener,noreferrer')
   }, [carrito, estaAutenticado, abrirModal, usuario, total])
 
+  const manejarEliminar = useCallback((item) => {
+    removeFromCart(item, item.cantidad)
+    eliminarDelCarrito(item.id)
+  }, [removeFromCart, eliminarDelCarrito])
+
+  const manejarDecrementar = useCallback((item) => {
+    const nuevaCantidad = item.cantidad - 1
+    if (nuevaCantidad < 1) { 
+      manejarEliminar(item)
+      return 
+    }
+    removeFromCart(item, 1)
+    actualizarCantidad(item.id, nuevaCantidad)
+  }, [removeFromCart, actualizarCantidad, manejarEliminar])
+
   if (!visible) return null
 
   const faltanteEnvio = Math.max(0, META_ENVIO_GRATIS - total)
@@ -97,7 +106,6 @@ export default function CartSidebar() {
 
   return (
     <>
-      {/* Backdrop */}
       <div
         id="cart-drawer-backdrop"
         onClick={() => setVisible(false)}
@@ -113,8 +121,6 @@ export default function CartSidebar() {
           animation: 'fadeIn 0.2s ease-out forwards',
         }}
       />
-
-      {/* Drawer Panel */}
       <aside
         id="cart-drawer-panel"
         role="dialog"
@@ -136,7 +142,6 @@ export default function CartSidebar() {
           borderLeft: '1px solid #e0d5c5',
         }}
       >
-        {/* Header */}
         <div
           style={{
             padding: '1.1rem 1.25rem',
@@ -179,7 +184,6 @@ export default function CartSidebar() {
           </button>
         </div>
 
-        {/* Barra de Progreso de Envío Gratis */}
         <div
           id="free-shipping-bar-container"
           style={{
@@ -203,7 +207,6 @@ export default function CartSidebar() {
               {porcentajeEnvio}%
             </span>
           </div>
-
           <div
             style={{
               width: '100%',
@@ -228,7 +231,6 @@ export default function CartSidebar() {
           </p>
         </div>
 
-        {/* Lista de Items */}
         <div
           id="cart-items-container"
           style={{
@@ -284,7 +286,6 @@ export default function CartSidebar() {
                     alignItems: 'center',
                   }}
                 >
-                  {/* Foto o icono */}
                   <div
                     style={{
                       width: '56px',
@@ -312,8 +313,6 @@ export default function CartSidebar() {
                       <ShoppingBag size={24} color="#334c2b" />
                     )}
                   </div>
-
-                  {/* Detalle */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h4
                       style={{
@@ -339,11 +338,9 @@ export default function CartSidebar() {
                         : ' c/u'}
                     </p>
                   </div>
-
-                  {/* Controles de cantidad */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
                     <button
-                      onClick={() => actualizarCantidad(item.id, item.cantidad - 1)}
+                      onClick={() => manejarDecrementar(item)}
                       aria-label={`Reducir cantidad de ${item.nombre}`}
                       style={{
                         width: '32px',
@@ -394,7 +391,7 @@ export default function CartSidebar() {
                       +
                     </button>
                     <button
-                      onClick={() => eliminarDelCarrito(item.id)}
+                      onClick={() => manejarEliminar(item)}
                       aria-label={`Eliminar ${item.nombre} del carrito`}
                       style={{
                         background: 'none',
@@ -419,7 +416,6 @@ export default function CartSidebar() {
           )}
         </div>
 
-        {/* Footer con Total y Acciones */}
         {carrito.length > 0 && (
           <div
             id="cart-drawer-footer"
@@ -430,7 +426,6 @@ export default function CartSidebar() {
               flexShrink: 0,
             }}
           >
-            {/* Fila Subtotal / Total */}
             <div
               style={{
                 display: 'flex',
@@ -451,8 +446,6 @@ export default function CartSidebar() {
                 {formatPYG(total)}
               </span>
             </div>
-
-            {/* CTA Principal Exclusivo Naranja: Finalizar compra */}
             <button
               id="cart-checkout-btn"
               onClick={irAlCheckout}
@@ -478,8 +471,6 @@ export default function CartSidebar() {
             >
               <CheckCircle size={18} /> Finalizar Compra
             </button>
-
-            {/* Secundario: WhatsApp - ESTILO OUTLINE */}
             <button
               id="cart-whatsapp-btn"
               onClick={confirmarPorWhatsApp}
@@ -504,8 +495,6 @@ export default function CartSidebar() {
             >
               <IconWhatsApp size={18} /> Pedir por WhatsApp
             </button>
-
-            {/* Vaciar carrito */}
             <div style={{ textAlign: 'center' }}>
               <button
                 id="cart-clear-btn"
