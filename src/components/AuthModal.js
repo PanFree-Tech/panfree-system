@@ -22,7 +22,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext'
-import { supabase } from '../lib/supabase'
+import { supabase } from '../lib/supabase-client'
 
 // Traduce errores de Supabase al español
 function traducirError(msg) {

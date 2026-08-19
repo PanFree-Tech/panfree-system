@@ -33,7 +33,7 @@ import {
   RefreshCw,
   ArrowRight,
 } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../lib/supabase-client'
 import { COLORS } from './_styles'
 import { formatPYG, formatFecha } from './lib/helpers'
 
@@ -278,6 +278,28 @@ export default function AdminDashboard() {
   const cargarMetricas = useCallback(async () => {
     setMetricas((prev) => ({ ...prev, loading: true }))
     try {
+      // 1. Obtener el token de sesión
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+
+      // 2. Intentar cargar resumen diario desde API con token en header y cookies
+      let resumenApi = null
+      try {
+        const headers = { 'Content-Type': 'application/json' }
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+        const res = await fetch('/api/resumen-diario', {
+          headers,
+          credentials: 'include',
+        })
+        if (res.ok) {
+          resumenApi = await res.json()
+        }
+      } catch (errApi) {
+        console.warn('[Dashboard] Fallback API resumen-diario:', errApi)
+      }
+
       const safeCount = async (tabla, filterFn = null) => {
         try {
           let query = supabase.from(tabla).select('*', { count: 'exact', head: true })
@@ -305,22 +327,26 @@ export default function AdminDashboard() {
         safeCount('productos', (q) => q.eq('is_active', true)),
         safeCount('clientes'),
         safeCount('insumos'),
-        safeCount('pedidos', (q) => q.eq('estado', 'pendiente')),
+        resumenApi?.resumen?.estados?.pendiente !== undefined
+          ? Promise.resolve(resumenApi.resumen.estados.pendiente)
+          : safeCount('pedidos', (q) => q.eq('estado', 'pendiente')),
       ])
 
-      let ultimosPedidos = []
-      try {
-        const { data: pedidosData } = await supabase
-          .from('pedidos')
-          .select('id, numero_pedido, estado, total_final, subtotal, metodo_entrega, metodo_pago, created_at, clientes(nombre_completo)')
-          .order('created_at', { ascending: false })
-          .limit(5)
+      let ultimosPedidos = resumenApi?.resumen?.ultimos_pedidos || []
+      if (ultimosPedidos.length === 0) {
+        try {
+          const { data: pedidosData } = await supabase
+            .from('pedidos')
+            .select('id, numero_pedido, estado, total_final, subtotal, metodo_entrega, metodo_pago, created_at, clientes(nombre_completo)')
+            .order('created_at', { ascending: false })
+            .limit(5)
 
-        if (pedidosData) {
-          ultimosPedidos = pedidosData
+          if (pedidosData) {
+            ultimosPedidos = pedidosData
+          }
+        } catch (errPed) {
+          console.warn('[Dashboard] Fallback ultimos pedidos:', errPed)
         }
-      } catch (errPed) {
-        console.warn('[Dashboard] Fallback ultimos pedidos:', errPed)
       }
 
       setMetricas({
