@@ -33,7 +33,7 @@ export default function AdminLayout({ children }) {
           return
         }
 
-        const rol = session.user?.app_metadata?.role
+        const rol = session.user?.app_metadata?.role || session.user?.user_metadata?.role || session.user?.raw_user_meta_data?.role
 
         if (rol !== 'admin') {
           console.warn('[PanFree] Acceso no autorizado al panel admin:', session.user.email)
@@ -60,7 +60,7 @@ export default function AdminLayout({ children }) {
         if (mounted) router.replace('/admin/login')
         return
       }
-      const rol = session.user?.app_metadata?.role
+      const rol = session.user?.app_metadata?.role || session.user?.user_metadata?.role || session.user?.raw_user_meta_data?.role
       if (rol !== 'admin') {
         if (mounted) router.replace('/')
       }

@@ -38,7 +38,8 @@ export async function POST(req) {
 
     if (!isTokenAuth) {
       const { data: { user } } = await supabaseClient.auth.getUser()
-      if (!user || user.app_metadata?.role !== 'admin') {
+      const userRole = user?.app_metadata?.role || user?.user_metadata?.role || user?.raw_user_meta_data?.role
+      if (!user || userRole !== 'admin') {
         return NextResponse.json(
           { error: 'No autorizado' },
           { status: 401 }
