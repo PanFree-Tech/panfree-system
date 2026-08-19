@@ -10,7 +10,7 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   LayoutDashboard,
   Croissant,
@@ -30,9 +30,12 @@ import {
   Loader2,
   CheckCircle2,
   Globe,
+  RefreshCw,
+  ArrowRight,
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { COLORS } from './_styles'
+import { formatPYG, formatFecha } from './lib/helpers'
 
 // VAPID public key
 const VAPID_PUBLIC_KEY =
@@ -268,46 +271,76 @@ export default function AdminDashboard() {
     totalClientes: '—',
     totalInsumos: '—',
     pedidosPendientes: '—',
+    ultimosPedidos: [],
     loading: true,
   })
 
-  useEffect(() => {
-    async function cargarMetricas() {
-      try {
-        const [
-          { count: totalProductos },
-          { count: productosActivos },
-          { count: totalClientes },
-          { count: totalInsumos },
-          { count: pedidosPendientes },
-        ] = await Promise.all([
-          supabase.from('productos').select('*', { count: 'exact', head: true }),
-          supabase
-            .from('productos')
-            .select('*', { count: 'exact', head: true })
-            .eq('is_active', true),
-          supabase.from('clientes').select('*', { count: 'exact', head: true }),
-          supabase.from('insumos').select('*', { count: 'exact', head: true }),
-          supabase
-            .from('pedidos')
-            .select('*', { count: 'exact', head: true })
-            .eq('estado', 'pendiente'),
-        ])
-        setMetricas({
-          totalProductos: totalProductos ?? '—',
-          productosActivos: productosActivos ?? '—',
-          totalClientes: totalClientes ?? '—',
-          totalInsumos: totalInsumos ?? '—',
-          pedidosPendientes: pedidosPendientes ?? '—',
-          loading: false,
-        })
-      } catch (err) {
-        console.error('[PanFree] Error cargando métricas:', err)
-        setMetricas((m) => ({ ...m, loading: false }))
+  const cargarMetricas = useCallback(async () => {
+    setMetricas((prev) => ({ ...prev, loading: true }))
+    try {
+      const safeCount = async (tabla, filterFn = null) => {
+        try {
+          let query = supabase.from(tabla).select('*', { count: 'exact', head: true })
+          if (filterFn) query = filterFn(query)
+          const { count, error } = await query
+          if (!error && count !== null) return count
+
+          let fallback = supabase.from(tabla).select('id')
+          if (filterFn) fallback = filterFn(fallback)
+          const { data } = await fallback
+          return data ? data.length : 0
+        } catch {
+          return 0
+        }
       }
+
+      const [
+        totalProductos,
+        productosActivos,
+        totalClientes,
+        totalInsumos,
+        pedidosPendientes,
+      ] = await Promise.all([
+        safeCount('productos'),
+        safeCount('productos', (q) => q.eq('is_active', true)),
+        safeCount('clientes'),
+        safeCount('insumos'),
+        safeCount('pedidos', (q) => q.eq('estado', 'pendiente')),
+      ])
+
+      let ultimosPedidos = []
+      try {
+        const { data: pedidosData } = await supabase
+          .from('pedidos')
+          .select('id, numero_pedido, estado, total_final, subtotal, metodo_entrega, metodo_pago, created_at, clientes(nombre_completo)')
+          .order('created_at', { ascending: false })
+          .limit(5)
+
+        if (pedidosData) {
+          ultimosPedidos = pedidosData
+        }
+      } catch (errPed) {
+        console.warn('[Dashboard] Fallback ultimos pedidos:', errPed)
+      }
+
+      setMetricas({
+        totalProductos: totalProductos ?? 0,
+        productosActivos: productosActivos ?? 0,
+        totalClientes: totalClientes ?? 0,
+        totalInsumos: totalInsumos ?? 0,
+        pedidosPendientes: pedidosPendientes ?? 0,
+        ultimosPedidos,
+        loading: false,
+      })
+    } catch (err) {
+      console.error('[PanFree] Error cargando métricas:', err)
+      setMetricas((m) => ({ ...m, loading: false }))
     }
-    cargarMetricas()
   }, [])
+
+  useEffect(() => {
+    cargarMetricas()
+  }, [cargarMetricas])
 
   const hoyFormateado = new Date().toLocaleDateString('es-PY', {
     weekday: 'long',
@@ -354,7 +387,30 @@ export default function AdminDashboard() {
             {hoyFormateado}
           </p>
         </div>
-        <BotonNotificaciones />
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={cargarMetricas}
+            title="Recargar datos"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              backgroundColor: '#fff',
+              border: `2px solid ${COLORS.grisBorde}`,
+              borderRadius: '8px',
+              padding: '0.6rem 0.9rem',
+              cursor: 'pointer',
+              color: COLORS.verdeOscuro,
+              fontWeight: '600',
+              fontSize: '0.85rem',
+            }}
+          >
+            <RefreshCw size={15} className={metricas.loading ? 'animate-spin' : ''} />
+            Actualizar
+          </button>
+          <BotonNotificaciones />
+        </div>
       </div>
 
       {/* Tarjetas de métricas */}
@@ -363,7 +419,7 @@ export default function AdminDashboard() {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
           gap: '1.25rem',
-          marginBottom: '2.5rem',
+          marginBottom: '2rem',
         }}
       >
         <Tarjeta
@@ -396,6 +452,91 @@ export default function AdminDashboard() {
           href="/admin/insumos"
         />
       </section>
+
+      {/* Últimos pedidos */}
+      {metricas.ultimosPedidos.length > 0 && (
+        <section style={{ marginBottom: '2.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ margin: 0, color: COLORS.verdeOscuro, fontSize: '1.1rem', fontWeight: '600' }}>
+              Pedidos Recientes
+            </h2>
+            <a
+              href="/admin/pedidos"
+              style={{
+                color: COLORS.naranja,
+                fontSize: '0.85rem',
+                fontWeight: '700',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+              }}
+            >
+              Ver todos los pedidos <ArrowRight size={14} />
+            </a>
+          </div>
+
+          <div
+            style={{
+              backgroundColor: COLORS.blanco,
+              borderRadius: '8px',
+              border: `2px solid ${COLORS.grisBorde}`,
+              overflow: 'hidden',
+            }}
+          >
+            {metricas.ultimosPedidos.map((ped, idx) => (
+              <a
+                key={ped.id}
+                href="/admin/pedidos"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '0.85rem 1.25rem',
+                  borderBottom: idx === metricas.ultimosPedidos.length - 1 ? 'none' : `1px solid ${COLORS.marfil}`,
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  transition: 'background-color 0.15s',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#faf6f0')}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              >
+                <div>
+                  <span style={{ fontWeight: '700', color: COLORS.verdeOscuro, fontFamily: 'monospace', fontSize: '0.92rem' }}>
+                    {ped.numero_pedido}
+                  </span>
+                  <span style={{ margin: '0 0.5rem', color: '#ccc' }}>·</span>
+                  <span style={{ fontSize: '0.85rem', color: '#555' }}>
+                    {ped.clientes?.nombre_completo || 'Cliente'}
+                  </span>
+                  <span style={{ margin: '0 0.5rem', color: '#ccc' }}>·</span>
+                  <span style={{ fontSize: '0.8rem', color: '#888' }}>
+                    {formatFecha(ped.created_at)}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span
+                    style={{
+                      fontSize: '0.78rem',
+                      fontWeight: '700',
+                      padding: '0.2rem 0.6rem',
+                      borderRadius: '4px',
+                      backgroundColor: ped.estado === 'pendiente' ? '#fff3e0' : '#e8f5e9',
+                      color: ped.estado === 'pendiente' ? '#e65100' : '#2e7d32',
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {ped.estado}
+                  </span>
+                  <span style={{ fontWeight: '800', color: COLORS.verdeOscuro, fontSize: '0.95rem' }}>
+                    {formatPYG(ped.total_final || ped.subtotal)}
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Accesos rápidos */}
       <section>

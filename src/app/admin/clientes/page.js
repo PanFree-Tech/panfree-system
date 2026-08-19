@@ -61,9 +61,9 @@ export default function AdminClientes() {
     try {
       const { data } = await supabase
         .from('pedidos')
-        .select('numero_pedido, estado, total_final, fecha_pedido, metodo_entrega, metodo_pago')
+        .select('numero_pedido, estado, total_final, created_at, metodo_entrega, metodo_pago')
         .eq('cliente_id', cliente.id)
-        .order('fecha_pedido', { ascending: false })
+        .order('created_at', { ascending: false })
       setPedidos(data || [])
     } catch (err) {
       console.error('[PanFree] Error cargando pedidos:', err)
@@ -449,7 +449,7 @@ export default function AdminClientes() {
                         {p.numero_pedido}
                       </p>
                       <p style={{ margin: 0, color: COLORS.grisClaro, fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        {formatFecha(p.fecha_pedido)} ·{' '}
+                        {formatFecha(p.created_at || p.fecha_pedido)} ·{' '}
                         {p.metodo_entrega === 'delivery' ? <Truck size={12} /> : <Store size={12} />} ·{' '}
                         {p.metodo_pago === 'efectivo' ? <Banknote size={12} /> : <Landmark size={12} />}
                       </p>
