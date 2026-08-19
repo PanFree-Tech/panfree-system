@@ -1,26 +1,25 @@
 /**
  * 📁 UBICACIÓN: src/app/admin/layout.js
- * 📅 ACTUALIZADO: 2026-03-12
- * 📌 DESCRIPCIÓN: Layout del panel administrativo con DOBLE verificación de seguridad.
- *    CAPA 1 (middleware.js): Verifica sesión + rol admin en el servidor antes de cargar.
- *    CAPA 2 (este layout): Verifica nuevamente en el cliente por si el middleware falla.
- *    - Sin sesión → redirige a /admin/login
- *    - Con sesión pero sin rol 'admin' → redirige a / con mensaje de error
- *    - Solo usuarios con app_metadata.role === 'admin' ven el panel
- *    Admins autorizados: pirovanipedrojose@gmail.com, luzzdevictoria@gmail.com, contacto.panfree@gmail.com
- * ✅ 2026-03-12: user_metadata → app_metadata (app_metadata no es editable por el usuario).
- * ⚠️  EN CASO DE MODIFICACIÓN SIGNIFICATIVA, actualizar este comentario.
+ * 📅 ACTUALIZADO: 2026-08-19 (FASE 6: UX Y MONITOREO)
+ * 📌 DESCRIPCIÓN: Layout del panel administrativo con Sidebar colapsable,
+ *    navegación modular completa, verificación de rol admin y notificaciones en tiempo real.
  */
 
 'use client'
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+
+import { useState, useEffect } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
+import NotificacionesAdmin from './notificaciones'
+import { AUDIT_ACTIONS, registrarAuditoria } from './lib/audit'
 
 export default function AdminLayout({ children }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [verificando, setVerificando] = useState(true)
   const [adminConfirmado, setAdminConfirmado] = useState(false)
+  const [sidebarAbierto, setSidebarAbierto] = useState(true)
 
   useEffect(() => {
     let mounted = true
@@ -34,7 +33,6 @@ export default function AdminLayout({ children }) {
           return
         }
 
-        // ✅ app_metadata no es editable por el usuario final
         const rol = session.user?.app_metadata?.role
 
         if (rol !== 'admin') {
@@ -74,6 +72,24 @@ export default function AdminLayout({ children }) {
     }
   }, [router])
 
+  // ── Menú de navegación ──
+  const menuItems = [
+    { href: '/admin', icon: '📊', label: 'Dashboard' },
+    { href: '/admin/pedidos', icon: '📦', label: 'Pedidos' },
+    { href: '/admin/productos', icon: '🍞', label: 'Productos' },
+    { href: '/admin/recetas', icon: '📖', label: 'Recetas' },
+    { href: '/admin/compras', icon: '🛒', label: 'Compras' },
+    { href: '/admin/insumos', icon: '🌾', label: 'Insumos' },
+    { href: '/admin/clientes', icon: '👤', label: 'Clientes' },
+    { href: '/admin/proveedores', icon: '🏢', label: 'Proveedores' },
+    { href: '/admin/produccion', icon: '🏭', label: 'Producción' },
+    { href: '/admin/costos', icon: '💰', label: 'Costos' },
+    { href: '/admin/maquinarias', icon: '⚙️', label: 'Maquinarias' },
+    { href: '/admin/marketing', icon: '📣', label: 'Marketing' },
+    { href: '/admin/reportes', icon: '📈', label: 'Reportes' },
+    { href: '/admin/ayuda', icon: '❓', label: 'Ayuda' },
+  ]
+
   if (verificando) {
     return (
       <div style={{
@@ -109,86 +125,224 @@ export default function AdminLayout({ children }) {
       minHeight: '100vh',
       backgroundColor: '#f5f0e8',
       fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif',
+      display: 'flex',
     }}>
-      <header style={{
+      {/* Sidebar Colapsable */}
+      <aside style={{
+        width: sidebarAbierto ? '230px' : '64px',
         backgroundColor: '#334c2b',
         color: '#eee6d9',
-        padding: '0.75rem 1.5rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottom: '3px solid #b7996b',
+        minHeight: '100vh',
+        transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        overflowX: 'hidden',
         position: 'sticky',
         top: 0,
-        zIndex: 100,
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        flexShrink: 0,
+        borderRight: '3px solid #b7996b',
+        zIndex: 50,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span style={{ fontSize: '1.25rem' }}>🍞</span>
-          <div>
-            <span style={{ fontWeight: '700', fontSize: '1rem', color: '#eee6d9', letterSpacing: '0.02em' }}>
-              PanFree
+        {/* Cabecera Sidebar y Toggle */}
+        <div style={{
+          padding: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: sidebarAbierto ? 'space-between' : 'center',
+          borderBottom: '1px solid rgba(255,255,255,0.12)',
+          minHeight: '60px',
+        }}>
+          {sidebarAbierto && (
+            <span style={{ fontWeight: '700', fontSize: '1.05rem', color: '#eee6d9', letterSpacing: '0.5px' }}>
+              🍞 PanFree
             </span>
-            <span style={{ color: '#b7996b', fontSize: '0.8rem', marginLeft: '0.5rem', fontWeight: '400' }}>
-              Panel Admin
-            </span>
-          </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setSidebarAbierto(!sidebarAbierto)}
+            title={sidebarAbierto ? 'Colapsar menú' : 'Expandir menú'}
+            style={{
+              background: 'rgba(255,255,255,0.08)',
+              border: 'none',
+              borderRadius: '4px',
+              color: '#eee6d9',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              padding: '0.35rem 0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.15s',
+            }}
+          >
+            {sidebarAbierto ? '◀' : '▶'}
+          </button>
         </div>
 
-        <nav style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <a href="/admin" style={navLinkStyle}>Dashboard</a>
-          <a href="/admin/productos" style={navLinkStyle}>Productos</a>
-          <a href="/admin/pedidos" style={navLinkStyle}>Pedidos</a>
-          <a href="/" target="_blank" style={{ ...navLinkStyle, color: '#b7996b' }}>Ver tienda ↗</a>
-          <BtnLogout />
+        {/* Navegación modular */}
+        <nav style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '0.6rem 0.4rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.2rem',
+        }}>
+          {menuItems.map(item => {
+            const esActivo = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={!sidebarAbierto ? item.label : undefined}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: sidebarAbierto ? '0.55rem 0.85rem' : '0.55rem 0',
+                  justifyContent: sidebarAbierto ? 'flex-start' : 'center',
+                  color: esActivo ? '#fff' : '#eee6d9',
+                  backgroundColor: esActivo ? 'rgba(244,110,21,0.25)' : 'transparent',
+                  borderLeft: esActivo ? '3px solid #f46e15' : '3px solid transparent',
+                  textDecoration: 'none',
+                  fontSize: '0.85rem',
+                  fontWeight: esActivo ? '700' : '500',
+                  borderRadius: '4px',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <span style={{ fontSize: '1.15rem', flexShrink: 0, lineHeight: 1 }}>{item.icon}</span>
+                {sidebarAbierto && <span>{item.label}</span>}
+              </Link>
+            )
+          })}
         </nav>
-      </header>
 
-      <main style={{ padding: '1.5rem' }}>
-        {children}
-      </main>
+        {/* Footer del sidebar */}
+        <div style={{
+          padding: '0.8rem',
+          borderTop: '1px solid rgba(255,255,255,0.12)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.4rem',
+          backgroundColor: '#283c22',
+        }}>
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Ver tienda en vivo"
+            style={{
+              color: '#b7996b',
+              textDecoration: 'none',
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              justifyContent: sidebarAbierto ? 'flex-start' : 'center',
+              padding: '0.4rem',
+              borderRadius: '4px',
+              fontWeight: '600',
+            }}
+          >
+            <span>🌐</span>
+            {sidebarAbierto && <span>Ver tienda ↗</span>}
+          </a>
+          <BtnLogout sidebarAbierto={sidebarAbierto} />
+        </div>
+      </aside>
+
+      {/* Contenedor del contenido principal */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        minWidth: 0,
+      }}>
+        {/* Header superior */}
+        <header style={{
+          backgroundColor: '#334c2b',
+          color: '#eee6d9',
+          padding: '0.65rem 1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: '3px solid #b7996b',
+          position: 'sticky',
+          top: 0,
+          zIndex: 40,
+          flexShrink: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div>
+              <span style={{ fontWeight: '700', fontSize: '1rem', color: '#eee6d9' }}>
+                PanFree
+              </span>
+              <span style={{ color: '#b7996b', fontSize: '0.8rem', marginLeft: '0.5rem', fontWeight: '500' }}>
+                ERP & Panel de Control
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <NotificacionesAdmin />
+          </div>
+        </header>
+
+        {/* Área de trabajo de cada página */}
+        <main style={{ padding: '1.5rem', flex: 1 }}>
+          {children}
+        </main>
+      </div>
     </div>
   )
 }
 
-const navLinkStyle = {
-  color: '#eee6d9',
-  textDecoration: 'none',
-  fontSize: '0.85rem',
-  padding: '0.35rem 0.7rem',
-  borderRadius: '4px',
-  transition: 'background 0.15s',
-  fontWeight: '500',
-}
-
-function BtnLogout() {
+function BtnLogout({ sidebarAbierto }) {
   const router = useRouter()
   const [saliendo, setSaliendo] = useState(false)
 
   async function handleLogout() {
-    setSaliendo(true)
-    await supabase.auth.signOut()
-    router.replace('/admin/login')
+    try {
+      setSaliendo(true)
+      await registrarAuditoria(AUDIT_ACTIONS.USUARIO_LOGOUT, 'Cierre de sesión manual desde el admin layout')
+      await supabase.auth.signOut()
+      router.replace('/admin/login')
+    } catch (err) {
+      console.error('[PanFree] Error al cerrar sesión:', err)
+      router.replace('/admin/login')
+    }
   }
 
   return (
     <button
+      type="button"
       onClick={handleLogout}
       disabled={saliendo}
+      title="Cerrar sesión"
       style={{
         backgroundColor: saliendo ? '#666' : '#f46e15',
         color: '#fff',
         border: 'none',
         borderRadius: '4px',
-        padding: '0.35rem 0.8rem',
-        fontSize: '0.85rem',
+        padding: sidebarAbierto ? '0.4rem 0.8rem' : '0.4rem 0',
+        fontSize: '0.8rem',
         fontWeight: '600',
         cursor: saliendo ? 'not-allowed' : 'pointer',
         fontFamily: 'inherit',
-        marginLeft: '0.5rem',
         transition: 'background 0.15s',
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.4rem',
       }}
     >
-      {saliendo ? 'Saliendo…' : 'Cerrar sesión'}
+      <span>🚪</span>
+      {sidebarAbierto && <span>{saliendo ? 'Saliendo…' : 'Cerrar sesión'}</span>}
     </button>
   )
 }

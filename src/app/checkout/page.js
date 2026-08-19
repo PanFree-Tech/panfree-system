@@ -551,35 +551,39 @@ export default function PaginaCheckout() {
       // GA4: purchase — con los datos reales de la orden ya creada
       purchase({ numeroPedido, totalFinal, costoDelivery, items: [...items] })
 
-      console.log('📌 5. Enviando a n8n...')
-      const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || 'https://panfree-bot.app.n8n.cloud/webhook/pedido'
+      console.log('📌 5. Enviando notificación de pedido...')
       try {
-        await fetch(N8N_WEBHOOK_URL, {
+        const headers = { 'Content-Type': 'application/json' }
+        if (process.env.NEXT_PUBLIC_API_TOKEN) {
+          headers['Authorization'] = `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`
+        }
+
+        await fetch('/api/notificar-pedido', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             pedido: {
               numero: numeroPedido,
-              total: totalFinal,
+              total: Number(totalFinal),
               metodoPago: metodoPago,
               metodoEntrega: metodoEntrega,
               items: items.map(i => ({
                 nombre: i.nombre,
-                cantidad: i.cantidad,
-                precio: i.precio_venta,
+                cantidad: Number(i.cantidad),
+                precio: Number(i.precio_venta),
               })),
             },
             cliente: {
               nombre: datos.nombre,
-              email: datos.email,
+              email: datos.email || null,
               telefono: datos.telefono,
-              direccion: datos.direccion,
+              direccion: datos.direccion || null,
             },
           }),
         })
-        console.log('✅ Pedido enviado a n8n')
+        console.log('✅ Pedido notificado a n8n vía API interna')
       } catch (err) {
-        console.error('❌ Error al enviar a n8n:', err)
+        console.error('❌ Error al enviar notificación de pedido:', err)
       }
     } catch (err) {
       console.error('❌ Error al crear pedido:', err)

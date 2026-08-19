@@ -15,34 +15,18 @@ Indicador visual de margen (rojo/naranja/verde)
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
+import { S, COLORS } from '../_styles'
+import { formatPYG, formatKG } from '../lib/helpers'
 
-const formatPYG = n => `₲ ${Number(n||0).toLocaleString('es-PY')}`
-const formatKG = n => `${Number(n||0).toLocaleString('es-PY', { minimumFractionDigits: 2, maximumFractionDigits: 3 })} kg`
 const UNIDADES  = ['kg','g','lt','ml','unidad','docena','pack']
 const LINEA_VACIA = { insumo_id:'', cantidad:'', unidad_medida:'kg', es_opcional:false, notas:'' }
 
-const S = {
-  page      : { minHeight:'100vh', backgroundColor:'#f5f5f5', fontFamily:'"Segoe UI",sans-serif' },
-  header    : { backgroundColor:'#334c2b', color:'#eee6d9', padding:'1rem 2rem', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'3px solid #b7996b' },
-  main      : { padding:'2rem', maxWidth:'1300px', margin:'0 auto' },
-  card      : { backgroundColor:'#fff', border:'2px solid #b7996b', borderRadius:'8px', padding:'1.5rem', marginBottom:'1.5rem' },
-  btnVerde  : { backgroundColor:'#334c2b', color:'#eee6d9', border:'none', padding:'0.6rem 1.2rem', borderRadius:'4px', cursor:'pointer', fontFamily:'inherit', fontWeight:'600', fontSize:'0.9rem' },
-  btnNaranja: { backgroundColor:'#f46e15', color:'#fff', border:'none', padding:'0.6rem 1.2rem', borderRadius:'4px', cursor:'pointer', fontFamily:'inherit', fontWeight:'600', fontSize:'0.9rem' },
-  btnGris   : { backgroundColor:'#999', color:'#fff', border:'none', padding:'0.6rem 1.2rem', borderRadius:'4px', cursor:'pointer', fontFamily:'inherit', fontWeight:'600', fontSize:'0.9rem' },
-  input     : { width:'100%', padding:'0.6rem 0.8rem', border:'2px solid #b7996b', borderRadius:'4px', fontFamily:'inherit', fontSize:'0.9rem', color:'#333', boxSizing:'border-box' },
-  label     : { display:'block', color:'#334c2b', fontWeight:'600', fontSize:'0.85rem', marginBottom:'0.3rem' },
-  th        : { backgroundColor:'#334c2b', color:'#eee6d9', padding:'0.6rem 0.8rem', textAlign:'left', fontSize:'0.82rem' },
-  td        : { padding:'0.6rem 0.8rem', borderBottom:'1px solid #eee6d9', fontSize:'0.88rem', color:'#333', verticalAlign:'middle' },
-  seccion   : { backgroundColor:'#f9f6f1', border:'1px solid #e8ddd0', borderRadius:'6px', padding:'1rem', marginBottom:'1rem' },
-  seccionTit: { color:'#334c2b', fontWeight:'700', fontSize:'0.9rem', marginBottom:'0.75rem', display:'flex', alignItems:'center', gap:'0.5rem' },
-}
-
 function badgeMargen(pct) {
   const n = Number(pct)
-  const color = n >= 40 ? '#2e7d32' : n >= 20 ? '#f46e15' : '#c62828'
+  const color = n >= 40 ? COLORS.verde : n >= 20 ? COLORS.naranja : COLORS.rojo
   const label = n >= 40 ? '✅ Bueno' : n >= 20 ? '⚠️ Ajustado' : '🔴 Pérdida'
   return (
-    <span style={{ backgroundColor: color, color:'#fff', padding:'0.25rem 0.7rem', borderRadius:'20px', fontSize:'0.8rem', fontWeight:700 }}>
+    <span style={{ backgroundColor: color, color: COLORS.blanco, padding:'0.25rem 0.7rem', borderRadius:'20px', fontSize:'0.8rem', fontWeight:700 }}>
       {label} {n}%
     </span>
   )

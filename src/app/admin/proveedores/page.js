@@ -14,25 +14,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
+import { S, COLORS } from '../_styles'
 
 const FORM_VACIO = {
   nombre_empresa:'', ruc_ci:'', contacto_nombre:'', contacto_email:'',
   contacto_telefono:'', direccion:'', ciudad:'', departamento:'',
   categorias:[], calificacion:'', notas_internas:'', is_active:true,
-}
-
-const S = {
-  page:{ minHeight:'100vh', backgroundColor:'#f5f5f5', fontFamily:'"Segoe UI",sans-serif' },
-  header:{ backgroundColor:'#334c2b', color:'#eee6d9', padding:'1rem 2rem', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'3px solid #b7996b' },
-  main:{ padding:'2rem', maxWidth:'1300px', margin:'0 auto' },
-  card:{ backgroundColor:'#fff', border:'2px solid #b7996b', borderRadius:'8px', padding:'1.5rem', marginBottom:'1rem' },
-  btnVerde:{ backgroundColor:'#334c2b', color:'#eee6d9', border:'none', padding:'0.6rem 1.2rem', borderRadius:'4px', cursor:'pointer', fontFamily:'inherit', fontWeight:'600', fontSize:'0.9rem' },
-  btnNaranja:{ backgroundColor:'#f46e15', color:'#fff', border:'none', padding:'0.6rem 1.2rem', borderRadius:'4px', cursor:'pointer', fontFamily:'inherit', fontWeight:'600', fontSize:'0.9rem' },
-  btnGris:{ backgroundColor:'#999', color:'#fff', border:'none', padding:'0.6rem 1.2rem', borderRadius:'4px', cursor:'pointer', fontFamily:'inherit', fontWeight:'600', fontSize:'0.9rem' },
-  input:{ width:'100%', padding:'0.6rem 0.8rem', border:'2px solid #b7996b', borderRadius:'4px', fontFamily:'inherit', fontSize:'0.9rem', color:'#333' },
-  label:{ display:'block', color:'#334c2b', fontWeight:'600', fontSize:'0.85rem', marginBottom:'0.3rem' },
-  th:{ backgroundColor:'#334c2b', color:'#eee6d9', padding:'0.75rem 1rem', textAlign:'left', fontSize:'0.85rem' },
-  td:{ padding:'0.75rem 1rem', borderBottom:'1px solid #eee6d9', fontSize:'0.9rem', color:'#333', verticalAlign:'middle' },
 }
 
 export default function PaginaProveedores() {

@@ -15,27 +15,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
-
-const formatPYG  = n  => `₲ ${Number(n||0).toLocaleString('es-PY')}`
-const formatFecha = f => f ? new Date(f).toLocaleDateString('es-PY', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—'
+import { S, COLORS } from '../_styles'
+import { formatPYG, formatFecha } from '../lib/helpers'
 
 const ESTADOS      = ['en_proceso','finalizado','mermado','cancelado']
 const LABEL_ESTADO = { en_proceso:'En proceso', finalizado:'Finalizado', mermado:'Mermado', cancelado:'Cancelado' }
-const COLOR_ESTADO = { en_proceso:'#2196f3', finalizado:'#2e7d32', mermado:'#ff9800', cancelado:'#c62828' }
-
-const S = {
-  page      : { minHeight:'100vh', backgroundColor:'#f5f5f5', fontFamily:'"Segoe UI",sans-serif' },
-  header    : { backgroundColor:'#334c2b', color:'#eee6d9', padding:'1rem 2rem', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'3px solid #b7996b' },
-  main      : { padding:'2rem', maxWidth:'1300px', margin:'0 auto' },
-  card      : { backgroundColor:'#fff', border:'2px solid #b7996b', borderRadius:'8px', marginBottom:'1rem' },
-  btnVerde  : { backgroundColor:'#334c2b', color:'#eee6d9', border:'none', padding:'0.6rem 1.2rem', borderRadius:'4px', cursor:'pointer', fontFamily:'inherit', fontWeight:'600', fontSize:'0.9rem' },
-  btnNaranja: { backgroundColor:'#f46e15', color:'#fff', border:'none', padding:'0.6rem 1.2rem', borderRadius:'4px', cursor:'pointer', fontFamily:'inherit', fontWeight:'600', fontSize:'0.9rem' },
-  btnGris   : { backgroundColor:'#999', color:'#fff', border:'none', padding:'0.6rem 1.2rem', borderRadius:'4px', cursor:'pointer', fontFamily:'inherit', fontWeight:'600', fontSize:'0.9rem' },
-  input     : { width:'100%', padding:'0.6rem 0.8rem', border:'2px solid #b7996b', borderRadius:'4px', fontFamily:'inherit', fontSize:'0.9rem', color:'#333', boxSizing:'border-box' },
-  label     : { display:'block', color:'#334c2b', fontWeight:'600', fontSize:'0.85rem', marginBottom:'0.3rem' },
-  th        : { backgroundColor:'#334c2b', color:'#eee6d9', padding:'0.7rem 0.9rem', textAlign:'left', fontSize:'0.83rem' },
-  td        : { padding:'0.7rem 0.9rem', borderBottom:'1px solid #eee6d9', fontSize:'0.87rem', color:'#333', verticalAlign:'middle' },
-}
+const COLOR_ESTADO = { en_proceso: COLORS.azul, finalizado: COLORS.verde, mermado:'#ff9800', cancelado: COLORS.rojo }
 
 async function obtenerProximoLote() {
   const anio = new Date().getFullYear()

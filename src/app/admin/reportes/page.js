@@ -18,28 +18,15 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
-
-const formatPYG = n => `₲ ${Number(n||0).toLocaleString('es-PY')}`
+import { S, COLORS } from '../_styles'
+import { formatPYG } from '../lib/helpers'
 
 const ESTADO_COLOR = {
-  pendiente  : '#f46e15',
-  confirmado : '#2196f3',
+  pendiente  : COLORS.naranja,
+  confirmado : COLORS.azul,
   en_camino  : '#9c27b0',
-  entregado  : '#2e7d32',
-  cancelado  : '#c62828',
-}
-
-const S = {
-  page    : { minHeight:'100vh', backgroundColor:'#f5f5f5', fontFamily:'"Segoe UI",sans-serif' },
-  header  : { backgroundColor:'#334c2b', color:'#eee6d9', padding:'1rem 2rem', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'3px solid #b7996b' },
-  main    : { padding:'2rem', maxWidth:'1200px', margin:'0 auto' },
-  card    : { backgroundColor:'#fff', border:'2px solid #b7996b', borderRadius:'8px', padding:'1.5rem', marginBottom:'1.5rem' },
-  cardTitle: { color:'#334c2b', marginBottom:'1rem', fontSize:'1rem', fontWeight:700 },
-  th      : { backgroundColor:'#334c2b', color:'#eee6d9', padding:'0.6rem 0.9rem', textAlign:'left', fontSize:'0.82rem' },
-  td      : { padding:'0.6rem 0.9rem', borderBottom:'1px solid #eee6d9', fontSize:'0.88rem', color:'#333' },
-  btnGris : { backgroundColor:'#999', color:'#fff', border:'none', padding:'0.6rem 1.2rem', borderRadius:'4px', cursor:'pointer', fontFamily:'inherit', fontWeight:'600', fontSize:'0.9rem' },
-  kpiGrid : { display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(170px,1fr))', gap:'1rem', marginBottom:'2rem' },
-  kpiCard : { backgroundColor:'#fff', border:'2px solid #b7996b', borderRadius:'8px', padding:'1.25rem', textAlign:'center' },
+  entregado  : COLORS.verde,
+  cancelado  : COLORS.rojo,
 }
 
 export default function PaginaReportes() {

@@ -15,6 +15,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
+import { S, COLORS } from '../_styles'
+import { formatPYG } from '../lib/helpers'
 
 // ✅ Se agregó 'féculas' en la lista
 const CATEGORIAS  = ['aditivos','chocolates','condimentos','endulzantes','envases','esencias','féculas','frutas','frutos_secos','grasas','harinas','huevos','lacteos','levaduras','otros']
@@ -24,20 +26,6 @@ const FORM_VACIO  = {
   factor_conversion:1, stock_actual:0, stock_minimo:1, stock_maximo:'',
   precio_compra_actual:0, ppp_actual:0, proveedor_id:'',
   is_active:true, requiere_control_lote:false,
-}
-const formatPYG = n => `₲ ${Number(n||0).toLocaleString('es-PY')}`
-const S = {
-  page:{ minHeight:'100vh', backgroundColor:'#f5f5f5', fontFamily:'"Segoe UI",sans-serif' },
-  header:{ backgroundColor:'#334c2b', color:'#eee6d9', padding:'1rem 2rem', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'3px solid #b7996b' },
-  main:{ padding:'2rem', maxWidth:'1300px', margin:'0 auto' },
-  card:{ backgroundColor:'#fff', border:'2px solid #b7996b', borderRadius:'8px', marginBottom:'1rem' },
-  btnVerde:{ backgroundColor:'#334c2b', color:'#eee6d9', border:'none', padding:'0.6rem 1.2rem', borderRadius:'4px', cursor:'pointer', fontFamily:'inherit', fontWeight:'600', fontSize:'0.9rem' },
-  btnNaranja:{ backgroundColor:'#f46e15', color:'#fff', border:'none', padding:'0.6rem 1.2rem', borderRadius:'4px', cursor:'pointer', fontFamily:'inherit', fontWeight:'600', fontSize:'0.9rem' },
-  btnGris:{ backgroundColor:'#999', color:'#fff', border:'none', padding:'0.6rem 1.2rem', borderRadius:'4px', cursor:'pointer', fontFamily:'inherit', fontWeight:'600', fontSize:'0.9rem' },
-  input:{ width:'100%', padding:'0.6rem 0.8rem', border:'2px solid #b7996b', borderRadius:'4px', fontFamily:'inherit', fontSize:'0.9rem', color:'#333' },
-  label:{ display:'block', color:'#334c2b', fontWeight:'600', fontSize:'0.85rem', marginBottom:'0.3rem' },
-  th:{ backgroundColor:'#334c2b', color:'#eee6d9', padding:'0.75rem 1rem', textAlign:'left', fontSize:'0.85rem' },
-  td:{ padding:'0.75rem 1rem', borderBottom:'1px solid #eee6d9', fontSize:'0.9rem', color:'#333', verticalAlign:'middle' },
 }
 
 export default function PaginaInsumos() {
