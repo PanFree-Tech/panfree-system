@@ -11,6 +11,26 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import {
+  LayoutDashboard,
+  Croissant,
+  Package,
+  Users,
+  Wheat,
+  BookOpen,
+  ShoppingCart,
+  Factory,
+  Settings,
+  Megaphone,
+  TrendingUp,
+  HelpCircle,
+  DollarSign,
+  Bell,
+  BellOff,
+  Loader2,
+  CheckCircle2,
+  Globe,
+} from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { COLORS } from './_styles'
 
@@ -18,7 +38,7 @@ import { COLORS } from './_styles'
 const VAPID_PUBLIC_KEY =
   'BFja0jK4232iA8cec5oo9vaOguB9EKDyyyss7YWmYfsDv6cqEeZynD7Z9ozV82Yc1vgZmAIdw4mLWuXjn6jINKg'
 
-function Tarjeta({ icon, titulo, valor, subtitulo, color = COLORS.verdeOscuro, href }) {
+function Tarjeta({ icon: Icon, titulo, valor, subtitulo, color = COLORS.verdeOscuro, href }) {
   return (
     <a
       href={href}
@@ -46,11 +66,13 @@ function Tarjeta({ icon, titulo, valor, subtitulo, color = COLORS.verdeOscuro, h
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '1rem',
+          gap: '0.75rem',
           marginBottom: '0.75rem',
         }}
       >
-        <span style={{ fontSize: '2rem' }}>{icon}</span>
+        <div style={{ padding: '0.5rem', borderRadius: '8px', backgroundColor: '#faf7f2', color: COLORS.verdeOscuro }}>
+          <Icon size={24} color="#334c2b" />
+        </div>
         <span
           style={{
             color: '#8f9a44',
@@ -131,7 +153,7 @@ function BotonNotificaciones() {
       if (!res.ok) throw new Error('Error guardando suscripción')
 
       setEstado('activo')
-      alert('✅ Notificaciones activadas. Recibirás alertas cuando lleguen pedidos nuevos.')
+      alert('Notificaciones activadas. Recibirás alertas cuando lleguen pedidos nuevos.')
     } catch (err) {
       console.error('Error activando notificaciones:', err)
       setEstado('inactivo')
@@ -179,7 +201,7 @@ function BotonNotificaciones() {
           fontSize: '0.88rem',
         }}
       >
-        🔔 Notificaciones activas · Desactivar
+        <Bell size={16} /> Notificaciones activas · Desactivar
       </button>
     )
 
@@ -198,7 +220,7 @@ function BotonNotificaciones() {
           fontSize: '0.88rem',
         }}
       >
-        🔕 Notificaciones bloqueadas — habilitá en ajustes del navegador
+        <BellOff size={16} /> Notificaciones bloqueadas — habilitá en ajustes del navegador
       </div>
     )
 
@@ -223,7 +245,17 @@ function BotonNotificaciones() {
         opacity: estado === 'activando' ? 0.7 : 1,
       }}
     >
-      {estado === 'activando' ? '⏳ Activando...' : '🔔 Activar notificaciones de pedidos'}
+      {estado === 'activando' ? (
+        <>
+          <Loader2 className="animate-spin" size={16} />
+          <span>Activando...</span>
+        </>
+      ) : (
+        <>
+          <Bell size={16} />
+          <span>Activar notificaciones de pedidos</span>
+        </>
+      )}
     </button>
   )
 }
@@ -304,9 +336,12 @@ export default function AdminDashboard() {
               color: COLORS.verdeOscuro,
               fontSize: '1.6rem',
               fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
             }}
           >
-            📊 Dashboard
+            <LayoutDashboard size={26} color="#334c2b" /> Dashboard
           </h1>
           <p
             style={{
@@ -332,31 +367,31 @@ export default function AdminDashboard() {
         }}
       >
         <Tarjeta
-          icon="🍞"
+          icon={Croissant}
           titulo="Productos activos"
-          valor={metricas.loading ? '⏳' : metricas.productosActivos}
+          valor={metricas.loading ? '…' : metricas.productosActivos}
           subtitulo={`${metricas.totalProductos} en total`}
           href="/admin/productos"
         />
         <Tarjeta
-          icon="📦"
+          icon={Package}
           titulo="Pedidos pendientes"
-          valor={metricas.loading ? '⏳' : metricas.pedidosPendientes}
+          valor={metricas.loading ? '…' : metricas.pedidosPendientes}
           subtitulo="Sin procesar"
           color={metricas.pedidosPendientes > 0 ? COLORS.naranja : COLORS.verdeOscuro}
           href="/admin/pedidos"
         />
         <Tarjeta
-          icon="👥"
+          icon={Users}
           titulo="Clientes registrados"
-          valor={metricas.loading ? '⏳' : metricas.totalClientes}
+          valor={metricas.loading ? '…' : metricas.totalClientes}
           subtitulo="Usuarios activos"
           href="/admin/clientes"
         />
         <Tarjeta
-          icon="🧪"
+          icon={Wheat}
           titulo="Insumos (PPP)"
-          valor={metricas.loading ? '⏳' : metricas.totalInsumos}
+          valor={metricas.loading ? '…' : metricas.totalInsumos}
           subtitulo="Materias primas"
           href="/admin/insumos"
         />
@@ -382,54 +417,57 @@ export default function AdminDashboard() {
           }}
         >
           {[
-            { href: '/admin/productos', icon: '🍞', label: 'Productos' },
-            { href: '/admin/recetas', icon: '📋', label: 'Recetas' },
-            { href: '/admin/insumos', icon: '🧪', label: 'Insumos' },
-            { href: '/admin/proveedores', icon: '🏭', label: 'Proveedores' },
-            { href: '/admin/compras', icon: '🛒', label: 'Compras' },
-            { href: '/admin/produccion', icon: '⚙️', label: 'Producción' },
-            { href: '/admin/maquinarias', icon: '🔌', label: 'Maquinarias' },
-            { href: '/admin/costos', icon: '💰', label: 'Costos' },
-            { href: '/admin/pedidos', icon: '📦', label: 'Pedidos' },
-            { href: '/admin/clientes', icon: '👥', label: 'Clientes' },
-            { href: '/admin/marketing', icon: '📸', label: 'Marketing' },
-            { href: '/admin/reportes', icon: '📊', label: 'Reportes' },
-            { href: '/admin/ayuda', icon: '❓', label: 'Ayuda' },
-          ].map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                padding: '1.25rem 0.75rem',
-                backgroundColor: COLORS.blanco,
-                borderRadius: '8px',
-                border: `2px solid ${COLORS.grisBorde}`,
-                textDecoration: 'none',
-                color: COLORS.verdeOscuro,
-                fontWeight: '600',
-                fontSize: '0.9rem',
-                textAlign: 'center',
-                transition: 'border-color 0.15s, background-color 0.15s',
-                minHeight: '90px',
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.borderColor = COLORS.naranja
-                e.currentTarget.style.backgroundColor = '#fff8f3'
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.borderColor = COLORS.grisBorde
-                e.currentTarget.style.backgroundColor = COLORS.blanco
-              }}
-            >
-              <span style={{ fontSize: '1.6rem' }}>{item.icon}</span>
-              {item.label}
-            </a>
-          ))}
+            { href: '/admin/productos', icon: Croissant, label: 'Productos' },
+            { href: '/admin/recetas', icon: BookOpen, label: 'Recetas' },
+            { href: '/admin/insumos', icon: Wheat, label: 'Insumos' },
+            { href: '/admin/proveedores', icon: Factory, label: 'Proveedores' },
+            { href: '/admin/compras', icon: ShoppingCart, label: 'Compras' },
+            { href: '/admin/produccion', icon: Factory, label: 'Producción' },
+            { href: '/admin/maquinarias', icon: Settings, label: 'Maquinarias' },
+            { href: '/admin/costos', icon: DollarSign, label: 'Costos' },
+            { href: '/admin/pedidos', icon: Package, label: 'Pedidos' },
+            { href: '/admin/clientes', icon: Users, label: 'Clientes' },
+            { href: '/admin/marketing', icon: Megaphone, label: 'Marketing' },
+            { href: '/admin/reportes', icon: TrendingUp, label: 'Reportes' },
+            { href: '/admin/ayuda', icon: HelpCircle, label: 'Ayuda' },
+          ].map((item) => {
+            const Icon = item.icon
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.6rem',
+                  padding: '1.25rem 0.75rem',
+                  backgroundColor: COLORS.blanco,
+                  borderRadius: '8px',
+                  border: `2px solid ${COLORS.grisBorde}`,
+                  textDecoration: 'none',
+                  color: COLORS.verdeOscuro,
+                  fontWeight: '600',
+                  fontSize: '0.9rem',
+                  textAlign: 'center',
+                  transition: 'border-color 0.15s, background-color 0.15s',
+                  minHeight: '90px',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.borderColor = COLORS.naranja
+                  e.currentTarget.style.backgroundColor = '#fff8f3'
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.borderColor = COLORS.grisBorde
+                  e.currentTarget.style.backgroundColor = COLORS.blanco
+                }}
+              >
+                <Icon size={24} color="#334c2b" />
+                {item.label}
+              </a>
+            )
+          })}
         </div>
       </section>
 
@@ -443,8 +481,8 @@ export default function AdminDashboard() {
           border: '1px solid #d4c5b0',
         }}
       >
-        <h3 style={{ margin: '0 0 0.5rem', color: COLORS.verdeOscuro, fontSize: '0.95rem' }}>
-          🌐 Estado del Sistema
+        <h3 style={{ margin: '0 0 0.5rem', color: COLORS.verdeOscuro, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Globe size={18} /> Estado del Sistema
         </h3>
         <p
           style={{
@@ -452,17 +490,31 @@ export default function AdminDashboard() {
             color: COLORS.verdeOscuro,
             fontSize: '0.85rem',
             lineHeight: '1.6',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            flexWrap: 'wrap',
           }}
         >
-          ✅ Supabase conectado · ✅ Auth activo · 🏪 Tienda:{' '}
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: COLORS.naranja, fontWeight: '600' }}
-          >
-            panfree.fit
-          </a>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+            <CheckCircle2 size={14} color="#2e7d32" /> Supabase conectado
+          </span>
+          ·
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+            <CheckCircle2 size={14} color="#2e7d32" /> Auth activo
+          </span>
+          ·
+          <span>
+            Tienda:{' '}
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: COLORS.naranja, fontWeight: '600' }}
+            >
+              panfree.fit
+            </a>
+          </span>
         </p>
       </section>
     </div>

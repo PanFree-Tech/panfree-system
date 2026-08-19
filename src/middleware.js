@@ -68,7 +68,7 @@ export async function middleware(request) {
     }
 
     // ── CAPA 2: ¿Es admin? ─────────────────────────────────────────────
-    const userRole = user.app_metadata?.role || user.user_metadata?.role || user.raw_user_meta_data?.role
+    const userRole = user.raw_user_meta_data?.role || user.user_metadata?.role || user.app_metadata?.role
 
     if (userRole !== 'admin') {
       // Logueado pero NO es admin → a la tienda pública

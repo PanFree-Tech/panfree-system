@@ -12,6 +12,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { Bell, Sparkles, Check, X, Loader2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { formatFecha } from './lib/helpers'
 
@@ -167,7 +168,7 @@ export default function NotificacionesAdmin() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-            <span style={{ fontSize: '1.3rem', lineHeight: '1' }}>🔔</span>
+            <Bell size={20} color="#f46e15" style={{ flexShrink: 0, marginTop: '2px' }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: '700', fontSize: '0.88rem', color: '#b7996b', marginBottom: '0.2rem' }}>
                 Nueva notificación
@@ -183,12 +184,13 @@ export default function NotificacionesAdmin() {
                 border: 'none',
                 color: '#b7996b',
                 cursor: 'pointer',
-                fontSize: '1rem',
                 padding: '0',
                 lineHeight: '1',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
-              ✕
+              <X size={16} />
             </button>
           </div>
         </div>
@@ -203,7 +205,6 @@ export default function NotificacionesAdmin() {
           background: mostrar ? 'rgba(0,0,0,0.15)' : 'transparent',
           border: 'none',
           borderRadius: '6px',
-          fontSize: '1.3rem',
           cursor: 'pointer',
           position: 'relative',
           padding: '0.4rem 0.6rem',
@@ -215,7 +216,7 @@ export default function NotificacionesAdmin() {
           minWidth: '40px',
         }}
       >
-        🔔
+        <Bell size={20} />
         {contador > 0 && (
           <span
             style={{
@@ -270,7 +271,7 @@ export default function NotificacionesAdmin() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <span style={{ fontSize: '1rem' }}>🔔</span>
+              <Bell size={16} color="#334c2b" />
               <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#334c2b', fontWeight: '700' }}>
                 Notificaciones
               </h3>
@@ -296,12 +297,12 @@ export default function NotificacionesAdmin() {
           </div>
 
           {cargando ? (
-            <p style={{ color: '#888', textAlign: 'center', margin: '1.5rem 0', fontSize: '0.88rem' }}>
-              ⏳ Cargando notificaciones...
+            <p style={{ color: '#888', textAlign: 'center', margin: '1.5rem 0', fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+              <Loader2 className="animate-spin" size={16} /> Cargando notificaciones...
             </p>
           ) : notificaciones.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '1.5rem 0', color: '#666' }}>
-              <p style={{ fontSize: '1.5rem', margin: '0 0 0.5rem' }}>✨</p>
+              <Sparkles size={28} color="#b7996b" style={{ margin: '0 auto 0.5rem' }} />
               <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: '600', color: '#2e7d32' }}>
                 No hay notificaciones nuevas
               </p>
@@ -353,7 +354,7 @@ export default function NotificacionesAdmin() {
                       justifyContent: 'center',
                     }}
                   >
-                    ✓
+                    <Check size={14} />
                   </button>
                 </div>
               ))}
