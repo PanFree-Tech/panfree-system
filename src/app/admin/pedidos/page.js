@@ -47,13 +47,16 @@ export default function PaginaPedidosAdmin() {
   const cargarPedidos = useCallback(async () => {
     setLoading(true)
     try {
+      let pedidosData = []
+
+      // 1. Intentar consulta con join de clientes
       const { data, error } = await supabase
         .from('pedidos')
         .select(`
           id, numero_pedido, estado, metodo_entrega, metodo_pago,
-          entrega_direccion, entrega_costo, entrega_instrucciones,
-          subtotal, descuento, total_final, estado_pago,
-          fecha_pedido, created_at,
+          entrega_direccion, entrega_costo,
+          subtotal, total_final, estado_pago,
+          created_at, cliente_id,
           clientes (
             id, nombre_completo, email, telefono
           )
@@ -61,21 +64,54 @@ export default function PaginaPedidosAdmin() {
         .order('created_at', { ascending: false })
         .limit(200)
 
-      if (error) throw error
-      setPedidos(data || [])
+      if (error) {
+        console.warn('[PanFree] Fallback al cargar pedidos sin join directo:', error.message)
+        // Fallback: Si falla el join por RLS o schema cache, cargar pedidos directamente
+        const { data: rawPedidos, error: errFallback } = await supabase
+          .from('pedidos')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(200)
+
+        if (errFallback) throw errFallback
+
+        // Cargar clientes para los IDs encontrados
+        const clienteIds = [...new Set((rawPedidos || []).map((p) => p.cliente_id).filter(Boolean))]
+        let clientesMap = {}
+        if (clienteIds.length > 0) {
+          const { data: clientesData } = await supabase
+            .from('clientes')
+            .select('id, nombre_completo, email, telefono')
+            .in('id', clienteIds)
+
+          if (clientesData) {
+            clientesMap = Object.fromEntries(clientesData.map((c) => [c.id, c]))
+          }
+        }
+
+        pedidosData = (rawPedidos || []).map((p) => ({
+          ...p,
+          clientes: p.cliente_id ? clientesMap[p.cliente_id] || null : null,
+        }))
+      } else {
+        pedidosData = data || []
+      }
+
+      setPedidos(pedidosData)
 
       // Calcular stats del día
       const hoy = new Date().toDateString()
-      const pedidosHoy = (data || []).filter(
-        (p) => new Date(p.created_at).toDateString() === hoy
+      const pedidosHoy = (pedidosData || []).filter(
+        (p) => p.created_at && new Date(p.created_at).toDateString() === hoy
       )
       setStatsHoy({
         total: pedidosHoy.length,
-        monto: pedidosHoy.reduce((s, p) => s + Number(p.total_final || 0), 0),
-        pendientes: (data || []).filter((p) => p.estado === 'pendiente').length,
+        monto: pedidosHoy.reduce((s, p) => s + Number(p.total_final || p.subtotal || 0), 0),
+        pendientes: (pedidosData || []).filter((p) => p.estado === 'pendiente').length,
       })
     } catch (err) {
       console.error('[PanFree] Error cargando pedidos:', err)
+      setPedidos([])
     } finally {
       setLoading(false)
     }
@@ -92,13 +128,38 @@ export default function PaginaPedidosAdmin() {
       const { data, error } = await supabase
         .from('detalle_pedido')
         .select(`
-          id, cantidad, precio_unitario, subtotal, notas,
+          id, cantidad, precio_unitario, producto_id,
           productos (id, nombre, imagen_url)
         `)
         .eq('pedido_id', pedidoId)
 
       if (!error && data) {
         setDetalles((prev) => ({ ...prev, [pedidoId]: data }))
+      } else if (error) {
+        console.warn('[PanFree] Fallback detalle_pedido sin join:', error.message)
+        const { data: rawDetalle } = await supabase
+          .from('detalle_pedido')
+          .select('*')
+          .eq('pedido_id', pedidoId)
+
+        if (rawDetalle) {
+          const prodIds = [...new Set(rawDetalle.map((d) => d.producto_id).filter(Boolean))]
+          let prodsMap = {}
+          if (prodIds.length > 0) {
+            const { data: prodsData } = await supabase
+              .from('productos')
+              .select('id, nombre, imagen_url')
+              .in('id', prodIds)
+            if (prodsData) {
+              prodsMap = Object.fromEntries(prodsData.map((pr) => [pr.id, pr]))
+            }
+          }
+          const finalDetalle = rawDetalle.map((d) => ({
+            ...d,
+            productos: d.producto_id ? prodsMap[d.producto_id] || null : null,
+          }))
+          setDetalles((prev) => ({ ...prev, [pedidoId]: finalDetalle }))
+        }
       }
     } catch (err) {
       console.error('[PanFree] Error cargando detalle del pedido:', err)

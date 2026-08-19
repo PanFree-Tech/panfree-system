@@ -175,39 +175,75 @@ CREATE TRIGGER trg_notificar_nuevo_pedido
 AFTER INSERT ON pedidos
 FOR EACH ROW
 EXECUTE FUNCTION crear_notificacion_pedido();
-Políticas RLS (Recomendadas)
-Roles: anon, authenticated, admin
+### Políticas RLS (Recomendadas)
+Roles: `anon`, `authenticated`, `admin` (en `raw_user_meta_data.role` o `user_metadata.role`)
 
-productos
-sql
+#### Función Helper
+```sql
+CREATE OR REPLACE FUNCTION auth.is_admin()
+RETURNS boolean AS $$
+BEGIN
+  RETURN (
+    coalesce(auth.jwt() -> 'user_metadata' ->> 'role', '') = 'admin' OR
+    coalesce(auth.jwt() -> 'raw_user_meta_data' ->> 'role', '') = 'admin' OR
+    coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+#### productos
+```sql
 ALTER TABLE productos ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "select_publico_productos" ON productos
 FOR SELECT USING (true);
-clientes
-sql
+
+CREATE POLICY "admin_all_productos" ON productos
+FOR ALL TO authenticated USING (auth.is_admin()) WITH CHECK (auth.is_admin());
+```
+
+#### clientes
+```sql
 ALTER TABLE clientes ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "clientes_insert_publico" ON clientes
-FOR INSERT USING (true)
-WITH CHECK ( (user_id IS NULL) OR (user_id = auth.uid()) );
+FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "clientes_select_own" ON clientes
-FOR SELECT USING (user_id = auth.uid() OR auth.role() = 'admin');
+CREATE POLICY "clientes_select_own_or_admin" ON clientes
+FOR SELECT USING (auth.is_admin() OR user_id = auth.uid());
 
-CREATE POLICY "clientes_update_own" ON clientes
-FOR UPDATE USING (user_id = auth.uid() OR auth.role() = 'admin')
-WITH CHECK (user_id = auth.uid() OR auth.role() = 'admin');
-pedidos
-sql
+CREATE POLICY "clientes_update_own_or_admin" ON clientes
+FOR UPDATE USING (auth.is_admin() OR user_id = auth.uid())
+WITH CHECK (auth.is_admin() OR user_id = auth.uid());
+```
+
+#### pedidos
+```sql
 ALTER TABLE pedidos ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "pedidos_insert_web" ON pedidos
-FOR INSERT USING (true)
-WITH CHECK ( subtotal >= 0 AND total_final >= 0 AND (metodo_entrega IN ('retiro','delivery')) );
+FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "pedidos_select_admin" ON pedidos
-FOR SELECT USING (auth.role() = 'admin' OR cliente_id IN (SELECT id FROM clientes WHERE user_id = auth.uid()));
+CREATE POLICY "pedidos_admin_all" ON pedidos
+FOR ALL TO authenticated USING (auth.is_admin()) WITH CHECK (auth.is_admin());
+
+CREATE POLICY "pedidos_select_own" ON pedidos
+FOR SELECT USING (
+  cliente_id IN (SELECT id FROM clientes WHERE user_id = auth.uid())
+);
+```
+
+#### detalle_pedido
+```sql
+ALTER TABLE detalle_pedido ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "detalle_pedido_insert_web" ON detalle_pedido
+FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "detalle_pedido_admin_all" ON detalle_pedido
+FOR ALL TO authenticated USING (auth.is_admin()) WITH CHECK (auth.is_admin());
+```
 Pendiente de Revisar en Supabase
 ✅ Exportar schema completo (pg_dump)
 
