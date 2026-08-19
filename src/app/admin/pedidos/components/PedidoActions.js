@@ -11,7 +11,7 @@
 
 'use client'
 
-import { Send } from 'lucide-react'
+import { Send, ArrowRight, X, Landmark, Loader2 } from 'lucide-react'
 import { CONFIG_ESTADO, S } from '../lib/config'
 
 export default function PedidoActions({
@@ -42,11 +42,19 @@ export default function PedidoActions({
       {cfgEstado.next && (
         <button
           type="button"
-          style={{ ...S.btnVerde, opacity: estaCambiandoEstado ? 0.6 : 1 }}
+          style={{ ...S.btnVerde, opacity: estaCambiandoEstado ? 0.6 : 1, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
           disabled={estaCambiandoEstado}
           onClick={() => onCambiarEstado(pedido.id, cfgEstado.next)}
         >
-          {estaCambiandoEstado ? '⏳ Actualizando…' : `→ Marcar como ${CONFIG_ESTADO[cfgEstado.next]?.label || cfgEstado.next}`}
+          {estaCambiandoEstado ? (
+            <>
+              <Loader2 className="animate-spin" size={14} /> Actualizando…
+            </>
+          ) : (
+            <>
+              <ArrowRight size={14} /> Marcar como {CONFIG_ESTADO[cfgEstado.next]?.label || cfgEstado.next}
+            </>
+          )}
         </button>
       )}
 
@@ -64,6 +72,9 @@ export default function PedidoActions({
             fontFamily: 'inherit',
             fontWeight: '600',
             fontSize: '0.85rem',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.35rem',
           }}
           onClick={() => {
             if (window.confirm(`¿Seguro que deseás cancelar el pedido ${pedido.numero_pedido}?`)) {
@@ -71,7 +82,7 @@ export default function PedidoActions({
             }
           }}
         >
-          ✕ Cancelar
+          <X size={14} /> Cancelar
         </button>
       )}
 
@@ -79,11 +90,19 @@ export default function PedidoActions({
       {pedido.estado_pago === 'pendiente' && pedido.metodo_pago === 'transferencia' && (
         <button
           type="button"
-          style={{ ...S.btnNaranja, opacity: estaCambiandoPago ? 0.6 : 1 }}
+          style={{ ...S.btnNaranja, opacity: estaCambiandoPago ? 0.6 : 1, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
           disabled={estaCambiandoPago}
           onClick={() => onCambiarEstadoPago(pedido.id, 'aprobado')}
         >
-          {estaCambiandoPago ? '⏳ Confirmando…' : '🏦 Confirmar pago'}
+          {estaCambiandoPago ? (
+            <>
+              <Loader2 className="animate-spin" size={14} /> Confirmando…
+            </>
+          ) : (
+            <>
+              <Landmark size={14} /> Confirmar pago
+            </>
+          )}
         </button>
       )}
 

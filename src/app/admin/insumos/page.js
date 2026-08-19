@@ -14,6 +14,17 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  ArrowLeft,
+  Wheat,
+  Plus,
+  AlertTriangle,
+  Pencil,
+  Check,
+  X,
+  Loader2,
+  Save,
+} from 'lucide-react'
 import { supabase } from '../../../lib/supabase'
 import { S, COLORS } from '../_styles'
 import { formatPYG } from '../lib/helpers'
@@ -101,15 +112,21 @@ export default function PaginaInsumos() {
     <div style={S.page}>
       <header style={S.header}>
         <div style={{ display:'flex', alignItems:'center', gap:'1rem' }}>
-          <button onClick={() => router.push('/admin')} style={{ ...S.btnGris, padding:'0.4rem 0.8rem' }}>← Volver</button>
-          <h1 style={{ margin:0, fontSize:'1.2rem' }}>🌾 Insumos</h1>
+          <button onClick={() => router.push('/admin')} style={{ ...S.btnGris, padding:'0.4rem 0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+            <ArrowLeft size={16} /> Volver
+          </button>
+          <h1 style={{ margin:0, fontSize:'1.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Wheat size={22} color="#f46e15" /> Insumos
+          </h1>
           {stockBajoCount > 0 && (
-            <span style={{ backgroundColor:'#c62828', color:'#fff', padding:'0.2rem 0.7rem', borderRadius:'20px', fontSize:'0.8rem', fontWeight:700 }}>
-              ⚠️ {stockBajoCount} con stock bajo
+            <span style={{ backgroundColor:'#c62828', color:'#fff', padding:'0.2rem 0.7rem', borderRadius:'20px', fontSize:'0.8rem', fontWeight:700, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+              <AlertTriangle size={13} /> {stockBajoCount} con stock bajo
             </span>
           )}
         </div>
-        <button onClick={abrirNuevo} style={S.btnNaranja}>+ Nuevo Insumo</button>
+        <button onClick={abrirNuevo} style={{ ...S.btnNaranja, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+          <Plus size={16} /> Nuevo Insumo
+        </button>
       </header>
 
       <main style={S.main}>
@@ -121,12 +138,16 @@ export default function PaginaInsumos() {
           </select>
           <label style={{ display:'flex', alignItems:'center', gap:'0.4rem', cursor:'pointer', fontWeight:600, color:'#c62828', fontSize:'0.9rem' }}>
             <input type="checkbox" checked={soloStockBajo} onChange={e => setSoloStockBajo(e.target.checked)} />
-            Solo stock bajo ⚠️
+            Solo stock bajo <AlertTriangle size={14} style={{ display: 'inline' }} />
           </label>
         </div>
 
         <div style={{ ...S.card, overflow:'auto' }}>
-          {loading ? <p style={{ padding:'2rem', textAlign:'center', color:'#999' }}>⏳ Cargando...</p> : (
+          {loading ? (
+            <p style={{ padding:'2rem', textAlign:'center', color:'#999', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+              <Loader2 className="animate-spin" size={16} /> Cargando...
+            </p>
+          ) : (
             <table style={{ width:'100%', borderCollapse:'collapse' }}>
               <thead>
                 <tr>{['Insumo','Categoría','Unidad','Stock Actual','Stock Mín','PPP Actual','Proveedor','Estado','Acciones'].map(h=><th key={h} style={S.th}>{h}</th>)}</tr>
@@ -140,18 +161,20 @@ export default function PaginaInsumos() {
                       <td style={S.td}><span style={{ backgroundColor:'#f0ebe3', padding:'0.2rem 0.6rem', borderRadius:'20px', fontSize:'0.8rem', color:'#334c2b', fontWeight:600 }}>{i.categoria}</span></td>
                       <td style={S.td}>{i.unidad_medida}</td>
                       <td style={{ ...S.td, fontWeight:700, color: stockBajo ? '#c62828' : '#2e7d32' }}>
-                        {i.stock_actual} {stockBajo && '⚠️'}
+                        {i.stock_actual} {stockBajo && <AlertTriangle size={14} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '0.2rem' }} />}
                       </td>
                       <td style={S.td}>{i.stock_minimo}</td>
                       <td style={{ ...S.td, color:'#f46e15', fontWeight:700 }}>{formatPYG(i.ppp_actual)}</td>
                       <td style={S.td}>{i.proveedores?.nombre_empresa || '—'}</td>
                       <td style={S.td}>
-                        <button onClick={() => toggleActivo(i)} style={{ ...S.btnVerde, padding:'0.3rem 0.8rem', fontSize:'0.8rem', backgroundColor: i.is_active ? '#2e7d32' : '#c62828' }}>
-                          {i.is_active ? '✅' : '❌'}
+                        <button onClick={() => toggleActivo(i)} style={{ ...S.btnVerde, padding:'0.3rem 0.6rem', fontSize:'0.8rem', backgroundColor: i.is_active ? '#2e7d32' : '#c62828', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {i.is_active ? <Check size={14} /> : <X size={14} />}
                         </button>
                       </td>
                       <td style={S.td}>
-                        <button onClick={() => abrirEditar(i)} style={{ ...S.btnVerde, padding:'0.3rem 0.8rem', fontSize:'0.8rem' }}>✏️</button>
+                        <button onClick={() => abrirEditar(i)} style={{ ...S.btnVerde, padding:'0.3rem 0.6rem', fontSize:'0.8rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Pencil size={14} />
+                        </button>
                       </td>
                     </tr>
                   )
@@ -166,7 +189,9 @@ export default function PaginaInsumos() {
         <>
           <div onClick={cerrar} style={{ position:'fixed', inset:0, backgroundColor:'rgba(0,0,0,0.5)', zIndex:300 }} />
           <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', backgroundColor:'#fff', border:'2px solid #b7996b', borderRadius:'8px', padding:'2rem', zIndex:301, width:'90%', maxWidth:'620px', maxHeight:'90vh', overflowY:'auto' }}>
-            <h2 style={{ color:'#334c2b', marginBottom:'1.5rem' }}>{editando ? '✏️ Editar Insumo' : '➕ Nuevo Insumo'}</h2>
+            <h2 style={{ color:'#334c2b', marginBottom:'1.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              {editando ? <><Pencil size={20} /> Editar Insumo</> : <><Plus size={20} /> Nuevo Insumo</>}
+            </h2>
             {error && <div style={{ backgroundColor:'#fdecea', border:'1px solid #c62828', borderRadius:'4px', padding:'0.75rem', marginBottom:'1rem', color:'#c62828', fontSize:'0.9rem' }}>⚠️ {error}</div>}
 
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' }}>
@@ -219,18 +244,18 @@ export default function PaginaInsumos() {
               </div>
               <div style={{ display:'flex', gap:'1.5rem', gridColumn:'1/-1' }}>
                 <label style={{ display:'flex', alignItems:'center', gap:'0.4rem', cursor:'pointer', fontWeight:600, color:'#334c2b', fontSize:'0.9rem' }}>
-                  <input type="checkbox" checked={!!form.is_active} onChange={e => cambiar('is_active', e.target.checked)} />✅ Activo
+                  <input type="checkbox" checked={!!form.is_active} onChange={e => cambiar('is_active', e.target.checked)} /> Activo
                 </label>
                 <label style={{ display:'flex', alignItems:'center', gap:'0.4rem', cursor:'pointer', fontWeight:600, color:'#334c2b', fontSize:'0.9rem' }}>
-                  <input type="checkbox" checked={!!form.requiere_control_lote} onChange={e => cambiar('requiere_control_lote', e.target.checked)} />🔢 Control de Lote
+                  <input type="checkbox" checked={!!form.requiere_control_lote} onChange={e => cambiar('requiere_control_lote', e.target.checked)} /> Control de Lote
                 </label>
               </div>
             </div>
 
             <div style={{ display:'flex', gap:'1rem', marginTop:'1.5rem', justifyContent:'flex-end' }}>
               <button onClick={cerrar} style={S.btnGris}>Cancelar</button>
-              <button onClick={guardar} disabled={guardando} style={{ ...S.btnNaranja, opacity: guardando ? 0.7 : 1 }}>
-                {guardando ? '⏳ Guardando...' : '💾 Guardar'}
+              <button onClick={guardar} disabled={guardando} style={{ ...S.btnNaranja, opacity: guardando ? 0.7 : 1, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                {guardando ? <><Loader2 className="animate-spin" size={14} /> Guardando...</> : <><Save size={14} /> Guardar</>}
               </button>
             </div>
           </div>

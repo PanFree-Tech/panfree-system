@@ -8,7 +8,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Send } from 'lucide-react'
+import {
+  Users,
+  Search,
+  Mail,
+  Phone,
+  MapPin,
+  Truck,
+  Store,
+  Banknote,
+  Landmark,
+  FileText,
+  X,
+  Send,
+  Loader2,
+} from 'lucide-react'
 import { supabase } from '../../../lib/supabase'
 import { S, COLORS } from '../_styles'
 import { formatFecha, formatPYG } from '../lib/helpers'
@@ -94,9 +108,12 @@ export default function AdminClientes() {
               color: COLORS.verdeOscuro,
               fontSize: '1.6rem',
               fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
             }}
           >
-            👥 Clientes
+            <Users size={26} /> Clientes
           </h1>
           <p style={{ margin: 0, color: '#8f9a44', fontSize: '0.9rem' }}>
             {loading ? '...' : `${clientes.length} clientes registrados`}
@@ -105,15 +122,15 @@ export default function AdminClientes() {
       </div>
 
       {/* Buscador */}
-      <div style={{ marginBottom: '1.5rem' }}>
+      <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
         <input
           type="text"
-          placeholder="🔍 Buscar por nombre, email o teléfono..."
+          placeholder="Buscar por nombre, email o teléfono..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           style={{
             width: '100%',
-            padding: '0.75rem 1rem',
+            padding: '0.75rem 1rem 0.75rem 2.5rem',
             border: `2px solid ${COLORS.marfil}`,
             borderRadius: '8px',
             fontFamily: 'inherit',
@@ -122,6 +139,11 @@ export default function AdminClientes() {
             backgroundColor: COLORS.blanco,
             boxSizing: 'border-box',
           }}
+        />
+        <Search
+          size={18}
+          color="#888"
+          style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }}
         />
       </div>
 
@@ -136,8 +158,8 @@ export default function AdminClientes() {
         {/* Lista de clientes */}
         <div>
           {loading ? (
-            <p style={{ color: COLORS.gris, textAlign: 'center', padding: '2rem' }}>
-              ⏳ Cargando clientes...
+            <p style={{ color: COLORS.gris, textAlign: 'center', padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              <Loader2 className="animate-spin" size={18} /> Cargando clientes...
             </p>
           ) : filtrados.length === 0 ? (
             <p style={{ color: COLORS.gris, textAlign: 'center', padding: '2rem' }}>
@@ -184,12 +206,12 @@ export default function AdminClientes() {
                       >
                         {cliente.nombre_completo || 'Sin nombre'}
                       </p>
-                      <p style={{ margin: '0 0 0.2rem', color: COLORS.gris, fontSize: '0.85rem' }}>
-                        📧 {cliente.email || '—'}
+                      <p style={{ margin: '0 0 0.2rem', color: COLORS.gris, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <Mail size={13} color="#888" /> {cliente.email || '—'}
                       </p>
                       {cliente.telefono && (
-                        <p style={{ margin: 0, color: COLORS.gris, fontSize: '0.85rem' }}>
-                          📞 {cliente.telefono}
+                        <p style={{ margin: 0, color: COLORS.gris, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <Phone size={13} color="#888" /> {cliente.telefono}
                         </p>
                       )}
                     </div>
@@ -236,9 +258,12 @@ export default function AdminClientes() {
                           color: COLORS.verdeOscuro,
                           padding: '0.15rem 0.5rem',
                           borderRadius: '20px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
                         }}
                       >
-                        🚚 Delivery
+                        <Truck size={12} /> Delivery
                       </span>
                     )}
                     {cliente.prefiere_retiro && (
@@ -249,9 +274,12 @@ export default function AdminClientes() {
                           color: COLORS.verdeOscuro,
                           padding: '0.15rem 0.5rem',
                           borderRadius: '20px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
                         }}
                       >
-                        🏪 Retiro
+                        <Store size={12} /> Retiro
                       </span>
                     )}
                     {cliente.direccion_ciudad && (
@@ -262,9 +290,12 @@ export default function AdminClientes() {
                           color: COLORS.verdeOscuro,
                           padding: '0.15rem 0.5rem',
                           borderRadius: '20px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
                         }}
                       >
-                        📍 {cliente.direccion_ciudad}
+                        <MapPin size={12} /> {cliente.direccion_ciudad}
                       </span>
                     )}
                   </div>
@@ -317,11 +348,10 @@ export default function AdminClientes() {
                   border: 'none',
                   cursor: 'pointer',
                   color: COLORS.grisClaro,
-                  fontSize: '1.2rem',
                   padding: 0,
                 }}
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
@@ -335,18 +365,18 @@ export default function AdminClientes() {
               }}
             >
               {selected.email && (
-                <p style={{ margin: 0, color: '#555', fontSize: '0.88rem' }}>
-                  📧 {selected.email}
+                <p style={{ margin: 0, color: '#555', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Mail size={14} color="#666" /> {selected.email}
                 </p>
               )}
               {selected.telefono && (
-                <p style={{ margin: 0, color: '#555', fontSize: '0.88rem' }}>
-                  📞 {selected.telefono}
+                <p style={{ margin: 0, color: '#555', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Phone size={14} color="#666" /> {selected.telefono}
                 </p>
               )}
               {selected.direccion_calle && (
-                <p style={{ margin: 0, color: '#555', fontSize: '0.88rem' }}>
-                  📍 {selected.direccion_calle} {selected.direccion_numero}{' '}
+                <p style={{ margin: 0, color: '#555', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <MapPin size={14} color="#666" /> {selected.direccion_calle} {selected.direccion_numero}{' '}
                   {selected.direccion_piso_dept || ''}, {selected.direccion_ciudad || ''}
                 </p>
               )}
@@ -360,9 +390,12 @@ export default function AdminClientes() {
                     padding: '0.5rem 0.75rem',
                     borderRadius: '6px',
                     borderLeft: `3px solid ${COLORS.marfil}`,
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '0.35rem',
                   }}
                 >
-                  📝 {selected.notas_cliente}
+                  <FileText size={14} style={{ flexShrink: 0, marginTop: '2px' }} /> {selected.notas_cliente}
                 </p>
               )}
             </div>
@@ -382,7 +415,9 @@ export default function AdminClientes() {
             </h3>
 
             {loadingPedidos ? (
-              <p style={{ color: COLORS.grisClaro, fontSize: '0.85rem' }}>⏳ Cargando...</p>
+              <p style={{ color: COLORS.grisClaro, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Loader2 className="animate-spin" size={14} /> Cargando...
+              </p>
             ) : pedidos.length === 0 ? (
               <p style={{ color: COLORS.grisClaro, fontSize: '0.85rem' }}>
                 Sin pedidos registrados
@@ -413,10 +448,10 @@ export default function AdminClientes() {
                       >
                         {p.numero_pedido}
                       </p>
-                      <p style={{ margin: 0, color: COLORS.grisClaro, fontSize: '0.78rem' }}>
+                      <p style={{ margin: 0, color: COLORS.grisClaro, fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                         {formatFecha(p.fecha_pedido)} ·{' '}
-                        {p.metodo_entrega === 'delivery' ? '🚚' : '🏪'} ·{' '}
-                        {p.metodo_pago === 'efectivo' ? '💵' : '🏦'}
+                        {p.metodo_entrega === 'delivery' ? <Truck size={12} /> : <Store size={12} />} ·{' '}
+                        {p.metodo_pago === 'efectivo' ? <Banknote size={12} /> : <Landmark size={12} />}
                       </p>
                     </div>
                     <div style={{ textAlign: 'right' }}>
@@ -455,7 +490,7 @@ export default function AdminClientes() {
                   encodeURIComponent(
                     'Hola ' +
                       (selected.nombre_completo?.split(' ')[0] || '') +
-                      '! Te contactamos desde PanFree 🍞'
+                      '! Te contactamos desde PanFree.'
                   )
                 }
                 target="_blank"

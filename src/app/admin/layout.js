@@ -10,6 +10,27 @@
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
+import {
+  LayoutDashboard,
+  Package,
+  Croissant,
+  BookOpen,
+  ShoppingCart,
+  Wheat,
+  Users,
+  Building2,
+  Factory,
+  DollarSign,
+  Settings,
+  Megaphone,
+  TrendingUp,
+  HelpCircle,
+  Globe,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+} from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import NotificacionesAdmin from './notificaciones'
 import { AUDIT_ACTIONS, registrarAuditoria } from './lib/audit'
@@ -33,7 +54,7 @@ export default function AdminLayout({ children }) {
           return
         }
 
-        const rol = session.user?.app_metadata?.role || session.user?.user_metadata?.role || session.user?.raw_user_meta_data?.role
+        const rol = session.user?.raw_user_meta_data?.role || session.user?.user_metadata?.role || session.user?.app_metadata?.role
 
         if (rol !== 'admin') {
           console.warn('[PanFree] Acceso no autorizado al panel admin:', session.user.email)
@@ -60,7 +81,7 @@ export default function AdminLayout({ children }) {
         if (mounted) router.replace('/admin/login')
         return
       }
-      const rol = session.user?.app_metadata?.role || session.user?.user_metadata?.role || session.user?.raw_user_meta_data?.role
+      const rol = session.user?.raw_user_meta_data?.role || session.user?.user_metadata?.role || session.user?.app_metadata?.role
       if (rol !== 'admin') {
         if (mounted) router.replace('/')
       }
@@ -72,22 +93,22 @@ export default function AdminLayout({ children }) {
     }
   }, [router])
 
-  // ── Menú de navegación ──
+  // ── Menú de navegación con Lucide Icons ──
   const menuItems = [
-    { href: '/admin', icon: '📊', label: 'Dashboard' },
-    { href: '/admin/pedidos', icon: '📦', label: 'Pedidos' },
-    { href: '/admin/productos', icon: '🍞', label: 'Productos' },
-    { href: '/admin/recetas', icon: '📖', label: 'Recetas' },
-    { href: '/admin/compras', icon: '🛒', label: 'Compras' },
-    { href: '/admin/insumos', icon: '🌾', label: 'Insumos' },
-    { href: '/admin/clientes', icon: '👤', label: 'Clientes' },
-    { href: '/admin/proveedores', icon: '🏢', label: 'Proveedores' },
-    { href: '/admin/produccion', icon: '🏭', label: 'Producción' },
-    { href: '/admin/costos', icon: '💰', label: 'Costos' },
-    { href: '/admin/maquinarias', icon: '⚙️', label: 'Maquinarias' },
-    { href: '/admin/marketing', icon: '📣', label: 'Marketing' },
-    { href: '/admin/reportes', icon: '📈', label: 'Reportes' },
-    { href: '/admin/ayuda', icon: '❓', label: 'Ayuda' },
+    { href: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+    { href: '/admin/pedidos', icon: Package, label: 'Pedidos' },
+    { href: '/admin/productos', icon: Croissant, label: 'Productos' },
+    { href: '/admin/recetas', icon: BookOpen, label: 'Recetas' },
+    { href: '/admin/compras', icon: ShoppingCart, label: 'Compras' },
+    { href: '/admin/insumos', icon: Wheat, label: 'Insumos' },
+    { href: '/admin/clientes', icon: Users, label: 'Clientes' },
+    { href: '/admin/proveedores', icon: Building2, label: 'Proveedores' },
+    { href: '/admin/produccion', icon: Factory, label: 'Producción' },
+    { href: '/admin/costos', icon: DollarSign, label: 'Costos' },
+    { href: '/admin/maquinarias', icon: Settings, label: 'Maquinarias' },
+    { href: '/admin/marketing', icon: Megaphone, label: 'Marketing' },
+    { href: '/admin/reportes', icon: TrendingUp, label: 'Reportes' },
+    { href: '/admin/ayuda', icon: HelpCircle, label: 'Ayuda' },
   ]
 
   if (verificando) {
@@ -102,18 +123,10 @@ export default function AdminLayout({ children }) {
         fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif',
         gap: '1rem',
       }}>
-        <div style={{
-          width: '48px',
-          height: '48px',
-          border: '4px solid #b7996b',
-          borderTopColor: '#334c2b',
-          borderRadius: '50%',
-          animation: 'spin 0.8s linear infinite',
-        }} />
+        <Loader2 className="animate-spin" size={40} color="#334c2b" />
         <p style={{ color: '#334c2b', fontSize: '0.95rem', fontWeight: '600', margin: 0 }}>
           Verificando acceso…
         </p>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
@@ -154,8 +167,8 @@ export default function AdminLayout({ children }) {
           minHeight: '60px',
         }}>
           {sidebarAbierto && (
-            <span style={{ fontWeight: '700', fontSize: '1.05rem', color: '#eee6d9', letterSpacing: '0.5px' }}>
-              🍞 PanFree
+            <span style={{ fontWeight: '700', fontSize: '1.05rem', color: '#eee6d9', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Croissant size={20} color="#f46e15" /> PanFree
             </span>
           )}
           <button
@@ -168,15 +181,14 @@ export default function AdminLayout({ children }) {
               borderRadius: '4px',
               color: '#eee6d9',
               cursor: 'pointer',
-              fontSize: '1rem',
-              padding: '0.35rem 0.5rem',
+              padding: '0.35rem 0.45rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               transition: 'background 0.15s',
             }}
           >
-            {sidebarAbierto ? '◀' : '▶'}
+            {sidebarAbierto ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
           </button>
         </div>
 
@@ -190,6 +202,7 @@ export default function AdminLayout({ children }) {
           gap: '0.2rem',
         }}>
           {menuItems.map(item => {
+            const Icon = item.icon
             const esActivo = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
             return (
               <Link
@@ -213,7 +226,7 @@ export default function AdminLayout({ children }) {
                   transition: 'all 0.15s',
                 }}
               >
-                <span style={{ fontSize: '1.15rem', flexShrink: 0, lineHeight: 1 }}>{item.icon}</span>
+                <Icon size={18} style={{ flexShrink: 0 }} />
                 {sidebarAbierto && <span>{item.label}</span>}
               </Link>
             )
@@ -247,7 +260,7 @@ export default function AdminLayout({ children }) {
               fontWeight: '600',
             }}
           >
-            <span>🌐</span>
+            <Globe size={16} />
             {sidebarAbierto && <span>Ver tienda ↗</span>}
           </a>
           <BtnLogout sidebarAbierto={sidebarAbierto} />
@@ -341,7 +354,7 @@ function BtnLogout({ sidebarAbierto }) {
         gap: '0.4rem',
       }}
     >
-      <span>🚪</span>
+      <LogOut size={16} />
       {sidebarAbierto && <span>{saliendo ? 'Saliendo…' : 'Cerrar sesión'}</span>}
     </button>
   )

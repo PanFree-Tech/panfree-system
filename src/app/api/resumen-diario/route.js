@@ -31,7 +31,9 @@ export async function GET(request) {
     }
 
     // Verificar que es admin
-    const isAdmin = session.user.user_metadata?.role === 'admin' ||
+    const isAdmin =
+      session.user.raw_user_meta_data?.role === 'admin' ||
+      session.user.user_metadata?.role === 'admin' ||
       session.user.app_metadata?.role === 'admin'
 
     if (!isAdmin) {

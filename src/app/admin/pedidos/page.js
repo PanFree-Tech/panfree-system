@@ -15,6 +15,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { ArrowLeft, Package, MessageSquare, RefreshCw } from 'lucide-react'
 import { supabase } from '../../../lib/supabase'
 import { S, formatPYG } from './lib/config'
 import PedidoStats from './components/PedidoStats'
@@ -205,12 +206,14 @@ export default function PaginaPedidosAdmin() {
           <button
             type="button"
             onClick={() => router.push('/admin')}
-            style={S.btnGris}
+            style={{ ...S.btnGris, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
           >
-            ← Volver
+            <ArrowLeft size={16} /> Volver
           </button>
           <div>
-            <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700' }}>📦 Pedidos de Clientes</h1>
+            <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Package size={22} /> Pedidos de Clientes
+            </h1>
             <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: '#b7996b' }}>
               Gestión comercial y entregas
             </p>
@@ -227,15 +230,15 @@ export default function PaginaPedidosAdmin() {
             onClick={() => setModalPedido(true)}
             style={{ ...S.btnNaranja, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
           >
-            📲 Pedido por WA
+            <MessageSquare size={16} /> Pedido por WA
           </button>
           <button
             type="button"
             onClick={cargarPedidos}
-            style={S.btnGris}
+            style={{ ...S.btnGris, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
             title="Refrescar lista"
           >
-            🔄 Actualizar
+            <RefreshCw size={16} /> Actualizar
           </button>
         </div>
       </header>

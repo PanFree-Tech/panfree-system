@@ -10,6 +10,7 @@
 'use client'
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { AlertTriangle, Lock, Loader2, Croissant, ArrowLeft } from 'lucide-react'
 import { supabase } from '../../../lib/supabase'
 
 // ─── Componente interno que usa useSearchParams ────────────────────────────────
@@ -25,7 +26,7 @@ function LoginForm() {
   // Si ya está logueado como admin, redirigir directo
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      const rol = session?.user?.app_metadata?.role || session?.user?.user_metadata?.role || session?.user?.raw_user_meta_data?.role
+      const rol = session?.user?.raw_user_meta_data?.role || session?.user?.user_metadata?.role || session?.user?.app_metadata?.role
       if (rol === 'admin') {
         const redirect = searchParams.get('redirect') || '/admin'
         router.replace(redirect)
@@ -42,7 +43,7 @@ function LoginForm() {
       const { data, error: errAuth } = await supabase.auth.signInWithPassword({ email, password })
       if (errAuth) throw errAuth
 
-      const rol = data.session?.user?.app_metadata?.role || data.session?.user?.user_metadata?.role || data.session?.user?.raw_user_meta_data?.role
+      const rol = data.session?.user?.raw_user_meta_data?.role || data.session?.user?.user_metadata?.role || data.session?.user?.app_metadata?.role
 
       if (rol !== 'admin') {
         await supabase.auth.signOut()
@@ -107,8 +108,12 @@ function LoginForm() {
           color: '#c62828',
           fontSize: '0.9rem',
           lineHeight: '1.4',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '0.5rem',
         }}>
-          ⚠️ {error}
+          <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+          <div>{error}</div>
         </div>
       )}
 
@@ -156,16 +161,30 @@ function LoginForm() {
             fontFamily: 'inherit',
             transition: 'background 0.2s',
             minHeight: '48px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
           }}
         >
-          {loading ? '⏳ Verificando...' : '🔐 Ingresar al Panel'}
+          {loading ? (
+            <>
+              <Loader2 className="animate-spin" size={18} />
+              <span>Verificando...</span>
+            </>
+          ) : (
+            <>
+              <Lock size={18} />
+              <span>Ingresar al Panel</span>
+            </>
+          )}
         </button>
       </form>
 
       {/* Link a la tienda */}
       <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-        <a href="/" style={{ color: '#b7996b', fontSize: '0.85rem', textDecoration: 'none' }}>
-          ← Volver a la tienda
+        <a href="/" style={{ color: '#b7996b', fontSize: '0.85rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+          <ArrowLeft size={14} /> Volver a la tienda
         </a>
       </div>
     </div>
@@ -181,7 +200,7 @@ function LoginCargando() {
       boxShadow: '0 4px 16px rgba(51,76,43,0.15)', border: '2px solid #b7996b',
       textAlign: 'center', color: '#334c2b',
     }}>
-      <p style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🍞</p>
+      <Croissant size={36} color="#f46e15" style={{ margin: '0 auto 0.5rem' }} />
       <p style={{ fontSize: '0.95rem', color: '#888' }}>Cargando...</p>
     </div>
   )

@@ -12,6 +12,17 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  ArrowLeft,
+  Plus,
+  Croissant,
+  Camera,
+  Pencil,
+  Star,
+  AlertTriangle,
+  Loader2,
+  Save,
+} from 'lucide-react'
 import { supabase } from '../../../lib/supabase'
 import { S, COLORS } from '../_styles'
 import { formatPYG } from '../lib/helpers'
@@ -399,10 +410,16 @@ export default function PaginaProductos() {
       {/* Header */}
       <header style={S.header}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button onClick={() => router.push('/admin')} style={S.btnGris}>← Volver</button>
-          <h1 style={{ margin: 0, fontSize: '1.2rem' }}>🛍️ Productos</h1>
+          <button onClick={() => router.push('/admin')} style={{ ...S.btnGris, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+            <ArrowLeft size={16} /> Volver
+          </button>
+          <h1 style={{ margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Croissant size={22} color="#f46e15" /> Productos
+          </h1>
         </div>
-        <button onClick={abrirNuevo} style={S.btnNaranja}>+ Nuevo producto</button>
+        <button onClick={abrirNuevo} style={{ ...S.btnNaranja, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Plus size={16} /> Nuevo producto
+        </button>
       </header>
 
       <main style={S.main}>
@@ -451,7 +468,7 @@ export default function PaginaProductos() {
                           <div style={{ width: '44px', height: '44px', borderRadius: '4px', overflow: 'hidden', backgroundColor: '#f5f0ea', border: '1px solid #e0d5c5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             {p.imagen_url
                               ? <img src={p.imagen_url} alt={p.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none' }} />
-                              : <span style={{ fontSize: '1.2rem' }}>🍞</span>
+                              : <Croissant size={20} color="#b7996b" />
                             }
                           </div>
                         </td>
@@ -459,24 +476,34 @@ export default function PaginaProductos() {
                           <strong style={{ color: '#334c2b' }}>{p.nombre}</strong>
                           <br />
                           <span style={{ fontSize: '0.78rem', color: '#999' }}>{p.slug}</span>
-                          {p.is_featured && <span style={{ marginLeft: '0.4rem', fontSize: '0.75rem', backgroundColor: '#fff3e0', color: '#e65100', padding: '0.1rem 0.4rem', borderRadius: '8px' }}>⭐ Destacado</span>}
+                          {p.is_featured && (
+                            <span style={{ marginLeft: '0.4rem', fontSize: '0.75rem', backgroundColor: '#fff3e0', color: '#e65100', padding: '0.1rem 0.4rem', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                              <Star size={12} /> Destacado
+                            </span>
+                          )}
                         </td>
                         <td style={S.td}>{p.categoria}</td>
                         <td style={S.td}><strong>{formatPYG(p.precio_venta)}</strong></td>
                         <td style={{ ...S.td, color: p.stock_actual <= p.stock_minimo ? '#c62828' : '#333' }}>
                           {p.stock_actual} {p.unidad_medida}
-                          {p.stock_actual <= p.stock_minimo && <span style={{ marginLeft: '0.3rem' }}>⚠️</span>}
+                          {p.stock_actual <= p.stock_minimo && <AlertTriangle size={14} color="#c62828" style={{ display: 'inline', marginLeft: '0.3rem', verticalAlign: 'middle' }} />}
                         </td>
                         {/* Contador de fotos */}
                         <td style={{ ...S.td, textAlign: 'center' }}>
                           <span style={{
-                            display: 'inline-block',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
                             padding: '0.15rem 0.5rem',
                             borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700,
                             backgroundColor: totalFotos > 1 ? '#e8f5e9' : '#f5f5f5',
                             color: totalFotos > 1 ? '#2e7d32' : '#999',
                           }}>
-                            {totalFotos > 1 ? `📷 ${totalFotos}` : '1'}
+                            {totalFotos > 1 ? (
+                              <>
+                                <Camera size={12} /> {totalFotos}
+                              </>
+                            ) : '1'}
                           </span>
                         </td>
                         <td style={S.td}>
@@ -486,7 +513,9 @@ export default function PaginaProductos() {
                         </td>
                         <td style={S.td}>
                           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                            <button onClick={() => abrirEditar(p)} style={{ ...S.btnVerde, padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>✏️ Editar</button>
+                            <button onClick={() => abrirEditar(p)} style={{ ...S.btnVerde, padding: '0.35rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <Pencil size={12} /> Editar
+                            </button>
                             <button onClick={() => toggleActivo(p)} style={{ ...S.btnGris, padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>
                               {p.is_active ? 'Desactivar' : 'Activar'}
                             </button>
@@ -506,8 +535,8 @@ export default function PaginaProductos() {
       {modalAbierto && (
         <div style={S.overlay} onClick={e => { if (e.target === e.currentTarget) cerrarModal() }}>
           <div style={S.modal}>
-            <h2 style={{ color: '#334c2b', marginTop: 0, marginBottom: '1.5rem' }}>
-              {editando ? '✏️ Editar producto' : '+ Nuevo producto'}
+            <h2 style={{ color: '#334c2b', marginTop: 0, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              {editando ? <><Pencil size={20} /> Editar producto</> : <><Plus size={20} /> Nuevo producto</>}
             </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
