@@ -77,6 +77,12 @@ img {
 }
 
 /* ===== HEADER RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .header-social-desktop {
+    display: none !important;
+  }
+}
+
 @media (max-width: 480px) {
   .header-logo-text {
     display: none !important;
@@ -87,6 +93,9 @@ img {
   }
   .header-inner {
     padding: 0.5rem 0.85rem !important;
+  }
+  .header-cart-text {
+    display: none !important;
   }
 }
 

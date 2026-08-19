@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone', // ← IMPORTANTE para IA Studio/Cloud
   reactStrictMode: true,
   eslint: {
     ignoreDuringBuilds: true,
