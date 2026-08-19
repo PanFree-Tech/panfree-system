@@ -10,6 +10,7 @@
     "migrar-imagenes": "node scripts/migrar-imagenes-cloudinary.js"
   },
   "dependencies": {
+    "@google/genai": "^2.17.1",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
