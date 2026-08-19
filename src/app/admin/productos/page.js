@@ -13,6 +13,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
+import { S, COLORS } from '../_styles'
+import { formatPYG } from '../lib/helpers'
 
 const CATEGORIAS = ['panes', 'dulces', 'salados', 'eventos']
 const UNIDADES   = ['unidad', 'kg', 'docena', 'pack']
@@ -25,30 +27,11 @@ const FORM_VACIO = {
   is_active: true, is_featured: false, disponible_delivery: true,
 }
 
-const formatPYG = n => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
-
 function generarSlug(nombre) {
   return nombre.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9\s-]/g, '')
     .trim().replace(/\s+/g, '-')
-}
-
-const S = {
-  page:      { minHeight: '100vh', backgroundColor: '#f5f5f5', fontFamily: '"Segoe UI",sans-serif' },
-  header:    { backgroundColor: '#334c2b', color: '#eee6d9', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #b7996b' },
-  main:      { padding: '2rem', maxWidth: '1300px', margin: '0 auto' },
-  card:      { backgroundColor: '#fff', border: '2px solid #b7996b', borderRadius: '8px', padding: '1.5rem', marginBottom: '1rem' },
-  btnVerde:  { backgroundColor: '#334c2b', color: '#eee6d9', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '4px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: '600', fontSize: '0.9rem' },
-  btnNaranja:{ backgroundColor: '#f46e15', color: '#fff',    border: 'none', padding: '0.6rem 1.2rem', borderRadius: '4px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: '600', fontSize: '0.9rem' },
-  btnGris:   { backgroundColor: '#999',    color: '#fff',    border: 'none', padding: '0.6rem 1.2rem', borderRadius: '4px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: '600', fontSize: '0.9rem' },
-  input:     { width: '100%', padding: '0.6rem 0.8rem', border: '2px solid #b7996b', borderRadius: '4px', fontFamily: 'inherit', fontSize: '0.9rem', color: '#333', boxSizing: 'border-box' },
-  label:     { display: 'block', color: '#334c2b', fontWeight: '600', fontSize: '0.85rem', marginBottom: '0.3rem' },
-  tabla:     { width: '100%', borderCollapse: 'collapse' },
-  th:        { backgroundColor: '#334c2b', color: '#eee6d9', padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem' },
-  td:        { padding: '0.75rem 1rem', borderBottom: '1px solid #eee6d9', fontSize: '0.9rem', color: '#333', verticalAlign: 'middle' },
-  overlay:   { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflowY: 'auto', padding: '2rem 1rem' },
-  modal:     { backgroundColor: '#fff', borderRadius: '8px', border: '2px solid #b7996b', width: '100%', maxWidth: '720px', padding: '2rem', position: 'relative' },
 }
 
 // ─────────────────────────────────────────────────────────────
