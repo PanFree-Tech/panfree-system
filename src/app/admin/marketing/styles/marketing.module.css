@@ -1,0 +1,228 @@
+/**
+ * 📁 UBICACIÓN: src/app/admin/marketing/styles/marketing.module.css
+ * 📌 Estilos para el módulo de Marketing Panfree.
+ * Paleta oficial: #FF6B35 (Naranja), #2D2D2D (Oscuro), #4ECDC4 (Turquesa), #334c2b (Verde), #eee6d9 (Crema), #b7996b (Dorado)
+ */
+
+.container {
+  min-height: 100vh;
+  background-color: #f0ebe3;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  color: #2D2D2D;
+}
+
+.header {
+  background-color: #334c2b;
+  color: #eee6d9;
+  padding: 0.85rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 3px solid #b7996b;
+}
+
+.mainLayout {
+  display: grid;
+  grid-template-columns: 355px 1fr;
+  min-height: calc(100vh - 62px);
+}
+
+@media (max-width: 960px) {
+  .mainLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.controlPanel {
+  background-color: #ffffff;
+  border-right: 2px solid #e0d5c5;
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+
+.previewArea {
+  background-color: #141414;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+.section {
+  margin-bottom: 1.2rem;
+  border-bottom: 1px solid #ede5d8;
+  padding-bottom: 1rem;
+}
+
+.sectionTitle {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #b7996b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.55rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #334c2b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.28rem;
+}
+
+.select, .input, .textarea {
+  width: 100%;
+  padding: 0.44rem 0.7rem;
+  border-radius: 6px;
+  border: 1.5px solid #d4c9b5;
+  background-color: #faf7f2;
+  font-family: inherit;
+  font-size: 0.87rem;
+  color: #334c2b;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.select:focus, .input:focus, .textarea:focus {
+  border-color: #f46e15;
+}
+
+.automationCard {
+  background: #1c1c1c;
+  border: 1px solid #2f2f2f;
+  border-radius: 12px;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.automationHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+  border-bottom: 1px solid #2a2a2a;
+  padding-bottom: 0.6rem;
+}
+
+.automationTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #eee6d9;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.badgeAi {
+  background: linear-gradient(135deg, #FF6B35, #4ECDC4);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+}
+
+.captionBox {
+  background-color: #121212;
+  border: 1px solid #333333;
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: #eee6d9;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  min-height: 90px;
+  max-height: 220px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 0.75rem;
+}
+
+.actionBtnPrimary {
+  background: linear-gradient(135deg, #FF6B35, #c8550a);
+  color: #ffffff;
+  border: none;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.actionBtnPrimary:hover {
+  opacity: 0.93;
+}
+
+.actionBtnPrimary:active {
+  transform: scale(0.98);
+}
+
+.actionBtnSecondary {
+  background: linear-gradient(135deg, #4ECDC4, #2a9d8f);
+  color: #1a1a1a;
+  border: none;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.actionBtnSecondary:hover {
+  opacity: 0.93;
+}
+
+.actionBtnSecondary:active {
+  transform: scale(0.98);
+}
+
+.historySection {
+  background: #181818;
+  border: 1px solid #2b2b2b;
+  border-radius: 12px;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 520px;
+}
+
+.historyTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #b7996b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.historyItem {
+  background-color: #222222;
+  border: 1px solid #333333;
+  border-radius: 8px;
+  padding: 0.7rem;
+  margin-bottom: 0.6rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
