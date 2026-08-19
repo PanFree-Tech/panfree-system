@@ -23,7 +23,7 @@ import {
   Send,
   Loader2,
 } from 'lucide-react'
-import { supabase } from '../../../lib/supabase'
+import { supabase } from '../../../lib/supabase-client'
 import { S, COLORS } from '../_styles'
 import { formatFecha, formatPYG } from '../lib/helpers'
 
@@ -42,6 +42,10 @@ export default function AdminClientes() {
   async function cargarClientes() {
     setLoading(true)
     try {
+      // Obtener el token de sesión
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       const { data, error } = await supabase
         .from('clientes')
         .select('*')
@@ -59,6 +63,10 @@ export default function AdminClientes() {
     setSelected(cliente)
     setLoadingPedidos(true)
     try {
+      // Obtener el token de sesión
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       const { data } = await supabase
         .from('pedidos')
         .select('numero_pedido, estado, total_final, created_at, metodo_entrega, metodo_pago')

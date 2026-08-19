@@ -15,10 +15,13 @@ export const dynamic = 'force-dynamic'
 export async function GET(request) {
   try {
     // 1. Crear cliente Supabase con contexto de cookies (SSR)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gbdrcaumghykiipqgbty.supabase.co'
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjczNjIsImV4cCI6MjA4NzgwMzM2Mn0.OydRQxa51Ql42zvscWnQkEKJuU_3yeCS4qPQQoP6TuM'
+
     const cookieStore = cookies()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      supabaseUrl,
+      supabaseAnonKey,
       {
         cookies: {
           get(name) {
@@ -42,7 +45,7 @@ export async function GET(request) {
       }
     )
 
-    // 2. Verificar usuario autenticado
+    // 2. Verificar usuario autenticado (1º Cookies SSR, 2º Header Authorization Bearer)
     let user = null
     const { data: { user: authUser }, error: userError } = await supabase.auth.getUser()
 
@@ -52,10 +55,12 @@ export async function GET(request) {
       // Fallback: verificar header Authorization si se pasa Bearer token
       const authHeader = request.headers.get('authorization')
       if (authHeader?.startsWith('Bearer ')) {
-        const token = authHeader.replace('Bearer ', '')
-        const { data: tokenUser } = await publicSupabase.auth.getUser(token)
-        if (tokenUser?.user) {
-          user = tokenUser.user
+        const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+        if (token) {
+          const { data: tokenUser, error: tokenErr } = await publicSupabase.auth.getUser(token)
+          if (!tokenErr && tokenUser?.user) {
+            user = tokenUser.user
+          }
         }
       }
     }

@@ -31,7 +31,7 @@ import {
   ChevronRight,
   Loader2,
 } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../lib/supabase-client'
 import NotificacionesAdmin from './notificaciones'
 import { AUDIT_ACTIONS, registrarAuditoria } from './lib/audit'
 

@@ -11,7 +11,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { AlertTriangle, Lock, Loader2, Croissant, ArrowLeft } from 'lucide-react'
-import { supabase } from '../../../lib/supabase'
+import { supabase } from '../../../lib/supabase-client'
 
 // ─── Componente interno que usa useSearchParams ────────────────────────────────
 // DEBE estar dentro de <Suspense> — Next.js 14 lo exige obligatoriamente

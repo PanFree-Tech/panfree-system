@@ -16,7 +16,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Package, MessageSquare, RefreshCw } from 'lucide-react'
-import { supabase } from '../../../lib/supabase'
+import { supabase } from '../../../lib/supabase-client'
 import { S, formatPYG } from './lib/config'
 import PedidoStats from './components/PedidoStats'
 import PedidoList from './components/PedidoList'
@@ -47,6 +47,10 @@ export default function PaginaPedidosAdmin() {
   const cargarPedidos = useCallback(async () => {
     setLoading(true)
     try {
+      // Obtener el token de sesión para autenticación
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       let pedidosData = []
 
       // 1. Intentar consulta con join de clientes
