@@ -13,15 +13,35 @@ import webpush from 'web-push'
 
 export const dynamic = 'force-dynamic'
 
-// Configurar web-push
-webpush.setVapidDetails(
-  'mailto:' + (process.env.NEXT_PUBLIC_VAPID_EMAIL || 'contact@panfree.py'),
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
-  process.env.VAPID_PRIVATE_KEY || ''
-)
+function getWebPush() {
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  const privateKey = process.env.VAPID_PRIVATE_KEY
+  if (!publicKey || !privateKey) {
+    return null
+  }
+  try {
+    webpush.setVapidDetails(
+      'mailto:' + (process.env.NEXT_PUBLIC_VAPID_EMAIL || 'contact@panfree.py'),
+      publicKey,
+      privateKey
+    )
+    return webpush
+  } catch (e) {
+    console.warn('Error configurando VAPID:', e.message)
+    return null
+  }
+}
 
 export async function POST(request) {
   try {
+    const wp = getWebPush()
+    if (!wp) {
+      return NextResponse.json(
+        { success: false, message: 'Servicio de notificaciones no configurado (falta VAPID keys)' },
+        { status: 200 }
+      )
+    }
+
     // ============================================
     // VERIFICAR AUTENTICACIÓN Y PERMISOS (ADMIN ONLY)
     // ============================================
