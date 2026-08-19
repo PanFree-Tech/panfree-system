@@ -25,8 +25,8 @@ function LoginForm() {
   // Si ya está logueado como admin, redirigir directo
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      // ✅ app_metadata no es editable por el usuario final
-      if (session?.user?.app_metadata?.role === 'admin') {
+      const rol = session?.user?.app_metadata?.role || session?.user?.user_metadata?.role || session?.user?.raw_user_meta_data?.role
+      if (rol === 'admin') {
         const redirect = searchParams.get('redirect') || '/admin'
         router.replace(redirect)
       }
@@ -42,7 +42,7 @@ function LoginForm() {
       const { data, error: errAuth } = await supabase.auth.signInWithPassword({ email, password })
       if (errAuth) throw errAuth
 
-      const rol = data.session?.user?.app_metadata?.role
+      const rol = data.session?.user?.app_metadata?.role || data.session?.user?.user_metadata?.role || data.session?.user?.raw_user_meta_data?.role
 
       if (rol !== 'admin') {
         await supabase.auth.signOut()
