@@ -244,6 +244,74 @@ FOR INSERT WITH CHECK (true);
 CREATE POLICY "detalle_pedido_admin_all" ON detalle_pedido
 FOR ALL TO authenticated USING (auth.is_admin()) WITH CHECK (auth.is_admin());
 ```
+
+---
+
+## Módulo de Marketing Inteligente
+
+### reglas_promocion
+
+| Columna | Tipo | Nulabilidad | Default | Descripción |
+|---------|------|-------------|---------|-------------|
+| `id` | `uuid` | **NO** | `gen_random_uuid()` | PK |
+| `nombre` | `text` | **NO** | - | Nombre identificador de la regla |
+| `descripcion` | `text` | SÍ | - | Detalle o propósito de la regla |
+| `condicion` | `jsonb` | **NO** | `'{}'` | Criterios de activación (tipo, stock, evento, etc.) |
+| `tipo_costo` | `text` | SÍ | `'competitivo'` | `competitivo`, `objetivo`, `premium` |
+| `descuento_min` | `integer` | **NO** | `5` | Porcentaje mínimo de descuento |
+| `descuento_max` | `integer` | **NO** | `20` | Porcentaje máximo de descuento |
+| `prioridad` | `integer` | **NO** | `1` | Nivel de precedencia ante múltiples reglas |
+| `activo` | `boolean` | **NO** | `true` | Estado de la regla |
+| `created_at` | `timestamptz` | **NO** | `now()` | Fecha de creación |
+| `updated_at` | `timestamptz` | **NO** | `now()` | Última actualización |
+
+### eventos_calendario
+
+| Columna | Tipo | Nulabilidad | Default | Descripción |
+|---------|------|-------------|---------|-------------|
+| `id` | `uuid` | **NO** | `gen_random_uuid()` | PK |
+| `nombre` | `text` | **NO** | - | Nombre de la festividad o evento |
+| `fecha_inicio` | `date` | **NO** | - | Fecha de inicio del evento |
+| `fecha_fin` | `date` | **NO** | - | Fecha de finalización |
+| `categoria` | `text` | SÍ | `'festividad'` | Categoría (`festividad`, `salud`, `familiar`, etc.) |
+| `productos_relacionados` | `text[]` | SÍ | `'{}'` | Lista de nombres o categorías de productos |
+| `activo` | `boolean` | **NO** | `true` | Evento habilitado |
+| `created_at` | `timestamptz` | **NO** | `now()` | Fecha de registro |
+
+### promociones_historico
+
+| Columna | Tipo | Nulabilidad | Default | Descripción |
+|---------|------|-------------|---------|-------------|
+| `id` | `uuid` | **NO** | `gen_random_uuid()` | PK |
+| `producto_id` | `uuid` | SÍ | `null` | FK → `productos.id` |
+| `regla_id` | `uuid` | SÍ | `null` | FK → `reglas_promocion.id` |
+| `descuento_aplicado` | `integer` | **NO** | `0` | Porcentaje de descuento aplicado |
+| `precio_final` | `numeric` | **NO** | `0` | Precio en Guaraníes con descuento |
+| `captions_generados` | `jsonb` | SÍ | `'{}'` | Objeto con hook, caption, hashtags y CTA |
+| `imagen_url` | `text` | SÍ | - | URL pública o referencia de la creatividad |
+| `post_id` | `text` | SÍ | - | ID retornado por Instagram Graph API |
+| `publicada` | `boolean` | **NO** | `false` | Indica si fue publicada o solo programada |
+| `fecha_programada` | `timestamptz` | SÍ | - | Fecha y hora de programación |
+| `fecha_publicacion` | `timestamptz` | SÍ | - | Fecha y hora efectiva de publicación |
+| `engagement` | `integer` | **NO** | `0` | Métrica de interacciones / clics |
+| `created_at` | `timestamptz` | **NO** | `now()` | Registro de la promoción |
+
+### instagram_posts
+
+| Columna | Tipo | Nulabilidad | Default | Descripción |
+|---------|------|-------------|---------|-------------|
+| `id` | `uuid` | **NO** | `gen_random_uuid()` | PK |
+| `product_id` | `uuid` | SÍ | `null` | FK → `productos.id` |
+| `product_name` | `text` | **NO** | - | Nombre del producto |
+| `caption` | `text` | **NO** | - | Copy publicado en Instagram |
+| `post_id` | `text` | SÍ | - | ID del post en Instagram |
+| `post_url` | `text` | SÍ | - | Enlace directo a la publicación |
+| `format` | `text` | SÍ | `'feed_4_5'` | Formato visual empleado |
+| `status` | `text` | SÍ | `'publicado'` | Estado del post |
+| `created_at` | `timestamptz` | **NO** | `now()` | Fecha y hora |
+
+---
+
 Pendiente de Revisar en Supabase
 ✅ Exportar schema completo (pg_dump)
 

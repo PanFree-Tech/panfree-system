@@ -24,6 +24,11 @@ import { useCanvasRenderer } from './hooks/useCanvasRenderer'
 // Components
 import AutomationPanel from './components/AutomationPanel'
 import ScheduledPosts from './components/ScheduledPosts'
+import DecisionPanel from './components/DecisionPanel'
+import RulesManager from './components/RulesManager'
+import EventCalendar from './components/EventCalendar'
+import AnalyticsView from './components/AnalyticsView'
+import styles from './styles/marketing.module.css'
 
 // ─── SIMULADOR DE CELULAR ─────────────────────────────────────────────────────
 function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
@@ -418,6 +423,7 @@ function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
 export default function MarketingPage() {
   const router = useRouter()
   const [refreshHistory, setRefreshHistory] = useState(0)
+  const [tabActiva, setTabActiva] = useState('decisiones')
 
   // 1. Cargar productos de Supabase
   const { productos, loadingProd } = useSupabaseProducts()
@@ -613,9 +619,9 @@ export default function MarketingPage() {
             ← Admin
           </button>
           <div>
-            <div style={{ fontWeight: 800, fontSize: '1rem' }}>📸 Generador Instagram</div>
+            <div style={{ fontWeight: 800, fontSize: '1rem' }}>📸 Marketing & Redes Sociales</div>
             <div style={{ fontSize: '0.73rem', color: P.dorado, opacity: 0.85 }}>
-              Marketing · imágenes publicitarias y automatización
+              PanFree · Sistema de Marketing Inteligente & Canvas Creativo
             </div>
           </div>
         </div>
@@ -624,8 +630,65 @@ export default function MarketingPage() {
         </button>
       </div>
 
-      {/* BODY */}
-      <div style={S.body}>
+      {/* BARRA DE PESTAÑAS */}
+      <div className={styles.tabNav} id="marketing-tab-bar">
+        <button
+          onClick={() => setTabActiva('decisiones')}
+          className={`${styles.tabButton} ${tabActiva === 'decisiones' ? styles.tabButtonActive : ''}`}
+        >
+          🤖 Decisiones Inteligentes (IA)
+        </button>
+
+        <button
+          onClick={() => setTabActiva('canvas')}
+          className={`${styles.tabButton} ${tabActiva === 'canvas' ? styles.tabButtonActive : ''}`}
+        >
+          🎨 Diseñador Visual (Canvas)
+        </button>
+
+        <button
+          onClick={() => setTabActiva('reglas')}
+          className={`${styles.tabButton} ${tabActiva === 'reglas' ? styles.tabButtonActive : ''}`}
+        >
+          📋 Reglas de Promoción
+        </button>
+
+        <button
+          onClick={() => setTabActiva('eventos')}
+          className={`${styles.tabButton} ${tabActiva === 'eventos' ? styles.tabButtonActive : ''}`}
+        >
+          📅 Calendario de Eventos
+        </button>
+
+        <button
+          onClick={() => setTabActiva('analisis')}
+          className={`${styles.tabButton} ${tabActiva === 'analisis' ? styles.tabButtonActive : ''}`}
+        >
+          📊 Métricas & Historial
+        </button>
+      </div>
+
+      {/* CONTENIDO CONDICIONAL POR PESTAÑA */}
+      {tabActiva === 'decisiones' && (
+        <DecisionPanel
+          productos={productos}
+          onApplyToCanvas={(cfg) => {
+            state.applyIntelligentConfig(cfg)
+            setTabActiva('canvas')
+          }}
+          onPostPublished={() => setRefreshHistory((prev) => prev + 1)}
+          onNavigateToTab={setTabActiva}
+        />
+      )}
+
+      {tabActiva === 'reglas' && <RulesManager />}
+
+      {tabActiva === 'eventos' && <EventCalendar />}
+
+      {tabActiva === 'analisis' && <AnalyticsView refreshTrigger={refreshHistory} />}
+
+      {/* PESTAÑA: DISEÑADOR VISUAL & CANVAS */}
+      <div style={{ ...S.body, display: tabActiva === 'canvas' ? 'grid' : 'none' }}>
         {/* ── PANEL DE CONTROL ─────────────────────────────────────────── */}
         <div style={S.panel}>
           {/* FORMATO */}
