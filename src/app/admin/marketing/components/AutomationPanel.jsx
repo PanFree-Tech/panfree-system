@@ -10,8 +10,9 @@ import { generateInstagramContent } from '../services/geminiService'
 import { publishToInstagram } from '../services/instagramService'
 import styles from '../styles/marketing.module.css'
 
-export default function AutomationPanel({ selectedProduct, canvasRef, onPostPublished }) {
+export default function AutomationPanel({ selectedProduct, canvasRef, onPostPublished, onOpenIntelligentEngine }) {
   const [generandoIA, setGenerandoIA] = useState(false)
+  const [generandoInteligente, setGenerandoInteligente] = useState(false)
   const [publicando, setPublicando] = useState(false)
   const [captionGenerado, setCaptionGenerado] = useState('')
   const [tono, setTono] = useState('persuasivo')
@@ -36,6 +37,41 @@ export default function AutomationPanel({ selectedProduct, canvasRef, onPostPubl
       })
     } finally {
       setGenerandoIA(false)
+    }
+  }
+
+  // 1.B Generar con Motor Inteligente (Decisión + Contenido Multimodal)
+  const handleGenerarInteligente = async () => {
+    try {
+      setGenerandoInteligente(true)
+      setNotificacion(null)
+
+      const res = await fetch('/api/admin/marketing/generar-contenido', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          producto_id: selectedProduct?.id,
+          tono: tono,
+          descuento: 15,
+        }),
+      })
+      const json = await res.json()
+      if (json.success && json.content) {
+        setCaptionGenerado(json.content.fullPost || json.content.caption)
+        setNotificacion({
+          tipo: 'exito',
+          texto: '🤖 ¡Copy y estrategia generados por el Motor Inteligente!',
+        })
+      } else {
+        throw new Error(json.error || 'Error al generar')
+      }
+    } catch (err) {
+      setNotificacion({
+        tipo: 'error',
+        texto: err?.message || 'No se pudo generar con el motor inteligente.',
+      })
+    } finally {
+      setGenerandoInteligente(false)
     }
   }
 
@@ -98,7 +134,7 @@ export default function AutomationPanel({ selectedProduct, canvasRef, onPostPubl
       {/* Encabezado */}
       <div className={styles.automationHeader}>
         <div className={styles.automationTitle}>
-          <span>⚡ Automatización Instagram</span>
+          <span>⚙️ Programación Manual & IA</span>
           <span className={styles.badgeAi}>GEMINI AI</span>
         </div>
         <div style={{ display: 'flex', gap: '0.4rem' }}>
@@ -146,15 +182,32 @@ export default function AutomationPanel({ selectedProduct, canvasRef, onPostPubl
       </div>
 
       {/* Botones de acción superior */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.85rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.45rem', marginBottom: '0.85rem' }}>
         <button
           id="btn-generar-ia"
           onClick={handleGenerarIA}
-          disabled={generandoIA}
+          disabled={generandoIA || generandoInteligente}
           className={styles.actionBtnPrimary}
-          style={{ flex: 1 }}
+          style={{ fontSize: '0.78rem', padding: '0.55rem 0.5rem' }}
         >
-          {generandoIA ? '⏳ Generando copy...' : '✨ Generar con IA'}
+          {generandoIA ? '⏳ Generando...' : '✨ Copy con IA'}
+        </button>
+
+        <button
+          id="btn-generar-inteligente"
+          onClick={handleGenerarInteligente}
+          disabled={generandoIA || generandoInteligente}
+          className={styles.tabButton}
+          style={{
+            backgroundColor: '#334c2b',
+            color: '#eee6d9',
+            border: '1px solid #b7996b',
+            fontSize: '0.78rem',
+            padding: '0.55rem 0.5rem',
+            justifyContent: 'center',
+          }}
+        >
+          {generandoInteligente ? '⏳ Analizando...' : '🤖 Motor Inteligente'}
         </button>
 
         <button
@@ -166,13 +219,13 @@ export default function AutomationPanel({ selectedProduct, canvasRef, onPostPubl
             color: copiado ? '#4ECDC4' : '#eee6d9',
             border: '1px solid #444',
             borderRadius: 8,
-            padding: '0.55rem 0.8rem',
+            padding: '0.55rem 0.75rem',
             fontSize: '0.8rem',
             cursor: captionGenerado ? 'pointer' : 'not-allowed',
             fontWeight: 600,
           }}
         >
-          {copiado ? '✓ Copiado' : '📋 Copiar'}
+          {copiado ? '✓' : '📋'}
         </button>
       </div>
 

@@ -53,6 +53,21 @@ export function useMarketingState(productos = []) {
     setLogoPaddingV(20)
   }
 
+  /**
+   * Aplica directamente una configuración sugerida por el motor de IA
+   */
+  const applyIntelligentConfig = (config = {}) => {
+    if (config.productoId) setProductoId(config.productoId)
+    if (config.plantilla) setPlantilla(config.plantilla)
+    if (config.esquema) setEsquema(config.esquema)
+    if (config.textoPrincipal) setTextoPrincipal(config.textoPrincipal)
+    if (config.subtitulo) setSubtitulo(config.subtitulo)
+    if (config.textoPromo) setTextoPromo(config.textoPromo)
+    if (config.textoCTA) setTextoCTA(config.textoCTA)
+    if (typeof config.mostrarPrecio === 'boolean') setMostrarPrecio(config.mostrarPrecio)
+    if (config.formato) setFormato(config.formato)
+  }
+
   return {
     productoId,
     setProductoId,
@@ -88,5 +103,6 @@ export function useMarketingState(productos = []) {
     logoPaddingV,
     setLogoPaddingV,
     resetLogoConfig,
+    applyIntelligentConfig,
   }
 }
