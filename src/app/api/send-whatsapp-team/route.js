@@ -10,7 +10,7 @@ import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
-import { supabase as supabaseAdmin } from '../../../lib/supabase'
+import { supabase as supabaseAdmin } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 

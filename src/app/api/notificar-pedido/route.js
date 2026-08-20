@@ -11,7 +11,7 @@
 
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { supabase } from '../../../lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
