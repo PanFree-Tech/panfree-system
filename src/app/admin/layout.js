@@ -1,7 +1,7 @@
 /**
  * 📁 UBICACIÓN: src/app/admin/layout.js
- * 📅 ACTUALIZADO: 2026-08-19 (FASE 6: UX Y MONITOREO)
- * 📌 DESCRIPCIÓN: Layout del panel administrativo con Sidebar colapsable,
+ * 📅 ACTUALIZADO: 2026-08-20 (OPTIMIZACIÓN RESPONSIVE MOBILE & TABLET)
+ * 📌 DESCRIPCIÓN: Layout del panel administrativo con Sidebar responsivo (drawer móvil + toggle escritorio),
  *    navegación modular completa, verificación de rol admin y notificaciones en tiempo real.
  */
 
@@ -29,18 +29,37 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Menu,
+  X,
   Loader2,
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase-client'
 import NotificacionesAdmin from './notificaciones'
 import { AUDIT_ACTIONS, registrarAuditoria } from './lib/audit'
+import { useMobile } from '../../hooks/useMobile'
+import styles from './admin.module.css'
 
 export default function AdminLayout({ children }) {
   const router = useRouter()
   const pathname = usePathname()
+  const { isMobile, isTablet } = useMobile(960)
+
   const [verificando, setVerificando] = useState(true)
   const [adminConfirmado, setAdminConfirmado] = useState(false)
   const [sidebarAbierto, setSidebarAbierto] = useState(true)
+  const [sidebarMovilAbierto, setSidebarMovilAbierto] = useState(false)
+
+  // Cerrar sidebar móvil automáticamente al cambiar de ruta
+  useEffect(() => {
+    setSidebarMovilAbierto(false)
+  }, [pathname])
+
+  // Ajustar estado por defecto del sidebar según tamaño de pantalla
+  useEffect(() => {
+    if (isMobile || isTablet) {
+      setSidebarAbierto(true) // En móvil siempre es ancho completo dentro del drawer
+    }
+  }, [isMobile, isTablet])
 
   useEffect(() => {
     let mounted = true
@@ -124,7 +143,7 @@ export default function AdminLayout({ children }) {
         gap: '1rem',
       }}>
         <Loader2 className="animate-spin" size={40} color="#334c2b" />
-        <p style={{ color: '#334c2b', fontSize: '0.95rem', fontWeight: '600', margin: 0 }}>
+        <p style={{ color: '#334c2b', fontSize: '1rem', fontWeight: '600', margin: 0 }}>
           Verificando acceso…
         </p>
       </div>
@@ -133,170 +152,117 @@ export default function AdminLayout({ children }) {
 
   if (!adminConfirmado) return null
 
+  const esPantallaPequena = isMobile || isTablet
+  const mostrarTextoSidebar = esPantallaPequena || sidebarAbierto
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f5f0e8',
-      fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif',
-      display: 'flex',
-    }}>
-      {/* Sidebar Colapsable */}
-      <aside style={{
-        width: sidebarAbierto ? '230px' : '64px',
-        backgroundColor: '#334c2b',
-        color: '#eee6d9',
-        minHeight: '100vh',
-        transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-        overflowX: 'hidden',
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        flexShrink: 0,
-        borderRight: '3px solid #b7996b',
-        zIndex: 50,
-      }}>
+    <div className={styles.adminContainer}>
+      {/* Backdrop overlay para móvil */}
+      {sidebarMovilAbierto && (
+        <div
+          className={styles.backdropOverlay}
+          onClick={() => setSidebarMovilAbierto(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar Responsivo */}
+      <aside
+        className={`${styles.sidebar} ${
+          sidebarAbierto ? styles.sidebarExpanded : styles.sidebarCollapsed
+        } ${sidebarMovilAbierto ? styles.sidebarMobileOpen : ''}`}
+      >
         {/* Cabecera Sidebar y Toggle */}
-        <div style={{
-          padding: '1rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: sidebarAbierto ? 'space-between' : 'center',
-          borderBottom: '1px solid rgba(255,255,255,0.12)',
-          minHeight: '60px',
-        }}>
-          {sidebarAbierto && (
-            <span style={{ fontWeight: '700', fontSize: '1.05rem', color: '#eee6d9', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Croissant size={20} color="#f46e15" /> PanFree
+        <div className={styles.sidebarHeader}>
+          {mostrarTextoSidebar ? (
+            <span className={styles.sidebarBrand}>
+              <Croissant size={22} color="#f46e15" /> PanFree Admin
             </span>
+          ) : (
+            <Croissant size={22} color="#f46e15" style={{ margin: '0 auto' }} />
           )}
-          <button
-            type="button"
-            onClick={() => setSidebarAbierto(!sidebarAbierto)}
-            title={sidebarAbierto ? 'Colapsar menú' : 'Expandir menú'}
-            style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: 'none',
-              borderRadius: '4px',
-              color: '#eee6d9',
-              cursor: 'pointer',
-              padding: '0.35rem 0.45rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'background 0.15s',
-            }}
-          >
-            {sidebarAbierto ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-          </button>
+
+          {/* Botón cerrar en móvil o colapsar en escritorio */}
+          {esPantallaPequena ? (
+            <button
+              type="button"
+              className={styles.toggleBtn}
+              onClick={() => setSidebarMovilAbierto(false)}
+              aria-label="Cerrar menú"
+            >
+              <X size={20} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.toggleBtn}
+              onClick={() => setSidebarAbierto(!sidebarAbierto)}
+              title={sidebarAbierto ? 'Colapsar menú' : 'Expandir menú'}
+              aria-label={sidebarAbierto ? 'Colapsar menú' : 'Expandir menú'}
+            >
+              {sidebarAbierto ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+            </button>
+          )}
         </div>
 
         {/* Navegación modular */}
-        <nav style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '0.6rem 0.4rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.2rem',
-        }}>
-          {menuItems.map(item => {
+        <nav className={styles.sidebarNav} aria-label="Menú principal">
+          {menuItems.map((item) => {
             const Icon = item.icon
             const esActivo = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                title={!sidebarAbierto ? item.label : undefined}
+                title={!mostrarTextoSidebar ? item.label : undefined}
+                className={`${styles.navLink} ${esActivo ? styles.navLinkActive : ''}`}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: sidebarAbierto ? '0.55rem 0.85rem' : '0.55rem 0',
-                  justifyContent: sidebarAbierto ? 'flex-start' : 'center',
-                  color: esActivo ? '#fff' : '#eee6d9',
-                  backgroundColor: esActivo ? 'rgba(244,110,21,0.25)' : 'transparent',
-                  borderLeft: esActivo ? '3px solid #f46e15' : '3px solid transparent',
-                  textDecoration: 'none',
-                  fontSize: '0.85rem',
-                  fontWeight: esActivo ? '700' : '500',
-                  borderRadius: '4px',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.15s',
+                  justifyContent: mostrarTextoSidebar ? 'flex-start' : 'center',
+                  padding: mostrarTextoSidebar ? '0.65rem 0.85rem' : '0.65rem 0',
                 }}
               >
-                <Icon size={18} style={{ flexShrink: 0 }} />
-                {sidebarAbierto && <span>{item.label}</span>}
+                <Icon size={20} style={{ flexShrink: 0 }} />
+                {mostrarTextoSidebar && <span>{item.label}</span>}
               </Link>
             )
           })}
         </nav>
 
         {/* Footer del sidebar */}
-        <div style={{
-          padding: '0.8rem',
-          borderTop: '1px solid rgba(255,255,255,0.12)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.4rem',
-          backgroundColor: '#283c22',
-        }}>
+        <div className={styles.sidebarFooter}>
           <a
             href="/"
             target="_blank"
             rel="noopener noreferrer"
             title="Ver tienda en vivo"
-            style={{
-              color: '#b7996b',
-              textDecoration: 'none',
-              fontSize: '0.8rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              justifyContent: sidebarAbierto ? 'flex-start' : 'center',
-              padding: '0.4rem',
-              borderRadius: '4px',
-              fontWeight: '600',
-            }}
+            className={styles.tiendaLink}
+            style={{ justifyContent: mostrarTextoSidebar ? 'flex-start' : 'center' }}
           >
-            <Globe size={16} />
-            {sidebarAbierto && <span>Ver tienda ↗</span>}
+            <Globe size={18} style={{ flexShrink: 0 }} />
+            {mostrarTextoSidebar && <span>Ver tienda ↗</span>}
           </a>
-          <BtnLogout sidebarAbierto={sidebarAbierto} />
+          <BtnLogout sidebarAbierto={mostrarTextoSidebar} />
         </div>
       </aside>
 
       {/* Contenedor del contenido principal */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        minWidth: 0,
-      }}>
+      <div className={styles.mainWrapper}>
         {/* Header superior */}
-        <header style={{
-          backgroundColor: '#334c2b',
-          color: '#eee6d9',
-          padding: '0.65rem 1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: '3px solid #b7996b',
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          flexShrink: 0,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <header className={styles.header}>
+          <div className={styles.headerBrand}>
+            {/* Botón hamburguesa visible solo en pantallas pequeñas */}
+            <button
+              type="button"
+              className={styles.hamburgerBtn}
+              onClick={() => setSidebarMovilAbierto(true)}
+              aria-label="Abrir menú de navegación"
+            >
+              <Menu size={24} />
+            </button>
+
             <div>
-              <span style={{ fontWeight: '700', fontSize: '1rem', color: '#eee6d9' }}>
-                PanFree
-              </span>
-              <span style={{ color: '#b7996b', fontSize: '0.8rem', marginLeft: '0.5rem', fontWeight: '500' }}>
-                ERP & Panel de Control
-              </span>
+              <span className={styles.headerTitle}>PanFree</span>
+              <span className={styles.headerSubtitle}>ERP & Panel de Control</span>
             </div>
           </div>
 
@@ -306,7 +272,7 @@ export default function AdminLayout({ children }) {
         </header>
 
         {/* Área de trabajo de cada página */}
-        <main style={{ padding: '1.5rem', flex: 1 }}>
+        <main className={styles.mainContent}>
           {children}
         </main>
       </div>
@@ -336,25 +302,12 @@ function BtnLogout({ sidebarAbierto }) {
       onClick={handleLogout}
       disabled={saliendo}
       title="Cerrar sesión"
+      className={styles.btnLogout}
       style={{
-        backgroundColor: saliendo ? '#666' : '#f46e15',
-        color: '#fff',
-        border: 'none',
-        borderRadius: '4px',
-        padding: sidebarAbierto ? '0.4rem 0.8rem' : '0.4rem 0',
-        fontSize: '0.8rem',
-        fontWeight: '600',
-        cursor: saliendo ? 'not-allowed' : 'pointer',
-        fontFamily: 'inherit',
-        transition: 'background 0.15s',
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '0.4rem',
+        padding: sidebarAbierto ? '0.55rem 0.8rem' : '0.55rem 0',
       }}
     >
-      <LogOut size={16} />
+      <LogOut size={18} style={{ flexShrink: 0 }} />
       {sidebarAbierto && <span>{saliendo ? 'Saliendo…' : 'Cerrar sesión'}</span>}
     </button>
   )

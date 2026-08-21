@@ -1,10 +1,14 @@
 /**
  * 📁 UBICACIÓN: src/app/admin/marketing/page.js
- * 📅 CREADO: 2026-03-07 v3 | REFACTORIZADO: Modular con Automatización IA & Instagram
+ * 📅 ACTUALIZADO: 2026-08-20 (OPTIMIZACIÓN RESPONSIVE MOBILE & TABLET)
  * 📌 Generador de imágenes publicitarias y automatización para Instagram.
- *    Carga productos reales de Supabase. Canvas HTML5 client-side.
- *    Generación de copy con Gemini AI y publicación a Instagram.
+ *    - Diseño adaptable: controles arriba y previsualización abajo en celular/tablet
+ *    - Grid responsivo de formatos (2 columnas en móviles)
+ *    - Inputs con font-size de 16px para evitar auto-zoom en iOS
+ *    - Sliders y botones táctiles optimizados (>44-48px)
+ *    - Canvas HTML5 client-side, generación de copy con Gemini AI y publicación a Instagram.
  */
+
 'use client'
 
 import { useState } from 'react'
@@ -20,6 +24,7 @@ import { fmt2PYG } from './utils/canvasUtils'
 import { useSupabaseProducts } from './hooks/useSupabaseProducts'
 import { useMarketingState } from './hooks/useMarketingState'
 import { useCanvasRenderer } from './hooks/useCanvasRenderer'
+import { useMobile } from '../../../hooks/useMobile'
 
 // Components
 import AutomationPanel from './components/AutomationPanel'
@@ -30,7 +35,7 @@ import EventCalendar from './components/EventCalendar'
 import AnalyticsView from './components/AnalyticsView'
 import styles from './styles/marketing.module.css'
 
-// ─── SIMULADOR DE CELULAR ─────────────────────────────────────────────────────
+// ─── SIMULADOR DE CELULAR RESPONSIVO ──────────────────────────────────────────
 function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
   const esStories = formato === 'stories'
   const dispW = esStories ? 248 : 290
@@ -56,16 +61,17 @@ function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
           justifyContent: 'center',
         }}
       >
-        <span style={{ color: '#333', fontSize: '0.7rem' }}>Generando…</span>
+        <span style={{ color: '#666', fontSize: '0.8rem', fontWeight: 600 }}>Generando…</span>
       </div>
     )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', width: '100%', maxWidth: '100%', overflowX: 'auto' }}>
       <div
         style={{
           position: 'relative',
           width: dispW + 44,
+          maxWidth: '92vw',
           height: dispH + (esStories ? 148 : 168),
           backgroundColor: '#1a1a1a',
           borderRadius: 44,
@@ -114,8 +120,8 @@ function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
             position: 'absolute',
             top: 10,
             left: 10,
-            width: dispW + 24,
-            height: dispH + (esStories ? 128 : 148),
+            right: 10,
+            bottom: 10,
             backgroundColor: '#000',
             borderRadius: 36,
             overflow: 'hidden',
@@ -133,7 +139,7 @@ function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
               flexShrink: 0,
             }}
           >
-            <span style={{ color: '#fff', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
+            <span style={{ color: '#fff', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
               {hora}
             </span>
             <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
@@ -191,7 +197,7 @@ function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
             {/* STORIES */}
             {esStories && (
               <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                <ImgPost style={{ width: dispW + 24, height: '100%' }} />
+                <ImgPost style={{ width: '100%', height: '100%' }} />
                 {/* Barras de progreso */}
                 <div style={{ position: 'absolute', top: 8, left: 8, right: 8, display: 'flex', gap: 3, zIndex: 2 }}>
                   {[0, 1, 2].map((i) => (
@@ -229,7 +235,7 @@ function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '0.65rem',
+                        fontSize: '0.68rem',
                         fontWeight: 700,
                         color: '#fff',
                         border: '1.5px solid #fff',
@@ -238,10 +244,10 @@ function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
                       PF
                     </div>
                     <div>
-                      <div style={{ color: '#fff', fontSize: '0.6rem', fontWeight: 700, lineHeight: 1.2 }}>
+                      <div style={{ color: '#fff', fontSize: '0.68rem', fontWeight: 700, lineHeight: 1.2 }}>
                         panfree.fit
                       </div>
-                      <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.52rem' }}>Hace 2 min</div>
+                      <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.58rem' }}>Hace 2 min</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -275,7 +281,7 @@ function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
                       paddingLeft: 10,
                     }}
                   >
-                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.55rem' }}>Enviar mensaje</span>
+                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.62rem' }}>Enviar mensaje</span>
                   </div>
                   <span style={{ fontSize: '1.1rem' }}>❤️</span>
                   <span style={{ fontSize: '1rem' }}>↗</span>
@@ -309,8 +315,8 @@ function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
                     Instagram
                   </span>
                   <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.9rem' }}>♡</span>
-                    <span style={{ fontSize: '0.9rem' }}>✈</span>
+                    <span style={{ fontSize: '0.95rem' }}>♡</span>
+                    <span style={{ fontSize: '0.95rem' }}>✈</span>
                   </div>
                 </div>
                 {/* Header del post */}
@@ -342,7 +348,7 @@ function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
                           alignItems: 'center',
                           justifyContent: 'center',
                           border: '1.5px solid #000',
-                          fontSize: '0.55rem',
+                          fontSize: '0.6rem',
                           fontWeight: 700,
                           color: '#eee6d9',
                         }}
@@ -351,8 +357,8 @@ function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
                       </div>
                     </div>
                     <div>
-                      <div style={{ color: '#fff', fontSize: '0.6rem', fontWeight: 700 }}>panfree.fit</div>
-                      <div style={{ color: '#888', fontSize: '0.5rem' }}>Encarnación, Paraguay</div>
+                      <div style={{ color: '#fff', fontSize: '0.68rem', fontWeight: 700 }}>panfree.fit</div>
+                      <div style={{ color: '#888', fontSize: '0.55rem' }}>Encarnación, Paraguay</div>
                     </div>
                   </div>
                   <span style={{ color: '#fff', fontSize: '1.1rem' }}>⋯</span>
@@ -372,24 +378,24 @@ function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
                 >
                   <div style={{ display: 'flex', gap: 11, alignItems: 'center' }}>
                     <span style={{ fontSize: '1rem' }}>🤍</span>
-                    <span style={{ fontSize: '0.9rem', color: '#fff' }}>💬</span>
-                    <span style={{ fontSize: '0.9rem', color: '#fff' }}>↗</span>
+                    <span style={{ fontSize: '0.95rem', color: '#fff' }}>💬</span>
+                    <span style={{ fontSize: '0.95rem', color: '#fff' }}>↗</span>
                   </div>
-                  <span style={{ fontSize: '0.9rem', color: '#fff' }}>🔖</span>
+                  <span style={{ fontSize: '0.95rem', color: '#fff' }}>🔖</span>
                 </div>
                 <div style={{ padding: '0 10px 3px' }}>
-                  <span style={{ color: '#fff', fontSize: '0.58rem', fontWeight: 700 }}>
+                  <span style={{ color: '#fff', fontSize: '0.65rem', fontWeight: 700 }}>
                     A 247 personas les gusta esto
                   </span>
                 </div>
                 <div style={{ padding: '0 10px 4px' }}>
-                  <span style={{ color: '#fff', fontSize: '0.58rem' }}>
+                  <span style={{ color: '#fff', fontSize: '0.65rem' }}>
                     <strong>panfree.fit</strong>{' '}
                     {nombre.length > 22 ? nombre.slice(0, 22) + '…' : nombre} 🍞 Sin gluten · Sin TACC
                   </span>
                 </div>
                 <div style={{ padding: '0 10px 8px' }}>
-                  <span style={{ color: '#555', fontSize: '0.52rem' }}>HACE 2 HORAS</span>
+                  <span style={{ color: '#555', fontSize: '0.58rem' }}>HACE 2 HORAS</span>
                 </div>
               </div>
             )}
@@ -412,8 +418,8 @@ function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
         />
       </div>
 
-      <div style={{ color: '#444', fontSize: '0.68rem', textAlign: 'center' }}>
-        Vista simulada · {esStories ? 'Stories / Reels' : 'Feed'}
+      <div style={{ color: '#888', fontSize: '0.75rem', textAlign: 'center', fontWeight: 500 }}>
+        Vista previa simulada · {esStories ? 'Stories / Reels (9:16)' : 'Feed Instagram'}
       </div>
     </div>
   )
@@ -424,6 +430,7 @@ export default function MarketingPage() {
   const router = useRouter()
   const [refreshHistory, setRefreshHistory] = useState(0)
   const [tabActiva, setTabActiva] = useState('decisiones')
+  const { isMobile } = useMobile(768)
 
   // 1. Cargar productos de Supabase
   const { productos, loadingProd } = useSupabaseProducts()
@@ -442,201 +449,85 @@ export default function MarketingPage() {
 
   const productoActual = state.selectedProduct
   const F = FORMATOS[state.formato] || FORMATOS.feed_4_5
-  const preH = 560
-  const scale = preH / F.h
-  const preW = F.w * scale
-
-  // ── ESTILOS DEL MÓDULO ──────────────────────────────────────────────────────
-  const S = {
-    page: { minHeight: '100vh', backgroundColor: '#f0ebe3', fontFamily: '"Segoe UI",sans-serif' },
-    header: {
-      backgroundColor: P.verde,
-      color: P.crema,
-      padding: '0.85rem 1.5rem',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      borderBottom: `3px solid ${P.dorado}`,
-    },
-    body: { display: 'grid', gridTemplateColumns: '355px 1fr', minHeight: 'calc(100vh - 62px)' },
-    panel: {
-      backgroundColor: '#fff',
-      borderRight: `2px solid #e0d5c5`,
-      overflowY: 'auto',
-      padding: '1.25rem',
-    },
-    preview: {
-      backgroundColor: '#141414',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      padding: '2rem',
-      gap: '1.5rem',
-      overflowY: 'auto',
-    },
-    sec: { marginBottom: '1.2rem', borderBottom: '1px solid #ede5d8', paddingBottom: '1rem' },
-    secTit: {
-      fontSize: '0.74rem',
-      fontWeight: 700,
-      color: P.dorado,
-      textTransform: 'uppercase',
-      letterSpacing: '0.08em',
-      marginBottom: '0.55rem',
-    },
-    label: {
-      display: 'block',
-      fontSize: '0.74rem',
-      fontWeight: 700,
-      color: P.verde,
-      textTransform: 'uppercase',
-      letterSpacing: '0.05em',
-      marginBottom: '0.28rem',
-    },
-    select: {
-      width: '100%',
-      padding: '0.44rem 0.7rem',
-      borderRadius: 6,
-      border: `1.5px solid ${P.dorado}`,
-      backgroundColor: '#faf7f2',
-      fontFamily: 'inherit',
-      fontSize: '0.87rem',
-      color: P.verde,
-      cursor: 'pointer',
-      outline: 'none',
-    },
-    input: {
-      width: '100%',
-      padding: '0.44rem 0.7rem',
-      borderRadius: 6,
-      border: '1.5px solid #d4c9b5',
-      backgroundColor: '#faf7f2',
-      fontFamily: 'inherit',
-      fontSize: '0.87rem',
-      color: P.verde,
-      outline: 'none',
-      boxSizing: 'border-box',
-    },
-    textarea: {
-      width: '100%',
-      padding: '0.44rem 0.7rem',
-      borderRadius: 6,
-      border: '1.5px solid #d4c9b5',
-      backgroundColor: '#faf7f2',
-      fontFamily: 'inherit',
-      fontSize: '0.84rem',
-      color: P.verde,
-      outline: 'none',
-      resize: 'vertical',
-      boxSizing: 'border-box',
-    },
-    radio: {
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: '0.5rem',
-      marginBottom: '0.55rem',
-      cursor: 'pointer',
-    },
-    toggle: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      fontSize: '0.86rem',
-      color: '#444',
-      cursor: 'pointer',
-      marginBottom: '0.32rem',
-    },
-    btnV: {
-      flex: 1,
-      padding: '0.68rem',
-      backgroundColor: P.verde,
-      color: P.crema,
-      border: 'none',
-      borderRadius: 7,
-      fontWeight: 700,
-      fontSize: '0.9rem',
-      cursor: 'pointer',
-      fontFamily: 'inherit',
-    },
-    btnN: {
-      flex: 1,
-      padding: '0.68rem',
-      backgroundColor: P.naranja,
-      color: '#fff',
-      border: 'none',
-      borderRadius: 7,
-      fontWeight: 700,
-      fontSize: '0.9rem',
-      cursor: 'pointer',
-      fontFamily: 'inherit',
-    },
-    hint: { fontSize: '0.72rem', color: '#999', marginTop: '0.2rem', lineHeight: 1.45 },
-    badge: {
-      display: 'inline-block',
-      padding: '2px 8px',
-      borderRadius: 12,
-      fontSize: '0.7rem',
-      fontWeight: 700,
-    },
-    backBtn: {
-      background: 'none',
-      border: `1px solid ${P.dorado}50`,
-      color: P.crema,
-      padding: '0.3rem 0.75rem',
-      borderRadius: 6,
-      cursor: 'pointer',
-      fontFamily: 'inherit',
-      fontSize: '0.82rem',
-    },
-    helpBtn: {
-      background: 'none',
-      border: `1px solid ${P.dorado}50`,
-      color: P.doradoClaro,
-      padding: '0.3rem 0.75rem',
-      borderRadius: 6,
-      cursor: 'pointer',
-      fontFamily: 'inherit',
-      fontSize: '0.82rem',
-    },
-  }
+  
+  // Escalar proporcionalmente según pantalla móvil o desktop
+  const maxCanvasW = isMobile ? 320 : 440
+  const scale = Math.min(1, maxCanvasW / F.w)
+  const preW = Math.round(F.w * scale)
+  const preH = Math.round(F.h * scale)
 
   if (loadingProd) {
     return (
-      <div style={{ ...S.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', color: P.verde }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🍞</div>
-          <p style={{ fontWeight: 700 }}>Cargando productos...</p>
+      <div className={styles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: P.verde, padding: '3rem' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🍞</div>
+          <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>Cargando módulo de marketing…</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div style={S.page}>
+    <div className={styles.container}>
       {/* HEADER */}
-      <div style={S.header}>
+      <div className={styles.header}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <button onClick={() => router.push('/admin')} style={S.backBtn}>
-            ← Admin
+          <button
+            onClick={() => router.push('/admin')}
+            style={{
+              background: 'rgba(255,255,255,0.08)',
+              border: `1px solid ${P.dorado}80`,
+              color: P.crema,
+              padding: '0.5rem 0.9rem',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '0.88rem',
+              fontWeight: 600,
+              minHeight: 44,
+              display: 'inline-flex',
+              alignItems: 'center',
+            }}
+          >
+            ← Volver a Admin
           </button>
           <div>
-            <div style={{ fontWeight: 800, fontSize: '1rem' }}>📸 Marketing & Redes Sociales</div>
-            <div style={{ fontSize: '0.73rem', color: P.dorado, opacity: 0.85 }}>
-              PanFree · Sistema de Marketing Inteligente & Canvas Creativo
+            <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#eee6d9' }}>
+              📸 Marketing & Redes Sociales
+            </div>
+            <div style={{ fontSize: '0.78rem', color: P.dorado }}>
+              Generador Visual & Automatización IA
             </div>
           </div>
         </div>
-        <button onClick={() => router.push('/admin/ayuda/marketing')} style={S.helpBtn}>
+        <button
+          onClick={() => router.push('/admin/ayuda/marketing')}
+          style={{
+            background: 'none',
+            border: `1px solid ${P.dorado}80`,
+            color: P.doradoClaro,
+            padding: '0.5rem 0.9rem',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            minHeight: 44,
+            display: 'inline-flex',
+            alignItems: 'center',
+          }}
+        >
           ❓ Guía de uso
         </button>
       </div>
 
-      {/* BARRA DE PESTAÑAS */}
+      {/* BARRA DE PESTAÑAS RESPONSIVA CON SCROLL SUAVE */}
       <div className={styles.tabNav} id="marketing-tab-bar">
         <button
           onClick={() => setTabActiva('decisiones')}
           className={`${styles.tabButton} ${tabActiva === 'decisiones' ? styles.tabButtonActive : ''}`}
         >
-          🤖 Decisiones Inteligentes (IA)
+          🤖 Decisiones IA
         </button>
 
         <button
@@ -688,60 +579,77 @@ export default function MarketingPage() {
       {tabActiva === 'analisis' && <AnalyticsView refreshTrigger={refreshHistory} />}
 
       {/* PESTAÑA: DISEÑADOR VISUAL & CANVAS */}
-      <div style={{ ...S.body, display: tabActiva === 'canvas' ? 'grid' : 'none' }}>
-        {/* ── PANEL DE CONTROL ─────────────────────────────────────────── */}
-        <div style={S.panel}>
+      <div
+        className={styles.mainLayout}
+        style={{ display: tabActiva === 'canvas' ? (isMobile ? 'flex' : 'grid') : 'none' }}
+      >
+        {/* ── PANEL DE CONTROL (ARRIBA EN MÓVIL) ─────────────────────────────────── */}
+        <div className={styles.controlPanel}>
           {/* FORMATO */}
-          <div style={S.sec}>
-            <div style={S.secTit}>📐 Formato</div>
-            {Object.entries(FORMATOS).map(([k, f]) => (
-              <label key={k} style={S.radio}>
-                <input
-                  type="radio"
-                  name="fmt"
-                  checked={state.formato === k}
-                  onChange={() => state.setFormato(k)}
-                  style={{ accentColor: P.verde, marginTop: 3 }}
-                />
-                <span>
-                  <strong style={{ fontSize: '0.87rem' }}>
-                    {f.tag} {f.label}
-                  </strong>
-                  <br />
-                  <span style={{ fontSize: '0.72rem', color: '#888' }}>
-                    {f.w}×{f.h}px · {f.desc}
-                  </span>
-                </span>
-              </label>
-            ))}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>📐 Formato de Publicación</div>
+            <div className={styles.formatGrid}>
+              {Object.entries(FORMATOS).map(([k, f]) => {
+                const esSeleccionado = state.formato === k
+                return (
+                  <label
+                    key={k}
+                    className={`${styles.formatOption} ${esSeleccionado ? styles.formatOptionActive : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="fmt"
+                      checked={esSeleccionado}
+                      onChange={() => state.setFormato(k)}
+                      style={{ accentColor: P.naranja, marginTop: 3, width: 18, height: 18 }}
+                    />
+                    <div>
+                      <strong style={{ fontSize: '0.92rem', color: '#334c2b' }}>
+                        {f.tag} {f.label}
+                      </strong>
+                      <div style={{ fontSize: '0.76rem', color: '#666', marginTop: 2 }}>
+                        {f.w}×{f.h}px · {f.desc}
+                      </div>
+                    </div>
+                  </label>
+                )
+              })}
+            </div>
           </div>
 
           {/* PLANTILLA */}
-          <div style={S.sec}>
-            <div style={S.secTit}>🎨 Plantilla</div>
-            {Object.entries(PLANTILLAS).map(([k, p]) => (
-              <label key={k} style={S.radio}>
-                <input
-                  type="radio"
-                  name="plt"
-                  checked={state.plantilla === k}
-                  onChange={() => state.setPlantilla(k)}
-                  style={{ accentColor: P.verde, marginTop: 3 }}
-                />
-                <span>
-                  <strong style={{ fontSize: '0.87rem' }}>{p.label}</strong>
-                  <br />
-                  <span style={{ fontSize: '0.72rem', color: '#888' }}>{p.desc}</span>
-                </span>
-              </label>
-            ))}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>🎨 Plantilla Visual</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {Object.entries(PLANTILLAS).map(([k, p]) => {
+                const esSeleccionada = state.plantilla === k
+                return (
+                  <label
+                    key={k}
+                    className={`${styles.formatOption} ${esSeleccionada ? styles.formatOptionActive : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="plt"
+                      checked={esSeleccionada}
+                      onChange={() => state.setPlantilla(k)}
+                      style={{ accentColor: P.naranja, marginTop: 3, width: 18, height: 18 }}
+                    />
+                    <div>
+                      <strong style={{ fontSize: '0.92rem', color: '#334c2b' }}>{p.label}</strong>
+                      <div style={{ fontSize: '0.76rem', color: '#666', marginTop: 2 }}>{p.desc}</div>
+                    </div>
+                  </label>
+                )
+              })}
+            </div>
           </div>
 
           {/* ESQUEMA DE COLOR */}
-          <div style={S.sec}>
-            <div style={S.secTit}>🎭 Esquema de color</div>
+          <div className={styles.section}>
+            <label className={styles.label}>🎭 Esquema de color</label>
             <select
-              style={S.select}
+              className={styles.select}
               value={state.esquema}
               onChange={(e) => state.setEsquema(e.target.value)}
             >
@@ -754,10 +662,10 @@ export default function MarketingPage() {
           </div>
 
           {/* PRODUCTO */}
-          <div style={S.sec}>
-            <div style={S.secTit}>🍞 Producto</div>
+          <div className={styles.section}>
+            <label className={styles.label}>🍞 Producto Destacado</label>
             <select
-              style={S.select}
+              className={styles.select}
               value={state.productoId}
               onChange={(e) => state.setProductoId(e.target.value)}
             >
@@ -769,63 +677,57 @@ export default function MarketingPage() {
               ))}
             </select>
             {productoActual && (
-              <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-                <span style={{ ...S.badge, backgroundColor: '#e8f4e9', color: P.verde }}>
+              <div style={{ marginTop: '0.6rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                <span className={`${styles.badge} ${styles.badgeGreen}`}>
                   {productoActual.categoria}
                 </span>
                 <span
-                  style={{
-                    ...S.badge,
-                    backgroundColor: productoActual.imagen_url
-                      ? imgProdLista
-                        ? '#e8f4e9'
-                        : '#fff8e0'
-                      : '#fff0e0',
-                    color: productoActual.imagen_url
-                      ? imgProdLista
-                        ? P.verde
-                        : P.naranja
-                      : P.naranja,
-                  }}
+                  className={`${styles.badge} ${
+                    productoActual.imagen_url && imgProdLista ? styles.badgeGreen : styles.badgeOrange
+                  }`}
                 >
                   {productoActual.imagen_url
                     ? imgProdLista
-                      ? '✓ imagen OK'
-                      : '⏳ cargando...'
-                    : 'sin imagen'}
+                      ? '✓ Imagen cargada'
+                      : '⏳ Cargando imagen...'
+                    : 'Sin imagen'}
                 </span>
               </div>
             )}
           </div>
 
           {/* TEXTOS */}
-          <div style={S.sec}>
-            <div style={S.secTit}>✏️ Textos</div>
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>✏️ Textos de la Publicación</div>
 
             {state.plantilla === 'promo' && (
-              <div style={{ marginBottom: '0.65rem' }}>
-                <label style={S.label}>Etiqueta de oferta</label>
+              <div style={{ marginBottom: '0.85rem' }}>
+                <label className={styles.label}>Etiqueta de oferta</label>
                 <input
-                  style={S.input}
+                  className={styles.input}
                   value={state.textoPromo}
                   onChange={(e) => state.setTextoPromo(e.target.value)}
                 />
               </div>
             )}
 
-            <label style={S.label}>Texto principal</label>
+            <label className={styles.label}>Texto principal</label>
             <textarea
-              style={{ ...S.textarea, height: state.plantilla === 'catalogo' ? 88 : 52 }}
+              className={styles.textarea}
+              style={{ minHeight: state.plantilla === 'catalogo' ? 100 : 75 }}
               value={state.textoPrincipal}
               onChange={(e) => state.setTextoPrincipal(e.target.value)}
+              placeholder="Escribí el texto aquí..."
             />
-            <p style={S.hint}>Enter = nueva línea. Cada línea tiene tamaño y color diferente.</p>
+            <p style={{ fontSize: '0.78rem', color: '#777', marginTop: '0.35rem', lineHeight: 1.4 }}>
+              Enter = nueva línea. Cada línea se renderiza con jerarquía visual calculada.
+            </p>
 
             {state.plantilla === 'hero' && (
-              <div style={{ marginTop: '0.65rem' }}>
-                <label style={S.label}>Subtítulo</label>
+              <div style={{ marginTop: '0.85rem' }}>
+                <label className={styles.label}>Subtítulo</label>
                 <input
-                  style={S.input}
+                  className={styles.input}
                   value={state.subtitulo}
                   onChange={(e) => state.setSubtitulo(e.target.value)}
                   placeholder="Artesanal · Sin Gluten · Sin TACC"
@@ -833,10 +735,10 @@ export default function MarketingPage() {
               </div>
             )}
 
-            <div style={{ marginTop: '0.65rem' }}>
-              <label style={S.label}>Texto del botón CTA</label>
+            <div style={{ marginTop: '0.85rem' }}>
+              <label className={styles.label}>Texto del botón CTA</label>
               <input
-                style={S.input}
+                className={styles.input}
                 value={state.textoCTA}
                 onChange={(e) => state.setTextoCTA(e.target.value)}
               />
@@ -844,63 +746,81 @@ export default function MarketingPage() {
           </div>
 
           {/* OPCIONES VISUALES */}
-          <div style={S.sec}>
-            <div style={S.secTit}>⚙️ Mostrar en la imagen</div>
-            {[
-              [state.mostrarPrecio, state.setMostrarPrecio, 'Precio del producto'],
-              [state.mostrarSlogan, state.setMostrarSlogan, 'Slogan de PanFree'],
-              [state.mostrarDelivery, state.setMostrarDelivery, 'Info de entrega'],
-            ].map(([val, set, lbl]) => (
-              <label key={lbl} style={S.toggle}>
-                <input
-                  type="checkbox"
-                  checked={val}
-                  onChange={(e) => set(e.target.checked)}
-                  style={{ accentColor: P.verde, width: 15, height: 15 }}
-                />
-                {lbl}
-              </label>
-            ))}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>⚙️ Elementos Visibles</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              {[
+                [state.mostrarPrecio, state.setMostrarPrecio, 'Precio del producto'],
+                [state.mostrarSlogan, state.setMostrarSlogan, 'Slogan de PanFree'],
+                [state.mostrarDelivery, state.setMostrarDelivery, 'Información de delivery'],
+              ].map(([val, set, lbl]) => (
+                <label
+                  key={lbl}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.65rem',
+                    fontSize: '0.92rem',
+                    color: '#334c2b',
+                    cursor: 'pointer',
+                    minHeight: 38,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={val}
+                    onChange={(e) => set(e.target.checked)}
+                    style={{ accentColor: P.naranja, width: 20, height: 20 }}
+                  />
+                  {lbl}
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* HASHTAGS */}
-          <div style={S.sec}>
-            <div style={S.secTit}># Hashtags</div>
-            <label style={S.toggle}>
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}># Hashtags</div>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.65rem',
+                fontSize: '0.92rem',
+                color: '#334c2b',
+                cursor: 'pointer',
+                marginBottom: '0.5rem',
+                minHeight: 38,
+              }}
+            >
               <input
                 type="checkbox"
                 checked={state.mostrarHashtags}
                 onChange={(e) => state.setMostrarHashtags(e.target.checked)}
-                style={{ accentColor: P.verde, width: 15, height: 15 }}
+                style={{ accentColor: P.naranja, width: 20, height: 20 }}
               />
               Incluir hashtags en la imagen
             </label>
             {state.mostrarHashtags && (
               <>
                 <textarea
-                  style={{ ...S.textarea, height: 70, marginTop: '0.45rem' }}
+                  className={styles.textarea}
+                  style={{ minHeight: 80, marginTop: '0.5rem' }}
                   value={state.hashtags}
                   onChange={(e) => state.setHashtags(e.target.value)}
                 />
-                <p style={S.hint}>
+                <p style={{ fontSize: '0.78rem', color: '#777', marginTop: '0.35rem' }}>
                   Separados por espacios. Máx. recomendado: 6–8 en imagen.
-                  <br />
-                  Podés agregar más en el caption de Instagram al publicar.
                 </p>
               </>
             )}
-            {!state.mostrarHashtags && (
-              <p style={S.hint}>
-                Los hashtags se pueden agregar automáticamente en el caption de Instagram con IA. La imagen queda más limpia.
-              </p>
-            )}
           </div>
 
-          {/* LOGO */}
-          <div style={S.sec}>
-            <div style={S.secTit}>🖼️ Logo</div>
+          {/* AJUSTES DE LOGO */}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>🖼️ Control de Logo</div>
 
-            <label style={S.label}>Tamaño — {state.logoAltura}px</label>
+            <label className={styles.label}>Tamaño del Logo: {state.logoAltura}px</label>
             <input
               type="range"
               min={60}
@@ -908,16 +828,15 @@ export default function MarketingPage() {
               step={4}
               value={state.logoAltura}
               onChange={(e) => state.setLogoAltura(Number(e.target.value))}
-              style={{ width: '100%', accentColor: P.verde, marginBottom: '0.75rem', cursor: 'pointer' }}
+              className={styles.rangeInput}
             />
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                fontSize: '0.7rem',
-                color: '#aaa',
-                marginTop: '-0.55rem',
-                marginBottom: '0.75rem',
+                fontSize: '0.75rem',
+                color: '#888',
+                marginBottom: '0.85rem',
               }}
             >
               <span>Pequeño</span>
@@ -925,7 +844,7 @@ export default function MarketingPage() {
               <span>Grande</span>
             </div>
 
-            <label style={S.label}>Espacio vertical — {state.logoPaddingV}px</label>
+            <label className={styles.label}>Espacio Vertical: {state.logoPaddingV}px</label>
             <input
               type="range"
               min={8}
@@ -933,16 +852,15 @@ export default function MarketingPage() {
               step={2}
               value={state.logoPaddingV}
               onChange={(e) => state.setLogoPaddingV(Number(e.target.value))}
-              style={{ width: '100%', accentColor: P.verde, cursor: 'pointer' }}
+              className={styles.rangeInput}
             />
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                fontSize: '0.7rem',
-                color: '#aaa',
-                marginTop: '-0.1rem',
-                marginBottom: '0.5rem',
+                fontSize: '0.75rem',
+                color: '#888',
+                marginBottom: '0.75rem',
               }}
             >
               <span>Compacto</span>
@@ -952,14 +870,16 @@ export default function MarketingPage() {
             <button
               onClick={state.resetLogoConfig}
               style={{
-                fontSize: '0.72rem',
+                fontSize: '0.82rem',
                 color: P.dorado,
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
                 fontFamily: 'inherit',
-                padding: 0,
+                padding: '0.4rem 0',
                 textDecoration: 'underline',
+                fontWeight: 600,
+                minHeight: 36,
               }}
             >
               Restaurar valores por defecto
@@ -968,26 +888,24 @@ export default function MarketingPage() {
 
           {/* EXPORTAR */}
           <div>
-            <div style={S.secTit}>⬇️ Exportar</div>
-            <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '0.5rem' }}>
-              <button style={S.btnV} onClick={() => exportar('png')} disabled={exportando}>
-                {exportando ? '...' : 'PNG'} <span style={{ fontSize: '0.71rem', opacity: 0.7 }}>lossless</span>
+            <div className={styles.sectionTitle}>⬇️ Descargar Imagen</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              <button className={styles.btnPrimary} onClick={() => exportar('png')} disabled={exportando}>
+                {exportando ? '...' : 'PNG Alta Calidad'}
               </button>
-              <button style={S.btnN} onClick={() => exportar('jpg')} disabled={exportando}>
-                {exportando ? '...' : 'JPG'} <span style={{ fontSize: '0.71rem', opacity: 0.7 }}>97%</span>
+              <button className={styles.btnAccent} onClick={() => exportar('jpg')} disabled={exportando}>
+                {exportando ? '...' : 'JPG Comprimido'}
               </button>
             </div>
-            <p style={S.hint}>
-              Resolución completa: {F.w}×{F.h}px.
-              <br />
-              Descargala en alta resolución o publicala con el panel de automatización.
+            <p style={{ fontSize: '0.78rem', color: '#777', margin: 0, lineHeight: 1.4 }}>
+              Resolución completa: {F.w}×{F.h}px. Descargala o programala directamente a Instagram con IA.
             </p>
           </div>
         </div>
 
-        {/* ── PREVIEW & AUTOMATIZACIÓN ─────────────────────────────────── */}
-        <div style={S.preview}>
-          {/* Barra superior: info resolución + toggle vista */}
+        {/* ── PREVIEW & AUTOMATIZACIÓN (ABAJO EN MÓVIL) ─────────────────────────────────── */}
+        <div className={styles.previewArea}>
+          {/* Barra superior de previsualización */}
           <div
             style={{
               display: 'flex',
@@ -995,36 +913,39 @@ export default function MarketingPage() {
               justifyContent: 'space-between',
               width: '100%',
               maxWidth: 520,
+              flexWrap: 'wrap',
+              gap: '0.5rem',
             }}
           >
-            <div style={{ color: '#555', fontSize: '0.75rem' }}>
+            <div style={{ color: '#999', fontSize: '0.85rem', fontWeight: 600 }}>
               {F.w}×{F.h}px · {F.label}
             </div>
-            <div style={{ display: 'flex', gap: '0.3rem' }}>
+            <div style={{ display: 'flex', gap: '0.4rem' }}>
               {['celular', 'canvas'].map((v) => (
                 <button
                   key={v}
                   onClick={() => state.setVistaPreview(v)}
                   style={{
-                    padding: '0.25rem 0.65rem',
-                    borderRadius: 5,
+                    padding: '0.45rem 0.85rem',
+                    borderRadius: 8,
                     border: 'none',
                     cursor: 'pointer',
                     fontFamily: 'inherit',
-                    fontSize: '0.72rem',
+                    fontSize: '0.82rem',
                     fontWeight: 700,
                     backgroundColor: state.vistaPreview === v ? P.dorado : '#2a2a2a',
-                    color: state.vistaPreview === v ? '#1a1a1a' : '#666',
+                    color: state.vistaPreview === v ? '#1a1a1a' : '#888',
                     transition: 'all 0.15s',
+                    minHeight: 40,
                   }}
                 >
-                  {v === 'celular' ? '📱 Celular' : '🖼 Imagen'}
+                  {v === 'celular' ? '📱 Simulador Móvil' : '🖼 Canvas Real'}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Canvas SIEMPRE en el DOM — visible solo en vista imagen */}
+          {/* Canvas SIEMPRE en el DOM — visible en vista imagen */}
           <div
             style={{
               display: state.vistaPreview === 'canvas' ? 'flex' : 'none',
@@ -1032,16 +953,19 @@ export default function MarketingPage() {
               alignItems: 'center',
               gap: '1rem',
               width: '100%',
+              maxWidth: '100%',
+              overflowX: 'auto',
             }}
           >
             <div
               style={{
-                borderRadius: 8,
+                borderRadius: 12,
                 overflow: 'hidden',
-                boxShadow: '0 8px 48px rgba(0,0,0,0.7)',
+                boxShadow: '0 12px 48px rgba(0,0,0,0.8)',
                 width: preW,
                 height: preH,
                 flexShrink: 0,
+                backgroundColor: '#1a1a1a',
               }}
             >
               <canvas ref={canvasRef} style={{ width: preW, height: preH, display: 'block' }} />
@@ -1053,13 +977,14 @@ export default function MarketingPage() {
                 padding: '0.85rem 1rem',
                 maxWidth: preW,
                 width: '100%',
-                fontSize: '0.74rem',
-                color: '#666',
-                lineHeight: 1.65,
+                fontSize: '0.82rem',
+                color: '#aaa',
+                lineHeight: 1.5,
+                textAlign: 'center',
+                boxSizing: 'border-box',
               }}
             >
-              <span style={{ color: P.dorado, fontWeight: 700 }}>Resolución completa</span> — exportá PNG/JPG o
-              usá la automatización con IA.
+              <span style={{ color: P.dorado, fontWeight: 700 }}>Resolución original: {F.w}×{F.h}px</span>
             </div>
           </div>
 
@@ -1077,24 +1002,20 @@ export default function MarketingPage() {
           <div
             style={{
               backgroundColor: '#1a1a1a',
-              borderRadius: 7,
-              padding: '0.75rem 1rem',
+              borderRadius: 10,
+              padding: '0.85rem 1rem',
               maxWidth: 520,
               width: '100%',
-              fontSize: '0.72rem',
-              color: '#555',
-              lineHeight: 1.65,
+              fontSize: '0.82rem',
+              color: '#aaa',
+              lineHeight: 1.5,
+              boxSizing: 'border-box',
             }}
           >
-            <div style={{ color: P.dorado, fontWeight: 700, marginBottom: '0.25rem' }}>
-              Zonas seguras Instagram
+            <div style={{ color: P.dorado, fontWeight: 700, marginBottom: '0.3rem' }}>
+              ℹ️ Guía de Zonas Seguras de Instagram
             </div>
-            <div>↑ Header reservado para UI · ↓ Footer con hashtags opcionales</div>
-            {state.formato === 'stories' && (
-              <div style={{ marginTop: '0.3rem', color: '#555' }}>
-                📌 Sticker de link: se mueve libremente en la app de Instagram.
-              </div>
-            )}
+            <div>Encabezado y pie de imagen están optimizados para no ser tapados por la interfaz de Instagram.</div>
           </div>
 
           {/* ── SECCIÓN DE AUTOMATIZACIÓN E HISTORIAL DE PUBLICACIONES ── */}
@@ -1104,7 +1025,7 @@ export default function MarketingPage() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '1.25rem',
+              gap: '1.5rem',
             }}
           >
             <AutomationPanel
