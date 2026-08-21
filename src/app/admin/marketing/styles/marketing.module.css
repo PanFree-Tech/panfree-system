@@ -1,6 +1,6 @@
 /**
  * 📁 UBICACIÓN: src/app/admin/marketing/styles/marketing.module.css
- * 📌 Estilos para el módulo de Marketing Panfree.
+ * 📌 Estilos para el módulo de Marketing PanFree optimizado para Móvil, Tablet y Desktop.
  * Paleta oficial: #FF6B35 (Naranja), #2D2D2D (Oscuro), #4ECDC4 (Turquesa), #334c2b (Verde), #eee6d9 (Crema), #b7996b (Dorado)
  */
 
@@ -19,17 +19,27 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 3px solid #b7996b;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .header {
+    padding: 0.75rem 1rem;
+  }
 }
 
 .mainLayout {
   display: grid;
-  grid-template-columns: 355px 1fr;
+  grid-template-columns: 370px 1fr;
   min-height: calc(100vh - 62px);
 }
 
 @media (max-width: 960px) {
   .mainLayout {
     grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -37,7 +47,15 @@
   background-color: #ffffff;
   border-right: 2px solid #e0d5c5;
   overflow-y: auto;
-  padding: 1.25rem;
+  padding: 1.5rem 1.25rem;
+}
+
+@media (max-width: 960px) {
+  .controlPanel {
+    border-right: none;
+    border-bottom: 2px solid #e0d5c5;
+    order: 1; /* Controles ARRIBA en móvil */
+  }
 }
 
 .previewArea {
@@ -45,52 +63,169 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
+  padding: 2rem 1.25rem;
   gap: 1.5rem;
   overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 960px) {
+  .previewArea {
+    order: 2; /* Preview ABAJO en móvil */
+    padding: 1.5rem 0.75rem;
+  }
 }
 
 .section {
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.35rem;
   border-bottom: 1px solid #ede5d8;
-  padding-bottom: 1rem;
+  padding-bottom: 1.1rem;
 }
 
 .sectionTitle {
-  font-size: 0.74rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: #b7996b;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.65rem;
 }
 
 .label {
   display: block;
-  font-size: 0.74rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #334c2b;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 0.28rem;
+  margin-bottom: 0.35rem;
 }
 
+/* Inputs, Selects y Textareas optimizados para Touch */
 .select, .input, .textarea {
   width: 100%;
-  padding: 0.44rem 0.7rem;
-  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
   border: 1.5px solid #d4c9b5;
   background-color: #faf7f2;
   font-family: inherit;
-  font-size: 0.87rem;
+  font-size: 16px !important; /* Evita zoom molesto en iOS */
   color: #334c2b;
   box-sizing: border-box;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  min-height: 46px;
 }
 
 .select:focus, .input:focus, .textarea:focus {
   border-color: #f46e15;
+  box-shadow: 0 0 0 3px rgba(244, 110, 21, 0.15);
+}
+
+.textarea {
+  min-height: 80px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+/* Selector de formato en grid */
+.formatGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
+}
+
+@media (min-width: 480px) and (max-width: 960px) {
+  .formatGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.formatOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  border: 1.5px solid #e8e0d2;
+  background-color: #faf7f2;
+  cursor: pointer;
+  min-height: 48px;
+  transition: all 0.15s ease;
+}
+
+.formatOption:hover {
+  border-color: #b7996b;
+  background-color: #f5efe6;
+}
+
+.formatOptionActive {
+  border-color: #f46e15 !important;
+  background-color: #fff6ee !important;
+  box-shadow: 0 2px 8px rgba(244, 110, 21, 0.12);
+}
+
+/* Sliders grandes para Touch */
+.rangeInput {
+  width: 100%;
+  height: 12px;
+  border-radius: 6px;
+  background: #e2dad0;
+  outline: none;
+  accent-color: #334c2b;
+  cursor: pointer;
+  margin: 0.5rem 0;
+  touch-action: pan-y;
+}
+
+/* Botones de acción táctiles */
+.btnPrimary {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.75rem 1.25rem;
+  background-color: #334c2b;
+  color: #eee6d9;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.15s, transform 0.05s;
+  touch-action: manipulation;
+}
+
+.btnPrimary:active {
+  transform: scale(0.98);
+}
+
+.btnAccent {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.75rem 1.25rem;
+  background-color: #f46e15;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.15s, transform 0.05s;
+  touch-action: manipulation;
+}
+
+.btnAccent:active {
+  transform: scale(0.98);
 }
 
 .automationCard {
@@ -101,6 +236,7 @@
   width: 100%;
   max-width: 520px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
 }
 
 .automationHeader {
@@ -110,6 +246,8 @@
   margin-bottom: 0.9rem;
   border-bottom: 1px solid #2a2a2a;
   padding-bottom: 0.6rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .automationTitle {
@@ -118,15 +256,15 @@
   gap: 0.5rem;
   color: #eee6d9;
   font-weight: 700;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
 }
 
 .badgeAi {
   background: linear-gradient(135deg, #FF6B35, #4ECDC4);
   color: #fff;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  padding: 2px 7px;
+  padding: 3px 9px;
   border-radius: 20px;
   letter-spacing: 0.05em;
 }
@@ -135,32 +273,34 @@
   background-color: #121212;
   border: 1px solid #333333;
   border-radius: 8px;
-  padding: 0.75rem;
+  padding: 0.85rem;
   color: #eee6d9;
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   line-height: 1.5;
-  min-height: 90px;
-  max-height: 220px;
+  min-height: 100px;
+  max-height: 240px;
   overflow-y: auto;
   white-space: pre-wrap;
   word-break: break-word;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
 }
 
 .actionBtnPrimary {
   background: linear-gradient(135deg, #FF6B35, #c8550a);
   color: #ffffff;
   border: none;
-  padding: 0.65rem 1rem;
+  padding: 0.75rem 1.2rem;
   border-radius: 8px;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
+  min-height: 48px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
   transition: opacity 0.2s, transform 0.1s;
+  width: 100%;
 }
 
 .actionBtnPrimary:hover {
@@ -175,16 +315,18 @@
   background: linear-gradient(135deg, #4ECDC4, #2a9d8f);
   color: #1a1a1a;
   border: none;
-  padding: 0.65rem 1rem;
+  padding: 0.75rem 1.2rem;
   border-radius: 8px;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
+  min-height: 48px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
   transition: opacity 0.2s, transform 0.1s;
+  width: 100%;
 }
 
 .actionBtnSecondary:hover {
@@ -202,10 +344,11 @@
   padding: 1.25rem;
   width: 100%;
   max-width: 520px;
+  box-sizing: border-box;
 }
 
 .historyTitle {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #b7996b;
   text-transform: uppercase;
@@ -220,8 +363,8 @@
   background-color: #222222;
   border: 1px solid #333333;
   border-radius: 8px;
-  padding: 0.7rem;
-  margin-bottom: 0.6rem;
+  padding: 0.85rem;
+  margin-bottom: 0.75rem;
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
@@ -232,19 +375,20 @@
   display: flex;
   gap: 0.5rem;
   background-color: #23341d;
-  padding: 0.5rem 1.5rem;
+  padding: 0.6rem 1rem;
   border-bottom: 1px solid #445e38;
   overflow-x: auto;
   flex-wrap: nowrap;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tabButton {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  padding: 0.65rem 1.1rem;
+  border-radius: 8px;
   border: 1px solid transparent;
   background: transparent;
   color: #c9dfbf;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -252,6 +396,7 @@
   gap: 0.4rem;
   transition: all 0.2s ease;
   white-space: nowrap;
+  min-height: 44px;
 }
 
 .tabButton:hover {
@@ -269,7 +414,7 @@
 
 /* ─── PANELES Y CONTENEDORES INTELIGENTES ──────────────────────────────────── */
 .moduleContainer {
-  padding: 1.75rem;
+  padding: 1.5rem 1rem;
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
@@ -281,7 +426,7 @@
   background: #ffffff;
   border-radius: 12px;
   border: 1px solid #e2d9cc;
-  padding: 1.5rem;
+  padding: 1.5rem 1.25rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
@@ -289,7 +434,7 @@
   background: #1c1c1c;
   border-radius: 12px;
   border: 1px solid #2e2e2e;
-  padding: 1.5rem;
+  padding: 1.5rem 1.25rem;
   color: #eee6d9;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
@@ -322,20 +467,20 @@
   background: #faf7f2;
   border: 1px solid #e6dcd0;
   border-radius: 10px;
-  padding: 1rem 1.2rem;
+  padding: 1.1rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.3rem;
 }
 
 .kpiVal {
-  font-size: 1.6rem;
+  font-size: 1.7rem;
   font-weight: 800;
   color: #334c2b;
 }
 
 .kpiLabel {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #887a66;
   text-transform: uppercase;
@@ -345,9 +490,9 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.55rem;
+  padding: 0.25rem 0.65rem;
   border-radius: 20px;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.03em;
 }
@@ -396,7 +541,6 @@
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  padding: 1.75rem;
+  padding: 1.5rem;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
-
