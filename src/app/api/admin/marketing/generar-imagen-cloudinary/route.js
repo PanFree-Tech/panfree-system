@@ -44,7 +44,7 @@ export async function POST(req) {
       try {
         const { data, error: dbError } = await supabase
           .from('productos')
-          .select('id, nombre, categoria, precio_venta, imagen_url, production_capacity, current_orders, availability_status')
+          .select('id, nombre, categoria, precio_venta, imagen_url, imagen_public_id, imagenes_urls, production_capacity, current_orders, availability_status')
           .eq('id', producto_id)
           .single()
 
@@ -64,14 +64,32 @@ export async function POST(req) {
         categoria: 'Panadería',
         precio_venta: 28000,
         imagen_url: custom_image_url || 'panfree/products/pan-campo-rustico',
+        imagen_public_id: null,
+        imagenes_urls: [],
       }
     }
 
-    // 2. Determinar la imagen base real
-    const imagenOriginalUrl =
-      custom_image_url ||
-      producto.imagen_url ||
-      'https://res.cloudinary.com/panfree/image/upload/v1/panfree/products/pan-campo-rustico.jpg'
+    // 2. Determinar la imagen base real (imagenes_urls[0] -> imagen_public_id -> imagen_url -> fallback)
+    let imagePublicIdOrUrl = null
+
+    if (custom_image_url) {
+      imagePublicIdOrUrl = custom_image_url
+    } else if (
+      Array.isArray(producto.imagenes_urls) &&
+      producto.imagenes_urls.length > 0 &&
+      producto.imagenes_urls[0]
+    ) {
+      imagePublicIdOrUrl = producto.imagenes_urls[0]
+    } else if (producto.imagen_public_id) {
+      imagePublicIdOrUrl = producto.imagen_public_id
+    } else if (producto.imagen_url) {
+      imagePublicIdOrUrl = producto.imagen_url
+    } else {
+      imagePublicIdOrUrl =
+        'https://res.cloudinary.com/panfree/image/upload/v1/panfree/products/pan-campo-rustico.jpg'
+    }
+
+    const imagenOriginalUrl = imagePublicIdOrUrl
 
     const descuentoNum = Number(descuento) || 0
     const precioBase = Number(producto.precio_venta) || 25000
