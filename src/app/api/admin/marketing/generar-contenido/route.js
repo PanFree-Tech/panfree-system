@@ -108,9 +108,12 @@ export async function POST(req) {
     // 4. Llamada a Gemini con sistema de fallback multi-modelo
     const ai = new GoogleGenAI({ apiKey })
     const candidateModels = [
-      'gemini-1.5-flash',
-      'gemini-2.0-flash-exp',
-      'gemini-1.5-pro',
+      'models/gemini-1.5-flash',
+      'models/gemini-2.0-flash-exp',
+      'models/gemini-1.5-pro',
+      'gemini-2.5-flash',
+      'gemini-3.7-flash',
+      'gemini-2.0-flash',
     ]
 
     let parsed = null
@@ -168,7 +171,7 @@ export async function POST(req) {
         descuento: descuento,
         precio_final_fmt: precioDescFmt,
       },
-      source: modelUsado.startsWith('gemini-') ? modelUsado : `gemini-${modelUsado}`,
+      source: modelUsado || 'gemini',
       fallback_info: {
         model_used: modelUsado,
         attempts: fallbackAttempts,
