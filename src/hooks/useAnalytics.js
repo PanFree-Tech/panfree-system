@@ -1,16 +1,18 @@
 'use client'
 /**
  * 📁 UBICACIÓN: src/hooks/useAnalytics.js
- * 📅 CREADO: 2026-08-18
- * 📌 DESCRIPCIÓN: Hook y utilidades para enviar eventos e-commerce a GA4.
+ * 📅 ACTUALIZADO: 2026-08-22
+ * 📌 DESCRIPCIÓN: Hook y utilidades para enviar eventos e-commerce y marketing a GA4.
  *    - Todas las llamadas están protegidas con try/catch: un error de analytics
  *      NUNCA debe romper la UI de la tienda (ej: adblockers, gtag no cargado).
  *    - Respeta el consentimiento (localStorage: panfree_ga_consent) y Do Not Track.
- *    - Eventos: page_view, view_item, view_item_list, select_item, add_to_cart,
+ *    - Eventos E-Commerce: page_view, view_item, view_item_list, select_item, add_to_cart,
  *      remove_from_cart, begin_checkout, purchase.
+ *    - Eventos Marketing: newsletter_subscribe, contact_whatsapp_click, view_promotion, select_promotion.
  * ⚠️  EN CASO DE MODIFICACIÓN SIGNIFICATIVA, actualizar este comentario.
  */
 import { useCallback } from 'react'
+import { getCampaignForAnalytics } from './useCampaigns'
 
 export const CONSENT_KEY = 'panfree_ga_consent'
 
@@ -72,10 +74,12 @@ export function useAnalytics() {
     if (typeof window === 'undefined' || !hasAnalyticsConsent()) return
     try {
       if (typeof window.gtag !== 'function') return
+      const utmParams = getCampaignForAnalytics()
       window.gtag('event', 'page_view', {
         page_path: url,
         page_location: window.location.href,
         page_title: document.title,
+        ...utmParams,
       })
     } catch (err) {
       console.warn('[GA4] Error enviando page_view', err)
@@ -126,23 +130,87 @@ export function useAnalytics() {
 
   const beginCheckout = useCallback((items = [], total = 0) => {
     if (!Array.isArray(items) || items.length === 0) return
+    const utmParams = getCampaignForAnalytics()
     enviarEvento('begin_checkout', {
       currency: 'PYG',
       value: Number(total) || 0,
       items: items.map(i => formatearItem(i)),
+      ...utmParams,
     })
   }, [])
 
   const purchase = useCallback((pedido) => {
     if (!pedido?.numeroPedido) return
+    const utmParams = getCampaignForAnalytics()
     enviarEvento('purchase', {
       transaction_id: pedido.numeroPedido,
       currency: 'PYG',
       value: Number(pedido.totalFinal) || 0,
       shipping: Number(pedido.costoDelivery) || 0,
       items: (pedido.items || []).map(i => formatearItem(i)),
+      ...utmParams,
     })
   }, [])
 
-  return { pageview, viewItem, viewItemList, selectItem, addToCart, removeFromCart, beginCheckout, purchase }
+  // ── Eventos de Marketing Adicionales ───────────────────────────────────────
+
+  const newsletterSubscribe = useCallback((email, origen = 'footer') => {
+    const utmParams = getCampaignForAnalytics()
+    enviarEvento('newsletter_subscribe', {
+      method: 'email',
+      form_location: origen,
+      ...utmParams,
+    })
+  }, [])
+
+  const contactWhatsappClick = useCallback((destino = 'general', producto = null) => {
+    const utmParams = getCampaignForAnalytics()
+    enviarEvento('contact_whatsapp_click', {
+      contact_type: destino,
+      product_name: producto?.nombre || undefined,
+      product_id: producto?.id || undefined,
+      ...utmParams,
+    })
+  }, [])
+
+  const viewPromotion = useCallback((promoData = {}) => {
+    const utmParams = getCampaignForAnalytics()
+    enviarEvento('view_promotion', {
+      promotion_id: promoData.id || promoData.promo_id || 'promo-general',
+      promotion_name: promoData.nombre || promoData.titulo || 'Promoción PanFree',
+      creative_name: promoData.plantilla || promoData.formato || 'banner',
+      creative_slot: promoData.ubicacion || 'home_banner',
+      location_id: promoData.ubicacion || 'tienda_online',
+      items: promoData.producto ? [formatearItem(promoData.producto)] : undefined,
+      ...utmParams,
+    })
+  }, [])
+
+  const selectPromotion = useCallback((promoData = {}) => {
+    const utmParams = getCampaignForAnalytics()
+    enviarEvento('select_promotion', {
+      promotion_id: promoData.id || promoData.promo_id || 'promo-general',
+      promotion_name: promoData.nombre || promoData.titulo || 'Promoción PanFree',
+      creative_name: promoData.plantilla || promoData.formato || 'banner',
+      creative_slot: promoData.ubicacion || 'home_banner',
+      location_id: promoData.ubicacion || 'tienda_online',
+      items: promoData.producto ? [formatearItem(promoData.producto)] : undefined,
+      ...utmParams,
+    })
+  }, [])
+
+  return {
+    pageview,
+    viewItem,
+    viewItemList,
+    selectItem,
+    addToCart,
+    removeFromCart,
+    beginCheckout,
+    purchase,
+    newsletterSubscribe,
+    contactWhatsappClick,
+    viewPromotion,
+    selectPromotion,
+  }
 }

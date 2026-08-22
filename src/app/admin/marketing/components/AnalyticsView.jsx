@@ -55,14 +55,32 @@ export default function AnalyticsView({ refreshTrigger }) {
           </p>
         </div>
 
-        <button
-          onClick={cargarAnaliticas}
-          disabled={cargando}
-          className={styles.tabButton}
-          style={{ backgroundColor: '#334c2b', color: '#eee6d9', border: '1px solid #b7996b' }}
-        >
-          {cargando ? '⏳ Actualizando...' : '🔄 Actualizar Métricas'}
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <a
+            href="/admin/marketing/analytics"
+            className={styles.tabButton}
+            style={{
+              backgroundColor: '#f46e15',
+              color: '#fff',
+              border: 'none',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              fontWeight: '700'
+            }}
+          >
+            📈 Abrir Panel GA4 Completo
+          </a>
+          <button
+            onClick={cargarAnaliticas}
+            disabled={cargando}
+            className={styles.tabButton}
+            style={{ backgroundColor: '#334c2b', color: '#eee6d9', border: '1px solid #b7996b' }}
+          >
+            {cargando ? '⏳ Actualizando...' : '🔄 Actualizar Métricas'}
+          </button>
+        </div>
       </div>
 
       {/* Grid de KPIs Principales */}
