@@ -4,8 +4,8 @@
  * 📅 ACTUALIZADO: 2026-08-22
  * 📌 DESCRIPCIÓN: Panel de Control de Analítica GA4 y E-commerce para Marketing de PanFree.
  *    - Identidad visual 100% PanFree: Verde #334c2b, Trigo/Dorado #b7996b, Crema #f5f1eb, Acento #c87d32.
+ *    - Recharts profesional integrado: Gráficos de Área y Barras fluidos y responsivos.
  *    - Tarjetas KPI con micro-interacciones, acentos y tipografía optimizada.
- *    - Gráficos de tendencias interactivos con gradientes, tooltips flotantes y selector de métricas.
  *    - Tablas de fuentes de tráfico (UTM), productos líderes y embudo de eventos con barras de progreso.
  *    - Monitor de infraestructura de medición (Measurement Protocol, Consent Mode, Measurement ID).
  * ⚠️  EN CASO DE MODIFICACIÓN SIGNIFICATIVA, actualizar este comentario.
@@ -34,22 +34,82 @@ import {
   ExternalLink,
   ShieldCheck,
   ChevronRight,
-  Eye,
-  MousePointerClick,
-  Award,
   Flame,
   ArrowUpRight,
-  HelpCircle,
-  Smartphone,
-  Layers,
   MessageCircle,
-  Instagram,
   Search,
-  Compass
+  Compass,
+  Camera
 } from 'lucide-react'
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid
+} from 'recharts'
 
 // Formateador de moneda oficial en Guaraníes
 const formatPYG = (n) => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
+
+// Icono SVG inline seguro para Instagram (evita problemas de dependencias en lucide-react)
+function InstagramIcon({ size = 15, className = '' }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  )
+}
+
+// Tooltip personalizado para Recharts con diseño PanFree
+const CustomChartTooltip = ({ active, payload, label, tipo }) => {
+  if (active && payload && payload.length) {
+    const dataPoint = payload[0].payload
+    return (
+      <div className="bg-[#2d2a26] text-[#f5f1eb] text-xs p-3 rounded-xl shadow-xl border border-[#b7996b]/40 backdrop-blur-md">
+        <p className="font-bold text-[#b7996b] text-[11px] mb-1">{dataPoint.label || label || dataPoint.fecha}</p>
+        <div className="space-y-1">
+          {tipo === 'revenue' && (
+            <p className="text-sm font-extrabold text-white">
+              {formatPYG(dataPoint.revenue)}
+            </p>
+          )}
+          {tipo === 'traffic' && (
+            <div>
+              <p className="text-sm font-extrabold text-white">{dataPoint.sesiones} sesiones</p>
+              <p className="text-[10px] text-[#e4dacb]">{dataPoint.usuarios} usuarios únicos</p>
+            </div>
+          )}
+          {tipo === 'conversiones' && (
+            <div>
+              <p className="text-sm font-extrabold text-white">{dataPoint.conversiones} compras</p>
+              {dataPoint.revenue > 0 && (
+                <p className="text-[10px] text-[#b7996b]">{formatPYG(dataPoint.revenue)}</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+  return null
+}
 
 export default function AdminGA4AnalyticsPage() {
   const [periodo, setPeriodo] = useState('30d')
@@ -57,7 +117,7 @@ export default function AdminGA4AnalyticsPage() {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [tabGrafico, setTabGrafico] = useState('revenue') // 'revenue' | 'traffic' | 'conversiones'
-  const [hoveredBarIndex, setHoveredBarIndex] = useState(null)
+  const [tipoGrafico, setTipoGrafico] = useState('area') // 'area' | 'bar'
   const [testEventStatus, setTestEventStatus] = useState(null)
   const [enviandoTest, setEnviandoTest] = useState(false)
 
@@ -120,11 +180,6 @@ export default function AdminGA4AnalyticsPage() {
   const topEventos = data?.topEventos || []
   const config = data?.configStatus || {}
 
-  // Cálculos dinámicos para los gráficos
-  const maxRevenue = useMemo(() => Math.max(...tendencias.map((t) => t.revenue || 0), 1), [tendencias])
-  const maxSesiones = useMemo(() => Math.max(...tendencias.map((t) => t.sesiones || 0), 1), [tendencias])
-  const maxConversiones = useMemo(() => Math.max(...tendencias.map((t) => t.conversiones || 0), 1), [tendencias])
-
   const totalVentasProductos = useMemo(() => {
     return topProductos.reduce((acc, p) => acc + (p.ventas || 0), 0) || 1
   }, [topProductos])
@@ -135,8 +190,8 @@ export default function AdminGA4AnalyticsPage() {
 
   // Icono para cada fuente de tráfico
   const getFuenteIcon = (fuente) => {
-    const f = fuente.toLowerCase()
-    if (f.includes('instagram')) return <Instagram size={15} className="text-[#c87d32]" />
+    const f = (fuente || '').toLowerCase()
+    if (f.includes('instagram')) return <InstagramIcon size={15} className="text-[#c87d32]" />
     if (f.includes('whatsapp')) return <MessageCircle size={15} className="text-emerald-700" />
     if (f.includes('google')) return <Search size={15} className="text-blue-700" />
     if (f.includes('facebook')) return <Share2 size={15} className="text-blue-800" />
@@ -209,7 +264,7 @@ export default function AdminGA4AnalyticsPage() {
             <button
               onClick={() => cargarMetricas(periodo)}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white text-[#334c2b] border border-[#e4dacb] hover:bg-[#f5f1eb] hover:border-[#b7996b] rounded-xl text-xs font-bold transition-all shadow-xs disabled:opacity-50 active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white text-[#334c2b] border border-[#e4dacb] hover:bg-[#f5f1eb] hover:border-[#b7996b] rounded-xl text-xs font-bold transition-all shadow-xs disabled:opacity-50 active:scale-95 cursor-pointer"
               title="Actualizar datos"
             >
               <RefreshCw size={14} className={loading ? 'animate-spin text-[#c87d32]' : 'text-[#334c2b]'} />
@@ -369,7 +424,7 @@ export default function AdminGA4AnalyticsPage() {
           </div>
         </section>
 
-        {/* 2. GRÁFICO INTERACTIVO DE TENDENCIAS */}
+        {/* 2. GRÁFICO PROFESIONAL CON RECHARTS */}
         <section className="bg-white rounded-2xl p-5 sm:p-7 border border-[#e4dacb] shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between pb-5 border-b border-[#f0e8dc] gap-4">
             <div>
@@ -380,149 +435,202 @@ export default function AdminGA4AnalyticsPage() {
                 </h2>
               </div>
               <p className="text-xs sm:text-sm text-[#6d665e] mt-0.5">
-                Comportamiento cronológico de ingresos, sesiones de clientes y pedidos en PanFree
+                Rendimiento de ventas, volumen de sesiones y pedidos en tiempo real
               </p>
             </div>
 
-            {/* Selector de Métrica para el Gráfico */}
-            <div className="inline-flex p-1 bg-[#f5f1eb] rounded-xl border border-[#e4dacb] text-xs font-bold self-start md:self-auto">
-              <button
-                onClick={() => setTabGrafico('revenue')}
-                className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  tabGrafico === 'revenue'
-                    ? 'bg-[#334c2b] text-[#f5f1eb] shadow-xs'
-                    : 'text-[#2d2a26] hover:bg-[#eae2d3]'
-                }`}
-              >
-                <DollarSign size={13} />
-                <span>Ingresos (₲)</span>
-              </button>
-              <button
-                onClick={() => setTabGrafico('traffic')}
-                className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  tabGrafico === 'traffic'
-                    ? 'bg-[#334c2b] text-[#f5f1eb] shadow-xs'
-                    : 'text-[#2d2a26] hover:bg-[#eae2d3]'
-                }`}
-              >
-                <Users size={13} />
-                <span>Sesiones & Visitas</span>
-              </button>
-              <button
-                onClick={() => setTabGrafico('conversiones')}
-                className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  tabGrafico === 'conversiones'
-                    ? 'bg-[#334c2b] text-[#f5f1eb] shadow-xs'
-                    : 'text-[#2d2a26] hover:bg-[#eae2d3]'
-                }`}
-              >
-                <ShoppingCart size={13} />
-                <span>Pedidos</span>
-              </button>
+            {/* Controles de Gráfico: Métrica y Tipo */}
+            <div className="flex flex-wrap items-center gap-2">
+              
+              {/* Selector de Métrica */}
+              <div className="inline-flex p-1 bg-[#f5f1eb] rounded-xl border border-[#e4dacb] text-xs font-bold">
+                <button
+                  onClick={() => setTabGrafico('revenue')}
+                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                    tabGrafico === 'revenue'
+                      ? 'bg-[#334c2b] text-[#f5f1eb] shadow-xs'
+                      : 'text-[#2d2a26] hover:bg-[#eae2d3]'
+                  }`}
+                >
+                  <DollarSign size={13} />
+                  <span>Ingresos (₲)</span>
+                </button>
+                <button
+                  onClick={() => setTabGrafico('traffic')}
+                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                    tabGrafico === 'traffic'
+                      ? 'bg-[#334c2b] text-[#f5f1eb] shadow-xs'
+                      : 'text-[#2d2a26] hover:bg-[#eae2d3]'
+                  }`}
+                >
+                  <Users size={13} />
+                  <span>Sesiones</span>
+                </button>
+                <button
+                  onClick={() => setTabGrafico('conversiones')}
+                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                    tabGrafico === 'conversiones'
+                      ? 'bg-[#334c2b] text-[#f5f1eb] shadow-xs'
+                      : 'text-[#2d2a26] hover:bg-[#eae2d3]'
+                  }`}
+                >
+                  <ShoppingCart size={13} />
+                  <span>Pedidos</span>
+                </button>
+              </div>
+
+              {/* Selector Tipo de Gráfico (Área vs Barras) */}
+              <div className="inline-flex p-1 bg-[#f5f1eb] rounded-xl border border-[#e4dacb] text-xs font-bold">
+                <button
+                  onClick={() => setTipoGrafico('area')}
+                  className={`px-2.5 py-1.5 rounded-lg transition-all ${
+                    tipoGrafico === 'area'
+                      ? 'bg-[#b7996b] text-white shadow-xs'
+                      : 'text-[#2d2a26] hover:bg-[#eae2d3]'
+                  }`}
+                  title="Gráfico de Área Suave"
+                >
+                  Área
+                </button>
+                <button
+                  onClick={() => setTipoGrafico('bar')}
+                  className={`px-2.5 py-1.5 rounded-lg transition-all ${
+                    tipoGrafico === 'bar'
+                      ? 'bg-[#b7996b] text-white shadow-xs'
+                      : 'text-[#2d2a26] hover:bg-[#eae2d3]'
+                  }`}
+                  title="Gráfico de Barras"
+                >
+                  Barras
+                </button>
+              </div>
+
             </div>
           </div>
 
-          {/* Canvas de Barras Personalizado PanFree */}
+          {/* Recharts Container */}
           <div className="mt-6">
             {loading ? (
-              <div className="h-64 flex flex-col items-center justify-center gap-3 text-[#6d665e]">
+              <div className="h-72 flex flex-col items-center justify-center gap-3 text-[#6d665e]">
                 <div className="w-8 h-8 border-3 border-[#b7996b] border-t-[#334c2b] rounded-full animate-spin" />
                 <span className="text-xs font-semibold">Cargando serie cronológica...</span>
               </div>
             ) : tendencias.length === 0 ? (
-              <div className="h-64 flex flex-col items-center justify-center gap-2 text-[#6d665e]">
+              <div className="h-72 flex flex-col items-center justify-center gap-2 text-[#6d665e]">
                 <Calendar size={32} className="text-[#b7996b]/60" />
                 <p className="text-sm font-semibold">No se registran datos para este rango</p>
                 <p className="text-xs">Selecciona otro período en la barra superior</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                
-                {/* Visualizador de Barras con Tooltip Interactivo */}
-                <div className="relative h-60 flex items-end gap-1.5 sm:gap-2.5 pt-10 pb-4 px-2 overflow-x-auto">
-                  {tendencias.map((item, idx) => {
-                    let valor = item.revenue
-                    let max = maxRevenue
-                    let colorBarra = 'bg-[#334c2b]'
-                    let hoverColor = 'hover:bg-[#c87d32]'
-
-                    if (tabGrafico === 'traffic') {
-                      valor = item.sesiones
-                      max = maxSesiones
-                      colorBarra = 'bg-[#b7996b]'
-                      hoverColor = 'hover:bg-[#334c2b]'
-                    } else if (tabGrafico === 'conversiones') {
-                      valor = item.conversiones
-                      max = maxConversiones
-                      colorBarra = 'bg-[#c87d32]'
-                      hoverColor = 'hover:bg-[#334c2b]'
-                    }
-
-                    const porcentaje = Math.max(Math.min(Math.round((valor / max) * 100), 100), valor > 0 ? 8 : 3)
-                    const isHovered = hoveredBarIndex === idx
-
-                    return (
-                      <div
-                        key={idx}
-                        onMouseEnter={() => setHoveredBarIndex(idx)}
-                        onMouseLeave={() => setHoveredBarIndex(null)}
-                        className="flex-1 min-w-[28px] sm:min-w-[36px] max-w-[56px] flex flex-col items-center gap-1.5 h-full justify-end group cursor-pointer relative"
-                      >
-                        {/* Tooltip Flotante */}
-                        {isHovered && (
-                          <div className="absolute -top-14 z-30 bg-[#2d2a26] text-[#f5f1eb] text-xs p-2 rounded-xl shadow-xl border border-[#b7996b]/40 whitespace-nowrap animate-in fade-in duration-150 pointer-events-none">
-                            <div className="font-bold text-[#b7996b] text-[11px] mb-0.5">{item.label || item.fecha}</div>
-                            <div className="font-extrabold text-white">
-                              {tabGrafico === 'revenue'
-                                ? formatPYG(item.revenue)
-                                : tabGrafico === 'traffic'
-                                ? `${item.sesiones} sesiones (${item.usuarios} usuarios)`
-                                : `${item.conversiones} pedidos finalizados`}
-                            </div>
-                            {tabGrafico !== 'revenue' && item.revenue > 0 && (
-                              <div className="text-[10px] text-[#e4dacb]">{formatPYG(item.revenue)}</div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Barra */}
-                        <div
-                          style={{ height: `${porcentaje}%` }}
-                          className={`w-full rounded-t-lg transition-all duration-300 ${
-                            valor > 0 ? `${colorBarra} ${hoverColor}` : 'bg-[#e4dacb]/60'
-                          } ${isHovered ? 'scale-105 shadow-md' : ''}`}
+              <div className="w-full h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  {tipoGrafico === 'area' ? (
+                    <AreaChart data={tendencias} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#334c2b" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#334c2b" stopOpacity={0.0} />
+                        </linearGradient>
+                        <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#b7996b" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#b7996b" stopOpacity={0.0} />
+                        </linearGradient>
+                        <linearGradient id="colorConv" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#c87d32" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#c87d32" stopOpacity={0.0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0e8dc" vertical={false} />
+                      <XAxis
+                        dataKey="label"
+                        tick={{ fill: '#6d665e', fontSize: 11 }}
+                        axisLine={{ stroke: '#e4dacb' }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tick={{ fill: '#6d665e', fontSize: 11 }}
+                        axisLine={false}
+                        tickLine={false}
+                        tickFormatter={(v) => (tabGrafico === 'revenue' ? (v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : `${Math.round(v/1000)}k`) : v)}
+                      />
+                      <Tooltip content={<CustomChartTooltip tipo={tabGrafico} />} />
+                      {tabGrafico === 'revenue' && (
+                        <Area
+                          type="monotone"
+                          dataKey="revenue"
+                          stroke="#334c2b"
+                          strokeWidth={2.5}
+                          fillOpacity={1}
+                          fill="url(#colorRevenue)"
+                          activeDot={{ r: 6, fill: '#334c2b', stroke: '#fff', strokeWidth: 2 }}
                         />
-
-                        {/* Etiqueta de Fecha */}
-                        <span className={`text-[10px] truncate w-full text-center transition-colors ${
-                          isHovered ? 'font-black text-[#334c2b]' : 'text-[#6d665e]'
-                        }`}>
-                          {item.label?.split(' ')[0] || item.fecha?.slice(8)}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Leyenda y Resumen Rápido */}
-                <div className="flex flex-wrap items-center justify-between text-xs text-[#6d665e] pt-3 border-t border-[#f0e8dc] gap-2">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <span className="w-3 h-3 rounded-md bg-[#334c2b]" />
-                      <span>{tabGrafico === 'revenue' ? 'Días con ventas' : tabGrafico === 'traffic' ? 'Sesiones' : 'Pedidos'}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <span className="w-3 h-3 rounded-md bg-[#e4dacb]" />
-                      <span>Sin registro</span>
-                    </div>
-                  </div>
-                  <div className="text-[11px] font-semibold text-[#b7996b]">
-                    Mostrando últimos {tendencias.length} días de actividad
-                  </div>
-                </div>
-
+                      )}
+                      {tabGrafico === 'traffic' && (
+                        <Area
+                          type="monotone"
+                          dataKey="sesiones"
+                          stroke="#b7996b"
+                          strokeWidth={2.5}
+                          fillOpacity={1}
+                          fill="url(#colorTraffic)"
+                          activeDot={{ r: 6, fill: '#b7996b', stroke: '#fff', strokeWidth: 2 }}
+                        />
+                      )}
+                      {tabGrafico === 'conversiones' && (
+                        <Area
+                          type="monotone"
+                          dataKey="conversiones"
+                          stroke="#c87d32"
+                          strokeWidth={2.5}
+                          fillOpacity={1}
+                          fill="url(#colorConv)"
+                          activeDot={{ r: 6, fill: '#c87d32', stroke: '#fff', strokeWidth: 2 }}
+                        />
+                      )}
+                    </AreaChart>
+                  ) : (
+                    <BarChart data={tendencias} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0e8dc" vertical={false} />
+                      <XAxis
+                        dataKey="label"
+                        tick={{ fill: '#6d665e', fontSize: 11 }}
+                        axisLine={{ stroke: '#e4dacb' }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tick={{ fill: '#6d665e', fontSize: 11 }}
+                        axisLine={false}
+                        tickLine={false}
+                        tickFormatter={(v) => (tabGrafico === 'revenue' ? (v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : `${Math.round(v/1000)}k`) : v)}
+                      />
+                      <Tooltip content={<CustomChartTooltip tipo={tabGrafico} />} />
+                      {tabGrafico === 'revenue' && (
+                        <Bar dataKey="revenue" fill="#334c2b" radius={[6, 6, 0, 0]} maxBarSize={48} />
+                      )}
+                      {tabGrafico === 'traffic' && (
+                        <Bar dataKey="sesiones" fill="#b7996b" radius={[6, 6, 0, 0]} maxBarSize={48} />
+                      )}
+                      {tabGrafico === 'conversiones' && (
+                        <Bar dataKey="conversiones" fill="#c87d32" radius={[6, 6, 0, 0]} maxBarSize={48} />
+                      )}
+                    </BarChart>
+                  )}
+                </ResponsiveContainer>
               </div>
             )}
+          </div>
+
+          {/* Resumen del Período */}
+          <div className="flex flex-wrap items-center justify-between text-xs text-[#6d665e] pt-4 mt-2 border-t border-[#f0e8dc] gap-2">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5 font-medium">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#334c2b]" />
+                <span>Serie: {tabGrafico === 'revenue' ? 'Ingresos Totales (₲)' : tabGrafico === 'traffic' ? 'Sesiones Web' : 'Pedidos Finalizados'}</span>
+              </div>
+            </div>
+            <div className="text-[11px] font-semibold text-[#b7996b]">
+              Mostrando {tendencias.length} registros cronológicos
+            </div>
           </div>
         </section>
 
@@ -566,7 +674,7 @@ export default function AdminGA4AnalyticsPage() {
                         <tr key={idx} className="hover:bg-[#fbf9f6] transition-colors group">
                           <td className="py-3 px-3">
                             <div className="flex items-center gap-2">
-                              <div className="p-1 rounded-md bg-[#f5f1eb] border border-[#e4dacb]">
+                              <div className="p-1.5 rounded-md bg-[#f5f1eb] border border-[#e4dacb] flex items-center justify-center">
                                 {getFuenteIcon(f.fuente)}
                               </div>
                               <div>
@@ -702,7 +810,6 @@ export default function AdminGA4AnalyticsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {topEventos.map((ev, idx) => {
               const isPurchase = ev.evento === 'purchase'
-              const isCart = ev.evento === 'add_to_cart' || ev.evento === 'begin_checkout'
               const isMarketing = ev.categoria === 'Marketing'
 
               return (
@@ -823,7 +930,7 @@ export default function AdminGA4AnalyticsPage() {
             <button
               onClick={dispararEventoPrueba}
               disabled={enviandoTest}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#334c2b] text-[#f5f1eb] hover:bg-[#25391e] rounded-xl text-xs font-bold transition-all shadow-xs disabled:opacity-50 active:scale-95 flex-shrink-0"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#334c2b] text-[#f5f1eb] hover:bg-[#25391e] rounded-xl text-xs font-bold transition-all shadow-xs disabled:opacity-50 active:scale-95 flex-shrink-0 cursor-pointer"
             >
               <Send size={14} className={enviandoTest ? 'animate-pulse text-[#b7996b]' : ''} />
               <span>{enviandoTest ? 'Enviando ping a GA4...' : 'Enviar Ping de Prueba'}</span>
