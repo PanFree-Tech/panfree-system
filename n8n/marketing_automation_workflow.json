@@ -1,5 +1,5 @@
 {
-  "name": "PanFree - Sistema de Marketing Inteligente Automatizado (Fase 2: Control de Capacidad)",
+  "name": "PanFree - Sistema de Marketing Inteligente Automatizado (Fase 3: Generación con Cloudinary & Control de Capacidad)",
   "nodes": [
     {
       "parameters": {
@@ -121,10 +121,10 @@
     },
     {
       "parameters": {
-        "functionCode": "// 6. GENERADOR DE PROMPTS PARA IMAGEN Y TEXTO\nconst decision = $input.first().json;\nif (decision.skip_execution) {\n  return [{ json: decision }];\n}\n\nconst p = decision.producto;\nconst d = decision.descuento_aplicado;\nconst ev = decision.evento;\n\nconst imagePrompt = `Foto profesional publicitaria para Instagram de ${p.nombre}, panadería artesanal gourmet 100% sin gluten (Sin TACC). Estilo cálido, fondo de madera rústica con harina de arroz espolvoreada suavemente, iluminación de estudio gastronómico con banner elegante que indica ${d}% OFF. Alta definición 8k, apetitoso y fresco recién horneado.`;\n\nconst textPrompt = `Actúa como el Director de Marketing de PanFree (Encarnación, Paraguay). Redacta un copy publicitario para Instagram con gancho atractivo, emojis, llamado a la acción y hashtags para ${p.nombre} con un ${d}% de descuento especial por ${ev ? ev.nombre : 'promoción de la semana'}. Precio promocional: G/ ${Number(decision.precio_final).toLocaleString('es-PY')}. Pedidos en panfree.fit o WhatsApp al +595 984 589845.`;\n\nreturn [{\n  json: {\n    ...decision,\n    image_prompt: imagePrompt,\n    text_prompt: textPrompt\n  }\n}];"
+        "functionCode": "// 6. GENERADOR DE PROMPTS Y BRIEFS CREATIVOS PARA CLOUDINARY Y GEMINI\nconst decision = $input.first().json;\nif (decision.skip_execution) {\n  return [{ json: decision }];\n}\n\nconst p = decision.producto;\nconst d = decision.descuento_aplicado;\nconst ev = decision.evento;\n\n// Brief creativo para fondo generativo de Cloudinary (IA solo diseña el entorno, NO los precios)\nconst briefCreativo = `Rustic gourmet artisanal bakery studio setting with warm natural morning lighting, wooden table with soft rice flour dust, aesthetic background for ${p.nombre}, theme: ${ev ? ev.nombre : 'artisan bakery promo'}, 8k resolution advertising shot`;\n\nreturn [{\n  json: {\n    ...decision,\n    brief_creativo: briefCreativo\n  }\n}];"
       },
       "id": "node-prompt-generator",
-      "name": "6. Function Node: Prompt Generator",
+      "name": "6. Function Node: Brief Creativo",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
       "position": [880, 360]
@@ -138,24 +138,38 @@
         "jsonBody": "={\n  \"producto_id\": \"{{ $json.producto.id }}\",\n  \"descuento\": {{ $json.descuento_aplicado }},\n  \"evento\": \"{{ $json.evento ? $json.evento.nombre : '' }}\",\n  \"regla_id\": \"{{ $json.regla ? $json.regla.id : '' }}\"\n}"
       },
       "id": "node-http-generar-contenido",
-      "name": "7. HTTP Request: Generar Contenido IA",
+      "name": "7. HTTP Request: Generar Copy con Gemini",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1120, 260]
+      "position": [1120, 240]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.APP_URL || 'https://www.panfree.fit' }}/api/admin/marketing/publish-instagram",
+        "url": "={{ $env.APP_URL || 'https://www.panfree.fit' }}/api/admin/marketing/generar-imagen-cloudinary",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"caption\": \"{{ $node['7. HTTP Request: Generar Contenido IA'].json['content']['fullPost'] }}\",\n  \"productName\": \"{{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['producto']['nombre'] }}\",\n  \"productId\": \"{{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['producto']['id'] }}\",\n  \"format\": \"feed_4_5\"\n}"
+        "jsonBody": "={\n  \"producto_id\": \"{{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['producto']['id'] }}\",\n  \"descuento\": {{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['descuento_aplicado'] }},\n  \"evento\": \"{{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['evento'] ? $node['5. Function Node: Decisor Inteligente con Capacidad'].json['evento']['nombre'] : '' }}\",\n  \"brief_creativo\": \"{{ $node['6. Function Node: Brief Creativo'].json['brief_creativo'] }}\"\n}"
       },
-      "id": "node-http-instagram",
-      "name": "8. HTTP Request: Publicar en Instagram",
+      "id": "node-http-cloudinary-image",
+      "name": "8. HTTP Request: Generar Arte Publicitario con Cloudinary",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1380, 360]
+      "position": [1360, 360]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.APP_URL || 'https://www.panfree.fit' }}/api/admin/marketing/programar-publicacion",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"caption\": \"{{ $node['7. HTTP Request: Generar Copy con Gemini'].json['content']['fullPost'] }}\",\n  \"producto_id\": \"{{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['producto']['id'] }}\",\n  \"descuento\": {{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['descuento_aplicado'] }},\n  \"precio_final\": {{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['precio_final'] }},\n  \"imagen_url\": \"{{ $node['8. HTTP Request: Generar Arte Publicitario con Cloudinary'].json['imagen_url'] }}\",\n  \"publicar_ahora\": true\n}"
+      },
+      "id": "node-http-instagram",
+      "name": "9. HTTP Request: Publicar en Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1620, 360]
     },
     {
       "parameters": {
@@ -166,10 +180,10 @@
         "jsonBody": "={\n  \"producto_id\": \"{{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['producto']['id'] }}\",\n  \"incremento\": 1\n}"
       },
       "id": "node-http-actualizar-capacidad",
-      "name": "9. HTTP Request: Actualizar Capacidad tras Publicación",
+      "name": "10. HTTP Request: Actualizar Capacidad tras Publicación",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1620, 260]
+      "position": [1880, 240]
     },
     {
       "parameters": {
@@ -181,18 +195,19 @@
             "regla_id": "={{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['regla']['id'] }}",
             "descuento_aplicado": "={{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['descuento_aplicado'] }}",
             "precio_final": "={{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['precio_final'] }}",
-            "captions_generados": "={{ $node['7. HTTP Request: Generar Contenido IA'].json['content'] || {} }}",
-            "post_id": "={{ $node['8. HTTP Request: Publicar en Instagram'].json.postId || 'IG-AUTO-' + $now.format('yyyyMMdd-HHmmss') }}",
+            "captions_generados": "={{ $node['7. HTTP Request: Generar Copy con Gemini'].json['content'] || {} }}",
+            "imagen_url": "={{ $node['8. HTTP Request: Generar Arte Publicitario con Cloudinary'].json['imagen_url'] }}",
+            "post_id": "={{ $node['9. HTTP Request: Publicar en Instagram'].json.post_id || 'IG-AUTO-' + $now.format('yyyyMMdd-HHmmss') }}",
             "publicada": true,
             "fecha_publicacion": "={{ $now.toISO() }}"
           }
         }
       },
       "id": "node-supabase-insert",
-      "name": "10. Supabase Insert: Guardar en Histórico",
+      "name": "11. Supabase Insert: Guardar en Histórico",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [1860, 360],
+      "position": [2120, 360],
       "credentials": {
         "supabaseApi": {
           "id": "supabase-panfree",
@@ -206,13 +221,13 @@
         "url": "={{ $env.N8N_ADMIN_WEBHOOK || $env.APP_URL + '/api/send-whatsapp-team' }}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"tipo\": \"notificacion_marketing_auto\",\n  \"mensaje\": \"🚀 *PanFree Marketing IA*: Se ha publicado la promoción de *\" + $node['5. Function Node: Decisor Inteligente con Capacidad'].json['producto']['nombre'] + \"* con un *\" + $node['5. Function Node: Decisor Inteligente con Capacidad'].json['descuento_aplicado'] + \"% OFF*. Capacidad restante: \" + ($node['5. Function Node: Decisor Inteligente con Capacidad'].json['capacidad']['remaining_capacity'] - 1) + \" cupos.\",\n  \"post_id\": \"{{ $node['8. HTTP Request: Publicar en Instagram'].json['postId'] }}\",\n  \"timestamp\": \"{{ $now.toISO() }}\"\n}"
+        "jsonBody": "={\n  \"tipo\": \"notificacion_marketing_auto\",\n  \"mensaje\": \"🚀 *PanFree Marketing IA*: Se ha publicado la promoción de *\" + $node['5. Function Node: Decisor Inteligente con Capacidad'].json['producto']['nombre'] + \"* con un *\" + $node['5. Function Node: Decisor Inteligente con Capacidad'].json['descuento_aplicado'] + \"% OFF*.\\n📸 *Arte Cloudinary*: \" + $node['8. HTTP Request: Generar Arte Publicitario con Cloudinary'].json['imagen_url'] + \"\\nCapacidad restante en cocina: \" + ($node['5. Function Node: Decisor Inteligente con Capacidad'].json['capacidad']['remaining_capacity'] - 1) + \" cupos.\",\n  \"post_id\": \"{{ $node['9. HTTP Request: Publicar en Instagram'].json['post_id'] }}\",\n  \"timestamp\": \"{{ $now.toISO() }}\"\n}"
       },
       "id": "node-webhook-notificar-admin",
-      "name": "11. Webhook: Notificar al Admin",
+      "name": "12. Webhook: Notificar al Admin",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [2100, 360]
+      "position": [2360, 360]
     }
   ],
   "connections": {
@@ -274,56 +289,72 @@
       "main": [
         [
           {
-            "node": "6. Function Node: Prompt Generator",
+            "node": "6. Function Node: Brief Creativo",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "6. Function Node: Prompt Generator": {
+    "6. Function Node: Brief Creativo": {
       "main": [
         [
           {
-            "node": "7. HTTP Request: Generar Contenido IA",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "7. HTTP Request: Generar Contenido IA": {
-      "main": [
-        [
-          {
-            "node": "8. HTTP Request: Publicar en Instagram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "8. HTTP Request: Publicar en Instagram": {
-      "main": [
-        [
-          {
-            "node": "9. HTTP Request: Actualizar Capacidad tras Publicación",
+            "node": "7. HTTP Request: Generar Copy con Gemini",
             "type": "main",
             "index": 0
           },
           {
-            "node": "10. Supabase Insert: Guardar en Histórico",
+            "node": "8. HTTP Request: Generar Arte Publicitario con Cloudinary",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "10. Supabase Insert: Guardar en Histórico": {
+    "7. HTTP Request: Generar Copy con Gemini": {
       "main": [
         [
           {
-            "node": "11. Webhook: Notificar al Admin",
+            "node": "9. HTTP Request: Publicar en Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. HTTP Request: Generar Arte Publicitario con Cloudinary": {
+      "main": [
+        [
+          {
+            "node": "9. HTTP Request: Publicar en Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. HTTP Request: Publicar en Instagram": {
+      "main": [
+        [
+          {
+            "node": "10. HTTP Request: Actualizar Capacidad tras Publicación",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "11. Supabase Insert: Guardar en Histórico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. Supabase Insert: Guardar en Histórico": {
+      "main": [
+        [
+          {
+            "node": "12. Webhook: Notificar al Admin",
             "type": "main",
             "index": 0
           }

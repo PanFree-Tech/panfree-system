@@ -18,6 +18,7 @@ export default function DecisionPanel({
 }) {
   const [cargandoDecision, setCargandoDecision] = useState(false)
   const [generandoContenido, setGenerandoContenido] = useState(false)
+  const [generandoImagenCloudinary, setGenerandoImagenCloudinary] = useState(false)
   const [procesandoPublicacion, setProcesandoPublicacion] = useState(false)
   
   const [decision, setDecision] = useState(null)
@@ -26,6 +27,7 @@ export default function DecisionPanel({
   const [descuentoManual, setDescuentoManual] = useState(10)
   const [tono, setTono] = useState('persuasivo')
   const [contenidoGenerado, setContenidoGenerado] = useState(null)
+  const [imagenCloudinaryGenerada, setImagenCloudinaryGenerada] = useState(null)
   const [notificacion, setNotificacion] = useState(null)
   const [fechaProgramada, setFechaProgramada] = useState('')
 
@@ -107,6 +109,48 @@ export default function DecisionPanel({
     }
   }
 
+  // Generar imagen publicitaria con Cloudinary AI (Fase 3)
+  const handleGenerarImagenCloudinary = async () => {
+    if (!decision?.producto) return
+
+    try {
+      setGenerandoImagenCloudinary(true)
+      setNotificacion(null)
+
+      const payload = {
+        producto_id: decision.producto.id,
+        descuento: descuentoManual,
+        evento: decision.evento?.nombre || '',
+        brief_creativo: contenidoGenerado?.image_prompt || '',
+      }
+
+      const res = await fetch('/api/admin/marketing/generar-imagen-cloudinary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      const json = await res.json()
+
+      if (json.success && json.imagen_url) {
+        setImagenCloudinaryGenerada(json.imagen_url)
+        setNotificacion({
+          tipo: 'exito',
+          texto: '🖼️ ¡Arte publicitario generado exitosamente con Cloudinary AI y precios de BD!',
+        })
+      } else {
+        throw new Error(json.error || 'Error al generar imagen con Cloudinary')
+      }
+    } catch (err) {
+      setNotificacion({
+        tipo: 'error',
+        texto: err.message || 'Error al conectar con Cloudinary',
+      })
+    } finally {
+      setGenerandoImagenCloudinary(false)
+    }
+  }
+
   // Cargar en el Diseñador Canvas Visual
   const handleCargarEnCanvas = () => {
     if (!decision?.producto) return
@@ -164,7 +208,7 @@ export default function DecisionPanel({
         publicar_ahora: publicarAhora,
         fecha_programada: fechaProgramada || null,
         captions_generados: contenidoGenerado || {},
-        imagen_url: decision.producto.imagen_url || null,
+        imagen_url: imagenCloudinaryGenerada || decision.producto.imagen_url || null,
       }
 
       const res = await fetch('/api/admin/marketing/programar-publicacion', {
@@ -402,14 +446,53 @@ export default function DecisionPanel({
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {/* Prompt de Imagen Sugerido */}
+              {/* Prompt de Imagen Sugerido y Acción de Generación Cloudinary AI */}
               <div style={{ backgroundColor: '#262626', padding: '0.75rem', borderRadius: 8, border: '1px solid #3a3a3a' }}>
-                <div style={{ fontSize: '0.7rem', color: '#b7996b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                  🎨 Prompt para Composición Visual / Fotografía
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#b7996b', fontWeight: 700, textTransform: 'uppercase' }}>
+                    🎨 Composición Visual Cloudinary Generative AI
+                  </div>
+                  <button
+                    onClick={handleGenerarImagenCloudinary}
+                    disabled={generandoImagenCloudinary}
+                    style={{
+                      backgroundColor: '#FF6B35',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 6,
+                      padding: '0.3rem 0.6rem',
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {generandoImagenCloudinary ? '⏳ Generando Arte...' : '🖼️ Generar con Cloudinary AI'}
+                  </button>
                 </div>
                 <div style={{ fontSize: '0.76rem', color: '#ccc', fontStyle: 'italic', lineHeight: 1.45 }}>
                   "{contenidoGenerado.image_prompt}"
                 </div>
+
+                {/* Previsualización del Arte Cloudinary si fue generado */}
+                {imagenCloudinaryGenerada && (
+                  <div style={{ marginTop: '0.75rem', textAlign: 'center', borderTop: '1px solid #444', paddingTop: '0.75rem' }}>
+                    <div style={{ fontSize: '0.68rem', color: '#10b981', fontWeight: 700, marginBottom: '0.4rem' }}>
+                      ✅ Arte Generado con Cloudinary (Precios Reales Inyectados desde BD)
+                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={imagenCloudinaryGenerada}
+                      alt="Arte publicitario generado con Cloudinary"
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '260px',
+                        borderRadius: 8,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                        objectFit: 'contain',
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Hook */}
