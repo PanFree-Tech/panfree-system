@@ -7,13 +7,9 @@
  *    - ✅ Reemplazado Wheat por Package
  *    - ✅ AGREGADA unidad de medida junto al precio
  */
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import { MapPin, ShoppingCart, Package, Phone } from 'lucide-react'
 import CldImageWrapper from '@/components/CldImageWrapper'
-
-const supabaseUrl     = process.env.NEXT_PUBLIC_SUPABASE_URL     || 'https://gbdrcaumghykiipqgbty.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjczNjIsImV4cCI6MjA4NzgwMzM2Mn0.OydRQxa51Ql42zvscWnQkEKJuU_3yeCS4qPQQoP6TuM'
-const supabase        = createClient(supabaseUrl, supabaseAnonKey)
 
 const WA_URL = 'https://wa.me/595984589845?text=Hola%20PanFree!%20%F0%9F%9E%90%20Quiero%20hacer%20un%20pedido'
 const formatPYG = n => `₲ ${Number(n || 0).toLocaleString('es-PY')}`

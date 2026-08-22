@@ -6,10 +6,33 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-// ✅ Usar valores placeholder si las vars no existen (para permitir build)
-// Los valores reales se inyectan en runtime desde flyctl secrets
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gbdrcaumghykiipqgbty.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjczNjIsImV4cCI6MjA4NzgwMzM2Mn0.OydRQxa51Ql42zvscWnQkEKJuU_3yeCS4qPQQoP6TuM'
+export const DEFAULT_SUPABASE_URL = 'https://gbdrcaumghykiipqgbty.supabase.co'
+export const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjczNjIsImV4cCI6MjA4NzgwMzM2Mn0.OydRQxa51Ql42zvscWnQkEKJuU_3yeCS4qPQQoP6TuM'
+
+/**
+ * Sanitiza y asegura que supabaseUrl sea una URL HTTP/HTTPS válida
+ */
+export function sanitizeSupabaseUrl(url) {
+  if (!url || typeof url !== 'string') return DEFAULT_SUPABASE_URL
+  let clean = url.trim()
+  if (!clean) return DEFAULT_SUPABASE_URL
+  if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+    clean = `https://${clean}`
+  }
+  try {
+    new URL(clean)
+    return clean
+  } catch {
+    return DEFAULT_SUPABASE_URL
+  }
+}
+
+// ✅ Usar valores sanitizados
+const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+const rawKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+
+const supabaseUrl = sanitizeSupabaseUrl(rawUrl)
+const supabaseAnonKey = (rawKey && typeof rawKey === 'string' && rawKey.trim()) ? rawKey.trim() : DEFAULT_SUPABASE_ANON_KEY
 
 export const createClient = () => {
   if (typeof window !== 'undefined') {

@@ -10,15 +10,17 @@
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import { supabase, sanitizeSupabaseUrl, DEFAULT_SUPABASE_ANON_KEY } from '@/lib/supabase'
+import { sendEmail, DEFAULT_ADMIN_EMAIL } from '@/lib/resend'
+import { templatePublicacionInstagram } from '@/lib/email-templates'
 
 export const dynamic = 'force-dynamic'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gbdrcaumghykiipqgbty.supabase.co'
+const supabaseUrl = sanitizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL)
 const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjczNjIsImV4cCI6MjA4NzgwMzM2Mn0.OydRQxa51Ql42zvscWnQkEKJuU_3yeCS4qPQQoP6TuM'
+  (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY.trim()) ||
+  (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim()) ||
+  DEFAULT_SUPABASE_ANON_KEY
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
   auth: {
@@ -244,6 +246,29 @@ export async function POST(req) {
       }])
     } catch (igPostErr) {
       console.warn('Advertencia al registrar en instagram_posts:', igPostErr.message)
+    }
+
+    // 6. Enviar notificación por correo con Resend a system.panfree@gmail.com
+    if (isPublished) {
+      try {
+        const emailHtml = templatePublicacionInstagram({
+          producto: productName,
+          descuento: Number(descuento) || 0,
+          precioFinal: calculatedFinalPrice,
+          postUrl: postUrl || 'https://www.instagram.com/panfree_py/',
+          postId: postId || 'IG-POST',
+          capacidadRestante: dbProduct?.production_capacity ? dbProduct.production_capacity - (dbProduct.current_orders || 0) : null,
+          estado: apiStatus === 'published_live' ? 'Publicado en vivo en Instagram' : 'Simulado en entorno de pruebas',
+        })
+
+        sendEmail({
+          to: DEFAULT_ADMIN_EMAIL,
+          subject: `📸 Post Publicado en Instagram: ${productName}`,
+          html: emailHtml,
+        }).catch(err => console.warn('Advertencia al enviar correo async:', err.message))
+      } catch (emailErr) {
+        console.warn('Advertencia al construir correo de publicación (no bloqueante):', emailErr.message)
+      }
     }
 
     return NextResponse.json({

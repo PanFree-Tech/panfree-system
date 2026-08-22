@@ -19,16 +19,66 @@ export default function AutomationPanel({ selectedProduct, canvasRef, onPostPubl
   const [notificacion, setNotificacion] = useState(null)
   const [copiado, setCopiado] = useState(false)
 
+  // Enviar notificación de correo mediante Resend
+  const sendEmailNotification = async ({ producto, copy, descuento = 0, evento = 'Promoción Generada' }) => {
+    try {
+      const precioBase = Number(producto?.precio_venta) || 25000
+      const precioFinal = Math.round(precioBase * (1 - descuento / 100))
+
+      await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: 'system.panfree@gmail.com',
+          subject: `📢 PanFree: Nueva Campaña Creativa - ${producto?.nombre || 'General'}`,
+          html: `
+            <div style="font-family: sans-serif; background-color: #f7f4ee; padding: 24px; border-radius: 10px;">
+              <div style="background-color: #334c2b; color: #eee6d9; padding: 16px; border-radius: 8px; text-align: center;">
+                <h2 style="margin: 0;">🥖 PanFree · Notificación de Marketing</h2>
+              </div>
+              <div style="background-color: #fff; padding: 20px; border-radius: 8px; margin-top: 15px; border: 1px solid #e8e2d5;">
+                <h3 style="color: #334c2b; margin-top: 0;">✨ Campaña generada con IA para "${producto?.nombre || 'Especialidad PanFree'}"</h3>
+                <p><strong>Evento:</strong> ${evento}</p>
+                <p><strong>Descuento:</strong> ${descuento}% OFF</p>
+                <p><strong>Precio Final:</strong> G/ ${precioFinal.toLocaleString('es-PY')}</p>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+                <h4 style="margin: 0 0 10px 0; color: #334c2b;">📝 Copy / Caption:</h4>
+                <div style="background-color: #f9f9f9; padding: 12px; border-left: 4px solid #b7996b; font-family: monospace; white-space: pre-wrap; font-size: 13px;">${copy}</div>
+              </div>
+            </div>
+          `,
+          metadata: {
+            producto_id: producto?.id || null,
+            evento,
+            origen: 'AutomationPanel',
+          },
+        }),
+      })
+      console.log('📧 [PanFree] Correo de notificación enviado a system.panfree@gmail.com')
+    } catch (emailErr) {
+      console.warn('⚠️ No se pudo enviar notificación de correo (no bloqueante):', emailErr.message)
+    }
+  }
+
   // 1. Generar contenido con Gemini
   const handleGenerarIA = async () => {
     try {
       setGenerandoIA(true)
       setNotificacion(null)
       const data = await generateInstagramContent(selectedProduct, { tone: tono })
-      setCaptionGenerado(data.fullPost || data.caption)
+      const copyTexto = data.fullPost || data.caption
+      setCaptionGenerado(copyTexto)
       setNotificacion({
         tipo: 'exito',
         texto: '✨ ¡Copy generado exitosamente con IA!',
+      })
+
+      // Enviar notificación por correo con Resend
+      sendEmailNotification({
+        producto: selectedProduct,
+        copy: copyTexto,
+        descuento: 10,
+        evento: 'Generación Manual con Gemini',
       })
     } catch (err) {
       setNotificacion({
@@ -57,10 +107,19 @@ export default function AutomationPanel({ selectedProduct, canvasRef, onPostPubl
       })
       const json = await res.json()
       if (json.success && json.content) {
-        setCaptionGenerado(json.content.fullPost || json.content.caption)
+        const copyTexto = json.content.fullPost || json.content.caption
+        setCaptionGenerado(copyTexto)
         setNotificacion({
           tipo: 'exito',
           texto: '🤖 ¡Copy y estrategia generados por el Motor Inteligente!',
+        })
+
+        // Enviar notificación por correo con Resend
+        sendEmailNotification({
+          producto: selectedProduct,
+          copy: copyTexto,
+          descuento: 15,
+          evento: 'Motor Inteligente Multimodal',
         })
       } else {
         throw new Error(json.error || 'Error al generar')
