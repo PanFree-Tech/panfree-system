@@ -28,7 +28,7 @@ export function useSupabaseProducts() {
       setError(null)
       const { data, error: sbError } = await supabase
         .from('productos')
-        .select('id,nombre,categoria,precio_venta,imagen_url,slug,descripcion')
+        .select('id,nombre,categoria,precio_venta,imagen_url,slug,descripcion,production_capacity,current_orders,lead_time,order_available,availability_status')
         .eq('is_active', true)
         .order('is_featured', { ascending: false })
         .order('nombre')

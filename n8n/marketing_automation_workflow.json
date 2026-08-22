@@ -1,5 +1,5 @@
 {
-  "name": "PanFree - Sistema de Marketing Inteligente Automatizado",
+  "name": "PanFree - Sistema de Marketing Inteligente Automatizado (Fase 2: Control de Capacidad)",
   "nodes": [
     {
       "parameters": {
@@ -29,12 +29,22 @@
               "keyName": "is_active",
               "condition": "eq",
               "value": "true"
+            },
+            {
+              "keyName": "order_available",
+              "condition": "eq",
+              "value": "true"
+            },
+            {
+              "keyName": "availability_status",
+              "condition": "eq",
+              "value": "DISPONIBLE"
             }
           ]
         }
       },
       "id": "node-supabase-productos",
-      "name": "2. Supabase: Productos Activos",
+      "name": "2. Supabase: Productos Disponibles con Capacidad",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [380, 200],
@@ -101,17 +111,17 @@
     },
     {
       "parameters": {
-        "functionCode": "// 5. NODO DECISOR INTELIGENTE\n// Cruza productos, eventos del calendario y reglas para determinar la mejor promoción\nconst items = $input.all();\nconst hoy = new Date().toISOString().split('T')[0];\n\n// Extraer datos desde los nodos previos\nconst productos = $('2. Supabase: Productos Activos').all().map(i => i.json);\nconst eventos = $('3. Supabase: Eventos Calendario').all().map(i => i.json);\nconst reglas = $('4. Supabase: Reglas Activas').all().map(i => i.json).sort((a,b) => (b.prioridad || 0) - (a.prioridad || 0));\n\nif (!productos.length) {\n  throw new Error('No se encontraron productos activos.');\n}\n\n// 1. Buscar evento activo hoy o en los próximos 7 días\nconst eventoActual = eventos.find(e => {\n  const ini = e.fecha_inicio;\n  const fin = e.fecha_fin;\n  return hoy >= ini && hoy <= fin;\n}) || eventos[0] || null;\n\nlet productoElegido = null;\nlet reglaElegida = null;\nlet descuento = 10;\nlet motivo = 'Promoción sugerida por rotación general';\n\n// Si hay evento, priorizar productos relacionados\nif (eventoActual && eventoActual.productos_relacionados && eventoActual.productos_relacionados.length > 0) {\n  productoElegido = productos.find(p => \n    eventoActual.productos_relacionados.some(rel => p.nombre.toLowerCase().includes(rel.toLowerCase()))\n  );\n  if (productoElegido) {\n    reglaElegida = reglas.find(r => r.condicion?.tipo === 'evento_calendario') || reglas[0];\n    descuento = reglaElegida ? reglaElegida.descuento_min || 15 : 15;\n    motivo = `Asociado al evento: ${eventoActual.nombre}`;\n  }\n}\n\n// Si no se encontró por evento, seleccionar por mayor precio o destacado\nif (!productoElegido) {\n  productoElegido = productos.find(p => p.is_featured) || productos[0];\n  reglaElegida = reglas[0] || { id: null, nombre: 'Regla Estándar', descuento_min: 10, descuento_max: 15 };\n  descuento = reglaElegida.descuento_min || 10;\n  motivo = 'Promoción de fidelización / producto estrella';\n}\n\nconst precioOriginal = Number(productoElegido.precio_venta) || 25000;\nconst precioFinal = Math.round(precioOriginal * (1 - descuento / 100));\n\nreturn [{\n  json: {\n    decision_timestamp: new Date().toISOString(),\n    producto: productoElegido,\n    regla: reglaElegida,\n    evento: eventoActual,\n    descuento_aplicado: descuento,\n    precio_original: precioOriginal,\n    precio_final: precioFinal,\n    motivo: motivo\n  }\n}];"
+        "functionCode": "// 5. NODO DECISOR INTELIGENTE CON CONTROL DE CAPACIDAD MADE-TO-ORDER\n// Filtra y prioriza productos evaluando capacidad disponible en cocina\nconst hoy = new Date().toISOString().split('T')[0];\n\n// Extraer datos de nodos previos\nconst productosRaw = $('2. Supabase: Productos Disponibles con Capacidad').all().map(i => i.json);\nconst eventos = $('3. Supabase: Eventos Calendario').all().map(i => i.json);\nconst reglas = $('4. Supabase: Reglas Activas').all().map(i => i.json).sort((a,b) => (b.prioridad || 0) - (a.prioridad || 0));\n\n// Filtrar estrictamente productos DISPONIBLES con cupos libres\nconst productos = productosRaw\n  .map(p => {\n    const cap = Math.max(1, Number(p.production_capacity) || 10);\n    const ord = Math.max(0, Number(p.current_orders) || 0);\n    return {\n      ...p,\n      production_capacity: cap,\n      current_orders: ord,\n      remaining_capacity: Math.max(0, cap - ord),\n      availability_status: p.availability_status || (ord >= cap ? 'CERRADO' : ord >= cap * 0.8 ? 'CAPACIDAD LIMITADA' : 'DISPONIBLE')\n    };\n  })\n  .filter(p => p.availability_status === 'DISPONIBLE' && p.remaining_capacity > 0)\n  .sort((a, b) => b.remaining_capacity - a.remaining_capacity);\n\nif (!productos.length) {\n  return [{\n    json: {\n      skip_execution: true,\n      motivo: 'Capacidad agotada en cocina. No hay productos en estado DISPONIBLE para promocionar hoy.'\n    }\n  }];\n}\n\n// 1. Buscar evento activo en calendario\nconst eventoActual = eventos.find(e => {\n  const ini = e.fecha_inicio;\n  const fin = e.fecha_fin;\n  return hoy >= ini && hoy <= fin;\n}) || null;\n\nlet productoElegido = null;\nlet reglaElegida = null;\nlet descuento = 10;\nlet motivo = 'Promoción optimizada por alta capacidad disponible';\n\n// Coincidencia con evento activo si el producto tiene cupos disponibles\nif (eventoActual && eventoActual.productos_relacionados && eventoActual.productos_relacionados.length > 0) {\n  productoElegido = productos.find(p => \n    eventoActual.productos_relacionados.some(rel => p.nombre.toLowerCase().includes(rel.toLowerCase()))\n  );\n  if (productoElegido) {\n    reglaElegida = reglas.find(r => r.condicion?.tipo === 'evento_calendario') || reglas[0];\n    descuento = reglaElegida ? reglaElegida.descuento_min || 15 : 15;\n    motivo = `Asociado al evento: ${eventoActual.nombre} (${productoElegido.remaining_capacity} cupos libres)`;\n  }\n}\n\n// Si no coincide con evento, tomar producto disponible con mayor capacidad remanente\nif (!productoElegido) {\n  productoElegido = productos[0];\n  reglaElegida = reglas[0] || { id: null, nombre: 'Regla Capacidad', descuento_min: 10, descuento_max: 15 };\n  descuento = reglaElegida.descuento_min || 10;\n  motivo = `Mayor disponibilidad en cocina: ${productoElegido.remaining_capacity} cupos (${productoElegido.current_orders}/${productoElegido.production_capacity} pedidos)`;\n}\n\nconst precioOriginal = Number(productoElegido.precio_venta) || 25000;\nconst precioFinal = Math.round(precioOriginal * (1 - descuento / 100));\n\nreturn [{\n  json: {\n    decision_timestamp: new Date().toISOString(),\n    producto: productoElegido,\n    regla: reglaElegida,\n    evento: eventoActual,\n    descuento_aplicado: descuento,\n    precio_original: precioOriginal,\n    precio_final: precioFinal,\n    capacidad: {\n      production_capacity: productoElegido.production_capacity,\n      current_orders: productoElegido.current_orders,\n      remaining_capacity: productoElegido.remaining_capacity,\n      availability_status: productoElegido.availability_status\n    },\n    motivo: motivo\n  }\n}];"
       },
       "id": "node-function-decisor",
-      "name": "5. Function Node: Decisor Inteligente",
+      "name": "5. Function Node: Decisor Inteligente con Capacidad",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
       "position": [640, 360]
     },
     {
       "parameters": {
-        "functionCode": "// 6. GENERADOR DE PROMPTS PARA IMAGEN Y TEXTO\nconst decision = $input.first().json;\nconst p = decision.producto;\nconst d = decision.descuento_aplicado;\nconst ev = decision.evento;\n\nconst imagePrompt = `Foto profesional publicitaria para Instagram de ${p.nombre}, panadería artesanal gourmet 100% sin gluten (Sin TACC). Estilo cálido, fondo de madera rústica con harina de arroz espolvoreada suavemente, iluminación de estudio gastronómico con banner elegante que indica ${d}% OFF. Alta definición 8k, apetitoso y fresco recién horneado.`;\n\nconst textPrompt = `Actúa como el Director de Marketing de PanFree (Encarnación, Paraguay). Redacta un copy publicitario para Instagram con gancho atractivo, emojis, llamado a la acción y hashtags para ${p.nombre} con un ${d}% de descuento especial por ${ev ? ev.nombre : 'promoción de la semana'}. Precio promocional: G/ ${Number(decision.precio_final).toLocaleString('es-PY')}. Pedidos en panfree.fit o WhatsApp al +595 984 589845.`;\n\nreturn [{\n  json: {\n    ...decision,\n    image_prompt: imagePrompt,\n    text_prompt: textPrompt\n  }\n}];"
+        "functionCode": "// 6. GENERADOR DE PROMPTS PARA IMAGEN Y TEXTO\nconst decision = $input.first().json;\nif (decision.skip_execution) {\n  return [{ json: decision }];\n}\n\nconst p = decision.producto;\nconst d = decision.descuento_aplicado;\nconst ev = decision.evento;\n\nconst imagePrompt = `Foto profesional publicitaria para Instagram de ${p.nombre}, panadería artesanal gourmet 100% sin gluten (Sin TACC). Estilo cálido, fondo de madera rústica con harina de arroz espolvoreada suavemente, iluminación de estudio gastronómico con banner elegante que indica ${d}% OFF. Alta definición 8k, apetitoso y fresco recién horneado.`;\n\nconst textPrompt = `Actúa como el Director de Marketing de PanFree (Encarnación, Paraguay). Redacta un copy publicitario para Instagram con gancho atractivo, emojis, llamado a la acción y hashtags para ${p.nombre} con un ${d}% de descuento especial por ${ev ? ev.nombre : 'promoción de la semana'}. Precio promocional: G/ ${Number(decision.precio_final).toLocaleString('es-PY')}. Pedidos en panfree.fit o WhatsApp al +595 984 589845.`;\n\nreturn [{\n  json: {\n    ...decision,\n    image_prompt: imagePrompt,\n    text_prompt: textPrompt\n  }\n}];"
       },
       "id": "node-prompt-generator",
       "name": "6. Function Node: Prompt Generator",
@@ -122,7 +132,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.APP_URL || 'https://panfree.fit' }}/api/admin/marketing/generar-contenido",
+        "url": "={{ $env.APP_URL || 'https://www.panfree.fit' }}/api/admin/marketing/generar-contenido",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"producto_id\": \"{{ $json.producto.id }}\",\n  \"descuento\": {{ $json.descuento_aplicado }},\n  \"evento\": \"{{ $json.evento ? $json.evento.nombre : '' }}\",\n  \"regla_id\": \"{{ $json.regla ? $json.regla.id : '' }}\"\n}"
@@ -136,30 +146,30 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "url": "={{ $env.APP_URL || 'https://www.panfree.fit' }}/api/admin/marketing/publish-instagram",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"{{ $node['6. Function Node: Prompt Generator'].json['text_prompt'] }}\"\n    }]\n  }]\n}"
+        "jsonBody": "={\n  \"caption\": \"{{ $node['7. HTTP Request: Generar Contenido IA'].json['content']['fullPost'] }}\",\n  \"productName\": \"{{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['producto']['nombre'] }}\",\n  \"productId\": \"{{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['producto']['id'] }}\",\n  \"format\": \"feed_4_5\"\n}"
       },
-      "id": "node-http-gemini",
-      "name": "8. HTTP Request: Gemini 3.7 Flash API",
+      "id": "node-http-instagram",
+      "name": "8. HTTP Request: Publicar en Instagram",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1120, 460]
+      "position": [1380, 360]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.APP_URL || 'https://panfree.fit' }}/api/admin/marketing/publish-instagram",
+        "url": "={{ $env.APP_URL || 'https://www.panfree.fit' }}/api/admin/marketing/actualizar-capacidad",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"caption\": \"{{ $node['7. HTTP Request: Generar Contenido IA'].json['content']['fullPost'] || $json.candidates[0].content.parts[0].text }}\",\n  \"productName\": \"{{ $node['5. Function Node: Decisor Inteligente'].json['producto']['nombre'] }}\",\n  \"productId\": \"{{ $node['5. Function Node: Decisor Inteligente'].json['producto']['id'] }}\",\n  \"format\": \"feed_4_5\"\n}"
+        "jsonBody": "={\n  \"producto_id\": \"{{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['producto']['id'] }}\",\n  \"incremento\": 1\n}"
       },
-      "id": "node-http-instagram",
-      "name": "9. HTTP Request: Publicar en Instagram",
+      "id": "node-http-actualizar-capacidad",
+      "name": "9. HTTP Request: Actualizar Capacidad tras Publicación",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1380, 360]
+      "position": [1620, 260]
     },
     {
       "parameters": {
@@ -167,12 +177,12 @@
         "table": "promociones_historico",
         "columns": {
           "values": {
-            "producto_id": "={{ $node['5. Function Node: Decisor Inteligente'].json['producto']['id'] }}",
-            "regla_id": "={{ $node['5. Function Node: Decisor Inteligente'].json['regla']['id'] }}",
-            "descuento_aplicado": "={{ $node['5. Function Node: Decisor Inteligente'].json['descuento_aplicado'] }}",
-            "precio_final": "={{ $node['5. Function Node: Decisor Inteligente'].json['precio_final'] }}",
+            "producto_id": "={{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['producto']['id'] }}",
+            "regla_id": "={{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['regla']['id'] }}",
+            "descuento_aplicado": "={{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['descuento_aplicado'] }}",
+            "precio_final": "={{ $node['5. Function Node: Decisor Inteligente con Capacidad'].json['precio_final'] }}",
             "captions_generados": "={{ $node['7. HTTP Request: Generar Contenido IA'].json['content'] || {} }}",
-            "post_id": "={{ $json.postId || 'IG-AUTO-' + $now.format('yyyyMMdd-HHmmss') }}",
+            "post_id": "={{ $node['8. HTTP Request: Publicar en Instagram'].json.postId || 'IG-AUTO-' + $now.format('yyyyMMdd-HHmmss') }}",
             "publicada": true,
             "fecha_publicacion": "={{ $now.toISO() }}"
           }
@@ -182,7 +192,7 @@
       "name": "10. Supabase Insert: Guardar en Histórico",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [1620, 360],
+      "position": [1860, 360],
       "credentials": {
         "supabaseApi": {
           "id": "supabase-panfree",
@@ -196,13 +206,13 @@
         "url": "={{ $env.N8N_ADMIN_WEBHOOK || $env.APP_URL + '/api/send-whatsapp-team' }}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"tipo\": \"notificacion_marketing_auto\",\n  \"mensaje\": \"🚀 *PanFree Marketing IA*: Se ha publicado automáticamente la promoción de *\" + $node['5. Function Node: Decisor Inteligente'].json['producto']['nombre'] + \"* con un *\" + $node['5. Function Node: Decisor Inteligente'].json['descuento_aplicado'] + \"% OFF*.\",\n  \"post_id\": \"{{ $node['9. HTTP Request: Publicar en Instagram'].json['postId'] }}\",\n  \"timestamp\": \"{{ $now.toISO() }}\"\n}"
+        "jsonBody": "={\n  \"tipo\": \"notificacion_marketing_auto\",\n  \"mensaje\": \"🚀 *PanFree Marketing IA*: Se ha publicado la promoción de *\" + $node['5. Function Node: Decisor Inteligente con Capacidad'].json['producto']['nombre'] + \"* con un *\" + $node['5. Function Node: Decisor Inteligente con Capacidad'].json['descuento_aplicado'] + \"% OFF*. Capacidad restante: \" + ($node['5. Function Node: Decisor Inteligente con Capacidad'].json['capacidad']['remaining_capacity'] - 1) + \" cupos.\",\n  \"post_id\": \"{{ $node['8. HTTP Request: Publicar en Instagram'].json['postId'] }}\",\n  \"timestamp\": \"{{ $now.toISO() }}\"\n}"
       },
       "id": "node-webhook-notificar-admin",
       "name": "11. Webhook: Notificar al Admin",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1860, 360]
+      "position": [2100, 360]
     }
   ],
   "connections": {
@@ -210,7 +220,7 @@
       "main": [
         [
           {
-            "node": "2. Supabase: Productos Activos",
+            "node": "2. Supabase: Productos Disponibles con Capacidad",
             "type": "main",
             "index": 0
           },
@@ -227,11 +237,11 @@
         ]
       ]
     },
-    "2. Supabase: Productos Activos": {
+    "2. Supabase: Productos Disponibles con Capacidad": {
       "main": [
         [
           {
-            "node": "5. Function Node: Decisor Inteligente",
+            "node": "5. Function Node: Decisor Inteligente con Capacidad",
             "type": "main",
             "index": 0
           }
@@ -242,7 +252,7 @@
       "main": [
         [
           {
-            "node": "5. Function Node: Decisor Inteligente",
+            "node": "5. Function Node: Decisor Inteligente con Capacidad",
             "type": "main",
             "index": 0
           }
@@ -253,14 +263,14 @@
       "main": [
         [
           {
-            "node": "5. Function Node: Decisor Inteligente",
+            "node": "5. Function Node: Decisor Inteligente con Capacidad",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "5. Function Node: Decisor Inteligente": {
+    "5. Function Node: Decisor Inteligente con Capacidad": {
       "main": [
         [
           {
@@ -278,11 +288,6 @@
             "node": "7. HTTP Request: Generar Contenido IA",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "8. HTTP Request: Gemini 3.7 Flash API",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -291,27 +296,21 @@
       "main": [
         [
           {
-            "node": "9. HTTP Request: Publicar en Instagram",
+            "node": "8. HTTP Request: Publicar en Instagram",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "8. HTTP Request: Gemini 3.7 Flash API": {
+    "8. HTTP Request: Publicar en Instagram": {
       "main": [
         [
           {
-            "node": "9. HTTP Request: Publicar en Instagram",
+            "node": "9. HTTP Request: Actualizar Capacidad tras Publicación",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "9. HTTP Request: Publicar en Instagram": {
-      "main": [
-        [
+          },
           {
             "node": "10. Supabase Insert: Guardar en Histórico",
             "type": "main",
