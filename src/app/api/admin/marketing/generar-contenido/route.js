@@ -105,16 +105,57 @@ export async function POST(req) {
       tono,
     })
 
-    // 4. Llamada a Gemini 3.7 Flash
+    // 4. Llamada a Gemini con sistema de fallback multi-modelo
     const ai = new GoogleGenAI({ apiKey })
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
-      contents: prompt,
-    })
+    const candidateModels = [
+      'gemini-1.5-flash',
+      'gemini-2.0-flash-exp',
+      'gemini-1.5-pro',
+    ]
 
-    const rawText = response.text || ''
-    const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*$/gi, '').trim()
-    const parsed = JSON.parse(cleaned)
+    let parsed = null
+    let modelUsado = null
+    const fallbackAttempts = []
+
+    for (const modelName of candidateModels) {
+      try {
+        console.log(`🤖 [Generar Contenido] Intentando generar con modelo: ${modelName}...`)
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+        })
+
+        const rawText = response.text || ''
+        const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*$/gi, '').trim()
+        parsed = JSON.parse(cleaned)
+        modelUsado = modelName
+
+        console.log(`✅ [Generar Contenido] Contenido generado exitosamente con: ${modelName}`)
+        fallbackAttempts.push({ model: modelName, status: 'success' })
+        break
+      } catch (err) {
+        console.warn(`⚠️ [Generar Contenido] Falló el intento con modelo ${modelName}:`, err.message)
+        fallbackAttempts.push({
+          model: modelName,
+          status: 'failed',
+          error: err.message,
+        })
+      }
+    }
+
+    if (!parsed) {
+      console.error('❌ [Generar Contenido] Todos los modelos de Gemini fallaron en la secuencia de fallback')
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No se pudo generar contenido con ninguno de los modelos disponibles de Gemini (503/High Demand)',
+          fallback_info: {
+            attempts: fallbackAttempts,
+          },
+        },
+        { status: 503 }
+      )
+    }
 
     const fullPost = `${parsed.hook}\n\n${parsed.caption}\n\n${parsed.callToAction}\n\n${parsed.hashtags}`
 
@@ -127,7 +168,11 @@ export async function POST(req) {
         descuento: descuento,
         precio_final_fmt: precioDescFmt,
       },
-      source: 'gemini-3.7-flash',
+      source: modelUsado.startsWith('gemini-') ? modelUsado : `gemini-${modelUsado}`,
+      fallback_info: {
+        model_used: modelUsado,
+        attempts: fallbackAttempts,
+      },
     })
   } catch (error) {
     console.error('Error en generar-contenido route:', error)
