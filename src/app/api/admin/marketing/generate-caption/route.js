@@ -1,10 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req) {
   try {
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) {
+      return NextResponse.json(
+        { success: false, error: 'GEMINI_API_KEY no configurada en el servidor' },
+        { status: 500 }
+      )
+    }
+
     const body = await req.json()
     const { product, tone = 'persuasivo', format = 'feed' } = body || {}
 
@@ -25,7 +33,7 @@ Genera contenido publicitario de alto engagement para Instagram con las siguient
 - Tono deseado: ${tone} (cercano, tentador, profesional, enfocado en personas celíacas e intolerantes al gluten)
 - Formato: ${format}
 
-Debes responder ÚNICAMENTE con un objeto JSON válido con la siguiente estructura (sin bloques de código markdown extras, solo el JSON directo o markdown json):
+Debes responder ÚNICAMENTE con un objeto JSON válido con la siguiente estructura:
 {
   "hook": "Una frase de apertura atractiva y con emojis",
   "caption": "El texto completo del post de Instagram con saltos de línea, emojis relevantes, propuesta de valor sin gluten, mención de Encarnación y llamado a la acción",
@@ -33,61 +41,34 @@ Debes responder ÚNICAMENTE con un objeto JSON válido con la siguiente estructu
   "callToAction": "Pedí directo por nuestra web panfree.fit o escribinos al WhatsApp +595 984 589845 📲"
 }`
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY
-
-    if (apiKey) {
-      try {
-        const ai = new GoogleGenAI({ apiKey })
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.7-flash',
-          contents: prompt,
-        })
-
-        const rawText = response.text || ''
-        const cleanedText = rawText.replace(/```json\s*/gi, '').replace(/```\s*$/gi, '').trim()
-
-        try {
-          const parsed = JSON.parse(cleanedText)
-          return NextResponse.json({
-            success: true,
-            data: parsed,
-            source: 'gemini-3.7-flash',
-          })
-        } catch {
-          // Si el JSON falla al parsear, extraer datos del texto
-          return NextResponse.json({
-            success: true,
-            data: {
-              hook: `✨ ¡Probá nuestro ${productName}! 🍞`,
-              caption: rawText,
-              hashtags: '#PanFree #SinGluten #SinTACC #Encarnacion #Paraguay #CeliacosParaguay',
-              callToAction: '📲 Hacé tu pedido en panfree.fit o por WhatsApp al +595 984 589845',
-            },
-            source: 'gemini-3.7-flash-raw',
-          })
-        }
-      } catch (geminiError) {
-        console.warn('Fallo llamada directa a Gemini API, usando generador inteligente local:', geminiError?.message)
-      }
-    }
-
-    // Fallback inteligente artesanal con datos dinámicos del producto
-    const fallbackData = {
-      hook: `✨ ¿Extrañabas disfrutar de un buen panificado sin preocuparte por el gluten? 🍞❤️`,
-      caption: `¡En Panfree te traemos nuestro ${productName}! 🌾🚫\n\n` +
-        `Elaborado con ingredientes seleccionados de primera calidad en cocina 100% libre de contaminación cruzada en Encarnación.\n\n` +
-        `🏷️ Precio: ${productPrice}\n` +
-        `📍 Disponible para retiro y delivery en Encarnación y alrededores.\n` +
-        `💡 Hacé tus pedidos con 24hs de anticipación para garantizar máxima frescura recién horneada.`,
-      hashtags: '#PanFree #SinGluten #SinTACC #Encarnacion #Paraguay #CeliacosParaguay #Artesanal #SinGlutenPy',
-      callToAction: '👉 Hacé tu pedido en panfree.fit o envianos un WhatsApp al +595 984 589845 📲',
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: fallbackData,
-      source: 'fallback-generator',
+    const ai = new GoogleGenAI({ apiKey })
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.7-flash',
+      contents: prompt,
     })
+
+    const rawText = response.text || ''
+    const cleanedText = rawText.replace(/```json\s*/gi, '').replace(/```\s*$/gi, '').trim()
+
+    try {
+      const parsed = JSON.parse(cleanedText)
+      return NextResponse.json({
+        success: true,
+        data: parsed,
+        source: 'gemini-3.7-flash',
+      })
+    } catch {
+      return NextResponse.json({
+        success: true,
+        data: {
+          hook: `✨ ¡Probá nuestro ${productName}! 🍞`,
+          caption: rawText,
+          hashtags: '#PanFree #SinGluten #SinTACC #Encarnacion #Paraguay #CeliacosParaguay',
+          callToAction: '📲 Hacé tu pedido en panfree.fit o por WhatsApp al +595 984 589845',
+        },
+        source: 'gemini-3.7-flash-raw',
+      })
+    }
   } catch (error) {
     console.error('Error en generate-caption route:', error)
     return NextResponse.json(
