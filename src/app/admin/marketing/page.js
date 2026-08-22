@@ -1,467 +1,274 @@
 /**
  * 📁 UBICACIÓN: src/app/admin/marketing/page.js
- * 📅 ACTUALIZADO: 2026-08-20 (OPTIMIZACIÓN RESPONSIVE MOBILE & TABLET)
- * 📌 Generador de imágenes publicitarias y automatización para Instagram.
- *    - Diseño adaptable: controles arriba y previsualización abajo en celular/tablet
- *    - Grid responsivo de formatos (2 columnas en móviles)
- *    - Inputs con font-size de 16px para evitar auto-zoom en iOS
- *    - Sliders y botones táctiles optimizados (>44-48px)
- *    - Canvas HTML5 client-side, generación de copy con Gemini AI y publicación a Instagram.
+ * 📅 ACTUALIZADO: 2026-08-22
+ * 📌 DESCRIPCIÓN: Panel de Marketing y Automatización IA para PanFree.
+ *    - Estructura unificada: Decisiones IA → Generar Contenido con Gemini → Generar Imagen Cloudinary AI → Aprobar y Publicar.
+ *    - Eliminado el Diseñador Canvas en favor del motor Cloudinary Generative AI.
+ *    - Vista previa destacada de la imagen generada con Cloudinary (<img> visible, mensaje de carga y URL).
+ *    - Integración con reglas de negocio, calendario de eventos y programación para Instagram.
  */
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-
-// Utils & Config
-import { P, ESQUEMAS } from './utils/colorSchemes'
-import { FORMATOS } from './utils/formats'
-import { PLANTILLAS } from './utils/templates'
-import { fmt2PYG } from './utils/canvasUtils'
+import Link from 'next/link'
+import Image from 'next/image'
 
 // Hooks
 import { useSupabaseProducts } from './hooks/useSupabaseProducts'
-import { useMarketingState } from './hooks/useMarketingState'
-import { useCanvasRenderer } from './hooks/useCanvasRenderer'
-import { useMobile } from '../../../hooks/useMobile'
 
 // Components
-import AutomationPanel from './components/AutomationPanel'
 import ScheduledPosts from './components/ScheduledPosts'
-import DecisionPanel from './components/DecisionPanel'
 import RulesManager from './components/RulesManager'
 import EventCalendar from './components/EventCalendar'
 import AnalyticsView from './components/AnalyticsView'
 import styles from './styles/marketing.module.css'
 
-// ─── SIMULADOR DE CELULAR RESPONSIVO ──────────────────────────────────────────
-function SimuladorCelular({ dataUrl, formato, productoActual, P }) {
-  const esStories = formato === 'stories'
-  const dispW = esStories ? 248 : 290
-  const dispH = esStories ? 440 : formato === 'feed_1_1' ? 290 : 362
-  const hora = new Date().toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' })
-  const nombre = productoActual?.nombre || 'PanFree'
-
-  const ImgPost = ({ style }) =>
-    dataUrl ? (
-      <img
-        src={dataUrl}
-        alt="preview"
-        style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover', ...style }}
-      />
-    ) : (
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          backgroundColor: '#111',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <span style={{ color: '#666', fontSize: '0.8rem', fontWeight: 600 }}>Generando…</span>
-      </div>
-    )
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', width: '100%', maxWidth: '100%', overflowX: 'auto' }}>
-      <div
-        style={{
-          position: 'relative',
-          width: dispW + 44,
-          maxWidth: '92vw',
-          height: dispH + (esStories ? 148 : 168),
-          backgroundColor: '#1a1a1a',
-          borderRadius: 44,
-          boxShadow: `0 0 0 2px #333, 0 0 0 4px #111, 0 24px 64px rgba(0,0,0,0.8), inset 0 0 0 1px #333`,
-          flexShrink: 0,
-        }}
-      >
-        {/* Botones laterales */}
-        <div
-          style={{
-            position: 'absolute',
-            left: -3,
-            top: 90,
-            width: 3,
-            height: 32,
-            backgroundColor: '#2a2a2a',
-            borderRadius: '2px 0 0 2px',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            left: -3,
-            top: 132,
-            width: 3,
-            height: 32,
-            backgroundColor: '#2a2a2a',
-            borderRadius: '2px 0 0 2px',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            right: -3,
-            top: 110,
-            width: 3,
-            height: 48,
-            backgroundColor: '#2a2a2a',
-            borderRadius: '0 2px 2px 0',
-          }}
-        />
-
-        {/* Pantalla */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 10,
-            left: 10,
-            right: 10,
-            bottom: 10,
-            backgroundColor: '#000',
-            borderRadius: 36,
-            overflow: 'hidden',
-          }}
-        >
-          {/* Status bar */}
-          <div
-            style={{
-              height: 28,
-              backgroundColor: '#000',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '0 18px',
-              flexShrink: 0,
-            }}
-          >
-            <span style={{ color: '#fff', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
-              {hora}
-            </span>
-            <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-              {[3, 5, 7, 9].map((h, i) => (
-                <div
-                  key={i}
-                  style={{
-                    width: 3,
-                    height: h,
-                    backgroundColor: '#fff',
-                    borderRadius: 1,
-                    opacity: i < 3 ? 1 : 0.35,
-                  }}
-                />
-              ))}
-              <svg width="14" height="10" viewBox="0 0 14 10" style={{ marginLeft: 2 }}>
-                <path d="M7 8.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" fill="white" />
-                <path
-                  d="M4.5 6.5a3.5 3.5 0 0 1 5 0"
-                  stroke="white"
-                  strokeWidth="1.2"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M2.2 4.2a6.5 6.5 0 0 1 9.6 0"
-                  stroke="white"
-                  strokeWidth="1.2"
-                  fill="none"
-                  strokeLinecap="round"
-                  opacity="0.5"
-                />
-              </svg>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <div
-                  style={{
-                    width: 18,
-                    height: 9,
-                    border: '1.5px solid #fff',
-                    borderRadius: 2,
-                    padding: '1.5px',
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  <div style={{ width: '75%', height: '100%', backgroundColor: '#fff', borderRadius: 1 }} />
-                </div>
-                <div style={{ width: 2, height: 5, backgroundColor: '#fff', borderRadius: 1, opacity: 0.6 }} />
-              </div>
-            </div>
-          </div>
-
-          {/* Contenido */}
-          <div style={{ backgroundColor: '#000', height: dispH + (esStories ? 100 : 120), overflow: 'hidden' }}>
-            {/* STORIES */}
-            {esStories && (
-              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                <ImgPost style={{ width: '100%', height: '100%' }} />
-                {/* Barras de progreso */}
-                <div style={{ position: 'absolute', top: 8, left: 8, right: 8, display: 'flex', gap: 3, zIndex: 2 }}>
-                  {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      style={{
-                        flex: 1,
-                        height: 2.5,
-                        borderRadius: 2,
-                        backgroundColor: i === 0 ? '#fff' : 'rgba(255,255,255,0.35)',
-                      }}
-                    />
-                  ))}
-                </div>
-                {/* Header stories */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 18,
-                    left: 8,
-                    right: 8,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    zIndex: 2,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <div
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg,#f46e15,#334c2b)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '0.68rem',
-                        fontWeight: 700,
-                        color: '#fff',
-                        border: '1.5px solid #fff',
-                      }}
-                    >
-                      PF
-                    </div>
-                    <div>
-                      <div style={{ color: '#fff', fontSize: '0.68rem', fontWeight: 700, lineHeight: 1.2 }}>
-                        panfree.fit
-                      </div>
-                      <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.58rem' }}>Hace 2 min</div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '1rem' }}>⋯</span>
-                    <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '1rem' }}>✕</span>
-                  </div>
-                </div>
-                {/* Barra inferior */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    padding: '8px 10px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.5), transparent)',
-                    zIndex: 2,
-                  }}
-                >
-                  <div
-                    style={{
-                      flex: 1,
-                      height: 28,
-                      border: '1.5px solid rgba(255,255,255,0.5)',
-                      borderRadius: 20,
-                      display: 'flex',
-                      alignItems: 'center',
-                      paddingLeft: 10,
-                    }}
-                  >
-                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.62rem' }}>Enviar mensaje</span>
-                  </div>
-                  <span style={{ fontSize: '1.1rem' }}>❤️</span>
-                  <span style={{ fontSize: '1rem' }}>↗</span>
-                </div>
-              </div>
-            )}
-
-            {/* FEED */}
-            {!esStories && (
-              <div style={{ backgroundColor: '#000' }}>
-                {/* Barra superior Instagram */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0 10px',
-                    height: 36,
-                    borderBottom: '0.5px solid #222',
-                  }}
-                >
-                  <span
-                    style={{
-                      color: '#fff',
-                      fontFamily: 'serif',
-                      fontSize: '1rem',
-                      fontStyle: 'italic',
-                      fontWeight: 700,
-                    }}
-                  >
-                    Instagram
-                  </span>
-                  <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.95rem' }}>♡</span>
-                    <span style={{ fontSize: '0.95rem' }}>✈</span>
-                  </div>
-                </div>
-                {/* Header del post */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '6px 10px',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <div
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: '50%',
-                        padding: 2,
-                        background: 'linear-gradient(135deg,#f46e15,#c8007a)',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          borderRadius: '50%',
-                          background: 'linear-gradient(135deg,#334c2b,#b7996b)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          border: '1.5px solid #000',
-                          fontSize: '0.6rem',
-                          fontWeight: 700,
-                          color: '#eee6d9',
-                        }}
-                      >
-                        PF
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ color: '#fff', fontSize: '0.68rem', fontWeight: 700 }}>panfree.fit</div>
-                      <div style={{ color: '#888', fontSize: '0.55rem' }}>Encarnación, Paraguay</div>
-                    </div>
-                  </div>
-                  <span style={{ color: '#fff', fontSize: '1.1rem' }}>⋯</span>
-                </div>
-                {/* Imagen */}
-                <div style={{ width: '100%', height: dispH, backgroundColor: '#111', overflow: 'hidden' }}>
-                  <ImgPost />
-                </div>
-                {/* Acciones */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '7px 10px 4px',
-                  }}
-                >
-                  <div style={{ display: 'flex', gap: 11, alignItems: 'center' }}>
-                    <span style={{ fontSize: '1rem' }}>🤍</span>
-                    <span style={{ fontSize: '0.95rem', color: '#fff' }}>💬</span>
-                    <span style={{ fontSize: '0.95rem', color: '#fff' }}>↗</span>
-                  </div>
-                  <span style={{ fontSize: '0.95rem', color: '#fff' }}>🔖</span>
-                </div>
-                <div style={{ padding: '0 10px 3px' }}>
-                  <span style={{ color: '#fff', fontSize: '0.65rem', fontWeight: 700 }}>
-                    A 247 personas les gusta esto
-                  </span>
-                </div>
-                <div style={{ padding: '0 10px 4px' }}>
-                  <span style={{ color: '#fff', fontSize: '0.65rem' }}>
-                    <strong>panfree.fit</strong>{' '}
-                    {nombre.length > 22 ? nombre.slice(0, 22) + '…' : nombre} 🍞 Sin gluten · Sin TACC
-                  </span>
-                </div>
-                <div style={{ padding: '0 10px 8px' }}>
-                  <span style={{ color: '#555', fontSize: '0.58rem' }}>HACE 2 HORAS</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Dynamic island */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 14,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 72,
-            height: 22,
-            backgroundColor: '#000',
-            borderRadius: 12,
-            zIndex: 10,
-          }}
-        />
-      </div>
-
-      <div style={{ color: '#888', fontSize: '0.75rem', textAlign: 'center', fontWeight: 500 }}>
-        Vista previa simulada · {esStories ? 'Stories / Reels (9:16)' : 'Feed Instagram'}
-      </div>
-    </div>
-  )
+// Paleta PanFree
+const P = {
+  verde: '#334c2b',
+  dorado: '#b7996b',
+  doradoClaro: '#eddcc7',
+  crema: '#f5f1eb',
+  oscuro: '#2d2a26',
+  naranja: '#c87d32',
+  verdeClaro: '#eef6ed',
 }
 
-// ─── COMPONENTE PRINCIPAL REFACTORIZADO ───────────────────────────────────────
 export default function MarketingPage() {
   const router = useRouter()
+  const [tabActiva, setTabActiva] = useState('ia_marketing') // 'ia_marketing' | 'reglas' | 'eventos' | 'analisis'
   const [refreshHistory, setRefreshHistory] = useState(0)
-  const [tabActiva, setTabActiva] = useState('decisiones')
-  const { isMobile } = useMobile(768)
 
-  // 1. Cargar productos de Supabase
+  // 1. Cargar productos desde Supabase
   const { productos, loadingProd } = useSupabaseProducts()
 
-  // 2. Manejo de estado del marketing
-  const state = useMarketingState(productos)
+  // 2. Estados del Motor de Decisiones y Generación IA
+  const [cargandoDecision, setCargandoDecision] = useState(false)
+  const [generandoContenido, setGenerandoContenido] = useState(false)
+  const [generandoImagenCloudinary, setGenerandoImagenCloudinary] = useState(false)
+  const [procesandoPublicacion, setProcesandoPublicacion] = useState(false)
 
-  // 3. Orquestador de Canvas y exportaciones
-  const {
-    canvasRef,
-    dataUrl,
-    exportando,
-    imgProdLista,
-    exportar,
-  } = useCanvasRenderer(state, loadingProd)
+  const [decision, setDecision] = useState(null)
+  const [alternativas, setAlternativas] = useState([])
+  const [productoSeleccionadoId, setProductoSeleccionadoId] = useState('')
+  const [descuentoManual, setDescuentoManual] = useState(10)
+  const [tono, setTono] = useState('persuasivo')
+  const [contenidoGenerado, setContenidoGenerado] = useState(null)
+  const [imagenCloudinaryGenerada, setImagenCloudinaryGenerada] = useState(null)
+  const [notificacion, setNotificacion] = useState(null)
+  const [fechaProgramada, setFechaProgramada] = useState('')
+  const [urlCopiada, setUrlCopiada] = useState(false)
+  const [captionCopiado, setCaptionCopiado] = useState(false)
 
-  const productoActual = state.selectedProduct
-  const F = FORMATOS[state.formato] || FORMATOS.feed_4_5
-  
-  // Escalar proporcionalmente según pantalla móvil o desktop
-  const maxCanvasW = isMobile ? 320 : 440
-  const scale = Math.min(1, maxCanvasW / F.w)
-  const preW = Math.round(F.w * scale)
-  const preH = Math.round(F.h * scale)
+  // Cargar decisión inteligente desde la API
+  const obtenerDecisionInteligente = useCallback(async (prodId = '') => {
+    try {
+      setCargandoDecision(true)
+      setNotificacion(null)
+      const url = prodId
+        ? `/api/admin/marketing/decidir-promocion?producto_id=${prodId}`
+        : `/api/admin/marketing/decidir-promocion`
+
+      const res = await fetch(url)
+      const json = await res.json()
+
+      if (json.success && json.decision) {
+        setDecision(json.decision)
+        setAlternativas(json.alternativas || [])
+        setProductoSeleccionadoId(json.decision.producto?.id || '')
+        setDescuentoManual(json.decision.descuento_sugerido || 10)
+      } else {
+        throw new Error(json.error || 'No se pudo obtener la recomendación')
+      }
+    } catch (err) {
+      console.error('Error al cargar decisión:', err)
+      setNotificacion({
+        tipo: 'error',
+        texto: err.message || 'Error al conectar con el motor de decisiones',
+      })
+    } finally {
+      setCargandoDecision(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (productos && productos.length > 0) {
+      obtenerDecisionInteligente()
+    }
+  }, [productos, obtenerDecisionInteligente])
+
+  // 1. GENERAR CONTENIDO CON GEMINI AI
+  const handleGenerarContenido = async () => {
+    if (!decision?.producto) return
+
+    try {
+      setGenerandoContenido(true)
+      setNotificacion(null)
+
+      const payload = {
+        producto_id: decision.producto.id,
+        descuento: descuentoManual,
+        evento: decision.evento?.nombre || '',
+        regla_id: decision.regla?.id || '',
+        tono: tono,
+      }
+
+      const res = await fetch('/api/admin/marketing/generar-contenido', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      const json = await res.json()
+
+      if (json.success && json.content) {
+        setContenidoGenerado(json.content)
+        setNotificacion({
+          tipo: 'exito',
+          texto: '✨ ¡Contenido generado exitosamente con Gemini AI! Ahora puedes generar el arte visual con Cloudinary.',
+        })
+      } else {
+        throw new Error(json.error || 'Fallo la generación de contenido')
+      }
+    } catch (err) {
+      setNotificacion({
+        tipo: 'error',
+        texto: err.message || 'Error al generar contenido creativo con Gemini',
+      })
+    } finally {
+      setGenerandoContenido(false)
+    }
+  }
+
+  // 2. GENERAR IMAGEN CON CLOUDINARY AI
+  const handleGenerarImagenCloudinary = async () => {
+    if (!decision?.producto) return
+
+    try {
+      setGenerandoImagenCloudinary(true)
+      setNotificacion(null)
+
+      const payload = {
+        producto_id: decision.producto.id,
+        descuento: descuentoManual,
+        evento: decision.evento?.nombre || '',
+        brief_creativo: contenidoGenerado?.image_prompt || '',
+      }
+
+      const res = await fetch('/api/admin/marketing/generar-imagen-cloudinary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      const json = await res.json()
+
+      if (json.success && json.imagen_url) {
+        setImagenCloudinaryGenerada(json.imagen_url)
+        setNotificacion({
+          tipo: 'exito',
+          texto: '🖼️ ¡Arte publicitario generado con Cloudinary AI y precios reales inyectados desde la BD!',
+        })
+      } else {
+        throw new Error(json.error || 'Error al generar imagen con Cloudinary')
+      }
+    } catch (err) {
+      setNotificacion({
+        tipo: 'error',
+        texto: err.message || 'Error al conectar con Cloudinary Generative AI',
+      })
+    } finally {
+      setGenerandoImagenCloudinary(false)
+    }
+  }
+
+  // 3. APROBAR Y PUBLICAR / PROGRAMAR
+  const handleAprobarYPublicar = async (publicarAhora = true) => {
+    if (!decision?.producto) return
+
+    try {
+      setProcesandoPublicacion(true)
+      setNotificacion(null)
+
+      const precioFinalCalculado = Math.round(
+        Number(decision.precio_original || decision.producto.precio_venta || 25000) *
+          (1 - descuentoManual / 100)
+      )
+
+      const captionToSend =
+        contenidoGenerado?.fullPost ||
+        contenidoGenerado?.caption ||
+        `✨ ¡Aprovechá un ${descuentoManual}% OFF en nuestro ${decision.producto.nombre}! 🍞❤️\n\n100% Sin Gluten en Encarnación.\n👉 Pedí en panfree.fit`
+
+      const payload = {
+        producto_id: decision.producto.id,
+        regla_id: decision.regla?.id || null,
+        descuento: descuentoManual,
+        precio_final: precioFinalCalculado,
+        caption: captionToSend,
+        publicar_ahora: publicarAhora,
+        fecha_programada: fechaProgramada || null,
+        captions_generados: contenidoGenerado || {},
+        imagen_url: imagenCloudinaryGenerada || decision.producto.imagen_url || null,
+      }
+
+      const res = await fetch('/api/admin/marketing/programar-publicacion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      const json = await res.json()
+
+      if (json.success) {
+        setNotificacion({
+          tipo: 'exito',
+          texto: json.mensaje || '¡Publicación enviada o programada con éxito!',
+        })
+        setRefreshHistory((prev) => prev + 1)
+      } else {
+        throw new Error(json.error || 'Error al procesar la publicación')
+      }
+    } catch (err) {
+      setNotificacion({
+        tipo: 'error',
+        texto: err.message || 'Error al publicar en Instagram',
+      })
+    } finally {
+      setProcesandoPublicacion(false)
+    }
+  }
+
+  // Copiar URL al portapapeles
+  const copiarUrl = () => {
+    if (imagenCloudinaryGenerada) {
+      navigator.clipboard.writeText(imagenCloudinaryGenerada)
+      setUrlCopiada(true)
+      setTimeout(() => setUrlCopiada(false), 2500)
+    }
+  }
+
+  // Copiar Caption completo
+  const copiarCaption = () => {
+    if (contenidoGenerado) {
+      const fullText = `${contenidoGenerado.hook ? contenidoGenerado.hook + '\n\n' : ''}${contenidoGenerado.caption || ''}\n\n${contenidoGenerado.callToAction || ''}\n\n${contenidoGenerado.hashtags || ''}`
+      navigator.clipboard.writeText(fullText)
+      setCaptionCopiado(true)
+      setTimeout(() => setCaptionCopiado(false), 2500)
+    }
+  }
+
+  const precioOriginal = Number(decision?.precio_original || decision?.producto?.precio_venta || 0)
+  const precioFinalCalculado = Math.round(precioOriginal * (1 - descuentoManual / 100))
 
   if (loadingProd) {
     return (
-      <div className={styles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className={styles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
         <div style={{ textAlign: 'center', color: P.verde, padding: '3rem' }}>
           <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🍞</div>
-          <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>Cargando módulo de marketing…</p>
+          <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>Cargando módulo de marketing PanFree…</p>
         </div>
       </div>
     )
@@ -469,7 +276,7 @@ export default function MarketingPage() {
 
   return (
     <div className={styles.container}>
-      {/* HEADER */}
+      {/* HEADER SUPERIOR */}
       <div className={styles.header}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
           <button
@@ -496,45 +303,61 @@ export default function MarketingPage() {
               📸 Marketing & Redes Sociales
             </div>
             <div style={{ fontSize: '0.78rem', color: P.dorado }}>
-              Generador Visual & Automatización IA
+              Decisiones Inteligentes · Gemini AI · Cloudinary Generative AI
             </div>
           </div>
         </div>
-        <button
-          onClick={() => router.push('/admin/ayuda/marketing')}
-          style={{
-            background: 'none',
-            border: `1px solid ${P.dorado}80`,
-            color: P.doradoClaro,
-            padding: '0.5rem 0.9rem',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            minHeight: 44,
-            display: 'inline-flex',
-            alignItems: 'center',
-          }}
-        >
-          ❓ Guía de uso
-        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Link
+            href="/admin/marketing/analytics"
+            style={{
+              background: 'rgba(255,255,255,0.12)',
+              border: `1px solid ${P.dorado}`,
+              color: '#fff',
+              padding: '0.5rem 0.9rem',
+              borderRadius: 8,
+              fontFamily: 'inherit',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              textDecoration: 'none',
+              minHeight: 44,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+            }}
+          >
+            📊 Panel GA4 Live
+          </Link>
+          <button
+            onClick={() => router.push('/admin/ayuda/marketing')}
+            style={{
+              background: 'none',
+              border: `1px solid ${P.dorado}80`,
+              color: P.doradoClaro,
+              padding: '0.5rem 0.9rem',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              minHeight: 44,
+              display: 'inline-flex',
+              alignItems: 'center',
+            }}
+          >
+            ❓ Guía
+          </button>
+        </div>
       </div>
 
-      {/* BARRA DE PESTAÑAS RESPONSIVA CON SCROLL SUAVE */}
+      {/* BARRA DE NAVEGACIÓN POR PESTAÑAS */}
       <div className={styles.tabNav} id="marketing-tab-bar">
         <button
-          onClick={() => setTabActiva('decisiones')}
-          className={`${styles.tabButton} ${tabActiva === 'decisiones' ? styles.tabButtonActive : ''}`}
+          onClick={() => setTabActiva('ia_marketing')}
+          className={`${styles.tabButton} ${tabActiva === 'ia_marketing' ? styles.tabButtonActive : ''}`}
         >
-          🤖 Decisiones IA
-        </button>
-
-        <button
-          onClick={() => setTabActiva('canvas')}
-          className={`${styles.tabButton} ${tabActiva === 'canvas' ? styles.tabButtonActive : ''}`}
-        >
-          🎨 Diseñador Visual (Canvas)
+          🤖 Generador IA & Publicación
         </button>
 
         <button
@@ -555,488 +378,653 @@ export default function MarketingPage() {
           onClick={() => setTabActiva('analisis')}
           className={`${styles.tabButton} ${tabActiva === 'analisis' ? styles.tabButtonActive : ''}`}
         >
-          📊 Métricas & Historial
+          📊 Historial & Métricas
         </button>
       </div>
 
-      {/* CONTENIDO CONDICIONAL POR PESTAÑA */}
-      {tabActiva === 'decisiones' && (
-        <DecisionPanel
-          productos={productos}
-          onApplyToCanvas={(cfg) => {
-            state.applyIntelligentConfig(cfg)
-            setTabActiva('canvas')
+      {/* NOTIFICACIÓN GENERAL */}
+      {notificacion && (
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: '1rem auto 0 auto',
+            padding: '0.85rem 1.25rem',
+            borderRadius: 10,
+            fontSize: '0.88rem',
+            backgroundColor: notificacion.tipo === 'exito' ? '#dcfce7' : '#fee2e2',
+            color: notificacion.tipo === 'exito' ? '#166534' : '#991b1b',
+            border: `1px solid ${notificacion.tipo === 'exito' ? '#bbf7d0' : '#fecaca'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
           }}
-          onPostPublished={() => setRefreshHistory((prev) => prev + 1)}
-          onNavigateToTab={setTabActiva}
-        />
+        >
+          <span>{notificacion.texto}</span>
+          <button
+            onClick={() => setNotificacion(null)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 700 }}
+          >
+            ✕
+          </button>
+        </div>
       )}
 
+      {/* CONTENIDO CONDICIONAL POR PESTAÑAS */}
       {tabActiva === 'reglas' && <RulesManager />}
-
       {tabActiva === 'eventos' && <EventCalendar />}
-
       {tabActiva === 'analisis' && <AnalyticsView refreshTrigger={refreshHistory} />}
 
-      {/* PESTAÑA: DISEÑADOR VISUAL & CANVAS */}
-      <div
-        className={styles.mainLayout}
-        style={{ display: tabActiva === 'canvas' ? (isMobile ? 'flex' : 'grid') : 'none' }}
-      >
-        {/* ── PANEL DE CONTROL (ARRIBA EN MÓVIL) ─────────────────────────────────── */}
-        <div className={styles.controlPanel}>
-          {/* FORMATO */}
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>📐 Formato de Publicación</div>
-            <div className={styles.formatGrid}>
-              {Object.entries(FORMATOS).map(([k, f]) => {
-                const esSeleccionado = state.formato === k
-                return (
-                  <label
-                    key={k}
-                    className={`${styles.formatOption} ${esSeleccionado ? styles.formatOptionActive : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="fmt"
-                      checked={esSeleccionado}
-                      onChange={() => state.setFormato(k)}
-                      style={{ accentColor: P.naranja, marginTop: 3, width: 18, height: 18 }}
-                    />
-                    <div>
-                      <strong style={{ fontSize: '0.92rem', color: '#334c2b' }}>
-                        {f.tag} {f.label}
-                      </strong>
-                      <div style={{ fontSize: '0.76rem', color: '#666', marginTop: 2 }}>
-                        {f.w}×{f.h}px · {f.desc}
-                      </div>
-                    </div>
-                  </label>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* PLANTILLA */}
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>🎨 Plantilla Visual</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {Object.entries(PLANTILLAS).map(([k, p]) => {
-                const esSeleccionada = state.plantilla === k
-                return (
-                  <label
-                    key={k}
-                    className={`${styles.formatOption} ${esSeleccionada ? styles.formatOptionActive : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="plt"
-                      checked={esSeleccionada}
-                      onChange={() => state.setPlantilla(k)}
-                      style={{ accentColor: P.naranja, marginTop: 3, width: 18, height: 18 }}
-                    />
-                    <div>
-                      <strong style={{ fontSize: '0.92rem', color: '#334c2b' }}>{p.label}</strong>
-                      <div style={{ fontSize: '0.76rem', color: '#666', marginTop: 2 }}>{p.desc}</div>
-                    </div>
-                  </label>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* ESQUEMA DE COLOR */}
-          <div className={styles.section}>
-            <label className={styles.label}>🎭 Esquema de color</label>
-            <select
-              className={styles.select}
-              value={state.esquema}
-              onChange={(e) => state.setEsquema(e.target.value)}
-            >
-              {Object.entries(ESQUEMAS).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* PRODUCTO */}
-          <div className={styles.section}>
-            <label className={styles.label}>🍞 Producto Destacado</label>
-            <select
-              className={styles.select}
-              value={state.productoId}
-              onChange={(e) => state.setProductoId(e.target.value)}
-            >
-              <option value="">— Sin producto específico —</option>
-              {productos.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre} · {fmt2PYG(p.precio_venta)}
-                </option>
-              ))}
-            </select>
-            {productoActual && (
-              <div style={{ marginTop: '0.6rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                <span className={`${styles.badge} ${styles.badgeGreen}`}>
-                  {productoActual.categoria}
-                </span>
-                <span
-                  className={`${styles.badge} ${
-                    productoActual.imagen_url && imgProdLista ? styles.badgeGreen : styles.badgeOrange
-                  }`}
-                >
-                  {productoActual.imagen_url
-                    ? imgProdLista
-                      ? '✓ Imagen cargada'
-                      : '⏳ Cargando imagen...'
-                    : 'Sin imagen'}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* TEXTOS */}
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>✏️ Textos de la Publicación</div>
-
-            {state.plantilla === 'promo' && (
-              <div style={{ marginBottom: '0.85rem' }}>
-                <label className={styles.label}>Etiqueta de oferta</label>
-                <input
-                  className={styles.input}
-                  value={state.textoPromo}
-                  onChange={(e) => state.setTextoPromo(e.target.value)}
-                />
-              </div>
-            )}
-
-            <label className={styles.label}>Texto principal</label>
-            <textarea
-              className={styles.textarea}
-              style={{ minHeight: state.plantilla === 'catalogo' ? 100 : 75 }}
-              value={state.textoPrincipal}
-              onChange={(e) => state.setTextoPrincipal(e.target.value)}
-              placeholder="Escribí el texto aquí..."
-            />
-            <p style={{ fontSize: '0.78rem', color: '#777', marginTop: '0.35rem', lineHeight: 1.4 }}>
-              Enter = nueva línea. Cada línea se renderiza con jerarquía visual calculada.
-            </p>
-
-            {state.plantilla === 'hero' && (
-              <div style={{ marginTop: '0.85rem' }}>
-                <label className={styles.label}>Subtítulo</label>
-                <input
-                  className={styles.input}
-                  value={state.subtitulo}
-                  onChange={(e) => state.setSubtitulo(e.target.value)}
-                  placeholder="Artesanal · Sin Gluten · Sin TACC"
-                />
-              </div>
-            )}
-
-            <div style={{ marginTop: '0.85rem' }}>
-              <label className={styles.label}>Texto del botón CTA</label>
-              <input
-                className={styles.input}
-                value={state.textoCTA}
-                onChange={(e) => state.setTextoCTA(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* OPCIONES VISUALES */}
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>⚙️ Elementos Visibles</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-              {[
-                [state.mostrarPrecio, state.setMostrarPrecio, 'Precio del producto'],
-                [state.mostrarSlogan, state.setMostrarSlogan, 'Slogan de PanFree'],
-                [state.mostrarDelivery, state.setMostrarDelivery, 'Información de delivery'],
-              ].map(([val, set, lbl]) => (
-                <label
-                  key={lbl}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.65rem',
-                    fontSize: '0.92rem',
-                    color: '#334c2b',
-                    cursor: 'pointer',
-                    minHeight: 38,
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={val}
-                    onChange={(e) => set(e.target.checked)}
-                    style={{ accentColor: P.naranja, width: 20, height: 20 }}
-                  />
-                  {lbl}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* HASHTAGS */}
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}># Hashtags</div>
-            <label
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.65rem',
-                fontSize: '0.92rem',
-                color: '#334c2b',
-                cursor: 'pointer',
-                marginBottom: '0.5rem',
-                minHeight: 38,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={state.mostrarHashtags}
-                onChange={(e) => state.setMostrarHashtags(e.target.checked)}
-                style={{ accentColor: P.naranja, width: 20, height: 20 }}
-              />
-              Incluir hashtags en la imagen
-            </label>
-            {state.mostrarHashtags && (
-              <>
-                <textarea
-                  className={styles.textarea}
-                  style={{ minHeight: 80, marginTop: '0.5rem' }}
-                  value={state.hashtags}
-                  onChange={(e) => state.setHashtags(e.target.value)}
-                />
-                <p style={{ fontSize: '0.78rem', color: '#777', marginTop: '0.35rem' }}>
-                  Separados por espacios. Máx. recomendado: 6–8 en imagen.
-                </p>
-              </>
-            )}
-          </div>
-
-          {/* AJUSTES DE LOGO */}
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>🖼️ Control de Logo</div>
-
-            <label className={styles.label}>Tamaño del Logo: {state.logoAltura}px</label>
-            <input
-              type="range"
-              min={60}
-              max={280}
-              step={4}
-              value={state.logoAltura}
-              onChange={(e) => state.setLogoAltura(Number(e.target.value))}
-              className={styles.rangeInput}
-            />
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: '0.75rem',
-                color: '#888',
-                marginBottom: '0.85rem',
-              }}
-            >
-              <span>Pequeño</span>
-              <span>Mediano</span>
-              <span>Grande</span>
-            </div>
-
-            <label className={styles.label}>Espacio Vertical: {state.logoPaddingV}px</label>
-            <input
-              type="range"
-              min={8}
-              max={60}
-              step={2}
-              value={state.logoPaddingV}
-              onChange={(e) => state.setLogoPaddingV(Number(e.target.value))}
-              className={styles.rangeInput}
-            />
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: '0.75rem',
-                color: '#888',
-                marginBottom: '0.75rem',
-              }}
-            >
-              <span>Compacto</span>
-              <span>Amplio</span>
+      {/* ─── PESTAÑA PRINCIPAL: FLUJO INTEGRADO MARKETING IA ────────────────── */}
+      {tabActiva === 'ia_marketing' && (
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '1.25rem 1rem 3rem 1rem' }}>
+          
+          {/* BANNER INFORMATIVO DEL FLUJO */}
+          <div
+            style={{
+              backgroundColor: '#fff',
+              border: '1px solid #e4dacb',
+              borderRadius: 14,
+              padding: '1rem 1.25rem',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+            }}
+          >
+            <div>
+              <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: P.verde, margin: 0 }}>
+                Flujo Inteligente de Marketing & Publicación
+              </h1>
+              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.82rem', color: '#666' }}>
+                1. Selección y Diagnóstico IA ➔ 2. Copywriting con Gemini ➔ 3. Composición Visual Cloudinary AI ➔ 4. Publicación en Instagram.
+              </p>
             </div>
 
             <button
-              onClick={state.resetLogoConfig}
+              onClick={() => obtenerDecisionInteligente(productoSeleccionadoId)}
+              disabled={cargandoDecision}
               style={{
+                backgroundColor: P.verde,
+                color: '#fff',
+                border: `1px solid ${P.dorado}`,
+                padding: '0.55rem 1rem',
+                borderRadius: 8,
                 fontSize: '0.82rem',
-                color: P.dorado,
-                background: 'none',
-                border: 'none',
+                fontWeight: 700,
                 cursor: 'pointer',
-                fontFamily: 'inherit',
-                padding: '0.4rem 0',
-                textDecoration: 'underline',
-                fontWeight: 600,
-                minHeight: 36,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
               }}
             >
-              Restaurar valores por defecto
+              {cargandoDecision ? '⏳ Evaluando...' : '🔄 Re-evaluar Decisiones'}
             </button>
           </div>
 
-          {/* EXPORTAR */}
-          <div>
-            <div className={styles.sectionTitle}>⬇️ Descargar Imagen</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
-              <button className={styles.btnPrimary} onClick={() => exportar('png')} disabled={exportando}>
-                {exportando ? '...' : 'PNG Alta Calidad'}
-              </button>
-              <button className={styles.btnAccent} onClick={() => exportar('jpg')} disabled={exportando}>
-                {exportando ? '...' : 'JPG Comprimido'}
-              </button>
-            </div>
-            <p style={{ fontSize: '0.78rem', color: '#777', margin: 0, lineHeight: 1.4 }}>
-              Resolución completa: {F.w}×{F.h}px. Descargala o programala directamente a Instagram con IA.
-            </p>
-          </div>
-        </div>
+          {/* GRID DE DOS COLUMNAS: CONFIGURACIÓN IA (IZQ) vs VISTA PREVIA & ARTE (DER) */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+            
+            {/* ── COLUMNA IZQUIERDA: 1. DECISIONES IA Y 2. GEMINI CONTENT ────────── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              
+              {/* 1. SECCIÓN: DECISIONES IA */}
+              <div
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 14,
+                  border: '1px solid #e4dacb',
+                  padding: '1.25rem',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                  <div>
+                    <span className={`${styles.badge} ${styles.badgeGold}`} style={{ marginBottom: '0.35rem' }}>
+                      🤖 1. DECISIÓN DEL MOTOR IA
+                    </span>
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: P.verde, margin: '0.2rem 0' }}>
+                      {decision?.producto?.nombre || 'Analizando catálogo...'}
+                    </h2>
+                    <span style={{ fontSize: '0.75rem', color: '#887a66' }}>
+                      Categoría: <strong>{decision?.producto?.categoria || 'General'}</strong>
+                    </span>
+                  </div>
 
-        {/* ── PREVIEW & AUTOMATIZACIÓN (ABAJO EN MÓVIL) ─────────────────────────────────── */}
-        <div className={styles.previewArea}>
-          {/* Barra superior de previsualización */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-              maxWidth: 520,
-              flexWrap: 'wrap',
-              gap: '0.5rem',
-            }}
-          >
-            <div style={{ color: '#999', fontSize: '0.85rem', fontWeight: 600 }}>
-              {F.w}×{F.h}px · {F.label}
-            </div>
-            <div style={{ display: 'flex', gap: '0.4rem' }}>
-              {['celular', 'canvas'].map((v) => (
-                <button
-                  key={v}
-                  onClick={() => state.setVistaPreview(v)}
+                  {decision?.evento && (
+                    <span className={`${styles.badge} ${styles.badgeOrange}`}>
+                      🎉 {decision.evento.nombre}
+                    </span>
+                  )}
+                </div>
+
+                {/* Motivo de la IA */}
+                <div
                   style={{
-                    padding: '0.45rem 0.85rem',
-                    borderRadius: 8,
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
+                    backgroundColor: '#faf7f2',
+                    borderLeft: `3px solid ${P.dorado}`,
+                    padding: '0.75rem',
+                    borderRadius: '0 8px 8px 0',
+                    marginBottom: '1rem',
                     fontSize: '0.82rem',
-                    fontWeight: 700,
-                    backgroundColor: state.vistaPreview === v ? P.dorado : '#2a2a2a',
-                    color: state.vistaPreview === v ? '#1a1a1a' : '#888',
-                    transition: 'all 0.15s',
-                    minHeight: 40,
+                    color: '#444',
+                    lineHeight: 1.45,
                   }}
                 >
-                  {v === 'celular' ? '📱 Simulador Móvil' : '🖼 Canvas Real'}
+                  <strong>Justificación del Algoritmo:</strong>
+                  <br />
+                  {decision?.motivo || 'Evaluando rotación, márgenes y calendario...'}
+                </div>
+
+                {/* Selector de Producto */}
+                <div style={{ marginBottom: '1rem' }}>
+                  <label className={styles.label}>Producto para la campaña:</label>
+                  <select
+                    className={styles.select}
+                    value={productoSeleccionadoId}
+                    onChange={(e) => {
+                      setProductoSeleccionadoId(e.target.value)
+                      obtenerDecisionInteligente(e.target.value)
+                    }}
+                  >
+                    {productos.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre} — G/ {Number(p.precio_venta || 0).toLocaleString('es-PY')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Calculadora de Descuento */}
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                    <label className={styles.label}>Descuento a Aplicar:</label>
+                    <strong style={{ color: P.naranja, fontSize: '0.95rem' }}>{descuentoManual}% OFF</strong>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="40"
+                    step="5"
+                    value={descuentoManual}
+                    onChange={(e) => setDescuentoManual(Number(e.target.value))}
+                    style={{ width: '100%', accentColor: P.naranja, cursor: 'pointer' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#888' }}>
+                    <span>0% (Sin Descuento)</span>
+                    <span>15% (Recomendado)</span>
+                    <span>40% (Liquidación)</span>
+                  </div>
+                </div>
+
+                {/* Comparación de Precios en Guaraníes */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <div style={{ padding: '0.6rem', borderRadius: 8, backgroundColor: '#f5f5f5', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.68rem', color: '#888', textTransform: 'uppercase' }}>Precio Base</div>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#666', textDecoration: 'line-through' }}>
+                      G/ {precioOriginal.toLocaleString('es-PY')}
+                    </div>
+                  </div>
+                  <div style={{ padding: '0.6rem', borderRadius: 8, backgroundColor: '#ecfdf5', textAlign: 'center', border: '1px solid #a7f3d0' }}>
+                    <div style={{ fontSize: '0.68rem', color: '#047857', textTransform: 'uppercase', fontWeight: 700 }}>Precio Oferta</div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#065f46' }}>
+                      G/ {precioFinalCalculado.toLocaleString('es-PY')}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tono de Copywriting */}
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <label className={styles.label}>Tono del Copy:</label>
+                  <select
+                    className={styles.select}
+                    value={tono}
+                    onChange={(e) => setTono(e.target.value)}
+                  >
+                    <option value="persuasivo">🎯 Persuasivo / Conversión Comercial</option>
+                    <option value="artesanal">🥖 Artesanal / Tradicional de Encarnación</option>
+                    <option value="urgencia">⚡ Urgencia / Oferta por Tiempo Limitado</option>
+                    <option value="educativo">🌾 Educativo / Comunidad Celíaca y Saludable</option>
+                  </select>
+                </div>
+
+                {/* Botón: Generar Contenido con Gemini */}
+                <button
+                  onClick={handleGenerarContenido}
+                  disabled={generandoContenido || !decision?.producto}
+                  className={styles.actionBtnPrimary}
+                  style={{ width: '100%', padding: '0.85rem' }}
+                >
+                  {generandoContenido ? '⏳ Generando contenido con Gemini AI...' : '✨ Generar Copy y Prompt con Gemini AI'}
                 </button>
-              ))}
+              </div>
+
+              {/* 2. SECCIÓN: CONTENIDO GENERADO (GEMINI AI) */}
+              <div
+                style={{
+                  backgroundColor: '#1f1f1f',
+                  color: '#eee6d9',
+                  borderRadius: 14,
+                  border: '1px solid #333',
+                  padding: '1.25rem',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '1rem' }}>✨</span>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: P.dorado, margin: 0 }}>
+                      2. Contenido Generado (Gemini AI)
+                    </h3>
+                  </div>
+                  {contenidoGenerado && (
+                    <button
+                      onClick={copiarCaption}
+                      style={{
+                        background: 'none',
+                        border: '1px solid #555',
+                        color: captionCopiado ? '#10b981' : '#bbb',
+                        borderRadius: 6,
+                        padding: '0.25rem 0.5rem',
+                        fontSize: '0.72rem',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {captionCopiado ? '✓ Copiado' : '📋 Copiar Post'}
+                    </button>
+                  )}
+                </div>
+
+                {!contenidoGenerado ? (
+                  <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#777' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✍️</div>
+                    <p style={{ fontSize: '0.82rem', margin: 0 }}>
+                      Haz clic en <strong>"Generar Copy y Prompt con Gemini AI"</strong> para redactar el post optimizado y el brief creativo.
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    {/* Gancho */}
+                    <div style={{ backgroundColor: '#2a2a2a', padding: '0.65rem 0.85rem', borderRadius: 8, border: '1px solid #3a3a3a' }}>
+                      <div style={{ fontSize: '0.68rem', color: P.naranja, fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                        ⚡ Gancho / Hook
+                      </div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff' }}>
+                        {contenidoGenerado.hook}
+                      </div>
+                    </div>
+
+                    {/* Caption y CTA */}
+                    <div>
+                      <div style={{ fontSize: '0.68rem', color: '#aaa', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.3rem' }}>
+                        Caption para Instagram:
+                      </div>
+                      <div
+                        style={{
+                          backgroundColor: '#141414',
+                          border: '1px solid #333',
+                          borderRadius: 8,
+                          padding: '0.75rem',
+                          fontSize: '0.8rem',
+                          lineHeight: 1.5,
+                          color: '#ddd',
+                          whiteSpace: 'pre-wrap',
+                          maxHeight: 160,
+                          overflowY: 'auto',
+                          fontFamily: 'monospace',
+                        }}
+                      >
+                        {contenidoGenerado.caption}
+                        {'\n\n'}
+                        {contenidoGenerado.callToAction}
+                        {'\n\n'}
+                        {contenidoGenerado.hashtags}
+                      </div>
+                    </div>
+
+                    {/* Brief para Cloudinary */}
+                    <div style={{ backgroundColor: '#262626', padding: '0.65rem 0.85rem', borderRadius: 8, border: `1px solid ${P.dorado}40` }}>
+                      <div style={{ fontSize: '0.68rem', color: P.dorado, fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                        🖼️ Prompt Visual Sugerido para Cloudinary:
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#ccc', fontStyle: 'italic' }}>
+                        "{contenidoGenerado.image_prompt}"
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
             </div>
+
+            {/* ── COLUMNA DERECHA: 3. CLOUDINARY AI & 4. PUBLICACIÓN ────────────── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              
+              {/* 3. SECCIÓN: GENERADOR VISUAL CLOUDINARY AI */}
+              <div
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 14,
+                  border: '1px solid #e4dacb',
+                  padding: '1.25rem',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ede5d8', paddingBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '1.1rem' }}>🖼️</span>
+                    <h2 style={{ fontSize: '1rem', fontWeight: 800, color: P.verde, margin: 0 }}>
+                      3. Generar Arte con Cloudinary AI
+                    </h2>
+                  </div>
+                  <span className={`${styles.badge} ${styles.badgeGold}`}>
+                    PRODUCCIÓN REAL
+                  </span>
+                </div>
+
+                {/* Botón de Generación Cloudinary */}
+                <button
+                  onClick={handleGenerarImagenCloudinary}
+                  disabled={generandoImagenCloudinary || !decision?.producto}
+                  style={{
+                    backgroundColor: P.naranja,
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 10,
+                    padding: '0.85rem 1rem',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    boxShadow: '0 4px 12px rgba(200,125,50,0.25)',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {generandoImagenCloudinary ? (
+                    <span>⏳ Generando Arte Publicitario con Cloudinary AI...</span>
+                  ) : (
+                    <span>🖼️ Generar Imagen Publicitaria con Cloudinary AI</span>
+                  )}
+                </button>
+
+                {/* ÁREA DE VISUALIZACIÓN DE IMAGEN GENERADA */}
+                <div
+                  style={{
+                    backgroundColor: '#181818',
+                    borderRadius: 12,
+                    padding: '1.25rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: 380,
+                    border: '1px solid #333',
+                    position: 'relative',
+                  }}
+                >
+                  {/* ESTADO DE CARGA */}
+                  {generandoImagenCloudinary && (
+                    <div style={{ textAlign: 'center', color: '#eee6d9', padding: '2rem 1rem' }}>
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          border: `4px solid ${P.dorado}`,
+                          borderTopColor: 'transparent',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite',
+                          margin: '0 auto 1rem auto',
+                        }}
+                      />
+                      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+                      <h4 style={{ color: P.dorado, fontSize: '0.95rem', margin: '0 0 0.4rem 0' }}>
+                        Procesando imagen con Cloudinary AI...
+                      </h4>
+                      <p style={{ fontSize: '0.78rem', color: '#aaa', margin: 0 }}>
+                        Extrayendo fondo, aplicando transformaciones generativas e inyectando precios reales en Guaraníes.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* IMAGEN GENERADA VISIBLE */}
+                  {!generandoImagenCloudinary && imagenCloudinaryGenerada && (
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.85rem' }}>
+                      <div
+                        style={{
+                          width: '100%',
+                          maxWidth: 400,
+                          height: 400,
+                          backgroundColor: '#0a0a0a',
+                          borderRadius: 10,
+                          overflow: 'hidden',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                          border: `1px solid ${P.dorado}60`,
+                          position: 'relative',
+                        }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imagenCloudinaryGenerada}
+                          alt="Arte Publicitario Generado con Cloudinary"
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            display: 'block',
+                          }}
+                        />
+                      </div>
+
+                      {/* Badge informativo */}
+                      <div
+                        style={{
+                          backgroundColor: '#064e3b',
+                          color: '#6ee7b7',
+                          padding: '0.35rem 0.75rem',
+                          borderRadius: 20,
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          border: '1px solid #059669',
+                        }}
+                      >
+                        <span>✓</span> Arte Listo para Publicar (1080×1350px)
+                      </div>
+
+                      {/* URL Y CONTROLES DE IMAGEN */}
+                      <div
+                        style={{
+                          width: '100%',
+                          maxWidth: 400,
+                          backgroundColor: '#242424',
+                          borderRadius: 8,
+                          padding: '0.65rem 0.85rem',
+                          border: '1px solid #383838',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                          <span style={{ fontSize: '0.68rem', color: '#999', textTransform: 'uppercase', fontWeight: 700 }}>
+                            URL de Cloudinary:
+                          </span>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={copiarUrl}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: urlCopiada ? '#10b981' : P.dorado,
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {urlCopiada ? '✓ Copiada' : '📋 Copiar'}
+                            </button>
+                            <a
+                              href={imagenCloudinaryGenerada}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                color: '#60a5fa',
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                textDecoration: 'none',
+                              }}
+                            >
+                              ↗ Abrir
+                            </a>
+                          </div>
+                        </div>
+                        <input
+                          type="text"
+                          readOnly
+                          value={imagenCloudinaryGenerada}
+                          style={{
+                            width: '100%',
+                            backgroundColor: '#121212',
+                            color: '#bbb',
+                            border: '1px solid #333',
+                            borderRadius: 4,
+                            padding: '0.35rem 0.5rem',
+                            fontSize: '0.68rem',
+                            fontFamily: 'monospace',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ESTADO INICIAL SIN IMAGEN */}
+                  {!generandoImagenCloudinary && !imagenCloudinaryGenerada && (
+                    <div style={{ textAlign: 'center', color: '#777', padding: '2rem 1rem' }}>
+                      <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🖼️</div>
+                      <h4 style={{ color: '#ccc', fontSize: '0.9rem', margin: '0 0 0.35rem 0' }}>
+                        Aún no se ha generado la imagen publicitaria
+                      </h4>
+                      <p style={{ fontSize: '0.78rem', color: '#888', maxWidth: 280, margin: '0 auto' }}>
+                        Haz clic en <strong>"Generar Imagen con Cloudinary AI"</strong> para componer el arte publicitario con fondo generado y precios oficiales.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 4. SECCIÓN: APROBAR Y PUBLICAR EN INSTAGRAM */}
+              <div
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 14,
+                  border: '1px solid #e4dacb',
+                  padding: '1.25rem',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.85rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid #ede5d8', paddingBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '1.1rem' }}>📲</span>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, color: P.verde, margin: 0 }}>
+                    4. Aprobar y Publicar en Instagram
+                  </h3>
+                </div>
+
+                <p style={{ fontSize: '0.78rem', color: '#666', margin: 0 }}>
+                  Envía la publicación directamente a la cuenta de Instagram de PanFree o prográmala en el calendario.
+                </p>
+
+                {/* Botón Publicar Ahora */}
+                <button
+                  onClick={() => handleAprobarYPublicar(true)}
+                  disabled={procesandoPublicacion || !decision?.producto}
+                  className={styles.actionBtnSecondary}
+                  style={{ width: '100%', padding: '0.85rem', fontSize: '0.92rem' }}
+                >
+                  {procesandoPublicacion ? '🚀 Publicando en Instagram...' : '📲 Aprobar y Publicar Ahora en Instagram'}
+                </button>
+
+                {/* Programación de Fecha */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', paddingTop: '0.5rem', borderTop: '1px solid #ede5d8' }}>
+                  <input
+                    type="datetime-local"
+                    value={fechaProgramada}
+                    onChange={(e) => setFechaProgramada(e.target.value)}
+                    style={{
+                      backgroundColor: '#faf7f2',
+                      color: '#2d2a26',
+                      border: '1px solid #d4c5b3',
+                      borderRadius: 8,
+                      padding: '0.5rem 0.65rem',
+                      fontSize: '0.8rem',
+                      flex: 1,
+                      outline: 'none',
+                    }}
+                  />
+                  <button
+                    onClick={() => handleAprobarYPublicar(false)}
+                    disabled={procesandoPublicacion || !fechaProgramada}
+                    style={{
+                      backgroundColor: P.verde,
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 8,
+                      padding: '0.55rem 0.9rem',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    📅 Programar
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
           </div>
 
-          {/* Canvas SIEMPRE en el DOM — visible en vista imagen */}
-          <div
-            style={{
-              display: state.vistaPreview === 'canvas' ? 'flex' : 'none',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '1rem',
-              width: '100%',
-              maxWidth: '100%',
-              overflowX: 'auto',
-            }}
-          >
-            <div
-              style={{
-                borderRadius: 12,
-                overflow: 'hidden',
-                boxShadow: '0 12px 48px rgba(0,0,0,0.8)',
-                width: preW,
-                height: preH,
-                flexShrink: 0,
-                backgroundColor: '#1a1a1a',
-              }}
-            >
-              <canvas ref={canvasRef} style={{ width: preW, height: preH, display: 'block' }} />
+          {/* HISTORIAL Y PUBLICACIONES PROGRAMADAS DEBAJO */}
+          <div style={{ marginTop: '2.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: P.verde, margin: 0 }}>
+                🕒 Publicaciones Recientes y Programadas
+              </h3>
+              <button
+                onClick={() => setRefreshHistory((prev) => prev + 1)}
+                style={{
+                  background: 'none',
+                  border: `1px solid ${P.dorado}`,
+                  color: P.verde,
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: 6,
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                🔄 Actualizar lista
+              </button>
             </div>
-            <div
-              style={{
-                backgroundColor: '#1e1e1e',
-                borderRadius: 8,
-                padding: '0.85rem 1rem',
-                maxWidth: preW,
-                width: '100%',
-                fontSize: '0.82rem',
-                color: '#aaa',
-                lineHeight: 1.5,
-                textAlign: 'center',
-                boxSizing: 'border-box',
-              }}
-            >
-              <span style={{ color: P.dorado, fontWeight: 700 }}>Resolución original: {F.w}×{F.h}px</span>
-            </div>
-          </div>
-
-          {/* ── VISTA SIMULADOR CELULAR ── */}
-          {state.vistaPreview === 'celular' && (
-            <SimuladorCelular
-              dataUrl={dataUrl}
-              formato={state.formato}
-              productoActual={productoActual}
-              P={P}
-            />
-          )}
-
-          {/* Nota zonas seguras */}
-          <div
-            style={{
-              backgroundColor: '#1a1a1a',
-              borderRadius: 10,
-              padding: '0.85rem 1rem',
-              maxWidth: 520,
-              width: '100%',
-              fontSize: '0.82rem',
-              color: '#aaa',
-              lineHeight: 1.5,
-              boxSizing: 'border-box',
-            }}
-          >
-            <div style={{ color: P.dorado, fontWeight: 700, marginBottom: '0.3rem' }}>
-              ℹ️ Guía de Zonas Seguras de Instagram
-            </div>
-            <div>Encabezado y pie de imagen están optimizados para no ser tapados por la interfaz de Instagram.</div>
-          </div>
-
-          {/* ── SECCIÓN DE AUTOMATIZACIÓN E HISTORIAL DE PUBLICACIONES ── */}
-          <section
-            style={{
-              width: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '1.5rem',
-            }}
-          >
-            <AutomationPanel
-              selectedProduct={state.selectedProduct}
-              canvasRef={canvasRef}
-              onPostPublished={() => setRefreshHistory((prev) => prev + 1)}
-            />
             <ScheduledPosts refreshTrigger={refreshHistory} />
-          </section>
+          </div>
+
         </div>
-      </div>
+      )}
+
     </div>
   )
 }
