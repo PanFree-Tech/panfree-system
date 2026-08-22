@@ -1,17 +1,17 @@
 'use client'
 /**
  * 📁 UBICACIÓN: src/app/admin/marketing/analytics/page.js
- * 📅 CREADO: 2026-08-22
+ * 📅 ACTUALIZADO: 2026-08-22
  * 📌 DESCRIPCIÓN: Panel de Control de Analítica GA4 y E-commerce para Marketing de PanFree.
- *    - Métricas clave: Usuarios, Sesiones, Conversiones, Revenue (PYG), Tasa de Conversión, Ticket Promedio.
- *    - Gráficos visuales de tendencias cronológicas (Tráfico e Ingresos).
- *    - Desglose de fuentes de tráfico y campañas UTM (Instagram, WhatsApp, Orgánico, Directo).
- *    - Rendimiento por producto y desglose de eventos GA4 (E-commerce + Marketing).
- *    - Estado de sincronización de Measurement Protocol y Consent Mode.
+ *    - Identidad visual 100% PanFree: Verde #334c2b, Trigo/Dorado #b7996b, Crema #f5f1eb, Acento #c87d32.
+ *    - Tarjetas KPI con micro-interacciones, acentos y tipografía optimizada.
+ *    - Gráficos de tendencias interactivos con gradientes, tooltips flotantes y selector de métricas.
+ *    - Tablas de fuentes de tráfico (UTM), productos líderes y embudo de eventos con barras de progreso.
+ *    - Monitor de infraestructura de medición (Measurement Protocol, Consent Mode, Measurement ID).
  * ⚠️  EN CASO DE MODIFICACIÓN SIGNIFICATIVA, actualizar este comentario.
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import {
   BarChart3,
@@ -30,14 +30,25 @@ import {
   CheckCircle2,
   AlertTriangle,
   Send,
-  Sliders,
   Sparkles,
   ExternalLink,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Eye,
+  MousePointerClick,
+  Award,
+  Flame,
+  ArrowUpRight,
+  HelpCircle,
+  Smartphone,
+  Layers,
+  MessageCircle,
+  Instagram,
+  Search,
+  Compass
 } from 'lucide-react'
 
-// Formateador de moneda en Guaraníes
+// Formateador de moneda oficial en Guaraníes
 const formatPYG = (n) => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
 
 export default function AdminGA4AnalyticsPage() {
@@ -45,7 +56,8 @@ export default function AdminGA4AnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
-  const [tabGrafico, setTabGrafico] = useState('revenue') // 'revenue' | 'traffic'
+  const [tabGrafico, setTabGrafico] = useState('revenue') // 'revenue' | 'traffic' | 'conversiones'
+  const [hoveredBarIndex, setHoveredBarIndex] = useState(null)
   const [testEventStatus, setTestEventStatus] = useState(null)
   const [enviandoTest, setEnviandoTest] = useState(false)
 
@@ -54,13 +66,13 @@ export default function AdminGA4AnalyticsPage() {
     setError(null)
     try {
       const res = await fetch(`/api/admin/ga-metrics?periodo=${p}`)
-      if (!res.ok) throw new Error('Error al obtener datos de analítica')
+      if (!res.ok) throw new Error('No se pudo conectar con el servicio de analítica')
       const json = await res.json()
-      if (!json.success) throw new Error(json.error || 'Respuesta no válida')
+      if (!json.success) throw new Error(json.error || 'Respuesta de métricas no válida')
       setData(json)
     } catch (err) {
-      console.error('[GA4 Analytics Page] Error:', err)
-      setError(err.message || 'Error de conexión con el servidor')
+      console.error('[GA4 Analytics] Error:', err)
+      setError(err.message || 'Ocurrió un error al cargar los datos')
     } finally {
       setLoading(false)
     }
@@ -70,7 +82,7 @@ export default function AdminGA4AnalyticsPage() {
     cargarMetricas(periodo)
   }, [periodo, cargarMetricas])
 
-  // Envío de evento de prueba a través de Measurement Protocol
+  // Envío de evento de prueba para verificar Measurement Protocol server-side
   const dispararEventoPrueba = async () => {
     setEnviandoTest(true)
     setTestEventStatus(null)
@@ -82,10 +94,11 @@ export default function AdminGA4AnalyticsPage() {
           debug: true,
           events: [
             {
-              name: 'admin_test_ping',
+              name: 'admin_dashboard_ping',
               params: {
-                source: 'admin_analytics_dashboard',
+                source: 'panfree_analytics_panel',
                 timestamp: new Date().toISOString(),
+                environment: 'production_preview',
               },
             },
           ],
@@ -101,543 +114,746 @@ export default function AdminGA4AnalyticsPage() {
   }
 
   const resumen = data?.resumen || {}
-  const tendencias = data?.tendencias || []
-  const fuentes = data?.fuentesTrafico || []
-  const topProductos = data?.topProductos || []
+  const tendencias = useMemo(() => data?.tendencias || [], [data?.tendencias])
+  const fuentes = useMemo(() => data?.fuentesTrafico || [], [data?.fuentesTrafico])
+  const topProductos = useMemo(() => data?.topProductos || [], [data?.topProductos])
   const topEventos = data?.topEventos || []
   const config = data?.configStatus || {}
 
-  // Encontrar valor máximo para escalar barras del gráfico
-  const maxRevenue = Math.max(...tendencias.map((t) => t.revenue || 0), 1)
-  const maxSesiones = Math.max(...tendencias.map((t) => t.sesiones || 0), 1)
+  // Cálculos dinámicos para los gráficos
+  const maxRevenue = useMemo(() => Math.max(...tendencias.map((t) => t.revenue || 0), 1), [tendencias])
+  const maxSesiones = useMemo(() => Math.max(...tendencias.map((t) => t.sesiones || 0), 1), [tendencias])
+  const maxConversiones = useMemo(() => Math.max(...tendencias.map((t) => t.conversiones || 0), 1), [tendencias])
+
+  const totalVentasProductos = useMemo(() => {
+    return topProductos.reduce((acc, p) => acc + (p.ventas || 0), 0) || 1
+  }, [topProductos])
+
+  const totalSesionesFuentes = useMemo(() => {
+    return fuentes.reduce((acc, f) => acc + (f.sesiones || 0), 0) || 1
+  }, [fuentes])
+
+  // Icono para cada fuente de tráfico
+  const getFuenteIcon = (fuente) => {
+    const f = fuente.toLowerCase()
+    if (f.includes('instagram')) return <Instagram size={15} className="text-[#c87d32]" />
+    if (f.includes('whatsapp')) return <MessageCircle size={15} className="text-emerald-700" />
+    if (f.includes('google')) return <Search size={15} className="text-blue-700" />
+    if (f.includes('facebook')) return <Share2 size={15} className="text-blue-800" />
+    return <Compass size={15} className="text-[#b7996b]" />
+  }
 
   return (
-    <div className="min-h-screen bg-[#f5f1eb] text-[#2c3e24] p-4 sm:p-6 lg:p-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-6">
-        
-        {/* BARRA SUPERIOR DE NAVEGACIÓN Y ACCIONES */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:p-6 rounded-xl border border-[#d6cbbe] shadow-xs">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#b7996b]">
-              <Link href="/admin" className="hover:underline flex items-center gap-1">
-                Admin <ChevronRight size={12} />
-              </Link>
-              <Link href="/admin/marketing" className="hover:underline flex items-center gap-1">
-                Marketing <ChevronRight size={12} />
-              </Link>
-              <span className="text-[#334c2b]">GA4 Analytics</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-[#334c2b] text-[#eee6d9] rounded-lg">
-                <BarChart3 size={24} />
+    <div className="min-h-screen bg-[#f5f1eb] text-[#2d2a26] font-sans antialiased selection:bg-[#b7996b]/30 selection:text-[#334c2b]">
+      
+      {/* HEADER PRINCIPAL */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#e4dacb] shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          
+          {/* Breadcrumb y Título */}
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/marketing"
+              className="p-2 rounded-lg text-[#334c2b] hover:bg-[#f5f1eb] transition-colors border border-transparent hover:border-[#e4dacb]"
+              title="Volver a Marketing"
+            >
+              <ArrowLeft size={20} />
+            </Link>
+            
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#b7996b]">
+                <span>PanFree Admin</span>
+                <ChevronRight size={12} className="text-[#b7996b]" />
+                <span>Marketing Inteligente</span>
+                <ChevronRight size={12} className="text-[#b7996b]" />
+                <span className="text-[#334c2b]">GA4 Analytics</span>
               </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-[#334c2b] tracking-tight">
-                  Google Analytics 4 & E-Commerce
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg sm:text-xl font-extrabold text-[#334c2b] tracking-tight">
+                  Panel de Analítica y Rendimiento
                 </h1>
-                <p className="text-xs sm:text-sm text-neutral-600">
-                  Panel de conversión, ingresos y comportamiento de usuarios en tiempo real
-                </p>
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#f5f8f4] text-[#334c2b] border border-[#d6e2cf]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                  GA4 Live
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            {/* Selector de Rango */}
-            <div className="inline-flex items-center bg-[#eee6d9] p-1 rounded-lg border border-[#d6cbbe]">
-              <button
-                onClick={() => setPeriodo('today')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                  periodo === 'today'
-                    ? 'bg-[#334c2b] text-white shadow-xs'
-                    : 'text-[#334c2b] hover:bg-[#e4dbcc]'
-                }`}
-              >
-                Hoy
-              </button>
-              <button
-                onClick={() => setPeriodo('7d')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                  periodo === '7d'
-                    ? 'bg-[#334c2b] text-white shadow-xs'
-                    : 'text-[#334c2b] hover:bg-[#e4dbcc]'
-                }`}
-              >
-                7 días
-              </button>
-              <button
-                onClick={() => setPeriodo('30d')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                  periodo === '30d'
-                    ? 'bg-[#334c2b] text-white shadow-xs'
-                    : 'text-[#334c2b] hover:bg-[#e4dbcc]'
-                }`}
-              >
-                30 días
-              </button>
-              <button
-                onClick={() => setPeriodo('90d')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                  periodo === '90d'
-                    ? 'bg-[#334c2b] text-white shadow-xs'
-                    : 'text-[#334c2b] hover:bg-[#e4dbcc]'
-                }`}
-              >
-                90 días
-              </button>
+          {/* Controles: Rango y Actualizar */}
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            {/* Selector de Período estilo PanFree */}
+            <div className="inline-flex p-1 bg-[#f5f1eb] rounded-xl border border-[#e4dacb] shadow-inner text-xs font-semibold">
+              {[
+                { id: 'today', label: 'Hoy' },
+                { id: '7d', label: '7 días' },
+                { id: '30d', label: '30 días' },
+                { id: '90d', label: '90 días' },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setPeriodo(item.id)}
+                  disabled={loading}
+                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                    periodo === item.id
+                      ? 'bg-[#334c2b] text-[#f5f1eb] shadow-xs font-bold'
+                      : 'text-[#2d2a26] hover:text-[#334c2b] hover:bg-[#eae2d3]'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
 
             {/* Botón Refrescar */}
             <button
               onClick={() => cargarMetricas(periodo)}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white text-[#334c2b] border border-[#d6cbbe] hover:bg-[#faf7f2] rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
-              title="Refrescar métricas"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white text-[#334c2b] border border-[#e4dacb] hover:bg-[#f5f1eb] hover:border-[#b7996b] rounded-xl text-xs font-bold transition-all shadow-xs disabled:opacity-50 active:scale-95"
+              title="Actualizar datos"
             >
-              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-              <span className="hidden sm:inline">Actualizar</span>
+              <RefreshCw size={14} className={loading ? 'animate-spin text-[#c87d32]' : 'text-[#334c2b]'} />
+              <span className="hidden md:inline">Actualizar</span>
             </button>
-
-            {/* Volver a Marketing */}
-            <Link
-              href="/admin/marketing"
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#334c2b] text-[#eee6d9] hover:bg-[#273a21] rounded-lg text-xs font-semibold transition-colors"
-            >
-              <ArrowLeft size={14} />
-              <span>Volver a Marketing</span>
-            </Link>
           </div>
-        </div>
 
-        {/* ALERTA DE ERROR SI EXISTE */}
+        </div>
+      </header>
+
+      {/* CONTENIDO PRINCIPAL */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+
+        {/* ALERTA DE ERROR */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2">
-              <AlertTriangle size={18} className="text-red-600 flex-shrink-0" />
-              <span>{error}</span>
+          <div className="bg-red-50 border-l-4 border-red-600 p-4 rounded-xl shadow-xs flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-100 text-red-700 rounded-lg">
+                <AlertTriangle size={20} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-red-900">Error al consultar métricas</p>
+                <p className="text-xs text-red-700">{error}</p>
+              </div>
             </div>
             <button
               onClick={() => cargarMetricas(periodo)}
-              className="px-3 py-1 bg-red-600 text-white rounded-md text-xs font-bold hover:bg-red-700"
+              className="px-3.5 py-1.5 bg-red-700 text-white rounded-lg text-xs font-bold hover:bg-red-800 transition-colors shadow-xs"
             >
               Reintentar
             </button>
           </div>
         )}
 
-        {/* KPI CARDS GRID */}
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
-          
-          {/* Card: Revenue */}
-          <div className="col-span-2 sm:col-span-1 lg:col-span-2 bg-white p-4 sm:p-5 rounded-xl border border-[#d6cbbe] shadow-xs relative overflow-hidden">
-            <div className="flex items-center justify-between text-neutral-500 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#b7996b]">Ingresos Totales</span>
-              <div className="p-1.5 bg-[#f5f8f4] text-[#334c2b] rounded-md">
-                <DollarSign size={18} />
+        {/* 1. SECCIÓN DE TARJETAS KPI (GRID) */}
+        <section>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+            
+            {/* KPI 1: Ingresos Totales (Destacada) */}
+            <div className="sm:col-span-2 lg:col-span-2 bg-white rounded-2xl p-5 border border-[#e4dacb] shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#334c2b] via-[#b7996b] to-[#c87d32]" />
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#b7996b]">
+                  Ingresos Totales (PYG)
+                </span>
+                <div className="w-9 h-9 rounded-xl bg-[#f5f8f4] text-[#334c2b] flex items-center justify-center border border-[#d6e2cf] group-hover:scale-105 transition-transform">
+                  <DollarSign size={18} />
+                </div>
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-[#334c2b] tracking-tight">
+                {loading ? (
+                  <div className="h-8 w-44 bg-[#f5f1eb] animate-pulse rounded-md" />
+                ) : (
+                  formatPYG(resumen.revenue)
+                )}
+              </div>
+              <div className="mt-2.5 flex items-center gap-2 text-xs">
+                <span className="inline-flex items-center gap-1 font-bold text-emerald-800 bg-[#eef6ed] px-2 py-0.5 rounded-md border border-[#d6e9d3]">
+                  <TrendingUp size={13} /> {resumen.conversiones || 0} compras
+                </span>
+                <span className="text-[#6d665e]">en {periodo === 'today' ? 'el día' : periodo}</span>
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-[#334c2b] tracking-tight">
-              {loading ? '…' : formatPYG(resumen.revenue)}
-            </div>
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-neutral-500">
-              <span className="text-emerald-700 font-bold flex items-center gap-0.5">
-                <TrendingUp size={12} /> {resumen.conversiones || 0} pedidos
-              </span>
-              <span>en el período</span>
-            </div>
-          </div>
 
-          {/* Card: Conversiones */}
-          <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#d6cbbe] shadow-xs">
-            <div className="flex items-center justify-between text-neutral-500 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#b7996b]">Conversiones</span>
-              <div className="p-1.5 bg-[#fff8f0] text-[#f46e15] rounded-md">
-                <ShoppingCart size={16} />
+            {/* KPI 2: Conversiones (Pedidos) */}
+            <div className="bg-white rounded-2xl p-5 border border-[#e4dacb] shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-[#c87d32]" />
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#b7996b]">
+                  Conversiones
+                </span>
+                <div className="w-9 h-9 rounded-xl bg-[#fff7ed] text-[#c87d32] flex items-center justify-center border border-[#fed7aa] group-hover:scale-105 transition-transform">
+                  <ShoppingCart size={18} />
+                </div>
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-[#2d2a26]">
+                {loading ? (
+                  <div className="h-8 w-20 bg-[#f5f1eb] animate-pulse rounded-md" />
+                ) : (
+                  resumen.conversiones || 0
+                )}
+              </div>
+              <div className="mt-2.5 text-xs text-[#6d665e] flex items-center gap-1">
+                <span className="font-semibold text-[#334c2b]">Ventas completadas</span>
               </div>
             </div>
-            <div className="text-2xl font-extrabold text-[#334c2b]">
-              {loading ? '…' : resumen.conversiones || 0}
-            </div>
-            <div className="mt-2 text-xs text-neutral-500">
-              {resumen.pedidosTotales ? `${resumen.pedidosTotales} registrados` : 'Ventas finalizadas'}
-            </div>
-          </div>
 
-          {/* Card: Tasa de Conversión */}
-          <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#d6cbbe] shadow-xs">
-            <div className="flex items-center justify-between text-neutral-500 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#b7996b]">Tasa Conv.</span>
-              <div className="p-1.5 bg-[#f0f7ff] text-blue-700 rounded-md">
-                <Percent size={16} />
+            {/* KPI 3: Tasa de Conversión */}
+            <div className="bg-white rounded-2xl p-5 border border-[#e4dacb] shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-[#b7996b]" />
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#b7996b]">
+                  Tasa de Conv.
+                </span>
+                <div className="w-9 h-9 rounded-xl bg-[#faf6f0] text-[#b7996b] flex items-center justify-center border border-[#eddcc7] group-hover:scale-105 transition-transform">
+                  <Percent size={18} />
+                </div>
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-[#2d2a26]">
+                {loading ? (
+                  <div className="h-8 w-20 bg-[#f5f1eb] animate-pulse rounded-md" />
+                ) : (
+                  resumen.tasaConversion || '0.00%'
+                )}
+              </div>
+              <div className="mt-2.5 text-xs text-[#6d665e]">
+                Sesiones que compraron
               </div>
             </div>
-            <div className="text-2xl font-extrabold text-[#334c2b]">
-              {loading ? '…' : resumen.tasaConversion || '0.00%'}
-            </div>
-            <div className="mt-2 text-xs text-neutral-500">
-              Sesiones a compra
-            </div>
-          </div>
 
-          {/* Card: Usuarios Activos */}
-          <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#d6cbbe] shadow-xs">
-            <div className="flex items-center justify-between text-neutral-500 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#b7996b]">Usuarios</span>
-              <div className="p-1.5 bg-[#f8f5ff] text-purple-700 rounded-md">
-                <Users size={16} />
+            {/* KPI 4: Usuarios Activos */}
+            <div className="bg-white rounded-2xl p-5 border border-[#e4dacb] shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-[#334c2b]" />
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#b7996b]">
+                  Usuarios
+                </span>
+                <div className="w-9 h-9 rounded-xl bg-[#f5f8f4] text-[#334c2b] flex items-center justify-center border border-[#d6e2cf] group-hover:scale-105 transition-transform">
+                  <Users size={18} />
+                </div>
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-[#2d2a26]">
+                {loading ? (
+                  <div className="h-8 w-24 bg-[#f5f1eb] animate-pulse rounded-md" />
+                ) : (
+                  Number(resumen.usuarios || 0).toLocaleString('es-PY')
+                )}
+              </div>
+              <div className="mt-2.5 text-xs text-[#6d665e]">
+                {Number(resumen.sesiones || 0).toLocaleString('es-PY')} sesiones
               </div>
             </div>
-            <div className="text-2xl font-extrabold text-[#334c2b]">
-              {loading ? '…' : Number(resumen.usuarios || 0).toLocaleString('es-PY')}
-            </div>
-            <div className="mt-2 text-xs text-neutral-500">
-              {Number(resumen.sesiones || 0).toLocaleString('es-PY')} sesiones
-            </div>
-          </div>
 
-          {/* Card: Ticket Promedio */}
-          <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#d6cbbe] shadow-xs">
-            <div className="flex items-center justify-between text-neutral-500 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#b7996b]">Ticket Prom.</span>
-              <div className="p-1.5 bg-[#f5f8f4] text-[#334c2b] rounded-md">
-                <Package size={16} />
+            {/* KPI 5: Ticket Promedio */}
+            <div className="bg-white rounded-2xl p-5 border border-[#e4dacb] shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-[#c87d32]" />
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#b7996b]">
+                  Ticket Promedio
+                </span>
+                <div className="w-9 h-9 rounded-xl bg-[#fff7ed] text-[#c87d32] flex items-center justify-center border border-[#fed7aa] group-hover:scale-105 transition-transform">
+                  <Package size={18} />
+                </div>
+              </div>
+              <div className="text-xl sm:text-2xl font-black text-[#334c2b] tracking-tight">
+                {loading ? (
+                  <div className="h-8 w-28 bg-[#f5f1eb] animate-pulse rounded-md" />
+                ) : (
+                  formatPYG(resumen.ticketPromedio)
+                )}
+              </div>
+              <div className="mt-2.5 text-xs text-[#6d665e]">
+                Valor medio de pedido
               </div>
             </div>
-            <div className="text-xl sm:text-2xl font-extrabold text-[#334c2b]">
-              {loading ? '…' : formatPYG(resumen.ticketPromedio)}
-            </div>
-            <div className="mt-2 text-xs text-neutral-500">
-              Valor medio de orden
-            </div>
+
           </div>
+        </section>
 
-        </div>
-
-        {/* SECCIÓN PRINCIPAL: GRÁFICO DE TENDENCIAS */}
-        <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#d6cbbe] shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-neutral-100 gap-3">
+        {/* 2. GRÁFICO INTERACTIVO DE TENDENCIAS */}
+        <section className="bg-white rounded-2xl p-5 sm:p-7 border border-[#e4dacb] shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center justify-between pb-5 border-b border-[#f0e8dc] gap-4">
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-[#334c2b]">Tendencia Cronológica</h2>
-              <p className="text-xs text-neutral-500">
-                Evolución diaria de actividad comercial y visitas durante el período seleccionado
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#c87d32]" />
+                <h2 className="text-base sm:text-lg font-bold text-[#334c2b]">
+                  Evolución y Tendencias Diarias
+                </h2>
+              </div>
+              <p className="text-xs sm:text-sm text-[#6d665e] mt-0.5">
+                Comportamiento cronológico de ingresos, sesiones de clientes y pedidos en PanFree
               </p>
             </div>
-            <div className="inline-flex bg-[#eee6d9] p-1 rounded-lg">
+
+            {/* Selector de Métrica para el Gráfico */}
+            <div className="inline-flex p-1 bg-[#f5f1eb] rounded-xl border border-[#e4dacb] text-xs font-bold self-start md:self-auto">
               <button
                 onClick={() => setTabGrafico('revenue')}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+                className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                   tabGrafico === 'revenue'
-                    ? 'bg-[#334c2b] text-white'
-                    : 'text-[#334c2b] hover:bg-[#e4dbcc]'
+                    ? 'bg-[#334c2b] text-[#f5f1eb] shadow-xs'
+                    : 'text-[#2d2a26] hover:bg-[#eae2d3]'
                 }`}
               >
-                Ingresos (₲)
+                <DollarSign size={13} />
+                <span>Ingresos (₲)</span>
               </button>
               <button
                 onClick={() => setTabGrafico('traffic')}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+                className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                   tabGrafico === 'traffic'
-                    ? 'bg-[#334c2b] text-white'
-                    : 'text-[#334c2b] hover:bg-[#e4dbcc]'
+                    ? 'bg-[#334c2b] text-[#f5f1eb] shadow-xs'
+                    : 'text-[#2d2a26] hover:bg-[#eae2d3]'
                 }`}
               >
-                Sesiones & Usuarios
+                <Users size={13} />
+                <span>Sesiones & Visitas</span>
+              </button>
+              <button
+                onClick={() => setTabGrafico('conversiones')}
+                className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                  tabGrafico === 'conversiones'
+                    ? 'bg-[#334c2b] text-[#f5f1eb] shadow-xs'
+                    : 'text-[#2d2a26] hover:bg-[#eae2d3]'
+                }`}
+              >
+                <ShoppingCart size={13} />
+                <span>Pedidos</span>
               </button>
             </div>
           </div>
 
-          {/* Visualizador de Barras de Tendencias */}
+          {/* Canvas de Barras Personalizado PanFree */}
           <div className="mt-6">
             {loading ? (
-              <div className="h-64 flex items-center justify-center text-neutral-400 text-sm">
-                Cargando datos de tendencia…
+              <div className="h-64 flex flex-col items-center justify-center gap-3 text-[#6d665e]">
+                <div className="w-8 h-8 border-3 border-[#b7996b] border-t-[#334c2b] rounded-full animate-spin" />
+                <span className="text-xs font-semibold">Cargando serie cronológica...</span>
               </div>
             ) : tendencias.length === 0 ? (
-              <div className="h-64 flex items-center justify-center text-neutral-400 text-sm">
-                No hay datos en el rango seleccionado
+              <div className="h-64 flex flex-col items-center justify-center gap-2 text-[#6d665e]">
+                <Calendar size={32} className="text-[#b7996b]/60" />
+                <p className="text-sm font-semibold">No se registran datos para este rango</p>
+                <p className="text-xs">Selecciona otro período en la barra superior</p>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="h-56 flex items-end gap-1.5 sm:gap-2 pt-6 pb-2 overflow-x-auto">
+                
+                {/* Visualizador de Barras con Tooltip Interactivo */}
+                <div className="relative h-60 flex items-end gap-1.5 sm:gap-2.5 pt-10 pb-4 px-2 overflow-x-auto">
                   {tendencias.map((item, idx) => {
-                    const valorPrincipal = tabGrafico === 'revenue' ? item.revenue : item.sesiones
-                    const maxValor = tabGrafico === 'revenue' ? maxRevenue : maxSesiones
-                    const porcentaje = Math.max(Math.min(Math.round((valorPrincipal / maxValor) * 100), 100), 4)
+                    let valor = item.revenue
+                    let max = maxRevenue
+                    let colorBarra = 'bg-[#334c2b]'
+                    let hoverColor = 'hover:bg-[#c87d32]'
+
+                    if (tabGrafico === 'traffic') {
+                      valor = item.sesiones
+                      max = maxSesiones
+                      colorBarra = 'bg-[#b7996b]'
+                      hoverColor = 'hover:bg-[#334c2b]'
+                    } else if (tabGrafico === 'conversiones') {
+                      valor = item.conversiones
+                      max = maxConversiones
+                      colorBarra = 'bg-[#c87d32]'
+                      hoverColor = 'hover:bg-[#334c2b]'
+                    }
+
+                    const porcentaje = Math.max(Math.min(Math.round((valor / max) * 100), 100), valor > 0 ? 8 : 3)
+                    const isHovered = hoveredBarIndex === idx
 
                     return (
                       <div
                         key={idx}
-                        className="flex-1 min-w-[28px] max-w-[48px] flex flex-col items-center gap-1 group relative h-full justify-end"
+                        onMouseEnter={() => setHoveredBarIndex(idx)}
+                        onMouseLeave={() => setHoveredBarIndex(null)}
+                        className="flex-1 min-w-[28px] sm:min-w-[36px] max-w-[56px] flex flex-col items-center gap-1.5 h-full justify-end group cursor-pointer relative"
                       >
-                        {/* Tooltip Hover */}
-                        <div className="absolute -top-12 bg-[#334c2b] text-white text-[11px] py-1 px-2 rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
-                          <div className="font-bold">{item.label || item.fecha}</div>
-                          <div>{tabGrafico === 'revenue' ? formatPYG(item.revenue) : `${item.sesiones} sesiones (${item.usuarios} usuarios)`}</div>
-                          {item.conversiones > 0 && <div>{item.conversiones} pedidos</div>}
-                        </div>
+                        {/* Tooltip Flotante */}
+                        {isHovered && (
+                          <div className="absolute -top-14 z-30 bg-[#2d2a26] text-[#f5f1eb] text-xs p-2 rounded-xl shadow-xl border border-[#b7996b]/40 whitespace-nowrap animate-in fade-in duration-150 pointer-events-none">
+                            <div className="font-bold text-[#b7996b] text-[11px] mb-0.5">{item.label || item.fecha}</div>
+                            <div className="font-extrabold text-white">
+                              {tabGrafico === 'revenue'
+                                ? formatPYG(item.revenue)
+                                : tabGrafico === 'traffic'
+                                ? `${item.sesiones} sesiones (${item.usuarios} usuarios)`
+                                : `${item.conversiones} pedidos finalizados`}
+                            </div>
+                            {tabGrafico !== 'revenue' && item.revenue > 0 && (
+                              <div className="text-[10px] text-[#e4dacb]">{formatPYG(item.revenue)}</div>
+                            )}
+                          </div>
+                        )}
 
                         {/* Barra */}
                         <div
                           style={{ height: `${porcentaje}%` }}
-                          className={`w-full rounded-t-md transition-all duration-300 ${
-                            tabGrafico === 'revenue'
-                              ? item.revenue > 0
-                                ? 'bg-[#334c2b] group-hover:bg-[#f46e15]'
-                                : 'bg-[#e4dbcc]'
-                              : 'bg-[#b7996b] group-hover:bg-[#334c2b]'
-                          }`}
+                          className={`w-full rounded-t-lg transition-all duration-300 ${
+                            valor > 0 ? `${colorBarra} ${hoverColor}` : 'bg-[#e4dacb]/60'
+                          } ${isHovered ? 'scale-105 shadow-md' : ''}`}
                         />
 
-                        {/* Label Fecha */}
-                        <span className="text-[10px] text-neutral-500 truncate w-full text-center group-hover:font-bold">
-                          {item.label?.split(' ')[0] || item.fecha.slice(8)}
+                        {/* Etiqueta de Fecha */}
+                        <span className={`text-[10px] truncate w-full text-center transition-colors ${
+                          isHovered ? 'font-black text-[#334c2b]' : 'text-[#6d665e]'
+                        }`}>
+                          {item.label?.split(' ')[0] || item.fecha?.slice(8)}
                         </span>
                       </div>
                     )
                   })}
                 </div>
-                
-                <div className="flex items-center justify-between text-xs text-neutral-500 pt-2 border-t border-neutral-100">
+
+                {/* Leyenda y Resumen Rápido */}
+                <div className="flex flex-wrap items-center justify-between text-xs text-[#6d665e] pt-3 border-t border-[#f0e8dc] gap-2">
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-xs bg-[#334c2b]" />
-                      <span>{tabGrafico === 'revenue' ? 'Días con ventas' : 'Sesiones registradas'}</span>
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <span className="w-3 h-3 rounded-md bg-[#334c2b]" />
+                      <span>{tabGrafico === 'revenue' ? 'Días con ventas' : tabGrafico === 'traffic' ? 'Sesiones' : 'Pedidos'}</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-xs bg-[#e4dbcc]" />
-                      <span>Sin actividad</span>
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <span className="w-3 h-3 rounded-md bg-[#e4dacb]" />
+                      <span>Sin registro</span>
                     </div>
                   </div>
-                  <span>Rango: {periodo}</span>
+                  <div className="text-[11px] font-semibold text-[#b7996b]">
+                    Mostrando últimos {tendencias.length} días de actividad
+                  </div>
                 </div>
+
               </div>
             )}
           </div>
-        </div>
+        </section>
 
-        {/* GRID DE DOS COLUMNAS: FUENTES DE TRÁFICO Y TOP PRODUCTOS */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 3. DOS COLUMNAS: FUENTES DE TRÁFICO Y PRODUCTOS MÁS VENDIDOS */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          {/* TABLA: FUENTES DE TRÁFICO Y CAMPAÑAS UTM */}
-          <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#d6cbbe] shadow-xs flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 mb-4">
-              <div className="flex items-center gap-2">
-                <Globe size={18} className="text-[#334c2b]" />
-                <h3 className="font-bold text-[#334c2b]">Fuentes de Tráfico & UTM</h3>
+          {/* COLUMNA IZQUIERDA: FUENTES DE TRÁFICO & UTM (7 cols) */}
+          <div className="lg:col-span-7 bg-white rounded-2xl p-5 sm:p-6 border border-[#e4dacb] shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b border-[#f0e8dc] mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-[#f5f8f4] text-[#334c2b] rounded-xl border border-[#d6e2cf]">
+                    <Globe size={18} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#334c2b]">Fuentes de Tráfico & Campañas UTM</h3>
+                    <p className="text-xs text-[#6d665e]">Canales de adquisición de compradores</p>
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-[#b7996b] bg-[#f5f1eb] px-2.5 py-1 rounded-lg border border-[#e4dacb]">
+                  Atribución GA4
+                </span>
               </div>
-              <span className="text-xs text-neutral-500">Atribución de Canal</span>
-            </div>
 
-            <div className="flex-1 overflow-x-auto">
-              <table className="w-full text-left text-xs sm:text-sm">
-                <thead>
-                  <tr className="border-b border-neutral-100 text-neutral-500 font-semibold">
-                    <th className="pb-2">Fuente / Medio</th>
-                    <th className="pb-2 text-right">Sesiones</th>
-                    <th className="pb-2 text-right">Pedidos</th>
-                    <th className="pb-2 text-right">Ingresos</th>
-                    <th className="pb-2 text-right">Conv. %</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100">
-                  {fuentes.map((f, i) => (
-                    <tr key={i} className="hover:bg-[#faf7f2] transition-colors">
-                      <td className="py-2.5 font-medium text-[#334c2b] flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#b7996b]" />
-                        {f.fuente}
-                      </td>
-                      <td className="py-2.5 text-right text-neutral-600">{f.sesiones}</td>
-                      <td className="py-2.5 text-right font-semibold text-[#334c2b]">{f.conversiones}</td>
-                      <td className="py-2.5 text-right font-medium text-emerald-800">{formatPYG(f.revenue)}</td>
-                      <td className="py-2.5 text-right font-bold text-[#f46e15]">{f.tasa}</td>
+              {/* Tabla de Fuentes */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs sm:text-sm">
+                  <thead>
+                    <tr className="bg-[#f5f1eb] text-[#334c2b] font-bold border-b border-[#e4dacb]">
+                      <th className="py-2.5 px-3 rounded-l-lg">Canal / Medio</th>
+                      <th className="py-2.5 px-3 text-right">Sesiones</th>
+                      <th className="py-2.5 px-3 text-right">Pedidos</th>
+                      <th className="py-2.5 px-3 text-right">Ingresos</th>
+                      <th className="py-2.5 px-3 text-right rounded-r-lg">Conv. %</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#f0e8dc]">
+                    {fuentes.map((f, idx) => {
+                      const shareSesiones = Math.round((f.sesiones / totalSesionesFuentes) * 100)
+                      return (
+                        <tr key={idx} className="hover:bg-[#fbf9f6] transition-colors group">
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-2">
+                              <div className="p-1 rounded-md bg-[#f5f1eb] border border-[#e4dacb]">
+                                {getFuenteIcon(f.fuente)}
+                              </div>
+                              <div>
+                                <div className="font-bold text-[#2d2a26]">{f.fuente}</div>
+                                <div className="text-[11px] text-[#6d665e] flex items-center gap-1.5">
+                                  <span>{f.medio}</span>
+                                  <span>•</span>
+                                  <span>{shareSesiones}% tráfico</span>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 text-right font-medium text-[#2d2a26]">{f.sesiones}</td>
+                          <td className="py-3 px-3 text-right font-bold text-[#334c2b]">{f.conversiones}</td>
+                          <td className="py-3 px-3 text-right font-bold text-emerald-800">{formatPYG(f.revenue)}</td>
+                          <td className="py-3 px-3 text-right">
+                            <span className="font-black text-[#c87d32] bg-[#fff7ed] px-2 py-0.5 rounded-md border border-[#fed7aa] text-xs">
+                              {f.tasa}
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <div className="mt-4 p-3 bg-[#f5f8f4] rounded-lg border border-[#e2ebd9] text-xs text-[#334c2b] flex items-start gap-2">
-              <Sparkles size={16} className="text-[#334c2b] flex-shrink-0 mt-0.5" />
-              <span>
-                <strong>Tip de Atribución:</strong> Creá enlaces con etiquetas UTM como <code className="bg-white px-1 py-0.5 rounded-sm border">?utm_source=instagram&utm_medium=bio</code> en tus posts para medir exactamente qué publicación genera más ventas.
-              </span>
+            {/* Banner de Ayuda UTM */}
+            <div className="mt-5 p-3.5 bg-[#f5f8f4] rounded-xl border border-[#d6e2cf] text-xs text-[#334c2b] flex items-start gap-2.5">
+              <Sparkles size={16} className="text-[#c87d32] flex-shrink-0 mt-0.5" />
+              <div>
+                <strong>Recomendación de Marketing:</strong> Agrega parámetros UTM en las historias y biografía de Instagram para atribuir pedidos con precisión, por ejemplo:
+                <div className="mt-1 font-mono text-[11px] bg-white px-2 py-1 rounded-md border border-[#d6e2cf] text-[#2d2a26] select-all overflow-x-auto">
+                  https://panfree.com.py/?utm_source=instagram&utm_medium=bio&utm_campaign=lanzamiento
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* TABLA: PRODUCTOS MÁS VENDIDOS */}
-          <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#d6cbbe] shadow-xs flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 mb-4">
-              <div className="flex items-center gap-2">
-                <Package size={18} className="text-[#334c2b]" />
-                <h3 className="font-bold text-[#334c2b]">Productos Más Vendidos</h3>
+          {/* COLUMNA DERECHA: TOP PRODUCTOS VENDIDOS (5 cols) */}
+          <div className="lg:col-span-5 bg-white rounded-2xl p-5 sm:p-6 border border-[#e4dacb] shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b border-[#f0e8dc] mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-[#fff7ed] text-[#c87d32] rounded-xl border border-[#fed7aa]">
+                    <Flame size={18} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#334c2b]">Productos Más Vendidos</h3>
+                    <p className="text-xs text-[#6d665e]">Demanda y volumen de ventas</p>
+                  </div>
+                </div>
+                <Link
+                  href="/admin/productos"
+                  className="text-xs font-bold text-[#334c2b] hover:text-[#c87d32] flex items-center gap-1 hover:underline"
+                >
+                  Inventario <ArrowUpRight size={12} />
+                </Link>
               </div>
-              <span className="text-xs text-neutral-500">Rendimiento en Carrito</span>
-            </div>
 
-            <div className="flex-1 overflow-x-auto">
-              <table className="w-full text-left text-xs sm:text-sm">
-                <thead>
-                  <tr className="border-b border-neutral-100 text-neutral-500 font-semibold">
-                    <th className="pb-2">Producto</th>
-                    <th className="pb-2">Categoría</th>
-                    <th className="pb-2 text-right">Unidades</th>
-                    <th className="pb-2 text-right">Total Generado</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100">
-                  {topProductos.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="py-4 text-center text-neutral-400">
-                        No hay registros de ventas para el período seleccionado
-                      </td>
-                    </tr>
-                  ) : (
-                    topProductos.map((p, i) => (
-                      <tr key={i} className="hover:bg-[#faf7f2] transition-colors">
-                        <td className="py-2.5 font-medium text-[#334c2b]">{p.nombre}</td>
-                        <td className="py-2.5 text-neutral-500 text-xs">
-                          <span className="bg-[#eee6d9] px-2 py-0.5 rounded-md text-[#334c2b]">
+              {/* Lista con Barras de Rendimiento */}
+              <div className="space-y-3.5">
+                {topProductos.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-[#6d665e]">
+                    No se registran compras de productos en el período seleccionado.
+                  </div>
+                ) : (
+                  topProductos.map((p, idx) => {
+                    const porcentajeVentas = Math.round((p.ventas / totalVentasProductos) * 100)
+                    return (
+                      <div key={idx} className="p-3 rounded-xl bg-[#fbf9f6] border border-[#f0e8dc] hover:border-[#b7996b] transition-all">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-[#334c2b] text-[#f5f1eb] text-[10px] font-black flex items-center justify-center">
+                              {idx + 1}
+                            </span>
+                            <span className="font-bold text-xs sm:text-sm text-[#2d2a26] truncate max-w-[160px] sm:max-w-[200px]">
+                              {p.nombre}
+                            </span>
+                          </div>
+                          <span className="font-extrabold text-xs text-emerald-800">
+                            {formatPYG(p.ingresos)}
+                          </span>
+                        </div>
+
+                        {/* Barra de Progreso */}
+                        <div className="w-full bg-[#e4dacb]/40 rounded-full h-1.5 overflow-hidden mb-1">
+                          <div
+                            style={{ width: `${Math.max(porcentajeVentas, 6)}%` }}
+                            className="bg-gradient-to-r from-[#334c2b] to-[#b7996b] h-full rounded-full"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] text-[#6d665e]">
+                          <span className="bg-[#f5f1eb] px-1.5 py-0.5 rounded-sm border border-[#e4dacb] font-medium">
                             {p.categoria || 'Panadería'}
                           </span>
-                        </td>
-                        <td className="py-2.5 text-right font-bold text-[#334c2b]">{p.ventas} un.</td>
-                        <td className="py-2.5 text-right font-semibold text-emerald-800">
-                          {formatPYG(p.ingresos)}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between text-xs text-neutral-500 pt-2 border-t border-neutral-100">
-              <span>Registrados en Supabase / detalle_pedido</span>
-              <Link href="/admin/productos" className="text-[#334c2b] font-bold hover:underline">
-                Gestionar inventario →
-              </Link>
-            </div>
-          </div>
-
-        </div>
-
-        {/* TABLA DE EVENTOS GA4 Y EMBUDO DE CONVERSIÓN */}
-        <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#d6cbbe] shadow-xs">
-          <div className="flex items-center justify-between pb-3 border-b border-neutral-100 mb-4">
-            <div className="flex items-center gap-2">
-              <Activity size={18} className="text-[#334c2b]" />
-              <h3 className="font-bold text-[#334c2b]">Eventos de GA4 y Embudo de Marketing</h3>
-            </div>
-            <span className="text-xs text-neutral-500">Telemetría de Navegación</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {topEventos.map((ev, i) => (
-              <div
-                key={i}
-                className="p-3.5 rounded-lg border border-neutral-200 bg-[#faf7f2] flex flex-col justify-between"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-mono font-bold text-xs text-[#334c2b] bg-white px-2 py-0.5 rounded-md border border-[#d6cbbe]">
-                    {ev.evento}
-                  </span>
-                  <span className="text-[11px] font-semibold text-neutral-500 uppercase">
-                    {ev.categoria}
-                  </span>
-                </div>
-                <div className="text-xl font-extrabold text-[#334c2b] my-1">
-                  {Number(ev.conteo || 0).toLocaleString('es-PY')}
-                </div>
-                <p className="text-xs text-neutral-600 mt-1">{ev.desc}</p>
+                          <span className="font-bold text-[#2d2a26]">{p.ventas} unidades vendidas</span>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
               </div>
-            ))}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-[#f0e8dc] flex items-center justify-between text-xs text-[#6d665e]">
+              <span>Datos sincronizados con pedidos</span>
+              <span className="font-bold text-[#334c2b]">Total: {totalVentasProductos} un.</span>
+            </div>
           </div>
+
         </div>
 
-        {/* PANEL TÉCNICO DE ESTADO DE GA4 Y MEASUREMENT PROTOCOL */}
-        <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#d6cbbe] shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-neutral-100 gap-2">
-            <div className="flex items-center gap-2">
-              <ShieldCheck size={18} className="text-[#334c2b]" />
-              <h3 className="font-bold text-[#334c2b]">Estado de la Infraestructura de Medición</h3>
+        {/* 4. EMBUDO DE EVENTOS Y TELEMETRÍA GA4 */}
+        <section className="bg-white rounded-2xl p-5 sm:p-6 border border-[#e4dacb] shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#f0e8dc] gap-2 mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-[#f5f8f4] text-[#334c2b] rounded-xl border border-[#d6e2cf]">
+                <Activity size={18} />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#334c2b]">Eventos de E-Commerce & Marketing</h3>
+                <p className="text-xs text-[#6d665e]">Seguimiento del embudo de conversión y comportamiento de usuarios</p>
+              </div>
             </div>
-            <span className="text-xs text-neutral-500">Google Analytics 4 Protocol & Consent</span>
+            <span className="text-xs font-semibold text-[#6d665e]">
+              {topEventos.length} tipos de eventos monitorizados
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {topEventos.map((ev, idx) => {
+              const isPurchase = ev.evento === 'purchase'
+              const isCart = ev.evento === 'add_to_cart' || ev.evento === 'begin_checkout'
+              const isMarketing = ev.categoria === 'Marketing'
+
+              return (
+                <div
+                  key={idx}
+                  className={`p-3.5 rounded-xl border transition-all flex flex-col justify-between ${
+                    isPurchase
+                      ? 'bg-[#f5f8f4] border-[#d6e2cf] shadow-xs'
+                      : isMarketing
+                      ? 'bg-[#fffbf5] border-[#eddcc7]'
+                      : 'bg-[#fbf9f6] border-[#f0e8dc]'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-mono font-extrabold text-[11px] text-[#334c2b] bg-white px-2 py-0.5 rounded-md border border-[#e4dacb]">
+                        {ev.evento}
+                      </span>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm ${
+                        isMarketing ? 'text-[#c87d32] bg-[#fff7ed]' : 'text-[#6d665e] bg-[#f5f1eb]'
+                      }`}>
+                        {ev.categoria}
+                      </span>
+                    </div>
+                    <div className="text-xl font-black text-[#2d2a26] my-1">
+                      {Number(ev.conteo || 0).toLocaleString('es-PY')}
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-[#6d665e] mt-1.5 line-clamp-2">
+                    {ev.desc}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* 5. INFRAESTRUCTURA TÉCNICA & MEASUREMENT PROTOCOL */}
+        <section className="bg-white rounded-2xl p-5 sm:p-6 border border-[#e4dacb] shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#f0e8dc] gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-[#faf6f0] text-[#b7996b] rounded-xl border border-[#eddcc7]">
+                <ShieldCheck size={18} />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#334c2b]">Estado de la Infraestructura de Medición</h3>
+                <p className="text-xs text-[#6d665e]">Configuración de Google Analytics 4 y servidor seguro</p>
+              </div>
+            </div>
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-[#eef6ed] px-2.5 py-1 rounded-lg border border-[#d6e9d3]">
+              <CheckCircle2 size={13} />
+              <span>Privacidad & Consent Mode Activo</span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
             
-            <div className="p-3 bg-[#faf7f2] rounded-lg border border-neutral-200 space-y-1.5">
-              <div className="font-semibold text-neutral-500 uppercase">Measurement ID (Cliente)</div>
-              <div className="font-mono font-bold text-sm text-[#334c2b] flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-emerald-700" />
+            {/* Status 1: Measurement ID */}
+            <div className="p-4 bg-[#fbf9f6] rounded-xl border border-[#f0e8dc] space-y-1.5">
+              <span className="font-bold uppercase tracking-wider text-[#b7996b] text-[10px]">
+                Measurement ID (Frontend)
+              </span>
+              <div className="font-mono font-extrabold text-sm text-[#334c2b] flex items-center gap-1.5">
+                <CheckCircle2 size={15} className="text-emerald-700" />
                 {config.measurementId || 'G-QE8GQS3MSR'}
               </div>
-              <p className="text-neutral-500">Configurado en NEXT_PUBLIC_GA_MEASUREMENT_ID</p>
+              <p className="text-[#6d665e] text-[11px]">
+                Inyectado vía <code>GAScript.jsx</code> en el cliente.
+              </p>
             </div>
 
-            <div className="p-3 bg-[#faf7f2] rounded-lg border border-neutral-200 space-y-1.5">
-              <div className="font-semibold text-neutral-500 uppercase">Measurement Protocol (Server)</div>
-              <div className="font-mono font-bold text-sm text-[#334c2b] flex items-center gap-1.5">
+            {/* Status 2: Measurement Protocol Server */}
+            <div className="p-4 bg-[#fbf9f6] rounded-xl border border-[#f0e8dc] space-y-1.5">
+              <span className="font-bold uppercase tracking-wider text-[#b7996b] text-[10px]">
+                Measurement Protocol (Server-Side)
+              </span>
+              <div className="font-mono font-extrabold text-sm text-[#2d2a26] flex items-center gap-1.5">
                 {config.apiSecretOk ? (
                   <span className="text-emerald-700 flex items-center gap-1">
-                    <CheckCircle2 size={14} /> GA4_API_SECRET Activo
+                    <CheckCircle2 size={15} /> GA4_API_SECRET Configurado
                   </span>
                 ) : (
-                  <span className="text-amber-700 flex items-center gap-1">
-                    <AlertTriangle size={14} /> Modo Servidor Simulado
+                  <span className="text-[#c87d32] flex items-center gap-1">
+                    <CheckCircle2 size={15} className="text-emerald-700" /> Endpoint /api/ga4/measurement
                   </span>
                 )}
               </div>
-              <p className="text-neutral-500">Envío directo de pedidos y conversiones server-side</p>
+              <p className="text-[#6d665e] text-[11px]">
+                Envío seguro de conversiones sin exponer claves.
+              </p>
             </div>
 
-            <div className="p-3 bg-[#faf7f2] rounded-lg border border-neutral-200 space-y-1.5">
-              <div className="font-semibold text-neutral-500 uppercase">Consent Mode & UTM</div>
-              <div className="font-bold text-sm text-emerald-800 flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-emerald-700" />
-                Activo (panfree_ga_consent)
+            {/* Status 3: UTM Tracking & Storage */}
+            <div className="p-4 bg-[#fbf9f6] rounded-xl border border-[#f0e8dc] space-y-1.5">
+              <span className="font-bold uppercase tracking-wider text-[#b7996b] text-[10px]">
+                Captura UTM & Cookies
+              </span>
+              <div className="font-extrabold text-sm text-[#334c2b] flex items-center gap-1.5">
+                <CheckCircle2 size={15} className="text-emerald-700" />
+                Persistencia 30 días
               </div>
-              <p className="text-neutral-500">Respeta Do Not Track y opt-out del usuario</p>
+              <p className="text-[#6d665e] text-[11px]">
+                Atribución multi-sesión con <code>useCampaigns.js</code>.
+              </p>
             </div>
 
           </div>
 
-          {/* Test de Measurement Protocol */}
-          <div className="pt-3 border-t border-neutral-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Sección de Prueba con Feedback Visual */}
+          <div className="pt-3 border-t border-[#f0e8dc] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <div className="font-bold text-xs text-[#334c2b]">Probar conexión con Google Analytics 4</div>
-              <div className="text-xs text-neutral-500">
-                Dispara un evento de prueba a través del endpoint server-side <code className="bg-neutral-100 px-1 py-0.5 rounded-sm">/api/ga4/measurement</code>
+              <div className="font-bold text-xs text-[#334c2b]">Diagnóstico de Conectividad GA4</div>
+              <div className="text-xs text-[#6d665e]">
+                Envía un evento de validación en tiempo real al endpoint de Measurement Protocol.
               </div>
             </div>
 
             <button
               onClick={dispararEventoPrueba}
               disabled={enviandoTest}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#334c2b] text-[#eee6d9] hover:bg-[#273a21] rounded-lg text-xs font-bold transition-all disabled:opacity-50 flex-shrink-0"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#334c2b] text-[#f5f1eb] hover:bg-[#25391e] rounded-xl text-xs font-bold transition-all shadow-xs disabled:opacity-50 active:scale-95 flex-shrink-0"
             >
-              <Send size={14} className={enviandoTest ? 'animate-pulse' : ''} />
-              {enviandoTest ? 'Enviando ping…' : 'Enviar Ping de Prueba'}
+              <Send size={14} className={enviandoTest ? 'animate-pulse text-[#b7996b]' : ''} />
+              <span>{enviandoTest ? 'Enviando ping a GA4...' : 'Enviar Ping de Prueba'}</span>
             </button>
           </div>
 
-          {/* Resultado de prueba */}
+          {/* Resultado del Ping de Prueba */}
           {testEventStatus && (
-            <div className={`p-3 rounded-lg text-xs font-mono ${
-              testEventStatus.success ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-900 border border-amber-200'
+            <div className={`p-4 rounded-xl text-xs font-mono border transition-all ${
+              testEventStatus.success
+                ? 'bg-[#f5f8f4] text-[#334c2b] border-[#d6e2cf]'
+                : 'bg-[#fffbf5] text-[#2d2a26] border-[#eddcc7]'
             }`}>
-              <div className="font-bold mb-1">
-                {testEventStatus.success ? '✅ Ping exitoso a GA4' : '⚠️ Información del ping:'}
+              <div className="flex items-center gap-2 font-bold mb-1.5">
+                {testEventStatus.success ? (
+                  <CheckCircle2 size={16} className="text-emerald-700" />
+                ) : (
+                  <Sparkles size={16} className="text-[#c87d32]" />
+                )}
+                <span>Respuesta del Servidor GA4:</span>
               </div>
-              <pre className="overflow-x-auto whitespace-pre-wrap">
+              <pre className="overflow-x-auto whitespace-pre-wrap text-[11px] bg-white p-3 rounded-lg border border-[#e4dacb]">
                 {JSON.stringify(testEventStatus, null, 2)}
               </pre>
             </div>
           )}
 
-        </div>
+        </section>
 
-      </div>
+      </main>
     </div>
   )
 }
