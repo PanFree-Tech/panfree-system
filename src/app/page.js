@@ -9,14 +9,8 @@
  *  - ✅ FIX: Eliminar fallback inseguro de Supabase
  *  - ✅ FIX: Lanzar error claro si faltan variables de entorno
  */
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import TiendaCliente from './TiendaCliente'
-
-// ============================================
-// ✅ VERIFICAR VARIABLES DE ENTORNO
-// ============================================
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gbdrcaumghykiipqgbty.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjczNjIsImV4cCI6MjA4NzgwMzM2Mn0.OydRQxa51Ql42zvscWnQkEKJuU_3yeCS4qPQQoP6TuM'
 
 // Caché: revalidar cada 5 minutos
 // Cambiar a 60 si Luciana actualiza insumos varias veces por hora
@@ -24,8 +18,6 @@ export const revalidate = 300
 
 async function cargarDatos() {
   try {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
     const [{ data: productos }, { data: disponibilidad }] = await Promise.all([
       supabase
         .from('productos')

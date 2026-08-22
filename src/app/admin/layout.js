@@ -26,6 +26,7 @@ import {
   TrendingUp,
   HelpCircle,
   Globe,
+  Mail,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -126,6 +127,7 @@ export default function AdminLayout({ children }) {
     { href: '/admin/costos', icon: DollarSign, label: 'Costos' },
     { href: '/admin/maquinarias', icon: Settings, label: 'Maquinarias' },
     { href: '/admin/marketing', icon: Megaphone, label: 'Marketing' },
+    { href: '/admin/correos', icon: Mail, label: 'Correos' },
     { href: '/admin/reportes', icon: TrendingUp, label: 'Reportes' },
     { href: '/admin/ayuda', icon: HelpCircle, label: 'Ayuda' },
   ]

@@ -5,12 +5,8 @@
  *  - Consulta vista_disponibilidad_productos y pasa prop `disponible` al cliente
  */
 import { notFound } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { supabase as supabaseServer } from '@/lib/supabase'
 import PaginaProductoCliente from './ProductoCliente'
-
-const supabaseUrl     = process.env.NEXT_PUBLIC_SUPABASE_URL     || 'https://gbdrcaumghykiipqgbty.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjczNjIsImV4cCI6MjA4NzgwMzM2Mn0.OydRQxa51Ql42zvscWnQkEKJuU_3yeCS4qPQQoP6TuM'
-const supabaseServer  = createClient(supabaseUrl, supabaseAnonKey)
 
 const DOMINIO = 'https://panfree.fit'
 
