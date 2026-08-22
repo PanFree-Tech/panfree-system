@@ -3,8 +3,9 @@
  * 📅 ACTUALIZADO: 2026-08-22
  * 📌 DESCRIPCIÓN: Panel de Marketing y Automatización IA para PanFree.
  *    - Estructura unificada: Decisiones IA → Generar Contenido con Gemini → Generar Imagen Cloudinary AI → Aprobar y Publicar.
- *    - Eliminado el Diseñador Canvas en favor del motor Cloudinary Generative AI.
- *    - Vista previa destacada de la imagen generada con Cloudinary (<img> visible, mensaje de carga y URL).
+ *    - Spinners de carga interactivos para Gemini, Cloudinary y Publicación en Instagram.
+ *    - Botones deshabilitados reactivamente durante cualquier proceso en curso.
+ *    - Notificaciones claras de éxito (✅) y error (❌).
  *    - Integración con reglas de negocio, calendario de eventos y programación para Instagram.
  */
 
@@ -13,7 +14,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 
 // Hooks
 import { useSupabaseProducts } from './hooks/useSupabaseProducts'
@@ -62,6 +62,13 @@ export default function MarketingPage() {
   const [urlCopiada, setUrlCopiada] = useState(false)
   const [captionCopiado, setCaptionCopiado] = useState(false)
 
+  // Variable de bloqueo global cuando hay algún proceso activo
+  const algunProcesoActivo =
+    cargandoDecision ||
+    generandoContenido ||
+    generandoImagenCloudinary ||
+    procesandoPublicacion
+
   // Cargar decisión inteligente desde la API
   const obtenerDecisionInteligente = useCallback(async (prodId = '') => {
     try {
@@ -86,7 +93,7 @@ export default function MarketingPage() {
       console.error('Error al cargar decisión:', err)
       setNotificacion({
         tipo: 'error',
-        texto: err.message || 'Error al conectar con el motor de decisiones',
+        texto: `❌ Error al conectar con el motor de decisiones: ${err.message || 'Fallo desconocido'}`,
       })
     } finally {
       setCargandoDecision(false)
@@ -101,7 +108,7 @@ export default function MarketingPage() {
 
   // 1. GENERAR CONTENIDO CON GEMINI AI
   const handleGenerarContenido = async () => {
-    if (!decision?.producto) return
+    if (!decision?.producto || algunProcesoActivo) return
 
     try {
       setGenerandoContenido(true)
@@ -127,7 +134,7 @@ export default function MarketingPage() {
         setContenidoGenerado(json.content)
         setNotificacion({
           tipo: 'exito',
-          texto: '✨ ¡Contenido generado exitosamente con Gemini AI! Ahora puedes generar el arte visual con Cloudinary.',
+          texto: '✅ ¡Contenido generado exitosamente con Gemini AI! Ahora puedes generar el arte publicitario con Cloudinary.',
         })
       } else {
         throw new Error(json.error || 'Fallo la generación de contenido')
@@ -135,7 +142,7 @@ export default function MarketingPage() {
     } catch (err) {
       setNotificacion({
         tipo: 'error',
-        texto: err.message || 'Error al generar contenido creativo con Gemini',
+        texto: `❌ Error al generar contenido creativo con Gemini: ${err.message || 'Error en el servicio'}`,
       })
     } finally {
       setGenerandoContenido(false)
@@ -144,7 +151,7 @@ export default function MarketingPage() {
 
   // 2. GENERAR IMAGEN CON CLOUDINARY AI
   const handleGenerarImagenCloudinary = async () => {
-    if (!decision?.producto) return
+    if (!decision?.producto || algunProcesoActivo) return
 
     try {
       setGenerandoImagenCloudinary(true)
@@ -169,7 +176,7 @@ export default function MarketingPage() {
         setImagenCloudinaryGenerada(json.imagen_url)
         setNotificacion({
           tipo: 'exito',
-          texto: '🖼️ ¡Arte publicitario generado con Cloudinary AI y precios reales inyectados desde la BD!',
+          texto: '✅ ¡Arte publicitario generado con Cloudinary AI y precios reales inyectados desde la BD!',
         })
       } else {
         throw new Error(json.error || 'Error al generar imagen con Cloudinary')
@@ -177,7 +184,7 @@ export default function MarketingPage() {
     } catch (err) {
       setNotificacion({
         tipo: 'error',
-        texto: err.message || 'Error al conectar con Cloudinary Generative AI',
+        texto: `❌ Error al conectar con Cloudinary Generative AI: ${err.message || 'Error en el servicio'}`,
       })
     } finally {
       setGenerandoImagenCloudinary(false)
@@ -186,7 +193,7 @@ export default function MarketingPage() {
 
   // 3. APROBAR Y PUBLICAR / PROGRAMAR
   const handleAprobarYPublicar = async (publicarAhora = true) => {
-    if (!decision?.producto) return
+    if (!decision?.producto || algunProcesoActivo) return
 
     try {
       setProcesandoPublicacion(true)
@@ -225,7 +232,7 @@ export default function MarketingPage() {
       if (json.success) {
         setNotificacion({
           tipo: 'exito',
-          texto: json.mensaje || '¡Publicación enviada o programada con éxito!',
+          texto: `✅ ${json.mensaje || (publicarAhora ? '¡Publicación enviada a Instagram con éxito!' : '¡Publicación programada con éxito!')}`,
         })
         setRefreshHistory((prev) => prev + 1)
       } else {
@@ -234,7 +241,7 @@ export default function MarketingPage() {
     } catch (err) {
       setNotificacion({
         tipo: 'error',
-        texto: err.message || 'Error al publicar en Instagram',
+        texto: `❌ Error al publicar en Instagram: ${err.message || 'Error en el servicio'}`,
       })
     } finally {
       setProcesandoPublicacion(false)
@@ -276,6 +283,19 @@ export default function MarketingPage() {
 
   return (
     <div className={styles.container}>
+      {/* Estilos globales para animación de spinners */}
+      <style>{`
+        @keyframes pfSpin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .pf-spinner {
+          display: inline-block;
+          border-radius: 50%;
+          animation: pfSpin 0.75s linear infinite;
+        }
+      `}</style>
+
       {/* HEADER SUPERIOR */}
       <div className={styles.header}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
@@ -382,7 +402,7 @@ export default function MarketingPage() {
         </button>
       </div>
 
-      {/* NOTIFICACIÓN GENERAL */}
+      {/* NOTIFICACIÓN GENERAL DE ÉXITO O ERROR */}
       {notificacion && (
         <div
           style={{
@@ -391,20 +411,29 @@ export default function MarketingPage() {
             padding: '0.85rem 1.25rem',
             borderRadius: 10,
             fontSize: '0.88rem',
+            fontWeight: 600,
             backgroundColor: notificacion.tipo === 'exito' ? '#dcfce7' : '#fee2e2',
-            color: notificacion.tipo === 'exito' ? '#166534' : '#991b1b',
-            border: `1px solid ${notificacion.tipo === 'exito' ? '#bbf7d0' : '#fecaca'}`,
+            color: notificacion.tipo === 'exito' ? '#14532d' : '#7f1d1d',
+            border: `1.5px solid ${notificacion.tipo === 'exito' ? '#86efac' : '#fca5a5'}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: '0.75rem',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
           }}
         >
-          <span>{notificacion.texto}</span>
+          <span style={{ lineHeight: 1.4 }}>{notificacion.texto}</span>
           <button
             onClick={() => setNotificacion(null)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 700 }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'inherit',
+              fontWeight: 800,
+              fontSize: '1rem',
+              padding: '0.2rem 0.5rem',
+            }}
           >
             ✕
           </button>
@@ -447,22 +476,38 @@ export default function MarketingPage() {
 
             <button
               onClick={() => obtenerDecisionInteligente(productoSeleccionadoId)}
-              disabled={cargandoDecision}
+              disabled={algunProcesoActivo}
               style={{
-                backgroundColor: P.verde,
-                color: '#fff',
+                backgroundColor: algunProcesoActivo ? '#e5e5e5' : P.verde,
+                color: algunProcesoActivo ? '#999' : '#fff',
                 border: `1px solid ${P.dorado}`,
                 padding: '0.55rem 1rem',
                 borderRadius: 8,
                 fontSize: '0.82rem',
                 fontWeight: 700,
-                cursor: 'pointer',
+                cursor: algunProcesoActivo ? 'not-allowed' : 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.4rem',
+                transition: 'all 0.15s ease',
               }}
             >
-              {cargandoDecision ? '⏳ Evaluando...' : '🔄 Re-evaluar Decisiones'}
+              {cargandoDecision ? (
+                <>
+                  <span
+                    className="pf-spinner"
+                    style={{
+                      width: 13,
+                      height: 13,
+                      border: '2px solid rgba(255,255,255,0.4)',
+                      borderTopColor: '#fff',
+                    }}
+                  />
+                  <span>⏳ Evaluando...</span>
+                </>
+              ) : (
+                <span>🔄 Re-evaluar Decisiones</span>
+              )}
             </button>
           </div>
 
@@ -526,6 +571,7 @@ export default function MarketingPage() {
                   <select
                     className={styles.select}
                     value={productoSeleccionadoId}
+                    disabled={algunProcesoActivo}
                     onChange={(e) => {
                       setProductoSeleccionadoId(e.target.value)
                       obtenerDecisionInteligente(e.target.value)
@@ -551,8 +597,9 @@ export default function MarketingPage() {
                     max="40"
                     step="5"
                     value={descuentoManual}
+                    disabled={algunProcesoActivo}
                     onChange={(e) => setDescuentoManual(Number(e.target.value))}
-                    style={{ width: '100%', accentColor: P.naranja, cursor: 'pointer' }}
+                    style={{ width: '100%', accentColor: P.naranja, cursor: algunProcesoActivo ? 'not-allowed' : 'pointer' }}
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#888' }}>
                     <span>0% (Sin Descuento)</span>
@@ -583,6 +630,7 @@ export default function MarketingPage() {
                   <select
                     className={styles.select}
                     value={tono}
+                    disabled={algunProcesoActivo}
                     onChange={(e) => setTono(e.target.value)}
                   >
                     <option value="persuasivo">🎯 Persuasivo / Conversión Comercial</option>
@@ -592,14 +640,34 @@ export default function MarketingPage() {
                   </select>
                 </div>
 
-                {/* Botón: Generar Contenido con Gemini */}
+                {/* Botón: Generar Contenido con Gemini (Con Spinner de Carga) */}
                 <button
                   onClick={handleGenerarContenido}
-                  disabled={generandoContenido || !decision?.producto}
+                  disabled={algunProcesoActivo || !decision?.producto}
                   className={styles.actionBtnPrimary}
-                  style={{ width: '100%', padding: '0.85rem' }}
+                  style={{
+                    width: '100%',
+                    padding: '0.85rem',
+                    cursor: algunProcesoActivo || !decision?.producto ? 'not-allowed' : 'pointer',
+                    opacity: algunProcesoActivo && !generandoContenido ? 0.6 : 1,
+                  }}
                 >
-                  {generandoContenido ? '⏳ Generando contenido con Gemini AI...' : '✨ Generar Copy y Prompt con Gemini AI'}
+                  {generandoContenido ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                      <span
+                        className="pf-spinner"
+                        style={{
+                          width: 16,
+                          height: 16,
+                          border: '2.5px solid rgba(255,255,255,0.4)',
+                          borderTopColor: '#fff',
+                        }}
+                      />
+                      <span>⏳ Generando contenido...</span>
+                    </span>
+                  ) : (
+                    <span>✨ Generar Copy y Prompt con Gemini AI</span>
+                  )}
                 </button>
               </div>
 
@@ -624,6 +692,7 @@ export default function MarketingPage() {
                   {contenidoGenerado && (
                     <button
                       onClick={copiarCaption}
+                      disabled={algunProcesoActivo}
                       style={{
                         background: 'none',
                         border: '1px solid #555',
@@ -631,7 +700,7 @@ export default function MarketingPage() {
                         borderRadius: 6,
                         padding: '0.25rem 0.5rem',
                         fontSize: '0.72rem',
-                        cursor: 'pointer',
+                        cursor: algunProcesoActivo ? 'not-allowed' : 'pointer',
                       }}
                     >
                       {captionCopiado ? '✓ Copiado' : '📋 Copiar Post'}
@@ -729,29 +798,40 @@ export default function MarketingPage() {
                   </span>
                 </div>
 
-                {/* Botón de Generación Cloudinary */}
+                {/* Botón de Generación Cloudinary (Con Spinner de Carga) */}
                 <button
                   onClick={handleGenerarImagenCloudinary}
-                  disabled={generandoImagenCloudinary || !decision?.producto}
+                  disabled={algunProcesoActivo || !decision?.producto}
                   style={{
-                    backgroundColor: P.naranja,
+                    backgroundColor: algunProcesoActivo && !generandoImagenCloudinary ? '#ccc' : P.naranja,
                     color: '#fff',
                     border: 'none',
                     borderRadius: 10,
                     padding: '0.85rem 1rem',
                     fontSize: '0.9rem',
                     fontWeight: 700,
-                    cursor: 'pointer',
+                    cursor: algunProcesoActivo || !decision?.producto ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.5rem',
-                    boxShadow: '0 4px 12px rgba(200,125,50,0.25)',
+                    boxShadow: algunProcesoActivo ? 'none' : '0 4px 12px rgba(200,125,50,0.25)',
                     transition: 'all 0.15s ease',
                   }}
                 >
                   {generandoImagenCloudinary ? (
-                    <span>⏳ Generando Arte Publicitario con Cloudinary AI...</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                      <span
+                        className="pf-spinner"
+                        style={{
+                          width: 18,
+                          height: 18,
+                          border: '2.5px solid rgba(255,255,255,0.4)',
+                          borderTopColor: '#fff',
+                        }}
+                      />
+                      <span>⏳ Generando imagen...</span>
+                    </span>
                   ) : (
                     <span>🖼️ Generar Imagen Publicitaria con Cloudinary AI</span>
                   )}
@@ -776,19 +856,17 @@ export default function MarketingPage() {
                   {generandoImagenCloudinary && (
                     <div style={{ textAlign: 'center', color: '#eee6d9', padding: '2rem 1rem' }}>
                       <div
+                        className="pf-spinner"
                         style={{
                           width: 48,
                           height: 48,
                           border: `4px solid ${P.dorado}`,
                           borderTopColor: 'transparent',
-                          borderRadius: '50%',
-                          animation: 'spin 1s linear infinite',
                           margin: '0 auto 1rem auto',
                         }}
                       />
-                      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
                       <h4 style={{ color: P.dorado, fontSize: '0.95rem', margin: '0 0 0.4rem 0' }}>
-                        Procesando imagen con Cloudinary AI...
+                        ⏳ Generando imagen publicitaria con Cloudinary AI...
                       </h4>
                       <p style={{ fontSize: '0.78rem', color: '#aaa', margin: 0 }}>
                         Extrayendo fondo, aplicando transformaciones generativas e inyectando precios reales en Guaraníes.
@@ -840,7 +918,7 @@ export default function MarketingPage() {
                           border: '1px solid #059669',
                         }}
                       >
-                        <span>✓</span> Arte Listo para Publicar (1080×1350px)
+                        <span>✅</span> Arte Listo para Publicar (1080×1350px)
                       </div>
 
                       {/* URL Y CONTROLES DE IMAGEN */}
@@ -870,7 +948,7 @@ export default function MarketingPage() {
                                 cursor: 'pointer',
                               }}
                             >
-                              {urlCopiada ? '✓ Copiada' : '📋 Copiar'}
+                              {urlCopiada ? '✅ Copiada' : '📋 Copiar'}
                             </button>
                             <a
                               href={imagenCloudinaryGenerada}
@@ -946,14 +1024,35 @@ export default function MarketingPage() {
                   Envía la publicación directamente a la cuenta de Instagram de PanFree o prográmala en el calendario.
                 </p>
 
-                {/* Botón Publicar Ahora */}
+                {/* Botón Publicar Ahora (Con Spinner de Carga) */}
                 <button
                   onClick={() => handleAprobarYPublicar(true)}
-                  disabled={procesandoPublicacion || !decision?.producto}
+                  disabled={algunProcesoActivo || !decision?.producto}
                   className={styles.actionBtnSecondary}
-                  style={{ width: '100%', padding: '0.85rem', fontSize: '0.92rem' }}
+                  style={{
+                    width: '100%',
+                    padding: '0.85rem',
+                    fontSize: '0.92rem',
+                    cursor: algunProcesoActivo || !decision?.producto ? 'not-allowed' : 'pointer',
+                    opacity: algunProcesoActivo && !procesandoPublicacion ? 0.6 : 1,
+                  }}
                 >
-                  {procesandoPublicacion ? '🚀 Publicando en Instagram...' : '📲 Aprobar y Publicar Ahora en Instagram'}
+                  {procesandoPublicacion ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                      <span
+                        className="pf-spinner"
+                        style={{
+                          width: 18,
+                          height: 18,
+                          border: '2.5px solid rgba(255,255,255,0.4)',
+                          borderTopColor: '#fff',
+                        }}
+                      />
+                      <span>⏳ Publicando en Instagram...</span>
+                    </span>
+                  ) : (
+                    <span>📲 Aprobar y Publicar Ahora en Instagram</span>
+                  )}
                 </button>
 
                 {/* Programación de Fecha */}
@@ -961,6 +1060,7 @@ export default function MarketingPage() {
                   <input
                     type="datetime-local"
                     value={fechaProgramada}
+                    disabled={algunProcesoActivo}
                     onChange={(e) => setFechaProgramada(e.target.value)}
                     style={{
                       backgroundColor: '#faf7f2',
@@ -975,20 +1075,38 @@ export default function MarketingPage() {
                   />
                   <button
                     onClick={() => handleAprobarYPublicar(false)}
-                    disabled={procesandoPublicacion || !fechaProgramada}
+                    disabled={algunProcesoActivo || !fechaProgramada}
                     style={{
-                      backgroundColor: P.verde,
+                      backgroundColor: algunProcesoActivo || !fechaProgramada ? '#ccc' : P.verde,
                       color: '#fff',
                       border: 'none',
                       borderRadius: 8,
                       padding: '0.55rem 0.9rem',
                       fontSize: '0.8rem',
                       fontWeight: 700,
-                      cursor: 'pointer',
+                      cursor: algunProcesoActivo || !fechaProgramada ? 'not-allowed' : 'pointer',
                       whiteSpace: 'nowrap',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
                     }}
                   >
-                    📅 Programar
+                    {procesandoPublicacion ? (
+                      <>
+                        <span
+                          className="pf-spinner"
+                          style={{
+                            width: 13,
+                            height: 13,
+                            border: '2px solid rgba(255,255,255,0.4)',
+                            borderTopColor: '#fff',
+                          }}
+                        />
+                        <span>⏳ Programando...</span>
+                      </>
+                    ) : (
+                      <span>📅 Programar</span>
+                    )}
                   </button>
                 </div>
               </div>
@@ -1005,6 +1123,7 @@ export default function MarketingPage() {
               </h3>
               <button
                 onClick={() => setRefreshHistory((prev) => prev + 1)}
+                disabled={algunProcesoActivo}
                 style={{
                   background: 'none',
                   border: `1px solid ${P.dorado}`,
@@ -1013,7 +1132,8 @@ export default function MarketingPage() {
                   borderRadius: 6,
                   fontSize: '0.78rem',
                   fontWeight: 600,
-                  cursor: 'pointer',
+                  cursor: algunProcesoActivo ? 'not-allowed' : 'pointer',
+                  opacity: algunProcesoActivo ? 0.6 : 1,
                 }}
               >
                 🔄 Actualizar lista
