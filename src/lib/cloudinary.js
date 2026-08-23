@@ -94,7 +94,10 @@ export function buildMarketingImageTransformationUrl({
       effect: 'background_removal',
     },
     {
-      effect: `gen_background_replace:prompt_${promptFondo}`,
+      effect: 'gen_background_replace',
+      gen_background_replace: {
+        prompt: promptFondo,
+      },
     },
     // 3. Optimización automática de calidad y formato WebP/JPEG
     {
