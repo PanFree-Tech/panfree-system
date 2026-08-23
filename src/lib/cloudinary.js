@@ -67,16 +67,29 @@ export function buildMarketingImageTransformationUrl({
   const client = getCloudinaryClient()
   const publicId = extractPublicId(imagePublicIdOrUrl)
 
-  const precioOriginal = Number(precioVenta) || 25000
-  const precioPromocional = Math.round(precioOriginal * (1 - Number(descuento) / 100))
+  const precioOriginal = Number(precioVenta) || 28000
+  const descuentoNum = Number(descuento) || 0
+  const precioPromocional = Math.round(precioOriginal * (1 - descuentoNum / 100))
   const precioOriginalFmt = `G/ ${precioOriginal.toLocaleString('es-PY')}`
   const precioPromoFmt = `G/ ${precioPromocional.toLocaleString('es-PY')}`
 
-  // Prompt temático para Generative Background Replacement (limpio y descriptivo)
-  const promptFondo = (
-    briefCreativo ||
-    `Rustic gourmet bakery table, artisanal gluten-free bakery setting, soft warm lighting, studio photography, theme ${evento || 'special artisan offer'}`
-  ).trim().slice(0, 300)
+  // Prompt temático enriquecido para Instagram
+  const mejoras = [
+    'fotografía gastronómica profesional',
+    'estilo Instagram de alta calidad',
+    'composición con regla de tercios',
+    'iluminación natural cálida tipo golden hour',
+    'fondo con texturas rústicas y elementos decorativos',
+    'atmósfera acogedora y artesanal',
+    'estilo visual de panadería gourmet',
+    'colores cálidos y vibrantes',
+    'profundidad de campo suave'
+  ]
+  const promptBase = briefCreativo || `fotografía gastronómica profesional de ${nombreProducto || 'panadería artesanal sin gluten'}`
+  const promptFondo = `${promptBase}, ${mejoras.join(', ')}`
+    .replace(/[,/\\#%_]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 
   // Transformaciones secuenciales en Cloudinary
   const transformations = [
@@ -87,31 +100,29 @@ export function buildMarketingImageTransformationUrl({
       crop: 'fill',
       gravity: 'auto',
     },
-    // 2. Eliminación de fondo y reemplazo generativo temático
+    // 2. Reemplazo de fondo generativo con prompt enriquecido
     {
-      effect: 'background_removal',
+      effect: `gen_background_replace:prompt_${promptFondo}`,
     },
-    {
-      effect: 'gen_background_replace',
-      gen_background_replace: {
-        prompt: promptFondo,
-      },
-    },
-    // 3. Optimización automática de calidad y formato WebP/JPEG
+    // 3. Mejoras de imagen para estilo visual gastronómico de alta calidad
+    { effect: 'brightness:10' },
+    { effect: 'contrast:15' },
+    { effect: 'saturation:10' },
+    { effect: 'vignette' },
     {
       quality: 'auto',
       fetch_format: 'auto',
     },
     // 4. CAPA: Badge / Texto de Descuento (% OFF)
-    ...(descuento > 0
+    ...(descuentoNum > 0
       ? [
           {
-            color: '#FF6B00',
+            color: 'rgb:FF6B00',
             overlay: {
-              font_family: 'Arial',
+              font_family: 'Montserrat',
               font_size: 72,
               font_weight: 'bold',
-              text: `${descuento}% OFF`,
+              text: `${descuentoNum}%25 OFF`,
             },
           },
           {
@@ -124,60 +135,60 @@ export function buildMarketingImageTransformationUrl({
       : []),
     // 5. CAPA: Nombre del Producto
     {
-      color: '#FFFFFF',
+      color: 'rgb:FFFFFF',
       overlay: {
-        font_family: 'Arial',
+        font_family: 'Montserrat',
         font_size: 48,
         font_weight: 'bold',
-        text: nombreProducto || 'PanFree Artesanal',
+        text: encodeURIComponent(nombreProducto || 'PanFree Artesanal'),
       },
     },
     {
       flags: 'layer_apply',
       gravity: 'south',
-      y: 180,
+      y: 220,
     },
     // 6. CAPA: Precio Original (tachado si hay descuento)
-    ...(descuento > 0
+    ...(descuentoNum > 0
       ? [
           {
-            color: '#D1D5DB',
+            color: 'rgb:D1D5DB',
             overlay: {
-              font_family: 'Arial',
+              font_family: 'Montserrat',
               font_size: 34,
-              text: precioOriginalFmt,
+              text: `G/${precioOriginal.toLocaleString('es-PY')}`,
             },
           },
           {
             flags: 'layer_apply',
             gravity: 'south',
-            y: 130,
+            y: 150,
           },
         ]
       : []),
     // 7. CAPA: Precio Promocional Real
     {
-      color: '#FF6B00',
+      color: 'rgb:FF6B00',
       overlay: {
-        font_family: 'Arial',
-        font_size: 54,
+        font_family: 'Montserrat',
+        font_size: 64,
         font_weight: 'bold',
-        text: precioPromoFmt,
+        text: `G/${precioPromocional.toLocaleString('es-PY')}`,
       },
     },
     {
       flags: 'layer_apply',
       gravity: 'south',
-      y: 75,
+      y: 90,
     },
     // 8. CAPA: Call To Action
     {
-      color: '#F9FAFB',
+      color: 'rgb:F9FAFB',
       overlay: {
-        font_family: 'Arial',
+        font_family: 'Montserrat',
         font_size: 28,
         font_weight: 'bold',
-        text: 'Pedi en panfree.fit | 100% Sin Gluten',
+        text: encodeURIComponent('Pedi en panfree.fit | 100% Sin Gluten'),
       },
     },
     {

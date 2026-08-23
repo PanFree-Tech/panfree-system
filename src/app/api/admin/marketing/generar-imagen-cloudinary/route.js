@@ -6,42 +6,53 @@ import { getCloudinaryClient } from '@/lib/cloudinary'
 export const dynamic = 'force-dynamic'
 
 /**
- * Acorta y optimiza el prompt para Cloudinary Generative AI
- * evitando URLs excesivamente largas que causen HTTP 400.
+ * Enriquece el prompt automáticamente con estilo gastronómico gourmet para Instagram
  */
-function acortarPrompt(prompt, maxLength = 100) {
-  if (!prompt || typeof prompt !== 'string') return 'mesa rustica iluminacion calida'
-
-  // Limpiar caracteres conflictivos para URLs de Cloudinary
-  let promptCorto = prompt.replace(/[,/\\#%_]/g, ' ')
-
-  // Eliminar adjetivos y términos redundantes comunes
-  const palabrasEliminar = [
-    'fotografía', 'fotografia', 'gastronómica', 'gastronomica',
-    'apetitoso', 'apetitosa', 'profesional', 'artesanal', 'artesanales',
-    'acogedor', 'acogedora', 'elegante', 'alta resolución', 'alta resolucion',
-    'textura detallada', 'estilo', 'composición de estudio', 'composicion de estudio',
-    'espolvoreado con', 'espolvoreada con', 'paño de lino', 'paño de lino rústico',
-    'fondo desenfocado', 'bokeh', 'de una cocina de panadería', 'de una cocina', 'en rodajas'
+function mejorarPromptParaInstagram(promptBase, producto) {
+  const mejoras = [
+    'fotografía gastronómica profesional',
+    'estilo Instagram de alta calidad',
+    'composición con regla de tercios',
+    'iluminación natural cálida tipo golden hour',
+    'fondo con texturas rústicas y elementos decorativos (ramas de romero, harina espolvoreada, frutas frescas)',
+    'ángulo ligeramente cenital',
+    'profundidad de campo suave',
+    'colores cálidos y vibrantes',
+    'atmósfera acogedora y artesanal',
+    'estilo visual de panadería gourmet'
   ]
 
-  palabrasEliminar.forEach(palabra => {
-    promptCorto = promptCorto.replace(new RegExp(palabra, 'gi'), '')
-  })
-
-  // Limpiar espacios múltiples
-  promptCorto = promptCorto.replace(/\s+/g, ' ').trim()
-
-  // Si sigue superando el límite, cortar en el último espacio
-  if (promptCorto.length > maxLength) {
-    promptCorto = promptCorto.substring(0, maxLength)
-    const lastSpace = promptCorto.lastIndexOf(' ')
-    if (lastSpace > 20) {
-      promptCorto = promptCorto.substring(0, lastSpace)
-    }
+  let base = (promptBase || '').trim()
+  if (!base) {
+    const nombreProd = producto?.nombre || 'panadería gourmet sin gluten'
+    base = `fotografía gastronómica profesional de ${nombreProd}`
   }
 
-  return promptCorto.trim() || 'mesa rustica iluminacion calida'
+  // Si el prompt ya contiene algunas de estas palabras, no repetirlas
+  const baseLower = base.toLowerCase()
+  const mejorasFiltradas = mejoras.filter(
+    (m) => !baseLower.includes(m.toLowerCase())
+  )
+
+  const promptMejorado = mejorasFiltradas.length > 0
+    ? `${base}, ${mejorasFiltradas.join(', ')}`
+    : base
+
+  return promptMejorado
+}
+
+/**
+ * Sanitiza y prepara el prompt para Cloudinary Generative AI
+ * evitando caracteres que rompan la estructura de la URL de Cloudinary.
+ */
+function sanitizarPromptParaCloudinary(prompt) {
+  if (!prompt || typeof prompt !== 'string') return 'mesa rustica panaderia gourmet iluminacion calida'
+
+  // Limpiar caracteres conflictivos para las transformaciones en URLs de Cloudinary
+  return prompt
+    .replace(/[,/\\#%_]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 /**
@@ -73,7 +84,7 @@ export async function POST(req) {
       )
     }
 
-    // 0. Diagnóstico de configuración — se ve en los logs de Vercel
+    // 0. Diagnóstico de configuración — visible en logs del servidor
     console.log('🔧 [Cloudinary Config Check]', {
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? '✅ presente' : '❌ AUSENTE',
       api_key: process.env.CLOUDINARY_API_KEY ? '✅ presente' : '❌ AUSENTE',
@@ -105,7 +116,6 @@ export async function POST(req) {
     }
 
     // 2. Determinar la imagen base con prioridad inteligente
-    // Priorizamos URLs HTTP completas reales (Supabase Storage) sobre public_ids no verificados
     let imageSource = null
     let origenImagen = ''
 
@@ -113,11 +123,11 @@ export async function POST(req) {
       imageSource = custom_image_url.trim()
       origenImagen = 'custom_image_url'
     } else if (producto.imagen_url && producto.imagen_url.startsWith('http')) {
-      // Prioridad 1: La URL completa en Supabase Storage
+      // Prioridad 1: URL completa en Supabase Storage
       imageSource = producto.imagen_url.trim()
       origenImagen = 'imagen_url (Supabase Storage)'
     } else if (producto.imagenes_urls && Array.isArray(producto.imagenes_urls)) {
-      // Prioridad 2: Buscar en imagenes_urls alguna que sea URL HTTP
+      // Prioridad 2: Buscar en imagenes_urls alguna URL HTTP
       const httpUrlInArray = producto.imagenes_urls.find(u => typeof u === 'string' && u.startsWith('http'))
       if (httpUrlInArray) {
         imageSource = httpUrlInArray.trim()
@@ -141,7 +151,7 @@ export async function POST(req) {
 
     console.log('🖼️ Imagen seleccionada:', imageSource, '| Origen:', origenImagen)
 
-    // 3. Función auxiliar para preparar y subir una imagen a Cloudinary
+    // 3. Subir imagen base a Cloudinary
     const cloudinary = getCloudinaryClient()
     const timestamp = Date.now()
     const cleanId = String(producto.id || 'promo').replace(/-/g, '')
@@ -170,18 +180,14 @@ export async function POST(req) {
       })
     }
 
-    // 4. Subir la imagen base a Cloudinary con auto-recuperación si falla
+    // 4. Subir la imagen base a Cloudinary con auto-recuperación
     console.log('📤 Subiendo imagen base a Cloudinary...')
-    console.log('📁 asset_folder destino:', folderDestino)
-    console.log('🆔 public_id:', publicIdDestino)
-
     let uploadResult
     try {
       uploadResult = await subirImagenACloudinary(imageSource)
     } catch (primerError) {
       console.warn('⚠️ Falló la primera opción de imagen base:', primerError?.message)
       
-      // Si falló y tenemos imagen_url de Supabase disponible como alternativa, intentamos con ella
       if (producto.imagen_url && producto.imagen_url.startsWith('http') && imageSource !== producto.imagen_url) {
         console.log('🔄 Reintentando automáticamente con imagen_url de Supabase:', producto.imagen_url)
         try {
@@ -198,24 +204,97 @@ export async function POST(req) {
     const finalPublicId = uploadResult.public_id || publicIdDestino
     console.log('✅ Imagen base guardada en Cloudinary:', finalPublicId, '| folder:', uploadResult.asset_folder)
 
-    // 5. Definir transformaciones y generar la URL de entrega (on-the-fly, no hace llamada de red aquí)
-    const promptBruto = brief_creativo || `fotografía gastronómica de ${producto.nombre}, mesa rústica, iluminación cálida`
-    const promptFondo = acortarPrompt(promptBruto, 100)
-    console.log(`🎨 Prompt de fondo optimizado (${promptFondo.length} caracteres): "${promptFondo}"`)
+    // 5. Enriquecer prompt y preparar transformaciones
+    const promptBase = brief_creativo || `fotografía gastronómica profesional de ${producto.nombre}`
+    const promptEnriquecido = mejorarPromptParaInstagram(promptBase, producto)
+    const promptFondo = sanitizarPromptParaCloudinary(promptEnriquecido)
+
+    console.log(`🎨 Prompt enriquecido para Instagram: "${promptEnriquecido}"`)
+    console.log(`🚀 Prompt fondo para Cloudinary: "${promptFondo}"`)
+
+    const precioOriginalNum = Number(producto.precio_venta) || 28000
+    const descuentoNum = Number(descuento) || 0
+    const precioPromoNum = Math.round(precioOriginalNum * (1 - descuentoNum / 100))
 
     const transformations = [
+      // Recorte y tamaño Instagram (1080x1350)
       { width: 1080, height: 1350, crop: 'fill', gravity: 'auto' },
+
+      // Fondo generado por IA con prompt mejorado
       { effect: `gen_background_replace:prompt_${promptFondo}` },
+
+      // Mejoras de imagen
+      { effect: 'brightness:10' },
+      { effect: 'contrast:15' },
+      { effect: 'saturation:10' },
+      { effect: 'vignette' },
       { quality: 'auto', fetch_format: 'auto' },
-      { overlay: { font_family: 'Arial', font_size: 72, font_weight: 'bold', text: `${descuento}%25 OFF` }, color: 'rgb:FF6B00' },
-      { flags: 'layer_apply', gravity: 'north_east', x: 50, y: 50 },
-      { overlay: { font_family: 'Arial', font_size: 48, font_weight: 'bold', text: encodeURIComponent(producto.nombre) }, color: 'rgb:FFFFFF' },
-      { flags: 'layer_apply', gravity: 'south', y: 180 },
-      { overlay: { font_family: 'Arial', font_size: 34, text: `G/${Number(producto.precio_venta).toLocaleString('es-PY')}` }, color: 'rgb:D1D5DB' },
-      { flags: 'layer_apply', gravity: 'south', y: 130 },
-      { overlay: { font_family: 'Arial', font_size: 54, font_weight: 'bold', text: `G/${Math.round(Number(producto.precio_venta) * (1 - Number(descuento) / 100)).toLocaleString('es-PY')}` }, color: 'rgb:FF6B00' },
-      { flags: 'layer_apply', gravity: 'south', y: 75 },
-      { overlay: { font_family: 'Arial', font_size: 28, font_weight: 'bold', text: encodeURIComponent('Pedi en panfree.fit | 100% Sin Gluten') }, color: 'rgb:F9FAFB' },
+
+      // Badge de descuento (más llamativo)
+      ...(descuentoNum > 0
+        ? [
+            {
+              overlay: {
+                font_family: 'Montserrat',
+                font_size: 72,
+                font_weight: 'bold',
+                text: `${descuentoNum}%25 OFF`,
+              },
+              color: 'rgb:FF6B00',
+            },
+            { flags: 'layer_apply', gravity: 'north_east', x: 50, y: 50 },
+          ]
+        : []),
+
+      // Nombre del producto con sombra y tipografía moderna
+      {
+        overlay: {
+          font_family: 'Montserrat',
+          font_size: 48,
+          font_weight: 'bold',
+          text: encodeURIComponent(producto.nombre),
+        },
+        color: 'rgb:FFFFFF',
+      },
+      { flags: 'layer_apply', gravity: 'south', y: 220 },
+
+      // Precio original (tachado) con fondo
+      ...(descuentoNum > 0
+        ? [
+            {
+              overlay: {
+                font_family: 'Montserrat',
+                font_size: 34,
+                text: `G/${precioOriginalNum.toLocaleString('es-PY')}`,
+              },
+              color: 'rgb:D1D5DB',
+            },
+            { flags: 'layer_apply', gravity: 'south', y: 150 },
+          ]
+        : []),
+
+      // Precio promocional (grande y llamativo)
+      {
+        overlay: {
+          font_family: 'Montserrat',
+          font_size: 64,
+          font_weight: 'bold',
+          text: `G/${precioPromoNum.toLocaleString('es-PY')}`,
+        },
+        color: 'rgb:FF6B00',
+      },
+      { flags: 'layer_apply', gravity: 'south', y: 90 },
+
+      // Call to action
+      {
+        overlay: {
+          font_family: 'Montserrat',
+          font_size: 28,
+          font_weight: 'bold',
+          text: encodeURIComponent('Pedi en panfree.fit | 100% Sin Gluten'),
+        },
+        color: 'rgb:F9FAFB',
+      },
       { flags: 'layer_apply', gravity: 'south', y: 25 },
     ]
 
@@ -227,22 +306,35 @@ export async function POST(req) {
     console.log('✅ URL con transformaciones generada:', generatedImageUrl)
 
     // 6. Guardar registro en Supabase
-    await supabase.from('generaciones_imagen').insert([{
-      producto_id: producto.id,
-      imagen_original_url: imageSource,
-      imagen_generada_url: generatedImageUrl,
-      transformaciones: transformations,
-      prompt_creativo: promptFondo,
-      evento: evento || null,
-      descuento_aplicado: Number(descuento),
-      precio_original: Number(producto.precio_venta),
-      precio_promocional: Math.round(Number(producto.precio_venta) * (1 - Number(descuento) / 100)),
-    }])
+    const { data: dataInsert } = await supabase
+      .from('generaciones_imagen')
+      .insert([{
+        producto_id: producto.id,
+        imagen_original_url: imageSource,
+        imagen_generada_url: generatedImageUrl,
+        transformaciones: transformations,
+        prompt_creativo: promptEnriquecido,
+        evento: evento || null,
+        descuento_aplicado: descuentoNum,
+        precio_original: precioOriginalNum,
+        precio_promocional: precioPromoNum,
+      }])
+      .select()
 
     return NextResponse.json({
       success: true,
       imagen_url: generatedImageUrl,
       public_id: finalPublicId,
+      producto: {
+        id: producto.id,
+        nombre: producto.nombre,
+        precio_original: precioOriginalNum,
+        precio_original_fmt: `G/ ${precioOriginalNum.toLocaleString('es-PY')}`,
+        precio_promocional: precioPromoNum,
+        precio_promocional_fmt: `G/ ${precioPromoNum.toLocaleString('es-PY')}`,
+        descuento: descuentoNum,
+      },
+      generacion_id: dataInsert?.[0]?.id || null,
       mensaje: `✅ Imagen generada y guardada en marketing/`,
     })
   } catch (error) {
