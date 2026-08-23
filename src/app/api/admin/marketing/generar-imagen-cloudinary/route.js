@@ -106,7 +106,14 @@ async function descargarComoDataUri(url) {
 export async function POST(req) {
   try {
     const body = await req.json()
-    const { producto_id, descuento = 0, evento = '', brief_creativo = '', custom_image_url = null } = body || {}
+    const {
+      producto_id,
+      descuento = 0,
+      evento = '',
+      brief_creativo = '',
+      custom_image_url = null,
+      modelo = 'nano-banana-2',
+    } = body || {}
 
     if (!producto_id && !custom_image_url) {
       return NextResponse.json(
@@ -114,6 +121,31 @@ export async function POST(req) {
         { status: 400 }
       )
     }
+
+    // Validar modelo seleccionado
+    const modelosPermitidos = [
+      'nano-banana-1',
+      'nano-banana-2',
+      'flux-2-pro',
+      'recraft-v4',
+      'gpt-image-2',
+      'ideogram-v4-base',
+    ]
+
+    const modeloSeleccionado = modelo || 'nano-banana-2'
+
+    if (!modelosPermitidos.includes(modeloSeleccionado)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Modelo "${modelo}" no soportado. Modelos permitidos: ${modelosPermitidos.join(', ')}`,
+        },
+        { status: 400 }
+      )
+    }
+
+    console.log(`🎨 [${new Date().toISOString()}] Modelo seleccionado: ${modeloSeleccionado}`)
+    console.log(`🎨 Modelo de IA seleccionado: ${modeloSeleccionado}`)
 
     // 0. Diagnóstico de configuración — visible en logs del servidor
     console.log('🔧 [Cloudinary Config Check]', {
@@ -250,6 +282,7 @@ export async function POST(req) {
       console.log(`📊 Reducción: ${Math.round((1 - promptComprimido.length / promptBase.length) * 100)}%`)
     }
     console.log(`🎨 Prompt fondo para Cloudinary: "${promptFondo}"`)
+    console.log(`🎨 Prompt: ${promptFondo}`)
 
     const precioOriginalNum = Number(producto.precio_venta) || 28000
     const descuentoNum = Number(descuento) || 0
@@ -260,8 +293,8 @@ export async function POST(req) {
       // Formato Instagram Portrait (1080x1350, relación 4:5)
       { width: 1080, height: 1350, crop: 'fill', gravity: 'auto' },
 
-      // Reemplazo generativo con prompt conciso y limpio
-      { effect: `gen_background_replace:prompt_${promptFondo}` },
+      // Reemplazo generativo con prompt conciso y modelo seleccionado
+      { effect: `gen_background_replace:prompt_${promptFondo}:model_${modeloSeleccionado}` },
 
       // Post-procesamiento fotográfico profesional: realce de color, contraste, nitidez y viñeta
       { effect: 'brightness:6' },
@@ -366,6 +399,7 @@ export async function POST(req) {
       success: true,
       imagen_url: generatedImageUrl,
       public_id: finalPublicId,
+      modelo_utilizado: modeloSeleccionado,
       url_length: generatedImageUrl.length,
       producto: {
         id: producto.id,
