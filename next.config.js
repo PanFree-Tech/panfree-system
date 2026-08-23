@@ -8,6 +8,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  experimental: {
+    serverComponentsExternalPackages: ['@axiomantic/llmlingua-2', '@huggingface/transformers', 'onnxruntime-node'],
+  },
   images: {
     remotePatterns: [
       {
