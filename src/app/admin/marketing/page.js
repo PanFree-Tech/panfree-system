@@ -56,7 +56,7 @@ export default function MarketingPage() {
   const [descuentoManual, setDescuentoManual] = useState(10)
   const [tono, setTono] = useState('persuasivo')
   const [contenidoGenerado, setContenidoGenerado] = useState(null)
-  const [promptVisualManual, setPromptVisualManual] = useState('')
+  const [promptText, setPromptText] = useState('')
   const [selectedModel, setSelectedModel] = useState('gemini-3.1-flash-image')
   const [modeloUtilizado, setModeloUtilizado] = useState('')
   const [imagenCloudinaryGenerada, setImagenCloudinaryGenerada] = useState(null)
@@ -135,8 +135,8 @@ export default function MarketingPage() {
 
       if (json.success && json.content) {
         setContenidoGenerado(json.content)
-        if (json.content.image_prompt && !promptVisualManual) {
-          setPromptVisualManual(json.content.image_prompt)
+        if (json.content.image_prompt && !promptText) {
+          setPromptText(json.content.image_prompt)
         }
         setNotificacion({
           tipo: 'exito',
@@ -163,7 +163,7 @@ export default function MarketingPage() {
       setGenerandoImagenCloudinary(true)
       setNotificacion(null)
 
-      const briefFinal = promptVisualManual.trim() || contenidoGenerado?.image_prompt || ''
+      const briefFinal = promptText.trim() || contenidoGenerado?.image_prompt || ''
 
       const payload = {
         producto_id: decision.producto.id,
@@ -853,10 +853,10 @@ export default function MarketingPage() {
                 {/* Campo editable de Prompt Visual (brief_creativo) */}
                 <div>
                   <label className={styles.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                    <span>Prompt Visual (brief_creativo):</span>
-                    {promptVisualManual ? (
+                    <span>✍️ Prompt Visual (brief_creativo):</span>
+                    {promptText ? (
                       <span style={{ fontSize: '0.7rem', color: P.naranja, fontWeight: 700 }}>
-                        ✍️ Personalizado
+                        ✍️ Editado / Personalizado
                       </span>
                     ) : contenidoGenerado?.image_prompt ? (
                       <span style={{ fontSize: '0.7rem', color: P.dorado, fontWeight: 600 }}>
@@ -866,10 +866,10 @@ export default function MarketingPage() {
                   </label>
                   <textarea
                     rows={3}
-                    value={promptVisualManual}
-                    onChange={(e) => setPromptVisualManual(e.target.value)}
-                    placeholder="Ej: fotografía gastronómica de pan artesanal, mesa de madera rústica, iluminación cálida..."
-                    disabled={generandoImagenCloudinary}
+                    value={promptText}
+                    onChange={(e) => setPromptText(e.target.value)}
+                    placeholder="Ej: fotografía publicitaria profesional de Pan de Campo 100% sin gluten, estilo Instagram, iluminación de estudio, fondo elegante y acogedor..."
+                    disabled={algunProcesoActivo}
                     style={{
                       width: '100%',
                       backgroundColor: '#faf7f2',
@@ -887,14 +887,14 @@ export default function MarketingPage() {
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
                     <span style={{ fontSize: '0.68rem', color: '#888' }}>
-                      {promptVisualManual.trim()
-                        ? 'Se usará este prompt para Cloudinary AI.'
-                        : 'Si está vacío, se usará el prompt de Gemini o la plantilla temática.'}
+                      {promptText.trim()
+                        ? 'Describe la imagen que quieres que genere Gemini.'
+                        : 'Si está vacío, se creará un prompt fotográfico profesional automáticamente para el producto.'}
                     </span>
-                    {promptVisualManual && (
+                    {promptText && (
                       <button
-                        onClick={() => setPromptVisualManual('')}
-                        disabled={generandoImagenCloudinary}
+                        onClick={() => setPromptText(contenidoGenerado?.image_prompt || '')}
+                        disabled={algunProcesoActivo}
                         style={{
                           background: 'none',
                           border: 'none',
@@ -943,7 +943,7 @@ export default function MarketingPage() {
                           borderTopColor: '#fff',
                         }}
                       />
-                      <span>⏳ Generando fondo con Gemini y ensamblando...</span>
+                      <span>⏳ Generando imagen publicitaria con Gemini...</span>
                     </span>
                   ) : (
                     <span>🖼️ Generar Arte con Gemini & Cloudinary</span>
