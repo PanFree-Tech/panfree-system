@@ -184,17 +184,23 @@ export default function MarketingPage() {
       if (json.success && json.imagen_url) {
         setImagenCloudinaryGenerada(json.imagen_url)
         setModeloUtilizado(json.modelo_utilizado || selectedModel)
+        
+        let mensajeExito = json.mensaje || `✅ ¡Arte generado con éxito! Referencia de Cloudinary (productos/) ➔ Gemini (${json.modelo_utilizado || selectedModel}) ➔ Guardado en Cloudinary (marketing/)`
+        if (json.advertencia_acceso) {
+          mensajeExito += ` ⚠️ Nota: ${json.advertencia_acceso}`
+        }
+
         setNotificacion({
-          tipo: 'exito',
-          texto: `✅ ¡Arte generado con estrategia de 2 pasos! (Fondo: ${json.modelo_utilizado || selectedModel} + Recorte Pixelz + Precios BD)`,
+          tipo: json.advertencia_acceso ? 'alerta' : 'exito',
+          texto: mensajeExito,
         })
       } else {
-        throw new Error(json.error || 'Error al generar imagen con Cloudinary')
+        throw new Error(json.error || 'Error al generar imagen con Gemini y Cloudinary')
       }
     } catch (err) {
       setNotificacion({
         tipo: 'error',
-        texto: `❌ Error al conectar con Cloudinary Generative AI: ${err.message || 'Error en el servicio'}`,
+        texto: `❌ Error en el generador de imágenes: ${err.message || 'Error en el servicio'}`,
       })
     } finally {
       setGenerandoImagenCloudinary(false)
