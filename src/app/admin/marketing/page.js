@@ -57,7 +57,7 @@ export default function MarketingPage() {
   const [tono, setTono] = useState('persuasivo')
   const [contenidoGenerado, setContenidoGenerado] = useState(null)
   const [promptVisualManual, setPromptVisualManual] = useState('')
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash')
+  const [selectedModel, setSelectedModel] = useState('gemini-3.1-flash-image')
   const [modeloUtilizado, setModeloUtilizado] = useState('')
   const [imagenCloudinaryGenerada, setImagenCloudinaryGenerada] = useState(null)
   const [notificacion, setNotificacion] = useState(null)
@@ -840,12 +840,13 @@ export default function MarketingPage() {
                       outline: 'none',
                     }}
                   >
-                    <option value="gemini-2.5-flash">🧠 Gemini 2.5 Flash (Gratuito – Mejora de Prompt)</option>
+                    <option value="gemini-3.1-flash-image">⭐ Gemini 3.1 Flash (Recomendado - Calidad)</option>
+                    <option value="gemini-3-pro-image">🚀 Gemini 3 Pro (Máxima Calidad)</option>
                   </select>
                   <p style={{ marginTop: '0.35rem', fontSize: '0.72rem', color: '#666', lineHeight: 1.4, margin: '0.35rem 0 0 0' }}>
-                    1. 🧠 Enriquecimiento de prompt con <strong>Google Gemini 2.5 Flash</strong> (Gratuito).<br />
-                    2. 🎨 Generación de fondo con <strong>Cloudinary gen_fill</strong> (Sin add-ons pagos).<br />
-                    3. 📐 Overlays tipográficos Montserrat con precios reales en G/ de BD.
+                    1. 🎨 Generación directa de imagen completa con <strong>Google Gemini Image API</strong>.<br />
+                    2. 📐 Formato vertical 3:4 publicitario optimizado para redes sociales.<br />
+                    3. ☁️ Almacenamiento directo y seguro en <strong>Cloudinary</strong>.
                   </p>
                 </div>
 
@@ -1046,7 +1047,7 @@ export default function MarketingPage() {
                         }}
                       >
                         <p style={{ margin: 0, fontSize: '0.78rem', color: '#065f46', fontWeight: 600 }}>
-                          ✅ Arte generado con: <strong style={{ color: '#047857' }}>{modeloUtilizado || selectedModel || 'gemini-2.5-flash'}</strong> + Composición Cloudinary
+                          ✅ Imagen generada con: <strong style={{ color: '#047857' }}>{modeloUtilizado || selectedModel || 'gemini-3.1-flash-image'}</strong>
                         </p>
                       </div>
 
