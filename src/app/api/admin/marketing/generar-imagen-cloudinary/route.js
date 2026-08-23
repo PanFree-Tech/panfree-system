@@ -107,31 +107,55 @@ export async function POST(req) {
       alto: 1350, // Formato 4:5 vertical ideal para Feed de Instagram
     })
 
-    let generatedImageUrl = resultadoTransformacion.url
+    const cloudinaryClient = getCloudinaryClient()
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'panfree'
+
+    // Asegurar que la fuente para el uploader sea una URL completa válida
+    let sourceForUpload = imagenOriginalUrl
+    if (!sourceForUpload.startsWith('http://') && !sourceForUpload.startsWith('https://') && !sourceForUpload.startsWith('data:')) {
+      sourceForUpload = `https://res.cloudinary.com/${cloudName}/image/upload/${imagenOriginalUrl}`
+    }
+
+    let generatedImageUrl = null
     let generatedPublicId = `marketing/product_${producto.id || 'promo'}_${Date.now()}`
 
-    // 4. Procesar la imagen en el servidor de Cloudinary usando `upload` con transformaciones aplicadas
-    // Esto genera una URL persistente, corta y sin parámetros excesivos en el query string
-    const cloudinaryClient = getCloudinaryClient()
+    // 4. Procesar la imagen en el servidor de Cloudinary usando `uploader.upload()`
+    // Esto ejecuta la IA generativa en el servidor y genera una URL permanente, corta (< 255 chars) guardada en 'marketing/'
     if (process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
       try {
-        const uploadResult = await cloudinaryClient.uploader.upload(imagenOriginalUrl, {
+        console.log('📤 Subiendo y transformando imagen en Cloudinary...')
+        console.log('🖼️ Fuente origen:', sourceForUpload)
+        console.log('📁 Carpeta destino: marketing/')
+
+        const uploadResult = await cloudinaryClient.uploader.upload(sourceForUpload, {
           folder: 'marketing',
           public_id: `product_${producto.id || 'promo'}_${Date.now()}`,
           transformation: resultadoTransformacion.transformations,
           overwrite: true,
           resource_type: 'image',
-          type: 'upload',
           secure: true,
         })
+
+        console.log('🖼️ Public ID generado:', uploadResult.public_id)
+        console.log('✅ URL generada y guardada:', uploadResult.secure_url)
 
         if (uploadResult && uploadResult.secure_url) {
           generatedImageUrl = uploadResult.secure_url
           generatedPublicId = uploadResult.public_id || generatedPublicId
         }
       } catch (uploadErr) {
-        console.warn('Nota: Fallback a URL de transformación directa de Cloudinary:', uploadErr.message)
+        console.warn('⚠️ Error en uploader.upload, activando fallback a URL de transformación:', uploadErr.message)
+        // Fallback a URL de transformación directa de Cloudinary
+        generatedImageUrl = resultadoTransformacion.url
       }
+    } else {
+      // Si no hay credenciales completas de Cloudinary configuradas
+      console.log('ℹ️ Credenciales de API Key/Secret ausentes, usando URL de transformación directa')
+      generatedImageUrl = resultadoTransformacion.url
+    }
+
+    if (!generatedImageUrl) {
+      generatedImageUrl = resultadoTransformacion.url
     }
 
     // 5. Registrar en la tabla `generaciones_imagen` de Supabase

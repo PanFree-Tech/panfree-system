@@ -74,10 +74,11 @@ export function buildMarketingImageTransformationUrl({
   const precioOriginalFmt = `G/ ${precioOriginal.toLocaleString('es-PY')}`
   const precioPromoFmt = `G/ ${precioPromocional.toLocaleString('es-PY')}`
 
-  // Prompt temático para Generative Background Replacement
-  const promptFondo =
+  // Prompt temático para Generative Background Replacement (limpio y descriptivo)
+  const promptFondo = (
     briefCreativo ||
-    `Rustic gourmet bakery table, artisanal gluten-free bakery setting, soft warm lighting, studio photography, theme: ${evento || 'special artisan offer'}`
+    `Rustic gourmet bakery table, artisanal gluten-free bakery setting, soft warm lighting, studio photography, theme ${evento || 'special artisan offer'}`
+  ).trim().slice(0, 300)
 
   // Transformaciones secuenciales en Cloudinary
   const transformations = [
@@ -93,7 +94,7 @@ export function buildMarketingImageTransformationUrl({
       effect: 'background_removal',
     },
     {
-      effect: `gen_background_replace:prompt_${encodeURIComponent(promptFondo)}`,
+      effect: `gen_background_replace:prompt_${promptFondo}`,
     },
     // 3. Optimización automática de calidad y formato WebP/JPEG
     {
@@ -127,7 +128,7 @@ export function buildMarketingImageTransformationUrl({
         font_family: 'Arial',
         font_size: 48,
         font_weight: 'bold',
-        text: encodeURIComponent(nombreProducto || 'PanFree Artesanal'),
+        text: nombreProducto || 'PanFree Artesanal',
       },
     },
     {
@@ -143,7 +144,7 @@ export function buildMarketingImageTransformationUrl({
             overlay: {
               font_family: 'Arial',
               font_size: 34,
-              text: encodeURIComponent(precioOriginalFmt),
+              text: precioOriginalFmt,
             },
           },
           {
@@ -160,7 +161,7 @@ export function buildMarketingImageTransformationUrl({
         font_family: 'Arial',
         font_size: 54,
         font_weight: 'bold',
-        text: encodeURIComponent(precioPromoFmt),
+        text: precioPromoFmt,
       },
     },
     {
@@ -175,7 +176,7 @@ export function buildMarketingImageTransformationUrl({
         font_family: 'Arial',
         font_size: 28,
         font_weight: 'bold',
-        text: encodeURIComponent('Pedi en panfree.fit | 100% Sin Gluten'),
+        text: 'Pedi en panfree.fit | 100% Sin Gluten',
       },
     },
     {
