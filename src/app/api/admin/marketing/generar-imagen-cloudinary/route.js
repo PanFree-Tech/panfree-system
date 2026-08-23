@@ -306,44 +306,94 @@ export async function POST(req) {
     const descuentoNum = Number(descuento) || 0
     const precioPromoNum = Math.round(precioOriginalNum * (1 - descuentoNum / 100))
 
-    // Overlay del producto (opcional, usa el recorte sin fondo)
+    // Overlay del producto (sin recortes circulares)
     const overlayProductTag = (publicIdProducto || 'productos/gmwx5mwuj0ockucprlwr').replace(/\//g, ':')
 
     const transformations = [
-      // Fondo generado por Cloudinary con gen_fill
-      { width: 1080, height: 1350, crop: 'pad', background: `gen_fill:prompt_${backgroundPrompt}`, gravity: 'center' },
-      // Efectos
+      // 1. Fondo generado y expandido con gen_fill (sin fondos negros ni crop: pad)
+      { width: 1080, height: 1350, crop: 'fill', gravity: 'center' },
+      { background: `gen_fill:prompt_${backgroundPrompt}` },
+
+      // 2. Realces fotográficos limpios y nítidos (sin viñeta oscura circular)
       { effect: 'brightness:5' },
       { effect: 'contrast:12' },
       { effect: 'saturation:14' },
-      { effect: 'sharpen:80' },
-      { effect: 'vignette:18' },
+      { effect: 'sharpen:60' },
       { quality: 'auto:best', fetch_format: 'auto' },
-      // Producto recortado (opcional)
+
+      // 3. Producto centrado y nítido (sin recortes circulares ni marcos negros)
       {
         overlay: overlayProductTag,
         width: 780,
         crop: 'fit',
       },
       { flags: 'layer_apply', gravity: 'center', y: -70 },
-      // Badge de descuento
-      ...(descuentoNum > 0 ? [
-        { overlay: { font_family: 'Montserrat', font_size: 72, font_weight: 'bold', text: `${descuentoNum}%25 OFF` }, color: 'rgb:FF6B00' },
-        { flags: 'layer_apply', gravity: 'north_east', x: 50, y: 50 },
-      ] : []),
-      // Nombre
-      { overlay: { font_family: 'Montserrat', font_size: 48, font_weight: 'bold', text: encodeURIComponent(producto.nombre) }, color: 'rgb:FFFFFF' },
+
+      // 4. Badge de descuento
+      ...(descuentoNum > 0
+        ? [
+            {
+              overlay: {
+                font_family: 'Montserrat',
+                font_size: 72,
+                font_weight: 'bold',
+                text: `${descuentoNum}%25 OFF`,
+              },
+              color: 'rgb:FF6B00',
+            },
+            { flags: 'layer_apply', gravity: 'north_east', x: 50, y: 50 },
+          ]
+        : []),
+
+      // 5. Nombre del producto
+      {
+        overlay: {
+          font_family: 'Montserrat',
+          font_size: 48,
+          font_weight: 'bold',
+          text: encodeURIComponent(producto.nombre),
+        },
+        color: 'rgb:FFFFFF',
+      },
       { flags: 'layer_apply', gravity: 'south', y: 220 },
-      // Precio original
-      ...(descuentoNum > 0 ? [
-        { overlay: { font_family: 'Montserrat', font_size: 34, text: `G/${precioOriginalNum.toLocaleString('es-PY')}` }, color: 'rgb:D1D5DB' },
-        { flags: 'layer_apply', gravity: 'south', y: 150 },
-      ] : []),
-      // Precio promocional
-      { overlay: { font_family: 'Montserrat', font_size: 64, font_weight: 'bold', text: `G/${precioPromoNum.toLocaleString('es-PY')}` }, color: 'rgb:FF6B00' },
+
+      // 6. Precio original tachado
+      ...(descuentoNum > 0
+        ? [
+            {
+              overlay: {
+                font_family: 'Montserrat',
+                font_size: 34,
+                text: `G/${precioOriginalNum.toLocaleString('es-PY')}`,
+              },
+              color: 'rgb:D1D5DB',
+            },
+            { flags: 'layer_apply', gravity: 'south', y: 150 },
+          ]
+        : []),
+
+      // 7. Precio promocional destacado
+      {
+        overlay: {
+          font_family: 'Montserrat',
+          font_size: 64,
+          font_weight: 'bold',
+          text: `G/${precioPromoNum.toLocaleString('es-PY')}`,
+        },
+        color: 'rgb:FF6B00',
+      },
       { flags: 'layer_apply', gravity: 'south', y: 90 },
-      // CTA
-      { overlay: { font_family: 'Montserrat', font_size: 28, font_weight: 'bold', text: encodeURIComponent('Pedi en panfree.fit | 100% Sin Gluten') }, color: 'rgb:F9FAFB' },
+
+      // 8. CTA de cierre
+      {
+        overlay: {
+          font_family: 'Montserrat',
+          font_size: 28,
+          font_weight: 'bold',
+          text: encodeURIComponent('Pedi en panfree.fit | 100% Sin Gluten'),
+        },
+        color: 'rgb:F9FAFB',
+      },
       { flags: 'layer_apply', gravity: 'south', y: 25 },
     ]
 
