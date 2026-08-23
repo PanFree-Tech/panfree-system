@@ -57,7 +57,7 @@ export default function MarketingPage() {
   const [tono, setTono] = useState('persuasivo')
   const [contenidoGenerado, setContenidoGenerado] = useState(null)
   const [promptVisualManual, setPromptVisualManual] = useState('')
-  const [selectedModel, setSelectedModel] = useState('nano-banana-2')
+  const [selectedModel, setSelectedModel] = useState('gemini-3.1-flash-image')
   const [modeloUtilizado, setModeloUtilizado] = useState('')
   const [imagenCloudinaryGenerada, setImagenCloudinaryGenerada] = useState(null)
   const [notificacion, setNotificacion] = useState(null)
@@ -800,7 +800,7 @@ export default function MarketingPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span style={{ fontSize: '1.1rem' }}>🖼️</span>
                     <h2 style={{ fontSize: '1rem', fontWeight: 800, color: P.verde, margin: 0 }}>
-                      3. Generar Arte con Cloudinary AI
+                      3. Generar Arte con Gemini & Cloudinary
                     </h2>
                   </div>
                   <span className={`${styles.badge} ${styles.badgeGold}`}>
@@ -808,14 +808,14 @@ export default function MarketingPage() {
                   </span>
                 </div>
 
-                {/* Selector de Modelo de IA para Cloudinary Image Generation */}
+                {/* Selector de Modelo de IA para Gemini Image Generation (Nano Banana) */}
                 <div style={{ backgroundColor: '#faf7f2', padding: '0.85rem', borderRadius: 10, border: '1px solid #e4dacb' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
                     <label className={styles.label} style={{ margin: 0, fontWeight: 700 }}>
-                      ⚡ Estrategia 2 Pasos: Image Generation + Pixelz
+                      ⚡ Estrategia: Gemini Image API + Pixelz + Cloudinary
                     </label>
                     <span style={{ fontSize: '0.68rem', backgroundColor: '#e8f5e9', color: '#2e7d32', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
-                      ADD-ONS ACTIVOS
+                      NANO BANANA
                     </span>
                   </div>
                   <select
@@ -834,16 +834,17 @@ export default function MarketingPage() {
                       outline: 'none',
                     }}
                   >
-                    <option value="nano-banana-2">⭐ Nano Banana 2 (Recomendado - Calidad Profesional)</option>
-                    <option value="flux-2-pro">🎨 Flux 2 Pro (Fotorrealismo y Acabados Premium)</option>
+                    <option value="gemini-3.1-flash-image">⭐ Gemini 3.1 Flash Image (Nano Banana 2 - Recomendado)</option>
+                    <option value="gemini-3.1-flash-lite-image">⚡ Gemini 3.1 Flash Lite Image (Nano Banana Lite - Rápido)</option>
+                    <option value="gemini-3-pro-image">🎨 Gemini 3 Pro Image (Nano Banana Pro - Máxima Resolución)</option>
+                    <option value="flux-2-pro">✨ Flux 2 Pro (Fotorrealismo y Acabados Premium)</option>
                     <option value="gpt-image-2">📢 GPT Image 2 (Campañas Publicitarias y Promos)</option>
                     <option value="recraft-v4">📐 Recraft V4 (Estilo Artesanal & Ilustración)</option>
-                    <option value="ideogram-v4-base">🖼️ Ideogram V4 (Fotografía de Estudio & Alto Contraste)</option>
-                    <option value="nano-banana-1">⚡ Nano Banana 1 (Generación Rápida)</option>
+                    <option value="ideogram-v4-base">🖼️ Ideogram V4 (Fotografía de Estudio)</option>
                   </select>
                   <p style={{ marginTop: '0.35rem', fontSize: '0.72rem', color: '#666', lineHeight: 1.4, margin: '0.35rem 0 0 0' }}>
                     1. ✂️ Elimina el fondo del producto con <strong>Pixelz / Cloudinary AI</strong>.<br />
-                    2. 🎨 Genera un fondo publicitario nuevo con <strong>Image Generation API</strong>.<br />
+                    2. 🎨 Genera el fondo publicitario con <strong>Google Gemini Image API (Nano Banana)</strong>.<br />
                     3. 📐 Ensambla con <strong>layer_apply</strong> inyectando precios reales de BD.
                   </p>
                 </div>
@@ -941,10 +942,10 @@ export default function MarketingPage() {
                           borderTopColor: '#fff',
                         }}
                       />
-                      <span>⏳ Generando imagen...</span>
+                      <span>⏳ Generando fondo con Gemini y ensamblando...</span>
                     </span>
                   ) : (
-                    <span>🖼️ Generar Imagen Publicitaria con Cloudinary AI</span>
+                    <span>🖼️ Generar Arte con Gemini & Cloudinary</span>
                   )}
                 </button>
 
@@ -977,10 +978,10 @@ export default function MarketingPage() {
                         }}
                       />
                       <h4 style={{ color: P.dorado, fontSize: '0.95rem', margin: '0 0 0.4rem 0' }}>
-                        ⏳ Generando imagen publicitaria con Cloudinary AI...
+                        ⏳ Generando fondo con Gemini Image API & ensamblando en Cloudinary...
                       </h4>
                       <p style={{ fontSize: '0.78rem', color: '#aaa', margin: 0 }}>
-                        Extrayendo fondo, aplicando transformaciones generativas e inyectando precios reales en Guaraníes.
+                        Recorte con Pixelz, fondo de estudio gastronómico con Gemini e inyección de precios reales de BD en Guaraníes.
                       </p>
                     </div>
                   )}
@@ -1004,7 +1005,7 @@ export default function MarketingPage() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={imagenCloudinaryGenerada}
-                          alt="Arte Publicitario Generado con Cloudinary"
+                          alt="Arte Publicitario Generado con Gemini y Cloudinary"
                           style={{
                             width: '100%',
                             height: '100%',
@@ -1045,7 +1046,7 @@ export default function MarketingPage() {
                         }}
                       >
                         <p style={{ margin: 0, fontSize: '0.78rem', color: '#065f46', fontWeight: 600 }}>
-                          ✅ Fondo generado con: <strong style={{ color: '#047857' }}>{modeloUtilizado || selectedModel || 'nano-banana-2'}</strong> + Recorte Pixelz
+                          ✅ Fondo generado con: <strong style={{ color: '#047857' }}>{modeloUtilizado || selectedModel || 'gemini-3.1-flash-image'}</strong> + Recorte Pixelz
                         </p>
                       </div>
 
