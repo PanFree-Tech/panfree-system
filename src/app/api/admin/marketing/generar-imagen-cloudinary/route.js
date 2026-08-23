@@ -121,17 +121,17 @@ export async function POST(req) {
 
     // 4. Procesar y guardar la imagen en Cloudinary Media Library ('marketing/')
     if (process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
-      const publicIdDestino = `product_${producto.id || 'promo'}_${Date.now()}`
+      const publicIdDestino = `marketing/product_${producto.id || 'promo'}_${Date.now()}`
 
       console.log('📤 Source a subir:', sourceForUpload)
-      console.log('📁 Carpeta destino: marketing/')
+      console.log('📁 Carpeta destino (asset_folder): marketing')
       console.log('📤 Transformaciones a enviar:', JSON.stringify(resultadoTransformacion.transformations, null, 2))
 
       try {
-        // Intento 1: Subir directamente aplicando las transformaciones en el servidor de Cloudinary
+        // Intento 1: Subir directamente aplicando las transformaciones en el servidor de Cloudinary (Dynamic Folder Mode)
         console.log('🚀 [Intento 1] Subiendo con transformaciones a Cloudinary...')
         const uploadResult = await cloudinaryClient.uploader.upload(sourceForUpload, {
-          folder: 'marketing',
+          asset_folder: 'marketing',
           public_id: publicIdDestino,
           transformation: resultadoTransformacion.transformations,
           overwrite: true,
@@ -144,23 +144,23 @@ export async function POST(req) {
 
         if (uploadResult && uploadResult.secure_url) {
           generatedImageUrl = uploadResult.secure_url
-          generatedPublicId = uploadResult.public_id || `marketing/${publicIdDestino}`
+          generatedPublicId = uploadResult.public_id || publicIdDestino
         }
       } catch (uploadErr) {
         console.warn('⚠️ [Intento 1] Error en uploader.upload con transformaciones:', uploadErr.message)
 
         try {
           // Intento 2 (Enfoque alternativo): Subir la imagen base a 'marketing/' y aplicar transformaciones en la URL de entrega
-          console.log('🔄 [Intento 2] Subiendo imagen base a carpeta marketing/ y aplicando transformaciones en URL de entrega...')
+          console.log('🔄 [Intento 2] Subiendo imagen base a asset_folder marketing/ y aplicando transformaciones en URL de entrega...')
           const uploadBaseResult = await cloudinaryClient.uploader.upload(sourceForUpload, {
-            folder: 'marketing',
+            asset_folder: 'marketing',
             public_id: publicIdDestino,
             overwrite: true,
             resource_type: 'image',
             secure: true,
           })
 
-          const savedPublicId = uploadBaseResult.public_id || `marketing/${publicIdDestino}`
+          const savedPublicId = uploadBaseResult.public_id || publicIdDestino
           console.log('📁 [Intento 2] Imagen base guardada en marketing/:', savedPublicId)
 
           // Generar URL con las transformaciones sobre el nuevo public_id guardado en marketing/
