@@ -64,13 +64,18 @@ async function descargarComoDataUri(url) {
 
 /**
  * Genera un fondo nuevo con la API de Image Generation de Cloudinary (text_to_image)
+ * Endpoint oficial: https://api.cloudinary.com/v2/generate/<cloud_name>/text_to_image
  */
 async function generarFondoConTextToImage({ cloudName, apiKey, apiSecret, prompt, model, publicId }) {
-  const authHeader = `Basic ${Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')}`
-  const endpoint = `https://api.cloudinary.com/v2/generate/${cloudName}/text_to_image`
+  const cleanCloudName = String(cloudName || '').trim().replace(/^["']|["']$/g, '')
+  const cleanApiKey = String(apiKey || '').trim().replace(/^["']|["']$/g, '')
+  const cleanApiSecret = String(apiSecret || '').trim().replace(/^["']|["']$/g, '')
 
-  console.log(`🚀 [text_to_image] Llamando a API de Image Generation de Cloudinary...`)
-  console.log(`   Endpoint: ${endpoint}`)
+  const authHeader = `Basic ${Buffer.from(`${cleanApiKey}:${cleanApiSecret}`).toString('base64')}`
+  const endpoint = `https://api.cloudinary.com/v2/generate/${cleanCloudName}/text_to_image`
+
+  console.log(`🚀 [Cloudinary Image Generation] Invocando API text_to_image...`)
+  console.log(`   URL: ${endpoint}`)
   console.log(`   Modelo: ${model}`)
   console.log(`   Prompt: "${prompt}"`)
 
@@ -80,18 +85,19 @@ async function generarFondoConTextToImage({ cloudName, apiKey, apiSecret, prompt
       headers: {
         'Authorization': authHeader,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify({
         prompt: prompt,
         model: model || 'nano-banana-2',
         aspect_ratio: '4:5',
-        asset_folder: 'marketing/backgrounds',
-        public_id: publicId,
       }),
     })
 
     const responseText = await res.text()
-    let data
+    const xCldError = res.headers.get('x-cld-error')
+    
+    let data = null
     try {
       data = JSON.parse(responseText)
     } catch {
@@ -99,20 +105,37 @@ async function generarFondoConTextToImage({ cloudName, apiKey, apiSecret, prompt
     }
 
     if (!res.ok) {
-      console.warn(`⚠️ [text_to_image] Respuesta HTTP ${res.status}:`, data)
-      return { success: false, error: data?.error?.message || data?.message || responseText, status: res.status }
+      const errorMsg = data?.error?.message || data?.message || xCldError || responseText || `HTTP ${res.status}`
+      console.warn(`⚠️ [Cloudinary Image Generation] Error HTTP ${res.status}:`, {
+        status: res.status,
+        endpoint,
+        error: errorMsg,
+        xCldError: xCldError || 'none',
+      })
+
+      if (res.status === 404) {
+        console.warn(`ℹ️ [Cloudinary Image Generation 404] El endpoint es correcto (${endpoint}). El error 404 indica que el add-on "Image Generation" está en proceso de activación o requiere confirmación de soporte en Cloudinary para este cloud name (${cleanCloudName}). Se activará fallback automático.`)
+      }
+
+      return {
+        success: false,
+        status: res.status,
+        error: errorMsg,
+        endpoint,
+        isAddonNotReady: res.status === 404,
+      }
     }
 
-    console.log(`✅ [text_to_image] Fondo generado con éxito en Cloudinary:`, data.public_id || publicId)
+    console.log(`✅ [Cloudinary Image Generation] Fondo generado exitosamente:`, data.public_id || data.secure_url)
     return {
       success: true,
-      public_id: data.public_id || `marketing/backgrounds/${publicId}`,
+      public_id: data.public_id || data.asset_id,
       secure_url: data.secure_url,
       data,
     }
   } catch (err) {
-    console.error('❌ [text_to_image] Error de red o ejecución:', err)
-    return { success: false, error: err?.message || 'Error de conexión' }
+    console.error('❌ [Cloudinary Image Generation] Error de red:', err)
+    return { success: false, error: err?.message || 'Error de conexión con Cloudinary' }
   }
 }
 
@@ -373,9 +396,9 @@ export async function POST(req) {
         { flags: 'layer_apply', gravity: 'south', y: 25 },
       ]
     } else {
-      // Fallback: Canvas directo con corte del producto y capas
+      // Fallback: Canvas directo con corte del producto (Pixelz) y fondo fotográfico cálido
       transformations = [
-        { width: 1080, height: 1350, crop: 'pad', background: 'gen_fill:prompt_rustic_bakery_table_warm_lighting', gravity: 'center' },
+        { width: 1080, height: 1350, crop: 'pad', background: 'rgb:241D17', gravity: 'center' },
         { effect: 'brightness:6' },
         { effect: 'contrast:15' },
         { effect: 'saturation:14' },
