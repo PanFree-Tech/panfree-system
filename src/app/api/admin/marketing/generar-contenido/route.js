@@ -28,9 +28,19 @@ Genera una campaña creativa completa para Instagram con estos datos:
 - Evento / Contexto: "${evento || 'Promoción de la Semana'}"
 - Tono: ${tono} (tentador, profesional, enfocado en personas celíacas, intolerantes y amantes de lo saludable y artesanal)
 
+REGLAS PARA "image_prompt":
+- Debe ser ESTRICTAMENTE una descripción visual y estética para un fondo/escena de fotografía gastronómica.
+- Usa términos fotográficos y descriptivos como: "fotografía gastronómica", "composición de estudio", "iluminación natural/cálida", "fondo desenfocado", "estilo artesanal", mesa de madera rústica, detalles gourmet.
+- PROHIBIDO TERMINANTEMENTE en "image_prompt":
+  * NO incluir precios ni signos monetarios (G/, $, %, OFF, descuento).
+  * NO incluir llamados a la acción ni URLs ni teléfonos.
+  * NO incluir texto promocional ni eslóganes.
+  * NO incluir referencias a condiciones médicas (celiaquía, celiaco, enfermedad, intolerancias).
+- El "image_prompt" debe describir SOLO la ambientación visual fotográfica donde se ubica el producto.
+
 Responde ÚNICAMENTE con un JSON con la siguiente estructura exacta:
 {
-  "image_prompt": "Descripción artística y fotográfica detallada para generar o componer una foto publicitaria de alta calidad de este producto sin gluten con iluminación de estudio, fondo rústico y sello de ${descuento}% OFF",
+  "image_prompt": "fotografía gastronómica de ${nombreProd}, composición de estudio profesional, estilo artesanal, sobre mesa de madera rústica con harina y espigas decorativas, iluminación natural cálida, fondo desenfocado (bokeh) de panadería elegante",
   "hook": "Frase de impacto inicial con emojis",
   "caption": "Texto completo para el post de Instagram con propuesta de valor libre de gluten, mención de Encarnación, precio con descuento destacado y llamado a la acción",
   "hashtags": "#PanFree #SinGluten #SinTACC #Encarnacion #Paraguay #CeliacosParaguay #${categoriaProd.replace(/\\s+/g, '')}",
