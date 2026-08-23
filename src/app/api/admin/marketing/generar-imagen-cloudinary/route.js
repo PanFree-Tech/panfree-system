@@ -107,9 +107,32 @@ export async function POST(req) {
       alto: 1350, // Formato 4:5 vertical ideal para Feed de Instagram
     })
 
-    const generatedImageUrl = resultadoTransformacion.url
+    const transformationUrl = resultadoTransformacion.url
+    let generatedImageUrl = transformationUrl
+    let generatedPublicId = `marketing/product_${producto.id || 'promo'}_${Date.now()}`
 
-    // 4. Registrar en la tabla `generaciones_imagen` de Supabase
+    // 4. Guardar/Persistir la imagen generada en la carpeta 'marketing/' de Cloudinary Media Library
+    const cloudinaryClient = getCloudinaryClient()
+    if (process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+      try {
+        const uploadResult = await cloudinaryClient.uploader.upload(transformationUrl, {
+          folder: 'marketing',
+          public_id: `product_${producto.id || 'promo'}_${Date.now()}`,
+          overwrite: true,
+          resource_type: 'image',
+          secure: true,
+        })
+
+        if (uploadResult && uploadResult.secure_url) {
+          generatedImageUrl = uploadResult.secure_url
+          generatedPublicId = uploadResult.public_id || generatedPublicId
+        }
+      } catch (uploadErr) {
+        console.warn('Nota: Usando URL de transformación generativa directa de Cloudinary (upload fallback):', uploadErr.message)
+      }
+    }
+
+    // 5. Registrar en la tabla `generaciones_imagen` de Supabase
     let generacionId = null
     try {
       const { data: recordData, error: recordError } = await supabase
@@ -138,10 +161,11 @@ export async function POST(req) {
       console.warn('Advertencia al registrar en generaciones_imagen:', dbInsertErr.message)
     }
 
-    // 5. Retornar respuesta enriquecida
+    // 6. Retornar respuesta enriquecida
     return NextResponse.json({
       success: true,
       imagen_url: generatedImageUrl,
+      public_id: generatedPublicId,
       generacion_id: generacionId || `LOCAL-GEN-${Date.now()}`,
       producto: {
         id: producto.id,
@@ -158,6 +182,7 @@ export async function POST(req) {
         generative_background_replacement: true,
         text_overlays_database_sourced: true,
         aspect_ratio: '4:5 (1080x1350)',
+        folder: 'marketing',
       },
       mensaje: `Imagen de marketing generada exitosamente con IA para "${producto.nombre}"`,
     })
