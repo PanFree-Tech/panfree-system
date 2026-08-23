@@ -273,9 +273,10 @@ export default function MarketingPage() {
         if (json.content.image_prompt && !promptText) {
           setPromptText(json.content.image_prompt)
         }
+        const motorTxt = json.motor_utilizado ? ` con ${json.motor_utilizado}` : ''
         setNotificacion({
           tipo: 'exito',
-          texto: '✅ ¡Contenido generado exitosamente con Gemini AI! Ahora puedes generar el arte publicitario con Cloudinary.',
+          texto: `✅ ¡Contenido generado exitosamente${motorTxt}! Ahora puedes generar el arte publicitario con Cloudinary.`,
         })
       } else {
         throw new Error(json.error || 'Fallo la generación de contenido')
@@ -283,7 +284,7 @@ export default function MarketingPage() {
     } catch (err) {
       setNotificacion({
         tipo: 'error',
-        texto: `❌ Error al generar contenido creativo con Gemini: ${err.message || 'Error en el servicio'}`,
+        texto: `❌ Error al generar contenido creativo: ${err.message || 'Error en el servicio'}`,
       })
     } finally {
       setGenerandoContenido(false)
