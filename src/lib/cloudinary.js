@@ -14,19 +14,17 @@ import { v2 as cloudinary } from 'cloudinary'
 let isConfigured = false
 
 export function getCloudinaryClient() {
-  if (!isConfigured) {
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME
-    const apiKey = process.env.CLOUDINARY_API_KEY
-    const apiSecret = process.env.CLOUDINARY_API_SECRET
+  const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || 'd7simx38').trim().replace(/^["']|["']$/g, '')
+  const apiKey = (process.env.CLOUDINARY_API_KEY || '').trim().replace(/^["']|["']$/g, '')
+  const apiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim().replace(/^["']|["']$/g, '')
 
-    cloudinary.config({
-      cloud_name: cloudName || 'panfree',
-      api_key: apiKey || '',
-      api_secret: apiSecret || '',
-      secure: true,
-    })
-    isConfigured = true
-  }
+  cloudinary.config({
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
+    secure: true,
+  })
+
   return cloudinary
 }
 
