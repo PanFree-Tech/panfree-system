@@ -121,9 +121,8 @@ export async function POST(req) {
       'models/gemini-1.5-flash',
       'models/gemini-2.0-flash-exp',
       'models/gemini-1.5-pro',
-      'gemini-2.5-flash',
-      'gemini-3.7-flash',
-      'gemini-2.0-flash',
+      'models/gemini-3.6-flash',
+      'models/gemini-3.7-flash',
     ]
 
     let parsed = null
