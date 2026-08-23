@@ -57,7 +57,7 @@ export default function MarketingPage() {
   const [tono, setTono] = useState('persuasivo')
   const [contenidoGenerado, setContenidoGenerado] = useState(null)
   const [promptVisualManual, setPromptVisualManual] = useState('')
-  const [selectedModel, setSelectedModel] = useState('gemini-3.1-flash-image')
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash')
   const [modeloUtilizado, setModeloUtilizado] = useState('')
   const [imagenCloudinaryGenerada, setImagenCloudinaryGenerada] = useState(null)
   const [notificacion, setNotificacion] = useState(null)
@@ -840,18 +840,12 @@ export default function MarketingPage() {
                       outline: 'none',
                     }}
                   >
-                    <option value="gemini-3.1-flash-image">⭐ Gemini 3.1 Flash Image (Nano Banana 2 - Recomendado)</option>
-                    <option value="gemini-3.1-flash-lite-image">⚡ Gemini 3.1 Flash Lite Image (Nano Banana Lite - Rápido)</option>
-                    <option value="gemini-3-pro-image">🎨 Gemini 3 Pro Image (Nano Banana Pro - Máxima Resolución)</option>
-                    <option value="flux-2-pro">✨ Flux 2 Pro (Fotorrealismo y Acabados Premium)</option>
-                    <option value="gpt-image-2">📢 GPT Image 2 (Campañas Publicitarias y Promos)</option>
-                    <option value="recraft-v4">📐 Recraft V4 (Estilo Artesanal & Ilustración)</option>
-                    <option value="ideogram-v4-base">🖼️ Ideogram V4 (Fotografía de Estudio)</option>
+                    <option value="gemini-2.5-flash">🧠 Gemini 2.5 Flash (Gratuito – Mejora de Prompt)</option>
                   </select>
                   <p style={{ marginTop: '0.35rem', fontSize: '0.72rem', color: '#666', lineHeight: 1.4, margin: '0.35rem 0 0 0' }}>
-                    1. ✂️ Elimina el fondo del producto con <strong>Pixelz / Cloudinary AI</strong>.<br />
-                    2. 🎨 Genera el fondo publicitario con <strong>Google Gemini Image API (Nano Banana)</strong>.<br />
-                    3. 📐 Ensambla con <strong>layer_apply</strong> inyectando precios reales de BD.
+                    1. 🧠 Enriquecimiento de prompt con <strong>Google Gemini 2.5 Flash</strong> (Gratuito).<br />
+                    2. 🎨 Generación de fondo con <strong>Cloudinary gen_fill</strong> (Sin add-ons pagos).<br />
+                    3. 📐 Overlays tipográficos Montserrat con precios reales en G/ de BD.
                   </p>
                 </div>
 
@@ -1052,7 +1046,7 @@ export default function MarketingPage() {
                         }}
                       >
                         <p style={{ margin: 0, fontSize: '0.78rem', color: '#065f46', fontWeight: 600 }}>
-                          ✅ Fondo generado con: <strong style={{ color: '#047857' }}>{modeloUtilizado || selectedModel || 'gemini-3.1-flash-image'}</strong> + Recorte Pixelz
+                          ✅ Arte generado con: <strong style={{ color: '#047857' }}>{modeloUtilizado || selectedModel || 'gemini-2.5-flash'}</strong> + Composición Cloudinary
                         </p>
                       </div>
 
