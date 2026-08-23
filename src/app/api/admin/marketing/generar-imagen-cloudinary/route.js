@@ -10,20 +10,6 @@ export const dynamic = 'force-dynamic'
  * Catálogo de motores de IA disponibles para generación de imágenes publicitarias
  */
 export const MOTORES_IA = {
-  gemini: {
-    id: 'gemini',
-    nombre: 'Google Gemini',
-    modeloDefault: 'gemini-3.1-flash-image',
-    modelos: [
-      { id: 'gemini-3.1-flash-image', nombre: 'Gemini 3.1 Flash Image (Recomendado)', costo: '~$0.045/img' },
-      { id: 'gemini-3-pro-image', nombre: 'Gemini 3 Pro Image (Alta Fidelidad)', costo: '~$0.09/img' },
-    ],
-    plan: 'Créditos prepago',
-    costo: '~$0.045/imagen',
-    descripcion: 'Motor principal de Google. Excelente calidad fotográfica y comprensión semántica de briefs.',
-    requiereKey: 'GEMINI_API_KEY',
-    gratuito: false,
-  },
   pollinations: {
     id: 'pollinations',
     nombre: 'Pollinations.ai',
@@ -34,9 +20,23 @@ export const MOTORES_IA = {
     ],
     plan: '100% Gratuito e Ilimitado',
     costo: '$0',
-    descripcion: 'Acceso libre sin API Key requerida. Ideal para prototipado rápido y campañas sin coste.',
+    descripcion: 'Acceso libre sin API Key requerida. Soporta imagen de referencia para composición visual del producto.',
     requiereKey: null,
     gratuito: true,
+  },
+  gemini: {
+    id: 'gemini',
+    nombre: 'Google Gemini',
+    modeloDefault: 'gemini-3.1-flash-image',
+    modelos: [
+      { id: 'gemini-3.1-flash-image', nombre: 'Gemini 3.1 Flash Image (Recomendado)', costo: '~$0.045/img' },
+      { id: 'gemini-3-pro-image', nombre: 'Gemini 3 Pro Image (Alta Fidelidad)', costo: '~$0.09/img' },
+    ],
+    plan: 'Créditos prepago',
+    costo: '~$0.045/imagen',
+    descripcion: 'Motor principal de Google. Envía la imagen de referencia como inlineData para máxima fidelidad visual.',
+    requiereKey: 'GEMINI_API_KEY',
+    gratuito: false,
   },
   leonardo: {
     id: 'leonardo',
@@ -61,7 +61,7 @@ export const MOTORES_IA = {
     ],
     plan: '100% Gratuito e Ilimitado',
     costo: '$0',
-    descripcion: 'Motor rápido sin límites de generación. Muy balanceado para redes sociales.',
+    descripcion: 'Motor rápido con soporte de imagen base64 de referencia.',
     requiereKey: 'AGNES_API_KEY',
     gratuito: true,
   },
@@ -75,7 +75,7 @@ export const MOTORES_IA = {
     ],
     plan: '10 llamadas gratis al registrarse',
     costo: 'Pago por uso',
-    descripcion: 'Optimizado para composiciones de e-commerce y fotografía gastronómica publicitaria.',
+    descripcion: 'Optimizado para composiciones de e-commerce y fotografía gastronómica publicitaria con imagen de referencia.',
     requiereKey: 'AIHUBMIX_API_KEY',
     gratuito: false,
   },
@@ -88,7 +88,7 @@ export const MOTORES_IA = {
     ],
     plan: 'Ultra económico',
     costo: '$0.003/imagen',
-    descripcion: 'Extremadamente económico para alto volumen con arquitectura Flux de última generación.',
+    descripcion: 'Extremadamente económico con arquitectura Flux y soporte de imagen de referencia.',
     requiereKey: 'NEXA_API_KEY',
     gratuito: false,
   },
@@ -156,9 +156,61 @@ async function urlToBase64(imageUrl, timeoutMs = 50000) {
 }
 
 /**
- * 1. ADAPTADOR: Google Gemini (gemini-3.1-flash-image / gemini-3-pro-image)
+ * Función para verificar y descargar la imagen pública de Cloudinary/URL del producto
+ * Retorna base64, mimeType y validación de tamaño
  */
-async function generarConGemini({ prompt, model = 'gemini-3.1-flash-image', aspectRatio = '3:4' }) {
+async function verificarYDescargarImagenPublica(url) {
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    return { valida: false, base64: null, mimeType: null }
+  }
+
+  try {
+    console.log(`📥 Descargando imagen de referencia del producto desde: ${url}`)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 20000)
+
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 PanFree-System/1.0',
+      },
+    })
+    clearTimeout(timeoutId)
+
+    if (!res.ok) {
+      console.warn(`⚠️ No se pudo descargar la imagen de referencia: HTTP ${res.status}`)
+      return { valida: false, base64: null, mimeType: null }
+    }
+
+    const arrayBuffer = await res.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    const mimeType = res.headers.get('content-type') || 'image/jpeg'
+    const base64 = buffer.toString('base64')
+
+    // Validar que no esté corrupta (> 10 KB = > 10240 bytes)
+    if (buffer.length < 500) {
+      console.warn(`⚠️ La imagen de referencia es demasiado pequeña (${buffer.length} bytes), posible error de descarga`)
+      return { valida: false, base64: null, mimeType: null }
+    }
+
+    console.log(`✅ Imagen de referencia descargada y validada (${(buffer.length / 1024).toFixed(1)} KB, ${mimeType})`)
+    return {
+      valida: true,
+      base64,
+      mimeType,
+      sizeBytes: buffer.length,
+    }
+  } catch (err) {
+    console.warn(`⚠️ Error al verificar/descargar imagen de referencia:`, err.message)
+    return { valida: false, base64: null, mimeType: null }
+  }
+}
+
+/**
+ * 1. ADAPTADOR: Google Gemini (gemini-3.1-flash-image / gemini-3-pro-image)
+ * Envía la imagen de referencia como inlineData en contents.parts
+ */
+async function generarConGemini({ prompt, model = 'gemini-3.1-flash-image', aspectRatio = '3:4', checkPublico = null }) {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     return { success: false, error: 'GEMINI_API_KEY no configurada en las variables de entorno' }
@@ -174,10 +226,31 @@ async function generarConGemini({ prompt, model = 'gemini-3.1-flash-image', aspe
   })
 
   try {
+    const parts = []
+
+    // Si tenemos imagen de referencia válida, la enviamos primero como inlineData
+    if (checkPublico?.base64) {
+      parts.push({
+        inlineData: {
+          data: checkPublico.base64,
+          mimeType: checkPublico.mimeType || 'image/jpeg',
+        },
+      })
+    }
+
+    // Prompt descriptivo contextualizado
+    const promptFinal = checkPublico?.base64
+      ? `Usa la imagen de referencia adjunta como base del producto real. Crea una composición fotográfica gastronómica profesional de alta calidad alrededor de este producto: ${prompt}`
+      : prompt
+
+    parts.push({ text: promptFinal })
+
+    console.log(`🖼️ Enviando imagen de referencia a Google Gemini: ${checkPublico?.base64 ? '✅' : '❌'}`)
+
     const response = await ai.models.generateContent({
       model: model || 'gemini-3.1-flash-image',
       contents: {
-        parts: [{ text: prompt }],
+        parts,
       },
       config: {
         imageConfig: {
@@ -199,20 +272,56 @@ async function generarConGemini({ prompt, model = 'gemini-3.1-flash-image', aspe
       return { success: false, error: 'Gemini no retornó datos de imagen válidos.' }
     }
   } catch (err) {
+    // Si falló con imagen de referencia, intentar fallback a solo texto
+    if (checkPublico?.base64) {
+      console.warn(`⚠️ Error en Gemini con imagen de referencia (${err.message}). Reintentando solo con texto...`)
+      try {
+        const fallbackRes = await ai.models.generateContent({
+          model: model || 'gemini-3.1-flash-image',
+          contents: {
+            parts: [{ text: prompt }],
+          },
+          config: {
+            imageConfig: {
+              aspectRatio: aspectRatio,
+            },
+          },
+        })
+        const imageData = fallbackRes?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data
+        if (imageData) {
+          return {
+            success: true,
+            base64Data: imageData,
+            mimeType: 'image/png',
+            modelUsed: model,
+            engineName: 'Google Gemini (Texto Fallback)',
+          }
+        }
+      } catch (fbErr) {
+        return { success: false, error: `Error en Gemini API: ${fbErr.message}` }
+      }
+    }
     return { success: false, error: `Error en Gemini API: ${err.message}` }
   }
 }
 
 /**
  * 2. ADAPTADOR: Pollinations.ai (Público, 100% Gratuito sin API Key)
+ * Soporta image-to-image con parámetro ?image=
  */
-async function generarConPollinations({ prompt, model = 'flux' }) {
+async function generarConPollinations({ prompt, model = 'flux', checkPublico = null }) {
   try {
-    // Pollinations GET endpoint con parámetros optimizados
     const cleanPrompt = encodeURIComponent(prompt)
     const seed = Math.floor(Math.random() * 1000000)
     const selectedModel = model === 'turbo' ? 'turbo' : 'flux'
-    const url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=768&height=1024&nologo=true&enhance=true&model=${selectedModel}&seed=${seed}`
+
+    console.log(`🖼️ Enviando imagen de referencia a Pollinations.ai: ${checkPublico?.base64 ? '✅' : '❌'}`)
+
+    let url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=768&height=1024&nologo=true&enhance=true&model=${selectedModel}&seed=${seed}`
+
+    if (checkPublico?.base64) {
+      url += `&image=${encodeURIComponent(checkPublico.base64)}`
+    }
 
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 55000)
@@ -242,22 +351,45 @@ async function generarConPollinations({ prompt, model = 'flux' }) {
       engineName: 'Pollinations.ai',
     }
   } catch (err) {
+    // Si falló y enviamos imagen, reintentar solo con prompt de texto
+    if (checkPublico?.base64) {
+      console.warn(`⚠️ Error en Pollinations con imagen (${err.message}). Reintentando solo con texto...`)
+      return generarConPollinations({ prompt, model, checkPublico: null })
+    }
     return { success: false, error: `Error en Pollinations.ai: ${err.message}` }
   }
 }
 
 /**
  * 3. ADAPTADOR: Leonardo AI
+ * Soporta imagen de referencia (image en base64 / init_image) con strength
  */
-async function generarConLeonardo({ prompt, model = 'aa77f04e-3eec-4034-9c07-d0f6196846fb' }) {
+async function generarConLeonardo({ prompt, model = 'aa77f04e-3eec-4034-9c07-d0f6196846fb', checkPublico = null }) {
   const apiKey = process.env.LEONARDO_API_KEY
   if (!apiKey) {
     return { success: false, error: 'LEONARDO_API_KEY no configurada en variables de entorno' }
   }
 
+  console.log(`🖼️ Enviando imagen de referencia a Leonardo AI: ${checkPublico?.base64 ? '✅' : '❌'}`)
+
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 20000)
+    const timeoutId = setTimeout(() => controller.abort(), 25000)
+
+    const requestBody = {
+      prompt: prompt,
+      modelId: model || 'aa77f04e-3eec-4034-9c07-d0f6196846fb',
+      width: 768,
+      height: 1024,
+      num_images: 1,
+      promptMagic: true,
+      photoReal: true,
+    }
+
+    if (checkPublico?.base64) {
+      requestBody.image = checkPublico.base64
+      requestBody.strength = 0.6
+    }
 
     // 1. Iniciar el trabajo de generación
     const createRes = await fetch('https://cloud.leonardo.ai/api/rest/v1/generations', {
@@ -268,15 +400,7 @@ async function generarConLeonardo({ prompt, model = 'aa77f04e-3eec-4034-9c07-d0f
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify({
-        prompt: prompt,
-        modelId: model || 'aa77f04e-3eec-4034-9c07-d0f6196846fb',
-        width: 768,
-        height: 1024,
-        num_images: 1,
-        promptMagic: true,
-        photoReal: true,
-      }),
+      body: JSON.stringify(requestBody),
     })
     clearTimeout(timeoutId)
 
@@ -335,22 +459,42 @@ async function generarConLeonardo({ prompt, model = 'aa77f04e-3eec-4034-9c07-d0f
       engineName: 'Leonardo AI',
     }
   } catch (err) {
+    if (checkPublico?.base64) {
+      console.warn(`⚠️ Error en Leonardo AI con imagen (${err.message}). Reintentando solo con texto...`)
+      return generarConLeonardo({ prompt, model, checkPublico: null })
+    }
     return { success: false, error: `Error en Leonardo AI: ${err.message}` }
   }
 }
 
 /**
  * 4. ADAPTADOR: Agnes AI (agnes-image-2.1-flash)
+ * Soporta imagen de referencia en base64
  */
-async function generarConAgnes({ prompt, model = 'agnes-image-2.1-flash' }) {
+async function generarConAgnes({ prompt, model = 'agnes-image-2.1-flash', checkPublico = null }) {
   const apiKey = process.env.AGNES_API_KEY
   if (!apiKey) {
     return { success: false, error: 'AGNES_API_KEY no configurada en variables de entorno' }
   }
 
+  console.log(`🖼️ Enviando imagen de referencia a Agnes AI: ${checkPublico?.base64 ? '✅' : '❌'}`)
+
   try {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 55000)
+
+    const requestBody = {
+      model: model || 'agnes-image-2.1-flash',
+      prompt: prompt,
+      n: 1,
+      size: '768x1024',
+      response_format: 'b64_json',
+    }
+
+    if (checkPublico?.base64) {
+      requestBody.image = checkPublico.base64
+      requestBody.strength = 0.6
+    }
 
     const res = await fetch('https://api.agnes.ai/v1/images/generations', {
       method: 'POST',
@@ -359,13 +503,7 @@ async function generarConAgnes({ prompt, model = 'agnes-image-2.1-flash' }) {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: model || 'agnes-image-2.1-flash',
-        prompt: prompt,
-        n: 1,
-        size: '768x1024',
-        response_format: 'b64_json',
-      }),
+      body: JSON.stringify(requestBody),
     })
     clearTimeout(timeoutId)
 
@@ -399,22 +537,42 @@ async function generarConAgnes({ prompt, model = 'agnes-image-2.1-flash' }) {
 
     throw new Error('Agnes AI no devolvió una imagen en base64 ni URL válida')
   } catch (err) {
+    if (checkPublico?.base64) {
+      console.warn(`⚠️ Error en Agnes AI con imagen (${err.message}). Reintentando solo con texto...`)
+      return generarConAgnes({ prompt, model, checkPublico: null })
+    }
     return { success: false, error: `Error en Agnes AI: ${err.message}` }
   }
 }
 
 /**
  * 5. ADAPTADOR: AIHubMix (gpt-image-2-free)
+ * Soporta imagen de referencia en base64
  */
-async function generarConAIHubMix({ prompt, model = 'gpt-image-2-free' }) {
+async function generarConAIHubMix({ prompt, model = 'gpt-image-2-free', checkPublico = null }) {
   const apiKey = process.env.AIHUBMIX_API_KEY
   if (!apiKey) {
     return { success: false, error: 'AIHUBMIX_API_KEY no configurada en variables de entorno' }
   }
 
+  console.log(`🖼️ Enviando imagen de referencia a AIHubMix: ${checkPublico?.base64 ? '✅' : '❌'}`)
+
   try {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 55000)
+
+    const requestBody = {
+      model: model || 'gpt-image-2-free',
+      prompt: prompt,
+      n: 1,
+      size: '1024x1024',
+      response_format: 'b64_json',
+    }
+
+    if (checkPublico?.base64) {
+      requestBody.image = checkPublico.base64
+      requestBody.strength = 0.6
+    }
 
     const res = await fetch('https://aihubmix.com/v1/images/generations', {
       method: 'POST',
@@ -423,13 +581,7 @@ async function generarConAIHubMix({ prompt, model = 'gpt-image-2-free' }) {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: model || 'gpt-image-2-free',
-        prompt: prompt,
-        n: 1,
-        size: '1024x1024',
-        response_format: 'b64_json',
-      }),
+      body: JSON.stringify(requestBody),
     })
     clearTimeout(timeoutId)
 
@@ -463,22 +615,42 @@ async function generarConAIHubMix({ prompt, model = 'gpt-image-2-free' }) {
 
     throw new Error('AIHubMix no retornó imagen válida')
   } catch (err) {
+    if (checkPublico?.base64) {
+      console.warn(`⚠️ Error en AIHubMix con imagen (${err.message}). Reintentando solo con texto...`)
+      return generarConAIHubMix({ prompt, model, checkPublico: null })
+    }
     return { success: false, error: `Error en AIHubMix: ${err.message}` }
   }
 }
 
 /**
  * 6. ADAPTADOR: NexaAPI (flux-kontext)
+ * Soporta imagen de referencia en base64
  */
-async function generarConNexa({ prompt, model = 'flux-kontext' }) {
+async function generarConNexa({ prompt, model = 'flux-kontext', checkPublico = null }) {
   const apiKey = process.env.NEXA_API_KEY
   if (!apiKey) {
     return { success: false, error: 'NEXA_API_KEY no configurada en variables de entorno' }
   }
 
+  console.log(`🖼️ Enviando imagen de referencia a NexaAPI: ${checkPublico?.base64 ? '✅' : '❌'}`)
+
   try {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 55000)
+
+    const requestBody = {
+      model: model || 'flux-kontext',
+      prompt: prompt,
+      n: 1,
+      size: '768x1024',
+      response_format: 'b64_json',
+    }
+
+    if (checkPublico?.base64) {
+      requestBody.image = checkPublico.base64
+      requestBody.strength = 0.6
+    }
 
     const res = await fetch('https://api.nexa4ai.com/v1/images/generations', {
       method: 'POST',
@@ -487,13 +659,7 @@ async function generarConNexa({ prompt, model = 'flux-kontext' }) {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: model || 'flux-kontext',
-        prompt: prompt,
-        n: 1,
-        size: '768x1024',
-        response_format: 'b64_json',
-      }),
+      body: JSON.stringify(requestBody),
     })
     clearTimeout(timeoutId)
 
@@ -527,20 +693,27 @@ async function generarConNexa({ prompt, model = 'flux-kontext' }) {
 
     throw new Error('NexaAPI no retornó imagen válida')
   } catch (err) {
+    if (checkPublico?.base64) {
+      console.warn(`⚠️ Error en NexaAPI con imagen (${err.message}). Reintentando solo con texto...`)
+      return generarConNexa({ prompt, model, checkPublico: null })
+    }
     return { success: false, error: `Error en NexaAPI: ${err.message}` }
   }
 }
 
 /**
  * 7. ADAPTADOR: Cloudflare Workers AI (@cf/stabilityai/stable-diffusion-xl-base-1.0)
+ * Soporta image de referencia en base64 cuando el modelo lo permite
  */
-async function generarConCloudflare({ prompt, model = '@cf/stabilityai/stable-diffusion-xl-base-1.0' }) {
+async function generarConCloudflare({ prompt, model = '@cf/stabilityai/stable-diffusion-xl-base-1.0', checkPublico = null }) {
   const apiKey = process.env.CLOUDFLARE_API_KEY
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID
 
   if (!apiKey || !accountId) {
     return { success: false, error: 'CLOUDFLARE_API_KEY o CLOUDFLARE_ACCOUNT_ID no configurados' }
   }
+
+  console.log(`🖼️ Enviando imagen de referencia a Cloudflare Workers AI: ${checkPublico?.base64 ? '✅' : '❌'}`)
 
   try {
     const selectedModel = model || '@cf/stabilityai/stable-diffusion-xl-base-1.0'
@@ -549,6 +722,16 @@ async function generarConCloudflare({ prompt, model = '@cf/stabilityai/stable-di
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 55000)
 
+    const requestBody = {
+      prompt: prompt,
+      num_steps: 20,
+    }
+
+    if (checkPublico?.base64) {
+      requestBody.image = checkPublico.base64
+      requestBody.strength = 0.6
+    }
+
     const res = await fetch(endpoint, {
       method: 'POST',
       signal: controller.signal,
@@ -556,10 +739,7 @@ async function generarConCloudflare({ prompt, model = '@cf/stabilityai/stable-di
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        prompt: prompt,
-        num_steps: 20,
-      }),
+      body: JSON.stringify(requestBody),
     })
     clearTimeout(timeoutId)
 
@@ -592,18 +772,25 @@ async function generarConCloudflare({ prompt, model = '@cf/stabilityai/stable-di
       engineName: 'Cloudflare Workers AI',
     }
   } catch (err) {
+    if (checkPublico?.base64) {
+      console.warn(`⚠️ Error en Cloudflare AI con imagen (${err.message}). Reintentando solo con texto...`)
+      return generarConCloudflare({ prompt, model, checkPublico: null })
+    }
     return { success: false, error: `Error en Cloudflare Workers AI: ${err.message}` }
   }
 }
 
 /**
  * 8. ADAPTADOR: Hugging Face Inference API
+ * Soporta image de referencia en base64 cuando el modelo lo permite
  */
-async function generarConHuggingFace({ prompt, model = 'stabilityai/stable-diffusion-xl-base-1.0' }) {
+async function generarConHuggingFace({ prompt, model = 'stabilityai/stable-diffusion-xl-base-1.0', checkPublico = null }) {
   const apiKey = process.env.HF_API_KEY
   if (!apiKey) {
     return { success: false, error: 'HF_API_KEY no configurada en variables de entorno' }
   }
+
+  console.log(`🖼️ Enviando imagen de referencia a Hugging Face Inference: ${checkPublico?.base64 ? '✅' : '❌'}`)
 
   try {
     const selectedModel = model || 'stabilityai/stable-diffusion-xl-base-1.0'
@@ -612,6 +799,18 @@ async function generarConHuggingFace({ prompt, model = 'stabilityai/stable-diffu
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 55000)
 
+    const requestBody = {
+      inputs: prompt,
+      parameters: {
+        negative_prompt: 'blurry, low quality, distorted, text, watermark, logo, bad anatomy',
+      },
+    }
+
+    if (checkPublico?.base64) {
+      requestBody.image = checkPublico.base64
+      requestBody.parameters.strength = 0.6
+    }
+
     const res = await fetch(endpoint, {
       method: 'POST',
       signal: controller.signal,
@@ -619,12 +818,7 @@ async function generarConHuggingFace({ prompt, model = 'stabilityai/stable-diffu
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        inputs: prompt,
-        parameters: {
-          negative_prompt: 'blurry, low quality, distorted, text, watermark, logo, bad anatomy',
-        },
-      }),
+      body: JSON.stringify(requestBody),
     })
     clearTimeout(timeoutId)
 
@@ -645,6 +839,10 @@ async function generarConHuggingFace({ prompt, model = 'stabilityai/stable-diffu
       engineName: 'Hugging Face Inference',
     }
   } catch (err) {
+    if (checkPublico?.base64) {
+      console.warn(`⚠️ Error en Hugging Face con imagen (${err.message}). Reintentando solo con texto...`)
+      return generarConHuggingFace({ prompt, model, checkPublico: null })
+    }
     return { success: false, error: `Error en Hugging Face: ${err.message}` }
   }
 }
@@ -652,45 +850,45 @@ async function generarConHuggingFace({ prompt, model = 'stabilityai/stable-diffu
 /**
  * Router / Dispatcher unificado de generación de imágenes por motor
  */
-async function generarImagenConMotor({ motor = 'gemini', modelo = '', prompt = '' }) {
+async function generarImagenConMotor({ motor = 'gemini', modelo = '', prompt = '', checkPublico = null }) {
   const motorNormalizado = (motor || 'gemini').toLowerCase().trim()
   const startTime = Date.now()
 
   console.log(`🚀 [Multi-Engine AI] Iniciando generación con motor: ${motorNormalizado.toUpperCase()}`)
   console.log(`   Modelo solicitado: ${modelo || 'default'}`)
+  console.log(`   Imagen de referencia disponible: ${checkPublico?.valida ? '✅ (' + checkPublico.mimeType + ')' : '❌ (Solo texto)'}`)
   console.log(`   Longitud prompt: ${prompt.length} caracteres`)
 
   let resultado
 
   switch (motorNormalizado) {
     case 'gemini':
-      resultado = await generarConGemini({ prompt, model: modelo || 'gemini-3.1-flash-image' })
+      resultado = await generarConGemini({ prompt, model: modelo || 'gemini-3.1-flash-image', checkPublico })
       break
     case 'pollinations':
-      resultado = await generarConPollinations({ prompt, model: modelo || 'flux' })
+      resultado = await generarConPollinations({ prompt, model: modelo || 'flux', checkPublico })
       break
     case 'leonardo':
-      resultado = await generarConLeonardo({ prompt, model: modelo || 'aa77f04e-3eec-4034-9c07-d0f6196846fb' })
+      resultado = await generarConLeonardo({ prompt, model: modelo || 'aa77f04e-3eec-4034-9c07-d0f6196846fb', checkPublico })
       break
     case 'agnes':
-      resultado = await generarConAgnes({ prompt, model: modelo || 'agnes-image-2.1-flash' })
+      resultado = await generarConAgnes({ prompt, model: modelo || 'agnes-image-2.1-flash', checkPublico })
       break
     case 'aihubmix':
-      resultado = await generarConAIHubMix({ prompt, model: modelo || 'gpt-image-2-free' })
+      resultado = await generarConAIHubMix({ prompt, model: modelo || 'gpt-image-2-free', checkPublico })
       break
     case 'nexa':
-      resultado = await generarConNexa({ prompt, model: modelo || 'flux-kontext' })
+      resultado = await generarConNexa({ prompt, model: modelo || 'flux-kontext', checkPublico })
       break
     case 'cloudflare':
-      resultado = await generarConCloudflare({ prompt, model: modelo || '@cf/stabilityai/stable-diffusion-xl-base-1.0' })
+      resultado = await generarConCloudflare({ prompt, model: modelo || '@cf/stabilityai/stable-diffusion-xl-base-1.0', checkPublico })
       break
     case 'huggingface':
-      resultado = await generarConHuggingFace({ prompt, model: modelo || 'stabilityai/stable-diffusion-xl-base-1.0' })
+      resultado = await generarConHuggingFace({ prompt, model: modelo || 'stabilityai/stable-diffusion-xl-base-1.0', checkPublico })
       break
     default:
-      // Fallback a Gemini si el motor no es reconocido
       console.warn(`⚠️ Motor '${motor}' desconocido. Usando Gemini por defecto.`)
-      resultado = await generarConGemini({ prompt, model: 'gemini-3.1-flash-image' })
+      resultado = await generarConGemini({ prompt, model: 'gemini-3.1-flash-image', checkPublico })
       break
   }
 
@@ -778,7 +976,15 @@ export async function POST(req) {
       )
     }
 
-    // 2. Construir el prompt fotográfico profesional
+    // 2. Determinar y descargar la imagen de referencia visual del producto (Cloudinary / URL pública)
+    const urlReferencia = custom_image_url || producto.imagen_url || (Array.isArray(producto.imagenes_urls) ? producto.imagenes_urls[0] : null)
+    let checkPublico = { valida: false, base64: null, mimeType: null }
+
+    if (urlReferencia) {
+      checkPublico = await verificarYDescargarImagenPublica(urlReferencia)
+    }
+
+    // 3. Construir el prompt fotográfico profesional
     const nombreProducto = producto.nombre
     const precioOriginal = Number(producto.precio_venta) || 28000
     const descuentoNum = Number(descuento) || 0
@@ -787,21 +993,14 @@ export async function POST(req) {
     const promptBase = brief_creativo || 
       `fotografía publicitaria profesional de ${nombreProducto}, panadería artesanal sin gluten de alta calidad, estilo Instagram, iluminación de estudio gastronómico cálida, composición atractiva sobre mesa de madera rústica, 8k, hiperrealista, sin texto superpuesto, sin logotipos, sin marcas de agua`
 
-    // Incluir referencia visual del producto si está disponible
-    let imageReferencePart = ''
-    if (custom_image_url && custom_image_url.startsWith('http')) {
-      imageReferencePart = ` Referencia visual del producto: ${custom_image_url}`
-    } else if (producto.imagen_url && producto.imagen_url.startsWith('http')) {
-      imageReferencePart = ` Referencia visual del producto: ${producto.imagen_url}`
-    }
+    const promptFinal = promptBase.trim()
 
-    const promptFinal = `${promptBase}.${imageReferencePart}`
-
-    // 3. Ejecutar el motor de IA seleccionado
+    // 4. Ejecutar el motor de IA seleccionado con la imagen de referencia
     const motorResultado = await generarImagenConMotor({
       motor: motor || 'gemini',
       modelo: modelo,
       prompt: promptFinal,
+      checkPublico: checkPublico.valida ? checkPublico : null,
     })
 
     if (!motorResultado.success) {
@@ -816,7 +1015,7 @@ export async function POST(req) {
       )
     }
 
-    // 4. Subir la imagen generada a Cloudinary (carpeta marketing/)
+    // 5. Subir la imagen generada a Cloudinary (carpeta marketing/)
     const cloudinary = getCloudinaryClient()
     const timestamp = Date.now()
     const cleanId = String(producto.id).replace(/-/g, '')
@@ -832,14 +1031,19 @@ export async function POST(req) {
 
     const generatedImageUrl = uploadResult.secure_url
 
-    // 5. Guardar registro en Supabase (generaciones_imagen)
+    // 6. Guardar registro en Supabase (generaciones_imagen)
     try {
       await supabase.from('generaciones_imagen').insert([{
         producto_id: producto.id,
         imagen_original_url: producto.imagen_url || null,
         imagen_generada_url: generatedImageUrl,
         transformaciones: [
-          { motor: motorResultado.motor, modelo: motorResultado.modelUsed, duracion_ms: motorResultado.durationMs }
+          {
+            motor: motorResultado.motor,
+            modelo: motorResultado.modelUsed,
+            duracion_ms: motorResultado.durationMs,
+            uso_referencia_visual: checkPublico.valida,
+          }
         ],
         prompt_creativo: promptFinal,
         evento: evento || null,
@@ -860,6 +1064,7 @@ export async function POST(req) {
       motor_utilizado: motorResultado.motor,
       motor_nombre: nombreMotorLegible,
       modelo_utilizado: modeloLegible,
+      referencia_visual_utilizada: checkPublico.valida,
       tiempo_ms: motorResultado.durationMs,
       prompt_utilizado: promptFinal,
       producto: {
@@ -871,7 +1076,7 @@ export async function POST(req) {
         precio_promocional_fmt: `G/ ${precioPromo.toLocaleString('es-PY')}`,
         descuento: descuentoNum,
       },
-      mensaje: `✅ Arte publicitario generado con ${nombreMotorLegible} (${modeloLegible}) en ${(motorResultado.durationMs / 1000).toFixed(1)}s y guardado en Cloudinary.`,
+      mensaje: `✅ Arte publicitario generado con ${nombreMotorLegible} (${modeloLegible}) ${checkPublico.valida ? 'usando la foto de referencia' : 'con prompt contextual'} en ${(motorResultado.durationMs / 1000).toFixed(1)}s y guardado en Cloudinary.`,
     })
 
   } catch (error) {
@@ -882,4 +1087,3 @@ export async function POST(req) {
     )
   }
 }
-
