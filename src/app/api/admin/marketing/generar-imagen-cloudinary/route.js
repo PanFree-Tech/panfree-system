@@ -65,20 +65,35 @@ export async function POST(req) {
       }
     }
 
-    // 2. Determinar la imagen base
-    let imageSource = custom_image_url
-    let origenImagen = 'custom_image_url'
+    // 2. Determinar la imagen base con prioridad inteligente
+    // Priorizamos URLs HTTP completas reales (Supabase Storage) sobre public_ids no verificados
+    let imageSource = null
+    let origenImagen = ''
 
+    if (custom_image_url && custom_image_url.trim()) {
+      imageSource = custom_image_url.trim()
+      origenImagen = 'custom_image_url'
+    } else if (producto.imagen_url && producto.imagen_url.startsWith('http')) {
+      // Prioridad 1: La URL completa en Supabase Storage
+      imageSource = producto.imagen_url.trim()
+      origenImagen = 'imagen_url (Supabase Storage)'
+    } else if (producto.imagenes_urls && Array.isArray(producto.imagenes_urls)) {
+      // Prioridad 2: Buscar en imagenes_urls alguna que sea URL HTTP
+      const httpUrlInArray = producto.imagenes_urls.find(u => typeof u === 'string' && u.startsWith('http'))
+      if (httpUrlInArray) {
+        imageSource = httpUrlInArray.trim()
+        origenImagen = 'imagenes_urls (HTTP)'
+      }
+    }
+
+    // Prioridad 3: Si no hay URL http, usar imagen_public_id o imagenes_urls[0]
     if (!imageSource) {
-      if (producto.imagenes_urls && producto.imagenes_urls.length > 0 && producto.imagenes_urls[0]) {
-        imageSource = producto.imagenes_urls[0]
+      if (producto.imagen_public_id && typeof producto.imagen_public_id === 'string' && !producto.imagen_public_id.includes('[')) {
+        imageSource = producto.imagen_public_id.trim()
+        origenImagen = 'imagen_public_id (Cloudinary)'
+      } else if (producto.imagenes_urls && producto.imagenes_urls.length > 0 && producto.imagenes_urls[0]) {
+        imageSource = String(producto.imagenes_urls[0]).trim()
         origenImagen = 'imagenes_urls[0]'
-      } else if (producto.imagen_public_id && !producto.imagen_public_id.includes('[')) {
-        imageSource = producto.imagen_public_id
-        origenImagen = 'imagen_public_id'
-      } else if (producto.imagen_url && producto.imagen_url.startsWith('http')) {
-        imageSource = producto.imagen_url
-        origenImagen = 'imagen_url (fallback)'
       } else {
         imageSource = 'https://res.cloudinary.com/d7simx38/image/upload/v1786629847/productos/gmwx5mwuj0ockucprlwr.jpg'
         origenImagen = 'fallback_default'
@@ -87,57 +102,58 @@ export async function POST(req) {
 
     console.log('🖼️ Imagen seleccionada:', imageSource, '| Origen:', origenImagen)
 
-    // 3. Preparar el "file" que le pasaremos a Cloudinary.
-    //    - Si es una URL http(s) que ya vive en Cloudinary, se la pasamos tal cual
-    //      (Cloudinary siempre puede leer sus propias URLs).
-    //    - Si es una URL externa (ej. Supabase Storage) o un public_id plano,
-    //      la descargamos nosotros primero para evitar el bloqueo de "remote fetch".
-    let fileParaSubir = imageSource
-
-    const esUrlDeCloudinary = /^https?:\/\/res\.cloudinary\.com\//.test(imageSource)
-    const esUrlHttp = /^https?:\/\//.test(imageSource)
-
-    if (esUrlHttp && !esUrlDeCloudinary) {
-      console.log('⬇️ Descargando imagen externa antes de subir (evita restricción de fetch remoto)...')
-      fileParaSubir = await descargarComoDataUri(imageSource)
-    } else if (!esUrlHttp) {
-      // Es un public_id "pelado" (sin http) — construir URL completa de Cloudinary
-      const cloudName = process.env.CLOUDINARY_CLOUD_NAME
-      fileParaSubir = `https://res.cloudinary.com/${cloudName}/image/upload/${imageSource}`
-    }
-
-    // 4. Obtener cliente de Cloudinary y subir la imagen base
+    // 3. Función auxiliar para preparar y subir una imagen a Cloudinary
     const cloudinary = getCloudinaryClient()
-
     const timestamp = Date.now()
     const cleanId = String(producto.id || 'promo').replace(/-/g, '')
-    const publicIdDestino = `product_${cleanId}_${timestamp}` // sin prefijo "marketing/" y sin guiones
+    const publicIdDestino = `product_${cleanId}_${timestamp}`
     const folderDestino = 'marketing'
 
-    console.log('📤 Subiendo imagen base a Cloudinary...')
-    console.log('📁 asset_folder destino:', folderDestino)
-    console.log('🆔 public_id:', publicIdDestino)
+    async function subirImagenACloudinary(source) {
+      let fileParaSubir = source
+      const esUrlDeCloudinary = /^https?:\/\/res\.cloudinary\.com\//.test(source)
+      const esUrlHttp = /^https?:\/\//.test(source)
 
-    let uploadResult
-    try {
-      uploadResult = await cloudinary.uploader.upload(fileParaSubir, {
+      if (esUrlHttp && !esUrlDeCloudinary) {
+        console.log('⬇️ Descargando imagen externa desde Supabase/remoto antes de subir...')
+        fileParaSubir = await descargarComoDataUri(source)
+      } else if (!esUrlHttp) {
+        const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'd7simx38'
+        fileParaSubir = `https://res.cloudinary.com/${cloudName}/image/upload/${source}`
+      }
+
+      return await cloudinary.uploader.upload(fileParaSubir, {
         asset_folder: folderDestino,
         public_id: publicIdDestino,
         overwrite: true,
         resource_type: 'image',
         secure: true,
       })
-    } catch (uploadErr) {
-      // Log detallado — Cloudinary suele meter el código real en http_code
-      console.error('❌ Error de Cloudinary al subir:', {
-        message: uploadErr?.message,
-        http_code: uploadErr?.http_code,
-        error: uploadErr?.error,
-      })
-      throw new Error(
-        `Cloudinary rechazó la subida (${uploadErr?.http_code || 'sin código'}): ${uploadErr?.message || 'error desconocido'}. ` +
-        `Revisá que el dominio de origen esté permitido y que las credenciales correspondan al cloud_name configurado.`
-      )
+    }
+
+    // 4. Subir la imagen base a Cloudinary con auto-recuperación si falla
+    console.log('📤 Subiendo imagen base a Cloudinary...')
+    console.log('📁 asset_folder destino:', folderDestino)
+    console.log('🆔 public_id:', publicIdDestino)
+
+    let uploadResult
+    try {
+      uploadResult = await subirImagenACloudinary(imageSource)
+    } catch (primerError) {
+      console.warn('⚠️ Falló la primera opción de imagen base:', primerError?.message)
+      
+      // Si falló y tenemos imagen_url de Supabase disponible como alternativa, intentamos con ella
+      if (producto.imagen_url && producto.imagen_url.startsWith('http') && imageSource !== producto.imagen_url) {
+        console.log('🔄 Reintentando automáticamente con imagen_url de Supabase:', producto.imagen_url)
+        try {
+          uploadResult = await subirImagenACloudinary(producto.imagen_url)
+          imageSource = producto.imagen_url
+        } catch (segundoError) {
+          throw new Error(`Error al subir imagen de Supabase: ${segundoError?.message || segundoError}`)
+        }
+      } else {
+        throw primerError
+      }
     }
 
     const finalPublicId = uploadResult.public_id || publicIdDestino
