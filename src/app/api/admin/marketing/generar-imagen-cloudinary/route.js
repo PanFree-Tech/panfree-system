@@ -69,12 +69,12 @@ export async function POST(req) {
       }
     }
 
-    // 2. Determinar la imagen base real con la nueva prioridad
-    // 1º custom_image_url (si se envía)
-    // 2º imagen_url (SIEMPRE que sea una URL válida que empiece con http)
-    // 3º imagenes_urls[0] (si tiene elementos válidos)
-    // 4º imagen_public_id (solo si NO es un placeholder con corchetes)
-    // 5º Fallback a imagen por defecto
+    // 2. Determinar la imagen base real (Prioridad funcional):
+    // 1º custom_image_url (si se envía explícitamente)
+    // 2º imagenes_urls[0] (si existe y es válida en Cloudinary)
+    // 3º imagen_public_id (si NO es un placeholder)
+    // 4º imagen_url (como fallback de URL)
+    // 5º Fallback por defecto
     let imagePublicIdOrUrl = null
     let origenImagen = 'fallback'
 
@@ -94,9 +94,6 @@ export async function POST(req) {
     if (custom_image_url) {
       imagePublicIdOrUrl = custom_image_url
       origenImagen = 'custom_image_url'
-    } else if (isValidHttpUrl(producto.imagen_url)) {
-      imagePublicIdOrUrl = producto.imagen_url
-      origenImagen = 'producto.imagen_url (Supabase Storage / URL directa)'
     } else if (
       Array.isArray(producto.imagenes_urls) &&
       producto.imagenes_urls.length > 0 &&
@@ -107,6 +104,9 @@ export async function POST(req) {
     } else if (isValidPublicId(producto.imagen_public_id)) {
       imagePublicIdOrUrl = producto.imagen_public_id
       origenImagen = 'producto.imagen_public_id'
+    } else if (isValidHttpUrl(producto.imagen_url)) {
+      imagePublicIdOrUrl = producto.imagen_url
+      origenImagen = 'producto.imagen_url (fallback url)'
     } else {
       imagePublicIdOrUrl =
         'https://res.cloudinary.com/panfree/image/upload/v1/panfree/products/pan-campo-rustico.jpg'
