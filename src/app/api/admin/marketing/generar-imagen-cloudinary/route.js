@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
 import { supabase } from '@/lib/supabase'
-import { getCloudinaryClient } from '@/lib/cloudinary'
+import { getCloudinaryClient, extractPublicId } from '@/lib/cloudinary'
 import { comprimirPrompt } from '@/lib/prompt-compressor'
 
 export const dynamic = 'force-dynamic'
@@ -29,50 +29,166 @@ function mapearModeloGemini(modeloId) {
 }
 
 /**
- * Genera un prompt descriptivo gastronómico optimizado para Gemini Image API
+ * Genera un prompt descriptivo gastronómico publicitario para Gemini Image API
  */
-function construirPromptGenerativoFondo(promptBase, producto, modeloId = 'gemini-3.1-flash-image') {
-  const nombreProd = producto?.nombre || 'panadería gourmet sin gluten'
+function construirPromptGenerativoComercial(promptBase, producto, modeloId = 'gemini-3.1-flash-image') {
+  const nombreProd = producto?.nombre || 'Panadería Gourmet 100% Sin Gluten'
+  const categoriaProd = producto?.categoria || 'Panadería Artesanal Sin Gluten'
 
   const mapaEstilos = {
-    'gemini-3.1-flash-image': 'A warm gourmet bakery studio background, rustic wooden table surface, soft natural golden morning light, subtle green herbs and flour dust on table, blurred artisan bakery background, 8k professional food photography backdrop, empty space in center for product placement, no text, no labels, clean background',
-    'gemini-3.1-flash-lite-image': 'Warm wooden table top, rustic bakery environment, golden hour lighting, cozy atmosphere, food photography backdrop, empty center for product placement, no text',
-    'gemini-3-pro-image': 'Ultra-realistic luxury white Italian marble countertop, morning sunbeam through window, soft natural shadows, elegant gourmet bakery scene, pristine food advertising background, empty center, no text',
-    'nano-banana-2': 'A warm gourmet bakery studio background, rustic wooden table surface, soft natural golden morning light, subtle green herbs and flour dust on table, blurred artisan bakery background, 8k professional food photography backdrop, empty space in center for product placement, no text',
-    'nano-banana-1': 'Warm wooden table top, rustic bakery environment, golden hour lighting, cozy atmosphere, food photography backdrop, empty center, no text',
+    'gemini-3.1-flash-image': 'A warm commercial food photography advertisement of the artisan gluten-free bakery product shown in the reference image. Placed on a rustic wooden bakery table surface, soft natural golden morning light, delicate flour dust and fresh rosemary herbs around, blurred cozy artisan bakery background, 8k ultra photorealistic food studio lighting, pristine commercial advertisement layout, no text, no words, no signs, no logos',
+    'gemini-3.1-flash-lite-image': 'Warm wooden table top, rustic bakery environment, golden hour lighting, cozy atmosphere, commercial food photography advertising shot of the reference bakery product, no text, no labels',
+    'gemini-3-pro-image': 'Ultra-realistic luxury white Italian marble countertop, morning sunbeam through window, soft natural shadows, elegant gourmet bakery scene featuring the reference gluten-free product, pristine food advertising background, no text',
+    'nano-banana-2': 'A warm commercial food photography advertisement of the artisan gluten-free bakery product shown in the reference image. Placed on a rustic wooden table surface, soft natural golden morning light, subtle flour dust, 8k food studio lighting, no text',
+    'nano-banana-1': 'Warm wooden table top, rustic bakery environment, golden hour lighting, cozy atmosphere, food photography of reference product, no text',
     'flux-2-pro': 'Ultra-realistic luxury white Italian marble countertop, morning sunbeam through window, soft natural shadows, elegant gourmet bakery scene, pristine food advertising background, no text',
-    'recraft-v4': 'Artisan bakery kitchen table, dark rustic wood texture, flour dusting, fresh rosemary and wheat sprigs, warm cozy depth of field, studio food photography background, no text',
-    'gpt-image-2': 'Vibrant festive celebration table backdrop, warm party bokeh lights, cheerful gourmet picnic atmosphere, bright and inviting commercial background, empty center, no text',
-    'ideogram-v4-base': 'Dark moody rustic restaurant table, dramatic warm spotlight, slate stone and charred oak texture, Michelin star food photography studio setting, empty center, no text',
+    'recraft-v4': 'Artisan bakery kitchen table, dark rustic wood texture, flour dusting, fresh rosemary and wheat sprigs, warm cozy depth of field, studio food photography of reference product, no text',
+    'gpt-image-2': 'Vibrant festive celebration table backdrop, warm party bokeh lights, cheerful gourmet picnic atmosphere with the reference product, bright and inviting commercial advertising shot, no text',
+    'ideogram-v4-base': 'Dark moody rustic restaurant table, dramatic warm spotlight, slate stone and charred oak texture, Michelin star food photography studio setting with reference product, no text',
   }
 
   const baseEstilo = mapaEstilos[modeloId] || mapaEstilos['gemini-3.1-flash-image']
 
   if (promptBase && promptBase.trim().length > 5) {
-    return `${promptBase.trim()}, commercial food photography studio backdrop for ${nombreProd}, soft natural lighting, depth of field, empty spacious center surface for product placement, ultra photorealistic 8k, no text, no words, no signs, no logos`
+    return `Commercial food photography advertisement of the gluten-free bakery product (${nombreProd}) from the reference image. ${promptBase.trim()}. Soft natural studio lighting, depth of field, high-end culinary presentation, 8k resolution, photorealistic, no text, no typography, no watermarks, no overlay text.`
   }
 
   return baseEstilo
 }
 
 /**
- * Descarga una imagen remota y la devuelve como Data URI base64
+ * Resuelve la URL pública canónica en Cloudinary (carpeta productos/)
+ * Prioriza la imagen en Cloudinary por sobre Supabase Storage
  */
-async function descargarComoDataUri(url) {
-  const res = await fetch(url)
-  if (!res.ok) {
-    throw new Error(`No se pudo descargar la imagen fuente (${res.status} ${res.statusText}): ${url}`)
+function resolverUrlCloudinaryPublica(producto, customImageUrl, cloudName) {
+  // 1. Si hay custom_image_url y es de Cloudinary
+  if (customImageUrl && customImageUrl.startsWith('http') && customImageUrl.includes('cloudinary.com')) {
+    return {
+      url: customImageUrl.trim(),
+      origen: 'custom_image_url (Cloudinary)',
+      publicId: extractPublicId(customImageUrl),
+      esCloudinaryDirecto: true,
+    }
   }
-  const contentType = res.headers.get('content-type') || 'image/jpeg'
-  const arrayBuffer = await res.arrayBuffer()
-  const base64 = Buffer.from(arrayBuffer).toString('base64')
-  return `data:${contentType};base64,${base64}`
+
+  // 2. Si el producto tiene imagen_public_id en Cloudinary (ej: "productos/gmwx5mwuj0ockucprlwr" o "gmwx5mwuj0ockucprlwr")
+  if (producto?.imagen_public_id && typeof producto.imagen_public_id === 'string' && !producto.imagen_public_id.includes('[')) {
+    let cleanId = producto.imagen_public_id.trim()
+    // Asegurar que use la carpeta productos/ si no tiene prefijo
+    if (!cleanId.includes('/')) {
+      cleanId = `productos/${cleanId}`
+    }
+    return {
+      url: `https://res.cloudinary.com/${cloudName}/image/upload/${cleanId}.jpg`,
+      origen: 'producto.imagen_public_id (Cloudinary productos/)',
+      publicId: cleanId,
+      esCloudinaryDirecto: true,
+    }
+  }
+
+  // 3. Si producto.imagen_url es directamente una URL de Cloudinary
+  if (producto?.imagen_url && typeof producto.imagen_url === 'string' && producto.imagen_url.includes('cloudinary.com')) {
+    return {
+      url: producto.imagen_url.trim(),
+      origen: 'producto.imagen_url (Cloudinary)',
+      publicId: extractPublicId(producto.imagen_url),
+      esCloudinaryDirecto: true,
+    }
+  }
+
+  // 4. Si producto.imagenes_urls tiene alguna URL de Cloudinary
+  if (Array.isArray(producto?.imagenes_urls)) {
+    const cldUrl = producto.imagenes_urls.find(u => typeof u === 'string' && u.includes('cloudinary.com'))
+    if (cldUrl) {
+      return {
+        url: cldUrl.trim(),
+        origen: 'producto.imagenes_urls (Cloudinary)',
+        publicId: extractPublicId(cldUrl),
+        esCloudinaryDirecto: true,
+      }
+    }
+  }
+
+  // 5. Si la URL es de Supabase Storage u otro servidor externo
+  if (producto?.imagen_url && typeof producto.imagen_url === 'string' && producto.imagen_url.startsWith('http')) {
+    return {
+      url: producto.imagen_url.trim(),
+      origen: 'producto.imagen_url (Supabase Storage - se migrará/asegurará a Cloudinary)',
+      publicId: null,
+      esCloudinaryDirecto: false,
+      isSupabase: true,
+    }
+  }
+
+  // 6. Fallback oficial a la imagen de producto en Cloudinary de PanFree
+  const defaultPublicId = 'productos/gmwx5mwuj0ockucprlwr'
+  return {
+    url: `https://res.cloudinary.com/${cloudName}/image/upload/${defaultPublicId}.jpg`,
+    origen: 'fallback_default (Cloudinary productos/)',
+    publicId: defaultPublicId,
+    esCloudinaryDirecto: true,
+  }
 }
 
 /**
- * Genera un fondo fotográfico publicitario utilizando Google Gemini Image API (Nano Banana)
+ * Verifica que la URL sea pública y descarga los bytes en Base64
  */
-async function generarFondoConGemini({ apiKey, prompt, model = 'gemini-3.1-flash-image', aspectRatio = '3:4' }) {
+async function verificarYDescargarImagenPublica(imageUrl) {
+  try {
+    console.log(`🔍 [Cloudinary Public Check] Verificando accesibilidad pública: ${imageUrl}`)
+    const res = await fetch(imageUrl, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'PanFree-Marketing-Engine/1.0',
+        'Accept': 'image/*,*/*',
+      },
+    })
+
+    if (!res.ok) {
+      console.warn(`⚠️ [Cloudinary Access Warning] Código HTTP ${res.status} al acceder a ${imageUrl}`)
+      return {
+        esPublica: false,
+        status: res.status,
+        advertencia: `La imagen en Cloudinary respondió HTTP ${res.status}. Asegúrate de que el 'Access Mode' esté en 'Public' en Cloudinary Media Library.`,
+        base64: null,
+        mimeType: null,
+      }
+    }
+
+    const contentType = res.headers.get('content-type') || 'image/jpeg'
+    const arrayBuffer = await res.arrayBuffer()
+    const base64 = Buffer.from(arrayBuffer).toString('base64')
+
+    console.log(`✅ [Cloudinary Public Check] Imagen 100% pública y descargada (${Math.round(base64.length / 1024)} KB, ${contentType})`)
+    return {
+      esPublica: true,
+      status: 200,
+      base64,
+      mimeType: contentType,
+    }
+  } catch (err) {
+    console.warn(`⚠️ [Cloudinary Access Warning] Error de red al verificar imagen pública: ${err.message}`)
+    return {
+      esPublica: false,
+      status: 0,
+      advertencia: `No se pudo conectar a la URL pública de Cloudinary (${err.message}).`,
+      base64: null,
+      mimeType: null,
+    }
+  }
+}
+
+/**
+ * Genera la nueva imagen publicitaria con Gemini (Nano Banana) usando la imagen pública de Cloudinary como referencia
+ */
+async function generarImagenConGemini({
+  apiKey,
+  prompt,
+  model = 'gemini-3.1-flash-image',
+  aspectRatio = '3:4',
+  referenceImageBase64 = null,
+  referenceImageMimeType = 'image/jpeg',
+}) {
   if (!apiKey) {
     console.warn('⚠️ [Gemini Image API] GEMINI_API_KEY no encontrada en variables de entorno')
     return { success: false, error: 'GEMINI_API_KEY no configurada' }
@@ -101,21 +217,33 @@ async function generarFondoConGemini({ apiKey, prompt, model = 'gemini-3.1-flash
 
   let lastError = null
 
+  // Construir las partes de contenido (Imagen de referencia + Prompt)
+  const parts = []
+  if (referenceImageBase64) {
+    parts.push({
+      inlineData: {
+        data: referenceImageBase64,
+        mimeType: referenceImageMimeType || 'image/jpeg',
+      },
+    })
+    console.log(`📎 [Gemini Reference Image] Inyectando imagen de referencia de Cloudinary (${Math.round(referenceImageBase64.length / 1024)} KB)`)
+  }
+
+  parts.push({
+    text: prompt,
+  })
+
   for (const m of uniqueModels) {
     try {
-      console.log(`🚀 [Gemini Image API] Invocando generación de fondo publicitario...`)
-      console.log(`   Modelo: ${m}`)
-      console.log(`   Prompt: "${prompt}"`)
+      console.log(`🚀 [Gemini Image API] Generando arte con modelo: ${m}...`)
+      console.log(`   Prompt: "${prompt.substring(0, 120)}..."`)
       console.log(`   Aspect Ratio: ${finalAspectRatio}`)
+      console.log(`   Tiene imagen de referencia: ${Boolean(referenceImageBase64)}`)
 
       const response = await ai.models.generateContent({
         model: m,
         contents: {
-          parts: [
-            {
-              text: prompt,
-            },
-          ],
+          parts,
         },
         config: {
           imageConfig: {
@@ -127,7 +255,7 @@ async function generarFondoConGemini({ apiKey, prompt, model = 'gemini-3.1-flash
       if (response?.candidates?.[0]?.content?.parts) {
         for (const part of response.candidates[0].content.parts) {
           if (part.inlineData && part.inlineData.data) {
-            console.log(`✅ [Gemini Image API] Fondo publicitario generado con éxito usando: ${m}`)
+            console.log(`✅ [Gemini Image API] Imagen publicitaria generada con éxito usando: ${m}`)
             return {
               success: true,
               base64Data: part.inlineData.data,
@@ -177,7 +305,7 @@ export async function POST(req) {
     const apiSecretCloudinary = process.env.CLOUDINARY_API_SECRET
     const geminiApiKey = process.env.GEMINI_API_KEY
 
-    console.log(`🎨 [${new Date().toISOString()}] Inicio Estrategia PanFree: Recorte Pixelz + Fondo Gemini (Nano Banana) + Overlays Cloudinary`)
+    console.log(`🎨 [${new Date().toISOString()}] Inicio Flujo PanFree: Cloudinary (productos/) + Gemini (Referencia) + Cloudinary (marketing/)`)
     console.log(`   Modelo Solicitado: ${modeloSeleccionado}`)
 
     // 0. Diagnóstico de credenciales
@@ -187,6 +315,8 @@ export async function POST(req) {
         { status: 500 }
       )
     }
+
+    const cloudinary = getCloudinaryClient()
 
     // 1. Obtener producto de Supabase
     let producto = null
@@ -212,153 +342,119 @@ export async function POST(req) {
       }
     }
 
-    // 2. Determinar la imagen base del producto
-    let imageSource = null
-    let origenImagen = ''
+    // =========================================================================
+    // PASO 1 & 2: Resolver imagen en Cloudinary (carpeta productos/) y verificar que sea PÚBLICA
+    // =========================================================================
+    const infoImagen = resolverUrlCloudinaryPublica(producto, custom_image_url, cloudName)
+    let urlImagenReferencia = infoImagen.url
+    let publicIdProducto = infoImagen.publicId
 
-    if (custom_image_url && custom_image_url.trim()) {
-      imageSource = custom_image_url.trim()
-      origenImagen = 'custom_image_url'
-    } else if (producto.imagen_url && producto.imagen_url.startsWith('http')) {
-      imageSource = producto.imagen_url.trim()
-      origenImagen = 'imagen_url (Supabase Storage)'
-    } else if (producto.imagenes_urls && Array.isArray(producto.imagenes_urls)) {
-      const httpUrlInArray = producto.imagenes_urls.find(u => typeof u === 'string' && u.startsWith('http'))
-      if (httpUrlInArray) {
-        imageSource = httpUrlInArray.trim()
-        origenImagen = 'imagenes_urls (HTTP)'
+    console.log(`📦 [Paso 1] Imagen resuelta: ${urlImagenReferencia} | Origen: ${infoImagen.origen}`)
+
+    // Si la imagen viene de Supabase Storage y no está aún en Cloudinary productos/, la subimos a Cloudinary productos/
+    if (infoImagen.isSupabase && !infoImagen.esCloudinaryDirecto) {
+      try {
+        console.log(`🔄 [Paso 1.1] Subiendo imagen de Supabase a Cloudinary carpeta productos/...`)
+        const cleanIdProd = String(producto.id || 'prod').replace(/-/g, '')
+        const uploadProdResult = await cloudinary.uploader.upload(infoImagen.url, {
+          folder: 'productos',
+          public_id: `prod_${cleanIdProd}`,
+          overwrite: true,
+          resource_type: 'image',
+          secure: true,
+        })
+        urlImagenReferencia = uploadProdResult.secure_url
+        publicIdProducto = uploadProdResult.public_id
+        console.log(`✅ [Paso 1.1] Imagen disponible en Cloudinary: ${urlImagenReferencia}`)
+      } catch (errUploadSupabase) {
+        console.warn(`⚠️ [Paso 1.1] No se pudo migrar imagen de Supabase a Cloudinary: ${errUploadSupabase.message}`)
       }
     }
 
-    if (!imageSource) {
-      if (producto.imagen_public_id && typeof producto.imagen_public_id === 'string' && !producto.imagen_public_id.includes('[')) {
-        imageSource = producto.imagen_public_id.trim()
-        origenImagen = 'imagen_public_id (Cloudinary)'
-      } else if (producto.imagenes_urls && producto.imagenes_urls.length > 0 && producto.imagenes_urls[0]) {
-        imageSource = String(producto.imagenes_urls[0]).trim()
-        origenImagen = 'imagenes_urls[0]'
-      } else {
-        imageSource = 'https://res.cloudinary.com/d7simx38/image/upload/v1786629847/productos/gmwx5mwuj0ockucprlwr.jpg'
-        origenImagen = 'fallback_default'
-      }
+    // Paso 2: Verificar que la URL de Cloudinary sea PÚBLICA y descargar bytes para Gemini
+    const checkPublico = await verificarYDescargarImagenPublica(urlImagenReferencia)
+    const advertenciaPublica = checkPublico.esPublica ? null : checkPublico.advertencia
+
+    if (!checkPublico.esPublica) {
+      console.warn(`⚠️ [Paso 2] ADVERTENCIA: ${checkPublico.advertencia}`)
     }
 
-    console.log('🖼️ [Paso 1] Imagen de producto seleccionada:', imageSource, '| Origen:', origenImagen)
-
-    const cloudinary = getCloudinaryClient()
-    const timestamp = Date.now()
-    const cleanId = String(producto.id || 'promo').replace(/-/g, '')
-    const productPublicId = `prod_cutout_${cleanId}_${timestamp}`
-    const bgPublicId = `bg_gemini_${cleanId}_${timestamp}`
-
     // =========================================================================
-    // PASO 1: Subir imagen del producto y aplicar background_removal (Pixelz)
+    // PASO 3 & 4: Gemini (Nano Banana) genera imagen NUEVA con la referencia y el prompt
     // =========================================================================
-    console.log('✂️ [Paso 1] Subiendo producto a Cloudinary con background_removal: pixelz...')
-    let fileParaSubir = imageSource
-    const esUrlDeCloudinary = /^https?:\/\/res\.cloudinary\.com\//.test(imageSource)
-    const esUrlHttp = /^https?:\/\//.test(imageSource)
-
-    if (esUrlHttp && !esUrlDeCloudinary) {
-      fileParaSubir = await descargarComoDataUri(imageSource)
-    } else if (!esUrlHttp) {
-      fileParaSubir = `https://res.cloudinary.com/${cloudName}/image/upload/${imageSource}`
-    }
-
-    const productUploadResult = await cloudinary.uploader.upload(fileParaSubir, {
-      asset_folder: 'marketing/products',
-      public_id: productPublicId,
-      background_removal: 'pixelz',
-      overwrite: true,
-      resource_type: 'image',
-      secure: true,
-    })
-
-    const finalProductPublicId = productUploadResult.public_id || productPublicId
-    console.log('✅ [Paso 1] Producto recortado y guardado en Cloudinary:', finalProductPublicId)
-
-    // =========================================================================
-    // PASO 2: Generar fondo publicitario con Gemini Image API (Nano Banana)
-    // =========================================================================
-    const promptBase = brief_creativo || `fotografía gastronómica profesional de ${producto.nombre}`
+    const promptBase = brief_creativo || `fotografía publicitaria gastronómica de ${producto.nombre}`
     const promptComprimido = await comprimirPrompt(promptBase, { ratio: 0.7, maxTokens: 80 })
-    const promptGenerativo = construirPromptGenerativoFondo(promptComprimido, producto, modeloSeleccionado)
+    const promptGenerativo = construirPromptGenerativoComercial(promptComprimido, producto, modeloSeleccionado)
 
-    console.log(`🎨 [Paso 2] Generando fondo con Gemini Image API (${modeloSeleccionado})...`)
-    const geminiResult = await generarFondoConGemini({
+    console.log(`🤖 [Paso 3 & 4] Enviando referencia y prompt a Gemini Image API (${modeloSeleccionado})...`)
+    const geminiResult = await generarImagenConGemini({
       apiKey: geminiApiKey,
       prompt: promptGenerativo,
       model: modeloSeleccionado,
       aspectRatio: '3:4',
+      referenceImageBase64: checkPublico.base64,
+      referenceImageMimeType: checkPublico.mimeType || 'image/jpeg',
     })
 
-    let baseCanvasId = finalProductPublicId
+    const timestamp = Date.now()
+    const cleanId = String(producto.id || 'promo').replace(/-/g, '')
+    let marketingPublicId = null
     let usandoFondoGenerado = false
-    let fondoGeneradoPublicId = null
     let modeloEfectivo = modeloSeleccionado
+    let baseCanvasId = publicIdProducto || `productos/gmwx5mwuj0ockucprlwr`
 
+    // =========================================================================
+    // PASO 5: Guardar imagen generada por Gemini en Cloudinary (carpeta marketing/)
+    // =========================================================================
     if (geminiResult.success && geminiResult.base64Data) {
       modeloEfectivo = geminiResult.modelUsed || modeloSeleccionado
       try {
-        console.log('☁️ [Paso 2.1] Subiendo fondo generado por Gemini a Cloudinary Media Library...')
-        const dataUriFondo = `data:${geminiResult.mimeType};base64,${geminiResult.base64Data}`
-        
-        const bgUploadResult = await cloudinary.uploader.upload(dataUriFondo, {
-          asset_folder: 'marketing/backgrounds',
-          public_id: bgPublicId,
+        console.log('☁️ [Paso 5] Guardando la imagen generada por Gemini en Cloudinary (carpeta marketing/)...')
+        const dataUriGenerada = `data:${geminiResult.mimeType};base64,${geminiResult.base64Data}`
+        const uploadResult = await cloudinary.uploader.upload(dataUriGenerada, {
+          folder: 'marketing',
+          public_id: `art_${cleanId}_${timestamp}`,
           overwrite: true,
           resource_type: 'image',
           secure: true,
         })
 
-        fondoGeneradoPublicId = bgUploadResult.public_id || bgPublicId
-        baseCanvasId = fondoGeneradoPublicId
+        marketingPublicId = uploadResult.public_id
+        baseCanvasId = uploadResult.public_id
         usandoFondoGenerado = true
-        console.log('✅ [Paso 2.2] Fondo de Gemini disponible en Cloudinary:', fondoGeneradoPublicId)
+        console.log(`✅ [Paso 5] Imagen de Gemini guardada exitosamente en Cloudinary: ${marketingPublicId}`)
       } catch (uploadErr) {
-        console.warn('⚠️ [Paso 2.2] Error al subir fondo de Gemini a Cloudinary, activando fallback visual:', uploadErr.message)
+        console.warn('⚠️ [Paso 5] Error al subir imagen generada a Cloudinary (carpeta marketing/):', uploadErr.message)
       }
     } else {
-      console.warn('⚠️ [Paso 2] No se pudo generar fondo via Gemini Image API, activando fallback de lienzo:', geminiResult.error)
+      console.warn('⚠️ [Paso 4] No se pudo generar imagen completa con Gemini Image API, activando composición con recorte Pixelz:', geminiResult.error)
     }
 
     // =========================================================================
-    // PASO 3: Combinar Producto + Fondo Generado + Overlays Publicitarios
+    // PASO 6: Overlays Publicitarios con Precios Reales en Guaraníes (Cloudinary)
     // =========================================================================
-    console.log('🎯 [Paso 3] Ensamblando arte publicitario con overlays de precios reales y layer_apply...')
+    console.log('🎯 [Paso 6] Inyectando overlays publicitarios de precios reales y CTA...')
     const precioOriginalNum = Number(producto.precio_venta) || 28000
     const descuentoNum = Number(descuento) || 0
     const precioPromoNum = Math.round(precioOriginalNum * (1 - descuentoNum / 100))
 
-    // Formatear el publicId del producto para overlay en Cloudinary (reemplazar / por :)
-    const overlayProductTag = finalProductPublicId.replace(/\//g, ':')
-
     let transformations = []
 
     if (usandoFondoGenerado) {
-      // Lienzo base: Fondo fotográfico publicitario generado por Gemini (Nano Banana)
+      // Imagen generada por Gemini en carpeta marketing/
       transformations = [
         // 1. Canvas Instagram Portrait 4:5 (1080x1350)
         { width: 1080, height: 1350, crop: 'fill', gravity: 'center' },
 
-        // 2. Overlay del producto sin fondo en el centro
-        {
-          overlay: overlayProductTag,
-          width: 780,
-          crop: 'fit',
-          effect: 'background_removal',
-        },
-        { flags: 'layer_apply', gravity: 'center', y: -70 },
-
-        // 3. Realces fotográficos gastronómicos
-        { effect: 'brightness:5' },
-        { effect: 'contrast:12' },
-        { effect: 'saturation:14' },
-        { effect: 'sharpen:80' },
-        { effect: 'vignette:18' },
+        // 2. Realces fotográficos gastronómicos
+        { effect: 'brightness:3' },
+        { effect: 'contrast:10' },
+        { effect: 'saturation:12' },
+        { effect: 'sharpen:70' },
+        { effect: 'vignette:16' },
         { quality: 'auto:best', fetch_format: 'auto' },
 
-        // 4. Badge de Descuento
+        // 3. Badge de Descuento
         ...(descuentoNum > 0
           ? [
               {
@@ -374,7 +470,7 @@ export async function POST(req) {
             ]
           : []),
 
-        // 5. Nombre del producto
+        // 4. Nombre del producto
         {
           overlay: {
             font_family: 'Montserrat',
@@ -386,7 +482,7 @@ export async function POST(req) {
         },
         { flags: 'layer_apply', gravity: 'south', y: 220 },
 
-        // 6. Precio original tachado
+        // 5. Precio original tachado
         ...(descuentoNum > 0
           ? [
               {
@@ -401,7 +497,7 @@ export async function POST(req) {
             ]
           : []),
 
-        // 7. Precio promocional destacado
+        // 6. Precio promocional destacado
         {
           overlay: {
             font_family: 'Montserrat',
@@ -413,7 +509,7 @@ export async function POST(req) {
         },
         { flags: 'layer_apply', gravity: 'south', y: 90 },
 
-        // 8. CTA de cierre
+        // 7. CTA de cierre
         {
           overlay: {
             font_family: 'Montserrat',
@@ -426,7 +522,9 @@ export async function POST(req) {
         { flags: 'layer_apply', gravity: 'south', y: 25 },
       ]
     } else {
-      // Fallback: Canvas directo con corte del producto (Pixelz) y fondo fotográfico cálido
+      // Fallback: Recorte de producto + fondo cálido + overlays
+      const overlayProductTag = (publicIdProducto || 'productos/gmwx5mwuj0ockucprlwr').replace(/\//g, ':')
+
       transformations = [
         { width: 1080, height: 1350, crop: 'pad', background: 'rgb:241D17', gravity: 'center' },
         { effect: 'brightness:6' },
@@ -505,14 +603,14 @@ export async function POST(req) {
       secure: true,
     })
 
-    console.log(`✅ [Paso 3] URL final generada con éxito (${generatedImageUrl.length} car.): ${generatedImageUrl}`)
+    console.log(`✅ [Paso 6] URL publicitaria final generada en Cloudinary (${generatedImageUrl.length} car.): ${generatedImageUrl}`)
 
-    // 4. Guardar registro en Supabase
+    // 7. Guardar registro en Supabase
     const { data: dataInsert } = await supabase
       .from('generaciones_imagen')
       .insert([{
         producto_id: producto.id,
-        imagen_original_url: imageSource,
+        imagen_original_url: urlImagenReferencia,
         imagen_generada_url: generatedImageUrl,
         transformaciones: transformations,
         prompt_creativo: promptGenerativo,
@@ -527,11 +625,14 @@ export async function POST(req) {
       success: true,
       imagen_url: generatedImageUrl,
       public_id: baseCanvasId,
-      producto_recortado_id: finalProductPublicId,
-      fondo_generado_id: fondoGeneradoPublicId,
+      imagen_referencia_url: urlImagenReferencia,
+      marketing_public_id: marketingPublicId,
+      guardado_en_carpeta: 'marketing/',
+      es_publica_cloudinary: checkPublico.esPublica,
+      advertencia_acceso: advertenciaPublica,
       modelo_utilizado: modeloEfectivo,
-      prompt_fondo: promptGenerativo,
-      usando_fondo_generado: usandoFondoGenerado,
+      prompt_utilizado: promptGenerativo,
+      usando_gemini_generado: usandoFondoGenerado,
       producto: {
         id: producto.id,
         nombre: producto.nombre,
@@ -542,7 +643,7 @@ export async function POST(req) {
         descuento: descuentoNum,
       },
       generacion_id: dataInsert?.[0]?.id || null,
-      mensaje: `✅ Arte publicitario generado: Recorte Pixelz + Fondo Gemini (${modeloEfectivo}) + Overlays Cloudinary`,
+      mensaje: `✅ Arte publicitario generado: Imagen de referencia (Cloudinary productos/) ➔ Gemini (${modeloEfectivo}) ➔ Guardado en Cloudinary (marketing/) + Overlays`,
     })
   } catch (error) {
     console.error('❌ Error en generar-imagen-cloudinary:', error)
@@ -552,5 +653,6 @@ export async function POST(req) {
     )
   }
 }
+
 
 
