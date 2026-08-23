@@ -7,45 +7,29 @@ import { comprimirPrompt } from '@/lib/prompt-compressor'
 export const dynamic = 'force-dynamic'
 
 /**
- * Enriquece el prompt automáticamente con estilo gastronómico gourmet para Instagram
+ * Estilos temáticos fotográficos gastronómicos para guiar el modelo de Cloudinary AI
  */
-function mejorarPromptParaInstagram(promptBase, producto) {
-  const mejoras = [
-    'fotografía gastronómica profesional',
-    'estilo Instagram de alta calidad',
-    'composición con regla de tercios',
-    'iluminación natural cálida tipo golden hour',
-    'fondo con texturas rústicas',
-    'atmósfera acogedora y artesanal',
-    'estilo visual de panadería gourmet',
-    'colores cálidos y vibrantes',
-    'profundidad de campo suave'
-  ]
-
-  let base = (promptBase || '').trim()
-  if (!base) {
-    const nombreProd = producto?.nombre || 'panadería gourmet sin gluten'
-    base = `fotografía gastronómica profesional de ${nombreProd}`
-  }
-
-  const baseLower = base.toLowerCase()
-  const mejorasFiltradas = mejoras.filter(
-    (m) => !baseLower.includes(m.toLowerCase())
-  )
-
-  const promptMejorado = mejorasFiltradas.length > 0
-    ? `${base}, ${mejorasFiltradas.join(', ')}`
-    : base
-
-  return promptMejorado
+const ESTILOS_PROMPT = {
+  'estudio-madera': 'rustic wooden bakery table warm golden light herbs',
+  'marmol-lujo': 'white marble countertop bright daylight soft shadow elegant bakery',
+  'desayuno-calido': 'morning breakfast table coffee cup natural golden sunlight cozy vibe',
+  'rustico-artesanal': 'artisan kitchen rustic wood flour dusting warm cozy depth of field',
+  'estudio-oscuro': 'dark moody rustic background dramatic warm spotlight gourmet food',
+  'evento-promo': 'festive celebration table gourmet party setting warm bokeh lights',
+  // Mapeos de compatibilidad con selectores previos
+  'nano-banana-2': 'rustic wooden bakery table warm golden lighting gourmet bakery atmosphere',
+  'nano-banana-1': 'clean wooden table warm lighting food photography',
+  'flux-2-pro': 'hyperrealistic white marble countertop bright studio lighting elegant gourmet setup',
+  'recraft-v4': 'artisan kitchen rustic wood flour dusting warm cozy depth of field',
+  'gpt-image-2': 'festive celebration table gourmet party setting warm bokeh lights',
+  'ideogram-v4-base': 'dark moody rustic background dramatic warm spotlight gourmet food',
 }
 
 /**
- * Destila y optimiza el prompt para Cloudinary AI (< 90 caracteres).
- * Extrae las palabras clave del producto y añade descriptores visuales de alto impacto.
- * Elimina acentos, caracteres especiales y frases de relleno que inflan la URL.
+ * Destila y optimiza el prompt para Cloudinary AI (< 85 caracteres).
+ * Limpia stopwords y construye la frase clave que la IA interpreta para el fondo.
  */
-function destilarPromptFondo(promptBase, producto) {
+function destilarPromptFondo(promptBase, producto, estiloId = 'estudio-madera') {
   const nombreProd = producto?.nombre || ''
   const textoOrigen = (promptBase && promptBase.trim().length > 3) ? promptBase : nombreProd
 
@@ -56,7 +40,7 @@ function destilarPromptFondo(promptBase, producto) {
     .replace(/[^a-zA-Z0-9\s]/g, ' ')
     .toLowerCase()
 
-  // 2. Eliminar palabras vacías, preposiciones y meta-instrucciones largas
+  // 2. Eliminar palabras vacías, preposiciones y meta-instrucciones
   const stopWords = [
     'fotografia', 'gastronomica', 'profesional', 'estilo', 'instagram', 'alta', 'calidad',
     'composicion', 'regla', 'de', 'tercios', 'angulo', 'ligeramente', 'cenital', 'profundidad',
@@ -69,28 +53,28 @@ function destilarPromptFondo(promptBase, producto) {
     textoLimpio = textoLimpio.replace(new RegExp(`\\b${word}\\b`, 'gi'), ' ')
   })
 
-  // 3. Extraer palabras clave más relevantes del producto
+  // 3. Extraer palabras clave del producto (máximo 2 palabras principales)
   const tokens = textoLimpio.split(/\s+/).filter((w) => w.length > 2)
-  const sujetoClave = tokens.slice(0, 3).join(' ') || 'bakery food'
+  const sujetoClave = tokens.slice(0, 2).join(' ') || 'bakery food'
 
-  // 4. Combinar con descriptores de fondo gastronómico que mejor interpreta el modelo de IA
-  const promptConstruido = `${sujetoClave} rustic wood bakery table warm golden light herbs`
+  // 4. Modificador de estilo visual seleccionado
+  const modificadorEstilo = ESTILOS_PROMPT[estiloId] || ESTILOS_PROMPT['estudio-madera']
 
-  // 5. Normalizar espacios a guiones bajos y limitar estrictamente a 85 caracteres
+  // 5. Construir prompt conciso
+  const promptConstruido = `${sujetoClave} ${modificadorEstilo}`
+
+  // 6. Normalizar a guiones bajos y limitar a 80 caracteres para URL segura
   const promptFinal = promptConstruido
     .trim()
     .replace(/\s+/g, '_')
-    .substring(0, 85)
+    .substring(0, 80)
     .replace(/_+$/, '')
 
   return promptFinal || 'rustic_wood_bakery_table_warm_golden_light'
 }
 
 /**
- * Descarga una imagen remota (Supabase, Cloudinary, etc.) y la devuelve
- * como Data URI base64. Esto evita que Cloudinary tenga que "fetchear"
- * la URL él mismo (lo cual puede estar bloqueado por la whitelist de
- * dominios de la cuenta y devolver 403).
+ * Descarga una imagen remota y la devuelve como Data URI base64
  */
 async function descargarComoDataUri(url) {
   const res = await fetch(url)
@@ -112,7 +96,8 @@ export async function POST(req) {
       evento = '',
       brief_creativo = '',
       custom_image_url = null,
-      modelo = 'nano-banana-2',
+      estilo = 'estudio-madera',
+      modelo = null,
     } = body || {}
 
     if (!producto_id && !custom_image_url) {
@@ -122,32 +107,11 @@ export async function POST(req) {
       )
     }
 
-    // Validar modelo seleccionado
-    const modelosPermitidos = [
-      'nano-banana-1',
-      'nano-banana-2',
-      'flux-2-pro',
-      'recraft-v4',
-      'gpt-image-2',
-      'ideogram-v4-base',
-    ]
+    const estiloSeleccionado = estilo || modelo || 'estudio-madera'
 
-    const modeloSeleccionado = modelo || 'nano-banana-2'
+    console.log(`🎨 [${new Date().toISOString()}] Estilo/Ambiente de Fondo: ${estiloSeleccionado}`)
 
-    if (!modelosPermitidos.includes(modeloSeleccionado)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Modelo "${modelo}" no soportado. Modelos permitidos: ${modelosPermitidos.join(', ')}`,
-        },
-        { status: 400 }
-      )
-    }
-
-    console.log(`🎨 [${new Date().toISOString()}] Modelo seleccionado: ${modeloSeleccionado}`)
-    console.log(`🎨 Modelo de IA seleccionado: ${modeloSeleccionado}`)
-
-    // 0. Diagnóstico de configuración — visible en logs del servidor
+    // 0. Diagnóstico de configuración en logs del servidor
     console.log('🔧 [Cloudinary Config Check]', {
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? '✅ presente' : '❌ AUSENTE',
       api_key: process.env.CLOUDINARY_API_KEY ? '✅ presente' : '❌ AUSENTE',
@@ -186,11 +150,9 @@ export async function POST(req) {
       imageSource = custom_image_url.trim()
       origenImagen = 'custom_image_url'
     } else if (producto.imagen_url && producto.imagen_url.startsWith('http')) {
-      // Prioridad 1: URL completa en Supabase Storage
       imageSource = producto.imagen_url.trim()
       origenImagen = 'imagen_url (Supabase Storage)'
     } else if (producto.imagenes_urls && Array.isArray(producto.imagenes_urls)) {
-      // Prioridad 2: Buscar en imagenes_urls alguna URL HTTP
       const httpUrlInArray = producto.imagenes_urls.find(u => typeof u === 'string' && u.startsWith('http'))
       if (httpUrlInArray) {
         imageSource = httpUrlInArray.trim()
@@ -198,7 +160,6 @@ export async function POST(req) {
       }
     }
 
-    // Prioridad 3: Si no hay URL http, usar imagen_public_id o imagenes_urls[0]
     if (!imageSource) {
       if (producto.imagen_public_id && typeof producto.imagen_public_id === 'string' && !producto.imagen_public_id.includes('[')) {
         imageSource = producto.imagen_public_id.trim()
@@ -267,22 +228,12 @@ export async function POST(req) {
     const finalPublicId = uploadResult.public_id || publicIdDestino
     console.log('✅ Imagen base guardada en Cloudinary:', finalPublicId, '| folder:', uploadResult.asset_folder)
 
-    // 5. Enriquecer prompt y comprimir
+    // 5. Destilar prompt para Cloudinary
     const promptBase = brief_creativo || `fotografía gastronómica profesional de ${producto.nombre}`
-
-    // NUEVO: Comprimir el prompt si es muy largo (ratio 0.6 = 40% de compresión)
     const promptComprimido = await comprimirPrompt(promptBase, { ratio: 0.6, maxTokens: 60 })
+    const promptFondo = destilarPromptFondo(promptComprimido, producto, estiloSeleccionado)
 
-    const promptEnriquecido = mejorarPromptParaInstagram(promptComprimido, producto)
-    const promptFondo = destilarPromptFondo(promptEnriquecido, producto)
-
-    console.log(`📊 Prompt original: ${promptBase.length} caracteres`)
-    console.log(`📊 Prompt comprimido: ${promptComprimido.length} caracteres`)
-    if (promptBase.length > 0) {
-      console.log(`📊 Reducción: ${Math.round((1 - promptComprimido.length / promptBase.length) * 100)}%`)
-    }
     console.log(`🎨 Prompt fondo para Cloudinary: "${promptFondo}"`)
-    console.log(`🎨 Prompt: ${promptFondo}`)
 
     const precioOriginalNum = Number(producto.precio_venta) || 28000
     const descuentoNum = Number(descuento) || 0
@@ -293,8 +244,8 @@ export async function POST(req) {
       // Formato Instagram Portrait (1080x1350, relación 4:5)
       { width: 1080, height: 1350, crop: 'fill', gravity: 'auto' },
 
-      // Reemplazo generativo con prompt conciso y modelo seleccionado
-      { effect: `gen_background_replace:prompt_${promptFondo}:model_${modeloSeleccionado}` },
+      // Reemplazo generativo canónico oficial de Cloudinary
+      { effect: `gen_background_replace:prompt_${promptFondo}` },
 
       // Post-procesamiento fotográfico profesional: realce de color, contraste, nitidez y viñeta
       { effect: 'brightness:6' },
@@ -399,7 +350,8 @@ export async function POST(req) {
       success: true,
       imagen_url: generatedImageUrl,
       public_id: finalPublicId,
-      modelo_utilizado: modeloSeleccionado,
+      estilo_utilizado: estiloSeleccionado,
+      prompt_fondo: promptFondo,
       url_length: generatedImageUrl.length,
       producto: {
         id: producto.id,
@@ -421,3 +373,4 @@ export async function POST(req) {
     )
   }
 }
+
