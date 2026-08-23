@@ -61,55 +61,62 @@ export async function POST(req) {
       }
     }
 
-    // 3. Construir la URL de transformación
+    // 3. Obtener cliente de Cloudinary
     const cloudinary = getCloudinaryClient()
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'd7simx38'
 
-    // Construir el prompt para el fondo
-    const promptFondo = brief_creativo || `fotografía gastronómica de ${producto.nombre}, mesa rústica, iluminación cálida`
-
-    // 4. SUBIR LA IMAGEN CON LAS TRANSFORMACIONES
+    // 4. Subir la imagen base a Cloudinary (sin transformaciones síncronas para evitar errores de IA)
     const timestamp = Date.now()
     const publicIdDestino = `product_${producto.id}_${timestamp}`
     const folderDestino = 'marketing'
 
-    console.log('📤 Subiendo imagen a Cloudinary con transformaciones...')
-    console.log('📁 Carpeta destino:', folderDestino)
+    console.log('📤 Subiendo imagen base a Cloudinary...')
+    console.log('📁 Asset folder destino:', folderDestino)
     console.log('🖼️ Public ID:', publicIdDestino)
 
     const uploadResult = await cloudinary.uploader.upload(imageSource, {
       asset_folder: folderDestino,
       public_id: publicIdDestino,
-      transformation: [
-        { width: 1080, height: 1350, crop: 'fill', gravity: 'auto' },
-        { effect: 'background_removal' },
-        { effect: 'gen_background_replace', gen_background_replace: { prompt: promptFondo } },
-        { quality: 'auto', fetch_format: 'auto' },
-        { overlay: { font_family: 'Arial', font_size: 72, font_weight: 'bold', text: `${descuento}% OFF` }, color: '#FF6B00' },
-        { flags: 'layer_apply', gravity: 'north_east', x: 50, y: 50 },
-        { overlay: { font_family: 'Arial', font_size: 48, font_weight: 'bold', text: producto.nombre }, color: '#FFFFFF' },
-        { flags: 'layer_apply', gravity: 'south', y: 180 },
-        { overlay: { font_family: 'Arial', font_size: 34, text: `G/${Number(producto.precio_venta).toLocaleString('es-PY')}` }, color: '#D1D5DB' },
-        { flags: 'layer_apply', gravity: 'south', y: 130 },
-        { overlay: { font_family: 'Arial', font_size: 54, font_weight: 'bold', text: `G/${Math.round(Number(producto.precio_venta) * (1 - Number(descuento) / 100)).toLocaleString('es-PY')}` }, color: '#FF6B00' },
-        { flags: 'layer_apply', gravity: 'south', y: 75 },
-        { overlay: { font_family: 'Arial', font_size: 28, font_weight: 'bold', text: 'Pedi en panfree.fit | 100% Sin Gluten' }, color: '#F9FAFB' },
-        { flags: 'layer_apply', gravity: 'south', y: 25 }
-      ],
       overwrite: true,
       resource_type: 'image',
       secure: true
     })
 
-    console.log('✅ URL generada y guardada:', uploadResult.secure_url)
-    console.log('🖼️ Public ID generado:', uploadResult.public_id)
+    const finalPublicId = uploadResult.public_id || publicIdDestino
+    console.log('✅ Imagen base guardada en Cloudinary:', finalPublicId)
 
-    // 5. Guardar en Supabase
+    // 5. Definir transformaciones y generar la URL de entrega (on-the-fly)
+    const promptFondo = brief_creativo || `fotografía gastronómica de ${producto.nombre}, mesa rústica, iluminación cálida`
+
+    const transformations = [
+      { width: 1080, height: 1350, crop: 'fill', gravity: 'auto' },
+      { effect: 'background_removal' },
+      { effect: 'gen_background_replace', gen_background_replace: { prompt: promptFondo } },
+      { quality: 'auto', fetch_format: 'auto' },
+      { overlay: { font_family: 'Arial', font_size: 72, font_weight: 'bold', text: `${descuento}% OFF` }, color: '#FF6B00' },
+      { flags: 'layer_apply', gravity: 'north_east', x: 50, y: 50 },
+      { overlay: { font_family: 'Arial', font_size: 48, font_weight: 'bold', text: producto.nombre }, color: '#FFFFFF' },
+      { flags: 'layer_apply', gravity: 'south', y: 180 },
+      { overlay: { font_family: 'Arial', font_size: 34, text: `G/${Number(producto.precio_venta).toLocaleString('es-PY')}` }, color: '#D1D5DB' },
+      { flags: 'layer_apply', gravity: 'south', y: 130 },
+      { overlay: { font_family: 'Arial', font_size: 54, font_weight: 'bold', text: `G/${Math.round(Number(producto.precio_venta) * (1 - Number(descuento) / 100)).toLocaleString('es-PY')}` }, color: '#FF6B00' },
+      { flags: 'layer_apply', gravity: 'south', y: 75 },
+      { overlay: { font_family: 'Arial', font_size: 28, font_weight: 'bold', text: 'Pedi en panfree.fit | 100% Sin Gluten' }, color: '#F9FAFB' },
+      { flags: 'layer_apply', gravity: 'south', y: 25 }
+    ]
+
+    const generatedImageUrl = cloudinary.url(finalPublicId, {
+      transformation: transformations,
+      secure: true
+    })
+
+    console.log('✅ URL con transformaciones generada:', generatedImageUrl)
+
+    // 6. Guardar registro en Supabase
     await supabase.from('generaciones_imagen').insert([{
       producto_id: producto.id,
       imagen_original_url: imageSource,
-      imagen_generada_url: uploadResult.secure_url,
-      transformaciones: uploadResult.transformation || [],
+      imagen_generada_url: generatedImageUrl,
+      transformaciones: transformations,
       prompt_creativo: promptFondo,
       evento: evento || null,
       descuento_aplicado: Number(descuento),
@@ -119,8 +126,8 @@ export async function POST(req) {
 
     return NextResponse.json({
       success: true,
-      imagen_url: uploadResult.secure_url,
-      public_id: uploadResult.public_id,
+      imagen_url: generatedImageUrl,
+      public_id: finalPublicId,
       mensaje: `✅ Imagen generada y guardada en marketing/`
     })
 
