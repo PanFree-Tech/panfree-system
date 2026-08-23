@@ -148,18 +148,17 @@ export async function POST(req) {
 
     const transformations = [
       { width: 1080, height: 1350, crop: 'fill', gravity: 'auto' },
-      { effect: 'background_removal' },
-      { effect: 'gen_background_replace', gen_background_replace: { prompt: promptFondo } },
+      { effect: `gen_background_replace:prompt_${promptFondo}` },
       { quality: 'auto', fetch_format: 'auto' },
-      { overlay: { font_family: 'Arial', font_size: 72, font_weight: 'bold', text: `${descuento}% OFF` }, color: '#FF6B00' },
+      { overlay: { font_family: 'Arial', font_size: 72, font_weight: 'bold', text: `${descuento}%25 OFF` }, color: 'rgb:FF6B00' },
       { flags: 'layer_apply', gravity: 'north_east', x: 50, y: 50 },
-      { overlay: { font_family: 'Arial', font_size: 48, font_weight: 'bold', text: producto.nombre }, color: '#FFFFFF' },
+      { overlay: { font_family: 'Arial', font_size: 48, font_weight: 'bold', text: producto.nombre }, color: 'rgb:FFFFFF' },
       { flags: 'layer_apply', gravity: 'south', y: 180 },
-      { overlay: { font_family: 'Arial', font_size: 34, text: `G/${Number(producto.precio_venta).toLocaleString('es-PY')}` }, color: '#D1D5DB' },
+      { overlay: { font_family: 'Arial', font_size: 34, text: `G/${Number(producto.precio_venta).toLocaleString('es-PY')}` }, color: 'rgb:D1D5DB' },
       { flags: 'layer_apply', gravity: 'south', y: 130 },
-      { overlay: { font_family: 'Arial', font_size: 54, font_weight: 'bold', text: `G/${Math.round(Number(producto.precio_venta) * (1 - Number(descuento) / 100)).toLocaleString('es-PY')}` }, color: '#FF6B00' },
+      { overlay: { font_family: 'Arial', font_size: 54, font_weight: 'bold', text: `G/${Math.round(Number(producto.precio_venta) * (1 - Number(descuento) / 100)).toLocaleString('es-PY')}` }, color: 'rgb:FF6B00' },
       { flags: 'layer_apply', gravity: 'south', y: 75 },
-      { overlay: { font_family: 'Arial', font_size: 28, font_weight: 'bold', text: 'Pedi en panfree.fit | 100% Sin Gluten' }, color: '#F9FAFB' },
+      { overlay: { font_family: 'Arial', font_size: 28, font_weight: 'bold', text: 'Pedi en panfree.fit | 100% Sin Gluten' }, color: 'rgb:F9FAFB' },
       { flags: 'layer_apply', gravity: 'south', y: 25 },
     ]
 
