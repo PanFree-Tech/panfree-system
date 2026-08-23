@@ -73,23 +73,23 @@ export function buildMarketingImageTransformationUrl({
   const precioOriginalFmt = `G/ ${precioOriginal.toLocaleString('es-PY')}`
   const precioPromoFmt = `G/ ${precioPromocional.toLocaleString('es-PY')}`
 
-  // Prompt temático enriquecido para Instagram
-  const mejoras = [
-    'fotografía gastronómica profesional',
-    'estilo Instagram de alta calidad',
-    'composición con regla de tercios',
-    'iluminación natural cálida tipo golden hour',
-    'fondo con texturas rústicas y elementos decorativos',
-    'atmósfera acogedora y artesanal',
-    'estilo visual de panadería gourmet',
-    'colores cálidos y vibrantes',
-    'profundidad de campo suave'
-  ]
-  const promptBase = briefCreativo || `fotografía gastronómica profesional de ${nombreProducto || 'panadería artesanal sin gluten'}`
-  const promptFondo = `${promptBase}, ${mejoras.join(', ')}`
-    .replace(/[,/\\#%_]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+  // Prompt temático optimizado y conciso para Generative AI de Cloudinary (< 90 chars)
+  let textoLimpio = (briefCreativo || nombreProducto || 'bakery')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9\s]/g, ' ')
+    .toLowerCase()
+
+  const stopWords = ['fotografia', 'gastronomica', 'profesional', 'estilo', 'instagram', 'alta', 'calidad', 'de', 'un', 'una', 'con', 'para', 'del', 'los', 'las', 'sobre', 'artesanal', 'gourmet']
+  stopWords.forEach((w) => {
+    textoLimpio = textoLimpio.replace(new RegExp(`\\b${w}\\b`, 'gi'), ' ')
+  })
+  const tokens = textoLimpio.split(/\s+/).filter((w) => w.length > 2)
+  const sujeto = tokens.slice(0, 3).join(' ') || 'bakery bread'
+  const promptFondo = `${sujeto} rustic wood bakery table warm golden light herbs`
+    .replace(/\s+/g, '_')
+    .substring(0, 85)
+    .replace(/_+$/, '')
 
   // Transformaciones secuenciales en Cloudinary
   const transformations = [

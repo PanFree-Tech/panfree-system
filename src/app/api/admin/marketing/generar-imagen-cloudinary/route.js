@@ -6,53 +6,49 @@ import { getCloudinaryClient } from '@/lib/cloudinary'
 export const dynamic = 'force-dynamic'
 
 /**
- * Enriquece el prompt automáticamente con estilo gastronómico gourmet para Instagram
+ * Destila y optimiza el prompt para Cloudinary AI (< 90 caracteres).
+ * Extrae las palabras clave del producto y añade descriptores visuales de alto impacto.
+ * Elimina acentos, caracteres especiales y frases de relleno que inflan la URL.
  */
-function mejorarPromptParaInstagram(promptBase, producto) {
-  const mejoras = [
-    'fotografía gastronómica profesional',
-    'estilo Instagram de alta calidad',
-    'composición con regla de tercios',
-    'iluminación natural cálida tipo golden hour',
-    'fondo con texturas rústicas y elementos decorativos (ramas de romero, harina espolvoreada, frutas frescas)',
-    'ángulo ligeramente cenital',
-    'profundidad de campo suave',
-    'colores cálidos y vibrantes',
-    'atmósfera acogedora y artesanal',
-    'estilo visual de panadería gourmet'
+function destilarPromptFondo(promptBase, producto) {
+  const nombreProd = producto?.nombre || ''
+  const textoOrigen = (promptBase && promptBase.trim().length > 3) ? promptBase : nombreProd
+
+  // 1. Quitar acentos y caracteres especiales para evitar expansión en URL (%C3%AD, etc.)
+  let textoLimpio = textoOrigen
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9\s]/g, ' ')
+    .toLowerCase()
+
+  // 2. Eliminar palabras vacías, preposiciones y meta-instrucciones largas
+  const stopWords = [
+    'fotografia', 'gastronomica', 'profesional', 'estilo', 'instagram', 'alta', 'calidad',
+    'composicion', 'regla', 'de', 'tercios', 'angulo', 'ligeramente', 'cenital', 'profundidad',
+    'campo', 'suave', 'atmosfera', 'acogedora', 'artesanal', 'visual', 'panaderia', 'gourmet',
+    'colores', 'calidos', 'vibrantes', 'en', 'un', 'una', 'con', 'para', 'del', 'los', 'las',
+    'sobre', 'detalles', 'espolvoreado', 'desenfocado', 'bokeh', 'cocina', 'elegante', 'el', 'la'
   ]
 
-  let base = (promptBase || '').trim()
-  if (!base) {
-    const nombreProd = producto?.nombre || 'panadería gourmet sin gluten'
-    base = `fotografía gastronómica profesional de ${nombreProd}`
-  }
+  stopWords.forEach((word) => {
+    textoLimpio = textoLimpio.replace(new RegExp(`\\b${word}\\b`, 'gi'), ' ')
+  })
 
-  // Si el prompt ya contiene algunas de estas palabras, no repetirlas
-  const baseLower = base.toLowerCase()
-  const mejorasFiltradas = mejoras.filter(
-    (m) => !baseLower.includes(m.toLowerCase())
-  )
+  // 3. Extraer palabras clave más relevantes del producto
+  const tokens = textoLimpio.split(/\s+/).filter((w) => w.length > 2)
+  const sujetoClave = tokens.slice(0, 3).join(' ') || 'bakery food'
 
-  const promptMejorado = mejorasFiltradas.length > 0
-    ? `${base}, ${mejorasFiltradas.join(', ')}`
-    : base
+  // 4. Combinar con descriptores de fondo gastronómico que mejor interpreta el modelo de IA
+  const promptConstruido = `${sujetoClave} rustic wood bakery table warm golden light herbs`
 
-  return promptMejorado
-}
-
-/**
- * Sanitiza y prepara el prompt para Cloudinary Generative AI
- * evitando caracteres que rompan la estructura de la URL de Cloudinary.
- */
-function sanitizarPromptParaCloudinary(prompt) {
-  if (!prompt || typeof prompt !== 'string') return 'mesa rustica panaderia gourmet iluminacion calida'
-
-  // Limpiar caracteres conflictivos para las transformaciones en URLs de Cloudinary
-  return prompt
-    .replace(/[,/\\#%_]/g, ' ')
-    .replace(/\s+/g, ' ')
+  // 5. Normalizar espacios a guiones bajos y limitar estrictamente a 85 caracteres
+  const promptFinal = promptConstruido
     .trim()
+    .replace(/\s+/g, '_')
+    .substring(0, 85)
+    .replace(/_+$/, '')
+
+  return promptFinal || 'rustic_wood_bakery_table_warm_golden_light'
 }
 
 /**
@@ -204,33 +200,31 @@ export async function POST(req) {
     const finalPublicId = uploadResult.public_id || publicIdDestino
     console.log('✅ Imagen base guardada en Cloudinary:', finalPublicId, '| folder:', uploadResult.asset_folder)
 
-    // 5. Enriquecer prompt y preparar transformaciones
-    const promptBase = brief_creativo || `fotografía gastronómica profesional de ${producto.nombre}`
-    const promptEnriquecido = mejorarPromptParaInstagram(promptBase, producto)
-    const promptFondo = sanitizarPromptParaCloudinary(promptEnriquecido)
-
-    console.log(`🎨 Prompt enriquecido para Instagram: "${promptEnriquecido}"`)
-    console.log(`🚀 Prompt fondo para Cloudinary: "${promptFondo}"`)
+    // 5. Destilar prompt de fondo a un formato conciso (< 90 chars, sin acentos ni caracteres especiales)
+    const promptFondoCompacto = destilarPromptFondo(brief_creativo, producto)
+    console.log(`🎨 Prompt de fondo optimizado (${promptFondoCompacto.length} caracteres): "${promptFondoCompacto}"`)
 
     const precioOriginalNum = Number(producto.precio_venta) || 28000
     const descuentoNum = Number(descuento) || 0
     const precioPromoNum = Math.round(precioOriginalNum * (1 - descuentoNum / 100))
 
+    // 6. Transformaciones estilizadas de alto impacto visual para Instagram
     const transformations = [
-      // Recorte y tamaño Instagram (1080x1350)
+      // Formato Instagram Portrait (1080x1350, relación 4:5)
       { width: 1080, height: 1350, crop: 'fill', gravity: 'auto' },
 
-      // Fondo generado por IA con prompt mejorado
-      { effect: `gen_background_replace:prompt_${promptFondo}` },
+      // Reemplazo generativo con prompt conciso y limpio
+      { effect: `gen_background_replace:prompt_${promptFondoCompacto}` },
 
-      // Mejoras de imagen
-      { effect: 'brightness:10' },
+      // Post-procesamiento fotográfico profesional: realce de color, contraste, nitidez y viñeta
+      { effect: 'brightness:6' },
       { effect: 'contrast:15' },
-      { effect: 'saturation:10' },
-      { effect: 'vignette' },
-      { quality: 'auto', fetch_format: 'auto' },
+      { effect: 'saturation:14' },
+      { effect: 'sharpen:80' },
+      { effect: 'vignette:20' },
+      { quality: 'auto:best', fetch_format: 'auto' },
 
-      // Badge de descuento (más llamativo)
+      // Badge de descuento (superior derecha, llamativo en naranja vibrante)
       ...(descuentoNum > 0
         ? [
             {
@@ -246,7 +240,7 @@ export async function POST(req) {
           ]
         : []),
 
-      // Nombre del producto con sombra y tipografía moderna
+      // Nombre del producto con tipografía moderna Montserrat
       {
         overlay: {
           font_family: 'Montserrat',
@@ -258,7 +252,7 @@ export async function POST(req) {
       },
       { flags: 'layer_apply', gravity: 'south', y: 220 },
 
-      // Precio original (tachado) con fondo
+      // Precio original de lista (tachado si hay descuento)
       ...(descuentoNum > 0
         ? [
             {
@@ -273,7 +267,7 @@ export async function POST(req) {
           ]
         : []),
 
-      // Precio promocional (grande y llamativo)
+      // Precio promocional destacado en naranja PanFree
       {
         overlay: {
           font_family: 'Montserrat',
@@ -285,7 +279,7 @@ export async function POST(req) {
       },
       { flags: 'layer_apply', gravity: 'south', y: 90 },
 
-      // Call to action
+      // Call to action de cierre
       {
         overlay: {
           font_family: 'Montserrat',
@@ -303,9 +297,9 @@ export async function POST(req) {
       secure: true,
     })
 
-    console.log('✅ URL con transformaciones generada:', generatedImageUrl)
+    console.log(`✅ URL generada (${generatedImageUrl.length} caracteres): ${generatedImageUrl}`)
 
-    // 6. Guardar registro en Supabase
+    // 7. Guardar registro en Supabase
     const { data: dataInsert } = await supabase
       .from('generaciones_imagen')
       .insert([{
@@ -313,7 +307,7 @@ export async function POST(req) {
         imagen_original_url: imageSource,
         imagen_generada_url: generatedImageUrl,
         transformaciones: transformations,
-        prompt_creativo: promptEnriquecido,
+        prompt_creativo: promptFondoCompacto,
         evento: evento || null,
         descuento_aplicado: descuentoNum,
         precio_original: precioOriginalNum,
@@ -325,6 +319,7 @@ export async function POST(req) {
       success: true,
       imagen_url: generatedImageUrl,
       public_id: finalPublicId,
+      url_length: generatedImageUrl.length,
       producto: {
         id: producto.id,
         nombre: producto.nombre,
