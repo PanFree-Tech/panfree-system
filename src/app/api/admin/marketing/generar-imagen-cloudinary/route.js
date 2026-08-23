@@ -7,70 +7,45 @@ import { comprimirPrompt } from '@/lib/prompt-compressor'
 export const dynamic = 'force-dynamic'
 
 /**
- * Estilos temáticos fotográficos gastronómicos para guiar el modelo de Cloudinary AI
+ * Modelos de IA disponibles en el add-on Image Generation de Cloudinary
  */
-const ESTILOS_PROMPT = {
-  'estudio-madera': 'rustic wooden bakery table warm golden light herbs',
-  'marmol-lujo': 'white marble countertop bright daylight soft shadow elegant bakery',
-  'desayuno-calido': 'morning breakfast table coffee cup natural golden sunlight cozy vibe',
-  'rustico-artesanal': 'artisan kitchen rustic wood flour dusting warm cozy depth of field',
-  'estudio-oscuro': 'dark moody rustic background dramatic warm spotlight gourmet food',
-  'evento-promo': 'festive celebration table gourmet party setting warm bokeh lights',
-  // Mapeos de compatibilidad con selectores previos
-  'nano-banana-2': 'rustic wooden bakery table warm golden lighting gourmet bakery atmosphere',
-  'nano-banana-1': 'clean wooden table warm lighting food photography',
-  'flux-2-pro': 'hyperrealistic white marble countertop bright studio lighting elegant gourmet setup',
-  'recraft-v4': 'artisan kitchen rustic wood flour dusting warm cozy depth of field',
-  'gpt-image-2': 'festive celebration table gourmet party setting warm bokeh lights',
-  'ideogram-v4-base': 'dark moody rustic background dramatic warm spotlight gourmet food',
-}
+const MODELOS_DISPONIBLES = [
+  'nano-banana-2',
+  'nano-banana-1',
+  'flux-2-pro',
+  'recraft-v4',
+  'gpt-image-2',
+  'ideogram-v4-base',
+]
 
 /**
- * Destila y optimiza el prompt para Cloudinary AI (< 85 caracteres).
- * Limpia stopwords y construye la frase clave que la IA interpreta para el fondo.
+ * Genera un prompt descriptivo gastronómico optimizado para text_to_image
  */
-function destilarPromptFondo(promptBase, producto, estiloId = 'estudio-madera') {
-  const nombreProd = producto?.nombre || ''
-  const textoOrigen = (promptBase && promptBase.trim().length > 3) ? promptBase : nombreProd
+function construirPromptGenerativoFondo(promptBase, producto, estiloId = 'nano-banana-2') {
+  const nombreProd = producto?.nombre || 'panadería gourmet sin gluten'
 
-  // 1. Quitar acentos y caracteres especiales para evitar expansión en URL (%C3%AD, etc.)
-  let textoLimpio = textoOrigen
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9\s]/g, ' ')
-    .toLowerCase()
+  const mapaEstilos = {
+    'nano-banana-2': 'A warm gourmet bakery studio background, rustic wooden table surface, soft natural golden morning light, subtle green herbs and flour dust on table, blurred artisan bakery background, 8k professional food photography backdrop, empty space in center for product placement',
+    'nano-banana-1': 'Warm wooden table top, rustic bakery environment, golden hour lighting, cozy atmosphere, food photography backdrop',
+    'flux-2-pro': 'Ultra-realistic luxury white Italian marble countertop, morning sunbeam through window, soft natural shadows, elegant gourmet bakery scene, pristine food advertising background',
+    'recraft-v4': 'Artisan bakery kitchen table, dark rustic wood texture, flour dusting, fresh rosemary and wheat sprigs, warm cozy depth of field, studio food photography background',
+    'gpt-image-2': 'Vibrant festive celebration table backdrop, warm party bokeh lights, cheerful gourmet picnic atmosphere, bright and inviting commercial background',
+    'ideogram-v4-base': 'Dark moody rustic restaurant table, dramatic warm spotlight, slate stone and charred oak texture, Michelin star food photography studio setting',
+    'estudio-madera': 'A warm gourmet bakery studio background, rustic wooden table surface, soft natural golden morning light, subtle green herbs, empty space in center',
+    'marmol-lujo': 'Ultra-realistic luxury white Italian marble countertop, morning sunbeam through window, soft natural shadows, elegant bakery scene',
+    'desayuno-calido': 'Cozy breakfast table with a ceramic coffee cup and linen napkin, warm morning golden sunlight, blurred cafe background',
+    'rustico-artesanal': 'Artisan bakery kitchen table, dark rustic wood texture, flour dusting, fresh wheat sprigs, cozy depth of field',
+    'estudio-oscuro': 'Dark moody rustic restaurant table, dramatic warm spotlight, slate stone and charred oak texture',
+    'evento-promo': 'Vibrant festive celebration table backdrop, warm party bokeh lights, cheerful gourmet picnic atmosphere',
+  }
 
-  // 2. Eliminar palabras vacías, preposiciones y meta-instrucciones
-  const stopWords = [
-    'fotografia', 'gastronomica', 'profesional', 'estilo', 'instagram', 'alta', 'calidad',
-    'composicion', 'regla', 'de', 'tercios', 'angulo', 'ligeramente', 'cenital', 'profundidad',
-    'campo', 'suave', 'atmosfera', 'acogedora', 'artesanal', 'visual', 'panaderia', 'gourmet',
-    'colores', 'calidos', 'vibrantes', 'en', 'un', 'una', 'con', 'para', 'del', 'los', 'las',
-    'sobre', 'detalles', 'espolvoreado', 'desenfocado', 'bokeh', 'cocina', 'elegante', 'el', 'la'
-  ]
+  const baseEstilo = mapaEstilos[estiloId] || mapaEstilos['nano-banana-2']
 
-  stopWords.forEach((word) => {
-    textoLimpio = textoLimpio.replace(new RegExp(`\\b${word}\\b`, 'gi'), ' ')
-  })
+  if (promptBase && promptBase.trim().length > 5) {
+    return `${promptBase.trim()}, gourmet food photography background for ${nombreProd}, empty center for product placement, high resolution, photorealistic`
+  }
 
-  // 3. Extraer palabras clave del producto (máximo 2 palabras principales)
-  const tokens = textoLimpio.split(/\s+/).filter((w) => w.length > 2)
-  const sujetoClave = tokens.slice(0, 2).join(' ') || 'bakery food'
-
-  // 4. Modificador de estilo visual seleccionado
-  const modificadorEstilo = ESTILOS_PROMPT[estiloId] || ESTILOS_PROMPT['estudio-madera']
-
-  // 5. Construir prompt conciso
-  const promptConstruido = `${sujetoClave} ${modificadorEstilo}`
-
-  // 6. Normalizar a guiones bajos y limitar a 80 caracteres para URL segura
-  const promptFinal = promptConstruido
-    .trim()
-    .replace(/\s+/g, '_')
-    .substring(0, 80)
-    .replace(/_+$/, '')
-
-  return promptFinal || 'rustic_wood_bakery_table_warm_golden_light'
+  return baseEstilo
 }
 
 /**
@@ -87,6 +62,60 @@ async function descargarComoDataUri(url) {
   return `data:${contentType};base64,${base64}`
 }
 
+/**
+ * Genera un fondo nuevo con la API de Image Generation de Cloudinary (text_to_image)
+ */
+async function generarFondoConTextToImage({ cloudName, apiKey, apiSecret, prompt, model, publicId }) {
+  const authHeader = `Basic ${Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')}`
+  const endpoint = `https://api.cloudinary.com/v2/generate/${cloudName}/text_to_image`
+
+  console.log(`🚀 [text_to_image] Llamando a API de Image Generation de Cloudinary...`)
+  console.log(`   Endpoint: ${endpoint}`)
+  console.log(`   Modelo: ${model}`)
+  console.log(`   Prompt: "${prompt}"`)
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        model: model || 'nano-banana-2',
+        aspect_ratio: '4:5',
+        asset_folder: 'marketing/backgrounds',
+        public_id: publicId,
+      }),
+    })
+
+    const responseText = await res.text()
+    let data
+    try {
+      data = JSON.parse(responseText)
+    } catch {
+      data = { raw: responseText }
+    }
+
+    if (!res.ok) {
+      console.warn(`⚠️ [text_to_image] Respuesta HTTP ${res.status}:`, data)
+      return { success: false, error: data?.error?.message || data?.message || responseText, status: res.status }
+    }
+
+    console.log(`✅ [text_to_image] Fondo generado con éxito en Cloudinary:`, data.public_id || publicId)
+    return {
+      success: true,
+      public_id: data.public_id || `marketing/backgrounds/${publicId}`,
+      secure_url: data.secure_url,
+      data,
+    }
+  } catch (err) {
+    console.error('❌ [text_to_image] Error de red o ejecución:', err)
+    return { success: false, error: err?.message || 'Error de conexión' }
+  }
+}
+
 export async function POST(req) {
   try {
     const body = await req.json()
@@ -96,8 +125,8 @@ export async function POST(req) {
       evento = '',
       brief_creativo = '',
       custom_image_url = null,
-      estilo = 'estudio-madera',
-      modelo = null,
+      modelo = 'nano-banana-2',
+      estilo = null,
     } = body || {}
 
     if (!producto_id && !custom_image_url) {
@@ -107,16 +136,21 @@ export async function POST(req) {
       )
     }
 
-    const estiloSeleccionado = estilo || modelo || 'estudio-madera'
+    const modeloSeleccionado = modelo || estilo || 'nano-banana-2'
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'd7simx38'
+    const apiKey = process.env.CLOUDINARY_API_KEY
+    const apiSecret = process.env.CLOUDINARY_API_SECRET
 
-    console.log(`🎨 [${new Date().toISOString()}] Estilo/Ambiente de Fondo: ${estiloSeleccionado}`)
+    console.log(`🎨 [${new Date().toISOString()}] Inicio Estrategia 2 Pasos (Background Removal + Image Generation)`)
+    console.log(`   Modelo: ${modeloSeleccionado}`)
 
-    // 0. Diagnóstico de configuración en logs del servidor
-    console.log('🔧 [Cloudinary Config Check]', {
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? '✅ presente' : '❌ AUSENTE',
-      api_key: process.env.CLOUDINARY_API_KEY ? '✅ presente' : '❌ AUSENTE',
-      api_secret: process.env.CLOUDINARY_API_SECRET ? '✅ presente' : '❌ AUSENTE',
-    })
+    // 0. Diagnóstico de credenciales
+    if (!apiKey || !apiSecret) {
+      return NextResponse.json(
+        { success: false, error: 'Credenciales de Cloudinary incompletas en variables de entorno' },
+        { status: 500 }
+      )
+    }
 
     // 1. Obtener producto de Supabase
     let producto = null
@@ -142,7 +176,7 @@ export async function POST(req) {
       }
     }
 
-    // 2. Determinar la imagen base con prioridad inteligente
+    // 2. Determinar la imagen base del producto
     let imageSource = null
     let origenImagen = ''
 
@@ -173,164 +207,254 @@ export async function POST(req) {
       }
     }
 
-    console.log('🖼️ Imagen seleccionada:', imageSource, '| Origen:', origenImagen)
+    console.log('🖼️ [Paso 1] Imagen de producto seleccionada:', imageSource, '| Origen:', origenImagen)
 
-    // 3. Subir imagen base a Cloudinary
     const cloudinary = getCloudinaryClient()
     const timestamp = Date.now()
     const cleanId = String(producto.id || 'promo').replace(/-/g, '')
-    const publicIdDestino = `product_${cleanId}_${timestamp}`
-    const folderDestino = 'marketing'
+    const productPublicId = `prod_cutout_${cleanId}_${timestamp}`
+    const bgPublicId = `bg_gen_${cleanId}_${timestamp}`
 
-    async function subirImagenACloudinary(source) {
-      let fileParaSubir = source
-      const esUrlDeCloudinary = /^https?:\/\/res\.cloudinary\.com\//.test(source)
-      const esUrlHttp = /^https?:\/\//.test(source)
+    // =========================================================================
+    // PASO 1: Subir imagen del producto y aplicar background_removal (Pixelz/AI)
+    // =========================================================================
+    console.log('✂️ [Paso 1] Subiendo producto a Cloudinary con background_removal (Pixelz)...')
+    let fileParaSubir = imageSource
+    const esUrlDeCloudinary = /^https?:\/\/res\.cloudinary\.com\//.test(imageSource)
+    const esUrlHttp = /^https?:\/\//.test(imageSource)
 
-      if (esUrlHttp && !esUrlDeCloudinary) {
-        console.log('⬇️ Descargando imagen externa desde Supabase/remoto antes de subir...')
-        fileParaSubir = await descargarComoDataUri(source)
-      } else if (!esUrlHttp) {
-        const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'd7simx38'
-        fileParaSubir = `https://res.cloudinary.com/${cloudName}/image/upload/${source}`
-      }
-
-      return await cloudinary.uploader.upload(fileParaSubir, {
-        asset_folder: folderDestino,
-        public_id: publicIdDestino,
-        overwrite: true,
-        resource_type: 'image',
-        secure: true,
-      })
+    if (esUrlHttp && !esUrlDeCloudinary) {
+      fileParaSubir = await descargarComoDataUri(imageSource)
+    } else if (!esUrlHttp) {
+      fileParaSubir = `https://res.cloudinary.com/${cloudName}/image/upload/${imageSource}`
     }
 
-    // 4. Subir la imagen base a Cloudinary con auto-recuperación
-    console.log('📤 Subiendo imagen base a Cloudinary...')
-    let uploadResult
-    try {
-      uploadResult = await subirImagenACloudinary(imageSource)
-    } catch (primerError) {
-      console.warn('⚠️ Falló la primera opción de imagen base:', primerError?.message)
-      
-      if (producto.imagen_url && producto.imagen_url.startsWith('http') && imageSource !== producto.imagen_url) {
-        console.log('🔄 Reintentando automáticamente con imagen_url de Supabase:', producto.imagen_url)
-        try {
-          uploadResult = await subirImagenACloudinary(producto.imagen_url)
-          imageSource = producto.imagen_url
-        } catch (segundoError) {
-          throw new Error(`Error al subir imagen de Supabase: ${segundoError?.message || segundoError}`)
-        }
-      } else {
-        throw primerError
-      }
-    }
+    const productUploadResult = await cloudinary.uploader.upload(fileParaSubir, {
+      asset_folder: 'marketing/products',
+      public_id: productPublicId,
+      background_removal: 'pixelz',
+      overwrite: true,
+      resource_type: 'image',
+      secure: true,
+    })
 
-    const finalPublicId = uploadResult.public_id || publicIdDestino
-    console.log('✅ Imagen base guardada en Cloudinary:', finalPublicId, '| folder:', uploadResult.asset_folder)
+    const finalProductPublicId = productUploadResult.public_id || productPublicId
+    console.log('✅ [Paso 1] Producto procesado y guardado:', finalProductPublicId)
 
-    // 5. Destilar prompt para Cloudinary
+    // =========================================================================
+    // PASO 2: Generar fondo nuevo con API text_to_image de Image Generation
+    // =========================================================================
     const promptBase = brief_creativo || `fotografía gastronómica profesional de ${producto.nombre}`
-    const promptComprimido = await comprimirPrompt(promptBase, { ratio: 0.6, maxTokens: 60 })
-    const promptFondo = destilarPromptFondo(promptComprimido, producto, estiloSeleccionado)
+    const promptComprimido = await comprimirPrompt(promptBase, { ratio: 0.7, maxTokens: 80 })
+    const promptGenerativo = construirPromptGenerativoFondo(promptComprimido, producto, modeloSeleccionado)
 
-    console.log(`🎨 Prompt fondo para Cloudinary: "${promptFondo}"`)
+    console.log(`🎨 [Paso 2] Generando fondo con Image Generation (${modeloSeleccionado})...`)
+    const bgResult = await generarFondoConTextToImage({
+      cloudName,
+      apiKey,
+      apiSecret,
+      prompt: promptGenerativo,
+      model: modeloSeleccionado,
+      publicId: bgPublicId,
+    })
 
+    let baseCanvasId = finalProductPublicId
+    let usandoFondoGenerado = false
+
+    if (bgResult.success && bgResult.public_id) {
+      baseCanvasId = bgResult.public_id
+      usandoFondoGenerado = true
+      console.log('✅ [Paso 2] Fondo generado listo para composición:', baseCanvasId)
+    } else {
+      console.warn('⚠️ [Paso 2] No se pudo generar fondo via text_to_image API, utilizando composición con canvas estilizado:', bgResult.error)
+    }
+
+    // =========================================================================
+    // PASO 3: Combinar Producto + Fondo Generado + Overlays Publicitarios
+    // =========================================================================
+    console.log('🎯 [Paso 3] Ensamblando arte publicitario con overlays y layer_apply...')
     const precioOriginalNum = Number(producto.precio_venta) || 28000
     const descuentoNum = Number(descuento) || 0
     const precioPromoNum = Math.round(precioOriginalNum * (1 - descuentoNum / 100))
 
-    // 6. Transformaciones estilizadas de alto impacto visual para Instagram
-    const transformations = [
-      // Formato Instagram Portrait (1080x1350, relación 4:5)
-      { width: 1080, height: 1350, crop: 'fill', gravity: 'auto' },
+    // Formatear el publicId del producto para overlay en Cloudinary (reemplazar / por :)
+    const overlayProductTag = finalProductPublicId.replace(/\//g, ':')
 
-      // Reemplazo generativo canónico oficial de Cloudinary
-      { effect: `gen_background_replace:prompt_${promptFondo}` },
+    let transformations = []
 
-      // Post-procesamiento fotográfico profesional: realce de color, contraste, nitidez y viñeta
-      { effect: 'brightness:6' },
-      { effect: 'contrast:15' },
-      { effect: 'saturation:14' },
-      { effect: 'sharpen:80' },
-      { effect: 'vignette:20' },
-      { quality: 'auto:best', fetch_format: 'auto' },
+    if (usandoFondoGenerado) {
+      // Si el lienzo base es el fondo generado con IA:
+      transformations = [
+        // Canvas Instagram Portrait 4:5
+        { width: 1080, height: 1350, crop: 'fill', gravity: 'center' },
 
-      // Badge de descuento (superior derecha, llamativo en naranja vibrante)
-      ...(descuentoNum > 0
-        ? [
-            {
-              overlay: {
-                font_family: 'Montserrat',
-                font_size: 72,
-                font_weight: 'bold',
-                text: `${descuentoNum}%25 OFF`,
+        // 1. Overlay del producto sin fondo en el centro
+        {
+          overlay: overlayProductTag,
+          width: 780,
+          crop: 'fit',
+          effect: 'background_removal',
+        },
+        { flags: 'layer_apply', gravity: 'center', y: -70 },
+
+        // 2. Realces fotográficos
+        { effect: 'brightness:5' },
+        { effect: 'contrast:12' },
+        { effect: 'saturation:14' },
+        { effect: 'sharpen:80' },
+        { effect: 'vignette:18' },
+        { quality: 'auto:best', fetch_format: 'auto' },
+
+        // 3. Badge de Descuento
+        ...(descuentoNum > 0
+          ? [
+              {
+                overlay: {
+                  font_family: 'Montserrat',
+                  font_size: 72,
+                  font_weight: 'bold',
+                  text: `${descuentoNum}%25 OFF`,
+                },
+                color: 'rgb:FF6B00',
               },
-              color: 'rgb:FF6B00',
-            },
-            { flags: 'layer_apply', gravity: 'north_east', x: 50, y: 50 },
-          ]
-        : []),
+              { flags: 'layer_apply', gravity: 'north_east', x: 50, y: 50 },
+            ]
+          : []),
 
-      // Nombre del producto con tipografía moderna Montserrat
-      {
-        overlay: {
-          font_family: 'Montserrat',
-          font_size: 48,
-          font_weight: 'bold',
-          text: encodeURIComponent(producto.nombre),
+        // 4. Nombre del producto
+        {
+          overlay: {
+            font_family: 'Montserrat',
+            font_size: 48,
+            font_weight: 'bold',
+            text: encodeURIComponent(producto.nombre),
+          },
+          color: 'rgb:FFFFFF',
         },
-        color: 'rgb:FFFFFF',
-      },
-      { flags: 'layer_apply', gravity: 'south', y: 220 },
+        { flags: 'layer_apply', gravity: 'south', y: 220 },
 
-      // Precio original de lista (tachado si hay descuento)
-      ...(descuentoNum > 0
-        ? [
-            {
-              overlay: {
-                font_family: 'Montserrat',
-                font_size: 34,
-                text: `G/${precioOriginalNum.toLocaleString('es-PY')}`,
+        // 5. Precio original tachado
+        ...(descuentoNum > 0
+          ? [
+              {
+                overlay: {
+                  font_family: 'Montserrat',
+                  font_size: 34,
+                  text: `G/${precioOriginalNum.toLocaleString('es-PY')}`,
+                },
+                color: 'rgb:D1D5DB',
               },
-              color: 'rgb:D1D5DB',
-            },
-            { flags: 'layer_apply', gravity: 'south', y: 150 },
-          ]
-        : []),
+              { flags: 'layer_apply', gravity: 'south', y: 150 },
+            ]
+          : []),
 
-      // Precio promocional destacado en naranja PanFree
-      {
-        overlay: {
-          font_family: 'Montserrat',
-          font_size: 64,
-          font_weight: 'bold',
-          text: `G/${precioPromoNum.toLocaleString('es-PY')}`,
+        // 6. Precio promocional destacado
+        {
+          overlay: {
+            font_family: 'Montserrat',
+            font_size: 64,
+            font_weight: 'bold',
+            text: `G/${precioPromoNum.toLocaleString('es-PY')}`,
+          },
+          color: 'rgb:FF6B00',
         },
-        color: 'rgb:FF6B00',
-      },
-      { flags: 'layer_apply', gravity: 'south', y: 90 },
+        { flags: 'layer_apply', gravity: 'south', y: 90 },
 
-      // Call to action de cierre
-      {
-        overlay: {
-          font_family: 'Montserrat',
-          font_size: 28,
-          font_weight: 'bold',
-          text: encodeURIComponent('Pedi en panfree.fit | 100% Sin Gluten'),
+        // 7. CTA de cierre
+        {
+          overlay: {
+            font_family: 'Montserrat',
+            font_size: 28,
+            font_weight: 'bold',
+            text: encodeURIComponent('Pedi en panfree.fit | 100% Sin Gluten'),
+          },
+          color: 'rgb:F9FAFB',
         },
-        color: 'rgb:F9FAFB',
-      },
-      { flags: 'layer_apply', gravity: 'south', y: 25 },
-    ]
+        { flags: 'layer_apply', gravity: 'south', y: 25 },
+      ]
+    } else {
+      // Fallback: Canvas directo con corte del producto y capas
+      transformations = [
+        { width: 1080, height: 1350, crop: 'pad', background: 'gen_fill:prompt_rustic_bakery_table_warm_lighting', gravity: 'center' },
+        { effect: 'brightness:6' },
+        { effect: 'contrast:15' },
+        { effect: 'saturation:14' },
+        { effect: 'sharpen:80' },
+        { effect: 'vignette:20' },
+        { quality: 'auto:best', fetch_format: 'auto' },
 
-    const generatedImageUrl = cloudinary.url(finalPublicId, {
+        ...(descuentoNum > 0
+          ? [
+              {
+                overlay: {
+                  font_family: 'Montserrat',
+                  font_size: 72,
+                  font_weight: 'bold',
+                  text: `${descuentoNum}%25 OFF`,
+                },
+                color: 'rgb:FF6B00',
+              },
+              { flags: 'layer_apply', gravity: 'north_east', x: 50, y: 50 },
+            ]
+          : []),
+
+        {
+          overlay: {
+            font_family: 'Montserrat',
+            font_size: 48,
+            font_weight: 'bold',
+            text: encodeURIComponent(producto.nombre),
+          },
+          color: 'rgb:FFFFFF',
+        },
+        { flags: 'layer_apply', gravity: 'south', y: 220 },
+
+        ...(descuentoNum > 0
+          ? [
+              {
+                overlay: {
+                  font_family: 'Montserrat',
+                  font_size: 34,
+                  text: `G/${precioOriginalNum.toLocaleString('es-PY')}`,
+                },
+                color: 'rgb:D1D5DB',
+              },
+              { flags: 'layer_apply', gravity: 'south', y: 150 },
+            ]
+          : []),
+
+        {
+          overlay: {
+            font_family: 'Montserrat',
+            font_size: 64,
+            font_weight: 'bold',
+            text: `G/${precioPromoNum.toLocaleString('es-PY')}`,
+          },
+          color: 'rgb:FF6B00',
+        },
+        { flags: 'layer_apply', gravity: 'south', y: 90 },
+
+        {
+          overlay: {
+            font_family: 'Montserrat',
+            font_size: 28,
+            font_weight: 'bold',
+            text: encodeURIComponent('Pedi en panfree.fit | 100% Sin Gluten'),
+          },
+          color: 'rgb:F9FAFB',
+        },
+        { flags: 'layer_apply', gravity: 'south', y: 25 },
+      ]
+    }
+
+    const generatedImageUrl = cloudinary.url(baseCanvasId, {
       transformation: transformations,
       secure: true,
     })
 
-    console.log(`✅ URL generada (${generatedImageUrl.length} caracteres): ${generatedImageUrl}`)
+    console.log(`✅ [Paso 3] URL final generada con éxito (${generatedImageUrl.length} car.): ${generatedImageUrl}`)
 
-    // 7. Guardar registro en Supabase
+    // 4. Guardar registro en Supabase
     const { data: dataInsert } = await supabase
       .from('generaciones_imagen')
       .insert([{
@@ -338,7 +462,7 @@ export async function POST(req) {
         imagen_original_url: imageSource,
         imagen_generada_url: generatedImageUrl,
         transformaciones: transformations,
-        prompt_creativo: promptFondo,
+        prompt_creativo: promptGenerativo,
         evento: evento || null,
         descuento_aplicado: descuentoNum,
         precio_original: precioOriginalNum,
@@ -349,10 +473,12 @@ export async function POST(req) {
     return NextResponse.json({
       success: true,
       imagen_url: generatedImageUrl,
-      public_id: finalPublicId,
-      estilo_utilizado: estiloSeleccionado,
-      prompt_fondo: promptFondo,
-      url_length: generatedImageUrl.length,
+      public_id: baseCanvasId,
+      producto_recortado_id: finalProductPublicId,
+      fondo_generado_id: bgResult.public_id || null,
+      modelo_utilizado: modeloSeleccionado,
+      prompt_fondo: promptGenerativo,
+      usando_fondo_generado: usandoFondoGenerado,
       producto: {
         id: producto.id,
         nombre: producto.nombre,
@@ -363,7 +489,7 @@ export async function POST(req) {
         descuento: descuentoNum,
       },
       generacion_id: dataInsert?.[0]?.id || null,
-      mensaje: `✅ Imagen generada y guardada en marketing/`,
+      mensaje: `✅ Arte publicitario generado con eliminación de fondo + Image Generation (${modeloSeleccionado})`,
     })
   } catch (error) {
     console.error('❌ Error en generar-imagen-cloudinary:', error)
@@ -373,4 +499,5 @@ export async function POST(req) {
     )
   }
 }
+
 
