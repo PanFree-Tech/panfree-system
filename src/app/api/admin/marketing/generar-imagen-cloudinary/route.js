@@ -2,8 +2,43 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getCloudinaryClient } from '@/lib/cloudinary'
+import { comprimirPrompt } from '@/lib/prompt-compressor'
 
 export const dynamic = 'force-dynamic'
+
+/**
+ * Enriquece el prompt automáticamente con estilo gastronómico gourmet para Instagram
+ */
+function mejorarPromptParaInstagram(promptBase, producto) {
+  const mejoras = [
+    'fotografía gastronómica profesional',
+    'estilo Instagram de alta calidad',
+    'composición con regla de tercios',
+    'iluminación natural cálida tipo golden hour',
+    'fondo con texturas rústicas',
+    'atmósfera acogedora y artesanal',
+    'estilo visual de panadería gourmet',
+    'colores cálidos y vibrantes',
+    'profundidad de campo suave'
+  ]
+
+  let base = (promptBase || '').trim()
+  if (!base) {
+    const nombreProd = producto?.nombre || 'panadería gourmet sin gluten'
+    base = `fotografía gastronómica profesional de ${nombreProd}`
+  }
+
+  const baseLower = base.toLowerCase()
+  const mejorasFiltradas = mejoras.filter(
+    (m) => !baseLower.includes(m.toLowerCase())
+  )
+
+  const promptMejorado = mejorasFiltradas.length > 0
+    ? `${base}, ${mejorasFiltradas.join(', ')}`
+    : base
+
+  return promptMejorado
+}
 
 /**
  * Destila y optimiza el prompt para Cloudinary AI (< 90 caracteres).
@@ -200,9 +235,21 @@ export async function POST(req) {
     const finalPublicId = uploadResult.public_id || publicIdDestino
     console.log('✅ Imagen base guardada en Cloudinary:', finalPublicId, '| folder:', uploadResult.asset_folder)
 
-    // 5. Destilar prompt de fondo a un formato conciso (< 90 chars, sin acentos ni caracteres especiales)
-    const promptFondoCompacto = destilarPromptFondo(brief_creativo, producto)
-    console.log(`🎨 Prompt de fondo optimizado (${promptFondoCompacto.length} caracteres): "${promptFondoCompacto}"`)
+    // 5. Enriquecer prompt y comprimir
+    const promptBase = brief_creativo || `fotografía gastronómica profesional de ${producto.nombre}`
+
+    // NUEVO: Comprimir el prompt si es muy largo (ratio 0.6 = 40% de compresión)
+    const promptComprimido = await comprimirPrompt(promptBase, { ratio: 0.6, maxTokens: 60 })
+
+    const promptEnriquecido = mejorarPromptParaInstagram(promptComprimido, producto)
+    const promptFondo = destilarPromptFondo(promptEnriquecido, producto)
+
+    console.log(`📊 Prompt original: ${promptBase.length} caracteres`)
+    console.log(`📊 Prompt comprimido: ${promptComprimido.length} caracteres`)
+    if (promptBase.length > 0) {
+      console.log(`📊 Reducción: ${Math.round((1 - promptComprimido.length / promptBase.length) * 100)}%`)
+    }
+    console.log(`🎨 Prompt fondo para Cloudinary: "${promptFondo}"`)
 
     const precioOriginalNum = Number(producto.precio_venta) || 28000
     const descuentoNum = Number(descuento) || 0
@@ -214,7 +261,7 @@ export async function POST(req) {
       { width: 1080, height: 1350, crop: 'fill', gravity: 'auto' },
 
       // Reemplazo generativo con prompt conciso y limpio
-      { effect: `gen_background_replace:prompt_${promptFondoCompacto}` },
+      { effect: `gen_background_replace:prompt_${promptFondo}` },
 
       // Post-procesamiento fotográfico profesional: realce de color, contraste, nitidez y viñeta
       { effect: 'brightness:6' },
