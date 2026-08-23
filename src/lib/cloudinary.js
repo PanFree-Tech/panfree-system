@@ -185,12 +185,10 @@ export function buildMarketingImageTransformationUrl({
     },
   ]
 
-  // Si la imagen es una URL externa, utilizar type: 'fetch'
-  const isExternalUrl = imagePublicIdOrUrl && imagePublicIdOrUrl.startsWith('http') && !imagePublicIdOrUrl.includes('res.cloudinary.com')
-
+  // Usar siempre type: 'upload' para evitar URLs largas /image/fetch/
   const transformationUrl = client.url(publicId, {
     transformation: transformations,
-    type: isExternalUrl ? 'fetch' : 'upload',
+    type: 'upload',
     secure: true,
   })
 

@@ -95,7 +95,7 @@ export async function POST(req) {
     const precioBase = Number(producto.precio_venta) || 25000
     const precioPromocional = Math.round(precioBase * (1 - descuentoNum / 100))
 
-    // 3. Generar URL de transformación con Cloudinary Generative AI + Overlays de datos reales
+    // 3. Preparar parámetros de transformación (Cloudinary Generative AI + Overlays de datos reales de Supabase)
     const resultadoTransformacion = buildMarketingImageTransformationUrl({
       imagePublicIdOrUrl: imagenOriginalUrl,
       nombreProducto: producto.nombre,
@@ -107,19 +107,21 @@ export async function POST(req) {
       alto: 1350, // Formato 4:5 vertical ideal para Feed de Instagram
     })
 
-    const transformationUrl = resultadoTransformacion.url
-    let generatedImageUrl = transformationUrl
+    let generatedImageUrl = resultadoTransformacion.url
     let generatedPublicId = `marketing/product_${producto.id || 'promo'}_${Date.now()}`
 
-    // 4. Guardar/Persistir la imagen generada en la carpeta 'marketing/' de Cloudinary Media Library
+    // 4. Procesar la imagen en el servidor de Cloudinary usando `upload` con transformaciones aplicadas
+    // Esto genera una URL persistente, corta y sin parámetros excesivos en el query string
     const cloudinaryClient = getCloudinaryClient()
     if (process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
       try {
-        const uploadResult = await cloudinaryClient.uploader.upload(transformationUrl, {
+        const uploadResult = await cloudinaryClient.uploader.upload(imagenOriginalUrl, {
           folder: 'marketing',
           public_id: `product_${producto.id || 'promo'}_${Date.now()}`,
+          transformation: resultadoTransformacion.transformations,
           overwrite: true,
           resource_type: 'image',
+          type: 'upload',
           secure: true,
         })
 
@@ -128,7 +130,7 @@ export async function POST(req) {
           generatedPublicId = uploadResult.public_id || generatedPublicId
         }
       } catch (uploadErr) {
-        console.warn('Nota: Usando URL de transformación generativa directa de Cloudinary (upload fallback):', uploadErr.message)
+        console.warn('Nota: Fallback a URL de transformación directa de Cloudinary:', uploadErr.message)
       }
     }
 
