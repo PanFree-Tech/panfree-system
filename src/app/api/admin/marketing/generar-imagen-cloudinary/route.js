@@ -5,6 +5,23 @@ import { getCloudinaryClient } from '@/lib/cloudinary'
 
 export const dynamic = 'force-dynamic'
 
+/**
+ * Descarga una imagen remota (Supabase, Cloudinary, etc.) y la devuelve
+ * como Data URI base64. Esto evita que Cloudinary tenga que "fetchear"
+ * la URL él mismo (lo cual puede estar bloqueado por la whitelist de
+ * dominios de la cuenta y devolver 403).
+ */
+async function descargarComoDataUri(url) {
+  const res = await fetch(url)
+  if (!res.ok) {
+    throw new Error(`No se pudo descargar la imagen fuente (${res.status} ${res.statusText}): ${url}`)
+  }
+  const contentType = res.headers.get('content-type') || 'image/jpeg'
+  const arrayBuffer = await res.arrayBuffer()
+  const base64 = Buffer.from(arrayBuffer).toString('base64')
+  return `data:${contentType};base64,${base64}`
+}
+
 export async function POST(req) {
   try {
     const body = await req.json()
@@ -16,6 +33,13 @@ export async function POST(req) {
         { status: 400 }
       )
     }
+
+    // 0. Diagnóstico de configuración — se ve en los logs de Vercel
+    console.log('🔧 [Cloudinary Config Check]', {
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? '✅ presente' : '❌ AUSENTE',
+      api_key: process.env.CLOUDINARY_API_KEY ? '✅ presente' : '❌ AUSENTE',
+      api_secret: process.env.CLOUDINARY_API_SECRET ? '✅ presente' : '❌ AUSENTE',
+    })
 
     // 1. Obtener producto de Supabase
     let producto = null
@@ -37,54 +61,88 @@ export async function POST(req) {
         precio_venta: 28000,
         imagen_url: null,
         imagen_public_id: null,
-        imagenes_urls: []
+        imagenes_urls: [],
       }
     }
 
     // 2. Determinar la imagen base
     let imageSource = custom_image_url
+    let origenImagen = 'custom_image_url'
 
     if (!imageSource) {
-      // Prioridad: imagenes_urls[0] → imagen_public_id → imagen_url
       if (producto.imagenes_urls && producto.imagenes_urls.length > 0 && producto.imagenes_urls[0]) {
         imageSource = producto.imagenes_urls[0]
-        console.log('📸 Usando imagen desde imagenes_urls[0]:', imageSource)
+        origenImagen = 'imagenes_urls[0]'
       } else if (producto.imagen_public_id && !producto.imagen_public_id.includes('[')) {
         imageSource = producto.imagen_public_id
-        console.log('📸 Usando imagen desde imagen_public_id:', imageSource)
+        origenImagen = 'imagen_public_id'
       } else if (producto.imagen_url && producto.imagen_url.startsWith('http')) {
         imageSource = producto.imagen_url
-        console.log('📸 Usando imagen desde imagen_url (fallback):', imageSource)
+        origenImagen = 'imagen_url (fallback)'
       } else {
         imageSource = 'https://res.cloudinary.com/d7simx38/image/upload/v1786629847/productos/gmwx5mwuj0ockucprlwr.jpg'
-        console.log('📸 Usando imagen por defecto:', imageSource)
+        origenImagen = 'fallback_default'
       }
     }
 
-    // 3. Obtener cliente de Cloudinary
+    console.log('🖼️ Imagen seleccionada:', imageSource, '| Origen:', origenImagen)
+
+    // 3. Preparar el "file" que le pasaremos a Cloudinary.
+    //    - Si es una URL http(s) que ya vive en Cloudinary, se la pasamos tal cual
+    //      (Cloudinary siempre puede leer sus propias URLs).
+    //    - Si es una URL externa (ej. Supabase Storage) o un public_id plano,
+    //      la descargamos nosotros primero para evitar el bloqueo de "remote fetch".
+    let fileParaSubir = imageSource
+
+    const esUrlDeCloudinary = /^https?:\/\/res\.cloudinary\.com\//.test(imageSource)
+    const esUrlHttp = /^https?:\/\//.test(imageSource)
+
+    if (esUrlHttp && !esUrlDeCloudinary) {
+      console.log('⬇️ Descargando imagen externa antes de subir (evita restricción de fetch remoto)...')
+      fileParaSubir = await descargarComoDataUri(imageSource)
+    } else if (!esUrlHttp) {
+      // Es un public_id "pelado" (sin http) — construir URL completa de Cloudinary
+      const cloudName = process.env.CLOUDINARY_CLOUD_NAME
+      fileParaSubir = `https://res.cloudinary.com/${cloudName}/image/upload/${imageSource}`
+    }
+
+    // 4. Obtener cliente de Cloudinary y subir la imagen base
     const cloudinary = getCloudinaryClient()
 
-    // 4. Subir la imagen base a Cloudinary (sin transformaciones síncronas para evitar errores de IA)
     const timestamp = Date.now()
-    const publicIdDestino = `product_${producto.id}_${timestamp}`
+    const publicIdDestino = `product_${producto.id}_${timestamp}` // sin prefijo "marketing/"
     const folderDestino = 'marketing'
 
     console.log('📤 Subiendo imagen base a Cloudinary...')
-    console.log('📁 Asset folder destino:', folderDestino)
-    console.log('🖼️ Public ID:', publicIdDestino)
+    console.log('📁 asset_folder destino:', folderDestino)
+    console.log('🆔 public_id:', publicIdDestino)
 
-    const uploadResult = await cloudinary.uploader.upload(imageSource, {
-      asset_folder: folderDestino,
-      public_id: publicIdDestino,
-      overwrite: true,
-      resource_type: 'image',
-      secure: true
-    })
+    let uploadResult
+    try {
+      uploadResult = await cloudinary.uploader.upload(fileParaSubir, {
+        asset_folder: folderDestino,
+        public_id: publicIdDestino,
+        overwrite: true,
+        resource_type: 'image',
+        secure: true,
+      })
+    } catch (uploadErr) {
+      // Log detallado — Cloudinary suele meter el código real en http_code
+      console.error('❌ Error de Cloudinary al subir:', {
+        message: uploadErr?.message,
+        http_code: uploadErr?.http_code,
+        error: uploadErr?.error,
+      })
+      throw new Error(
+        `Cloudinary rechazó la subida (${uploadErr?.http_code || 'sin código'}): ${uploadErr?.message || 'error desconocido'}. ` +
+        `Revisá que el dominio de origen esté permitido y que las credenciales correspondan al cloud_name configurado.`
+      )
+    }
 
     const finalPublicId = uploadResult.public_id || publicIdDestino
-    console.log('✅ Imagen base guardada en Cloudinary:', finalPublicId)
+    console.log('✅ Imagen base guardada en Cloudinary:', finalPublicId, '| folder:', uploadResult.asset_folder)
 
-    // 5. Definir transformaciones y generar la URL de entrega (on-the-fly)
+    // 5. Definir transformaciones y generar la URL de entrega (on-the-fly, no hace llamada de red aquí)
     const promptFondo = brief_creativo || `fotografía gastronómica de ${producto.nombre}, mesa rústica, iluminación cálida`
 
     const transformations = [
@@ -101,12 +159,12 @@ export async function POST(req) {
       { overlay: { font_family: 'Arial', font_size: 54, font_weight: 'bold', text: `G/${Math.round(Number(producto.precio_venta) * (1 - Number(descuento) / 100)).toLocaleString('es-PY')}` }, color: '#FF6B00' },
       { flags: 'layer_apply', gravity: 'south', y: 75 },
       { overlay: { font_family: 'Arial', font_size: 28, font_weight: 'bold', text: 'Pedi en panfree.fit | 100% Sin Gluten' }, color: '#F9FAFB' },
-      { flags: 'layer_apply', gravity: 'south', y: 25 }
+      { flags: 'layer_apply', gravity: 'south', y: 25 },
     ]
 
     const generatedImageUrl = cloudinary.url(finalPublicId, {
       transformation: transformations,
-      secure: true
+      secure: true,
     })
 
     console.log('✅ URL con transformaciones generada:', generatedImageUrl)
@@ -121,16 +179,15 @@ export async function POST(req) {
       evento: evento || null,
       descuento_aplicado: Number(descuento),
       precio_original: Number(producto.precio_venta),
-      precio_promocional: Math.round(Number(producto.precio_venta) * (1 - Number(descuento) / 100))
+      precio_promocional: Math.round(Number(producto.precio_venta) * (1 - Number(descuento) / 100)),
     }])
 
     return NextResponse.json({
       success: true,
       imagen_url: generatedImageUrl,
       public_id: finalPublicId,
-      mensaje: `✅ Imagen generada y guardada en marketing/`
+      mensaje: `✅ Imagen generada y guardada en marketing/`,
     })
-
   } catch (error) {
     console.error('❌ Error en generar-imagen-cloudinary:', error)
     return NextResponse.json(
