@@ -354,7 +354,7 @@ export async function POST(req) {
         imagen_original_url: imageSource,
         imagen_generada_url: generatedImageUrl,
         transformaciones: transformations,
-        prompt_creativo: promptFondoCompacto,
+        prompt_creativo: promptFondo,
         evento: evento || null,
         descuento_aplicado: descuentoNum,
         precio_original: precioOriginalNum,
