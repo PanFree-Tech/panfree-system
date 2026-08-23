@@ -56,18 +56,19 @@ async function runTests() {
   let failed = 0
 
   // =========================================================================
-  // TEST 1: POST /api/admin/marketing/generar-imagen-cloudinary (Con Producto ID)
+  // TEST 1: POST /api/admin/marketing/generar-imagen-cloudinary (Con Producto ID y Modelo)
   // =========================================================================
-  printHeader('TEST 1: Generación de Arte Publicitario con Datos Reales de Catálogo')
+  printHeader('TEST 1: Generación de Arte Publicitario con Modelo Seleccionado')
   try {
     const payload = {
       producto_id: 'prod-chipa-01',
       descuento: 15,
       evento: 'Semana Santa',
       brief_creativo: 'Fondo de madera rústica paraguaya con yerba mate y mantel artesanal, iluminación cálida de estudio 8k',
+      modelo: 'nano-banana-2',
     }
 
-    console.log(`  Enviando POST a ${BASE_URL}/api/admin/marketing/generar-imagen-cloudinary...`)
+    console.log(`  Enviando POST a ${BASE_URL}/api/admin/marketing/generar-imagen-cloudinary (modelo: nano-banana-2)...`)
     const res = await fetch(`${BASE_URL}/api/admin/marketing/generar-imagen-cloudinary`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -83,12 +84,13 @@ async function runTests() {
         descuento: `${data.producto?.descuento}% OFF`,
         precio_promocional: data.producto?.precio_promocional_fmt,
         imagen_url: data.imagen_url,
+        modelo_utilizado: data.modelo_utilizado,
         generacion_id: data.generacion_id,
       })
 
-      // Validar que la URL contenga transformaciones generativas de Cloudinary
-      if (data.imagen_url.includes('gen_background_replace') || data.imagen_url.includes('background_removal')) {
-        printSuccess('Transformaciones de Generative AI detectadas en la URL de Cloudinary')
+      // Validar que la URL contenga transformaciones generativas de Cloudinary con el modelo
+      if (data.imagen_url.includes('model_nano-banana-2') || data.imagen_url.includes('gen_background_replace')) {
+        printSuccess('Tag de modelo generativo verificado en URL de Cloudinary')
       } else {
         printWarning('URL generada pero no contiene tags generativos explícitos')
       }
