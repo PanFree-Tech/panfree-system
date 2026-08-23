@@ -69,27 +69,52 @@ export async function POST(req) {
       }
     }
 
-    // 2. Determinar la imagen base real (imagenes_urls[0] -> imagen_public_id -> imagen_url -> fallback)
+    // 2. Determinar la imagen base real con la nueva prioridad
+    // 1º custom_image_url (si se envía)
+    // 2º imagen_url (SIEMPRE que sea una URL válida que empiece con http)
+    // 3º imagenes_urls[0] (si tiene elementos válidos)
+    // 4º imagen_public_id (solo si NO es un placeholder con corchetes)
+    // 5º Fallback a imagen por defecto
     let imagePublicIdOrUrl = null
+    let origenImagen = 'fallback'
+
+    const isValidHttpUrl = (str) =>
+      typeof str === 'string' &&
+      (str.startsWith('http://') || str.startsWith('https://')) &&
+      !str.includes('[') &&
+      !str.includes('placeholder')
+
+    const isValidPublicId = (str) =>
+      typeof str === 'string' &&
+      str.trim().length > 0 &&
+      !str.includes('[') &&
+      !str.includes(']') &&
+      !str.toLowerCase().includes('placeholder')
 
     if (custom_image_url) {
       imagePublicIdOrUrl = custom_image_url
+      origenImagen = 'custom_image_url'
+    } else if (isValidHttpUrl(producto.imagen_url)) {
+      imagePublicIdOrUrl = producto.imagen_url
+      origenImagen = 'producto.imagen_url (Supabase Storage / URL directa)'
     } else if (
       Array.isArray(producto.imagenes_urls) &&
       producto.imagenes_urls.length > 0 &&
-      producto.imagenes_urls[0]
+      (isValidHttpUrl(producto.imagenes_urls[0]) || isValidPublicId(producto.imagenes_urls[0]))
     ) {
       imagePublicIdOrUrl = producto.imagenes_urls[0]
-    } else if (producto.imagen_public_id) {
+      origenImagen = 'producto.imagenes_urls[0]'
+    } else if (isValidPublicId(producto.imagen_public_id)) {
       imagePublicIdOrUrl = producto.imagen_public_id
-    } else if (producto.imagen_url) {
-      imagePublicIdOrUrl = producto.imagen_url
+      origenImagen = 'producto.imagen_public_id'
     } else {
       imagePublicIdOrUrl =
         'https://res.cloudinary.com/panfree/image/upload/v1/panfree/products/pan-campo-rustico.jpg'
+      origenImagen = 'fallback_default'
     }
 
     const imagenOriginalUrl = imagePublicIdOrUrl
+    console.log('🖼️ Imagen seleccionada:', imagenOriginalUrl, '| Origen:', origenImagen)
 
     const descuentoNum = Number(descuento) || 0
     const precioBase = Number(producto.precio_venta) || 25000
