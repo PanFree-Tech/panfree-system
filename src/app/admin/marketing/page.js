@@ -56,6 +56,7 @@ export default function MarketingPage() {
   const [descuentoManual, setDescuentoManual] = useState(10)
   const [tono, setTono] = useState('persuasivo')
   const [contenidoGenerado, setContenidoGenerado] = useState(null)
+  const [promptVisualManual, setPromptVisualManual] = useState('')
   const [imagenCloudinaryGenerada, setImagenCloudinaryGenerada] = useState(null)
   const [notificacion, setNotificacion] = useState(null)
   const [fechaProgramada, setFechaProgramada] = useState('')
@@ -132,6 +133,9 @@ export default function MarketingPage() {
 
       if (json.success && json.content) {
         setContenidoGenerado(json.content)
+        if (json.content.image_prompt && !promptVisualManual) {
+          setPromptVisualManual(json.content.image_prompt)
+        }
         setNotificacion({
           tipo: 'exito',
           texto: '✅ ¡Contenido generado exitosamente con Gemini AI! Ahora puedes generar el arte publicitario con Cloudinary.',
@@ -157,11 +161,13 @@ export default function MarketingPage() {
       setGenerandoImagenCloudinary(true)
       setNotificacion(null)
 
+      const briefFinal = promptVisualManual.trim() || contenidoGenerado?.image_prompt || ''
+
       const payload = {
         producto_id: decision.producto.id,
         descuento: descuentoManual,
         evento: decision.evento?.nombre || '',
-        brief_creativo: contenidoGenerado?.image_prompt || '',
+        brief_creativo: briefFinal,
       }
 
       const res = await fetch('/api/admin/marketing/generar-imagen-cloudinary', {
@@ -796,6 +802,67 @@ export default function MarketingPage() {
                   <span className={`${styles.badge} ${styles.badgeGold}`}>
                     PRODUCCIÓN REAL
                   </span>
+                </div>
+
+                {/* Campo editable de Prompt Visual (brief_creativo) */}
+                <div>
+                  <label className={styles.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                    <span>Prompt Visual (brief_creativo):</span>
+                    {promptVisualManual ? (
+                      <span style={{ fontSize: '0.7rem', color: P.naranja, fontWeight: 700 }}>
+                        ✍️ Personalizado
+                      </span>
+                    ) : contenidoGenerado?.image_prompt ? (
+                      <span style={{ fontSize: '0.7rem', color: P.dorado, fontWeight: 600 }}>
+                        ✨ Sugerencia de Gemini
+                      </span>
+                    ) : null}
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={promptVisualManual}
+                    onChange={(e) => setPromptVisualManual(e.target.value)}
+                    placeholder="Ej: fotografía gastronómica de pan artesanal, mesa de madera rústica, iluminación cálida..."
+                    disabled={generandoImagenCloudinary}
+                    style={{
+                      width: '100%',
+                      backgroundColor: '#faf7f2',
+                      color: '#2d2a26',
+                      border: '1px solid #d4c5b3',
+                      borderRadius: 8,
+                      padding: '0.65rem',
+                      fontSize: '0.82rem',
+                      fontFamily: 'inherit',
+                      lineHeight: 1.45,
+                      resize: 'vertical',
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
+                    <span style={{ fontSize: '0.68rem', color: '#888' }}>
+                      {promptVisualManual.trim()
+                        ? 'Se usará este prompt para Cloudinary AI.'
+                        : 'Si está vacío, se usará el prompt de Gemini o la plantilla temática.'}
+                    </span>
+                    {promptVisualManual && (
+                      <button
+                        onClick={() => setPromptVisualManual('')}
+                        disabled={generandoImagenCloudinary}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#888',
+                          fontSize: '0.68rem',
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                          padding: 0,
+                        }}
+                      >
+                        Restablecer
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Botón de Generación Cloudinary (Con Spinner de Carga) */}
