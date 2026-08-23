@@ -84,13 +84,13 @@ async function runTests() {
         descuento: `${data.producto?.descuento}% OFF`,
         precio_promocional: data.producto?.precio_promocional_fmt,
         imagen_url: data.imagen_url,
-        modelo_utilizado: data.modelo_utilizado,
+        estilo_utilizado: data.estilo_utilizado,
         generacion_id: data.generacion_id,
       })
 
-      // Validar que la URL contenga transformaciones generativas de Cloudinary con el modelo
-      if (data.imagen_url.includes('model_nano-banana-2') || data.imagen_url.includes('gen_background_replace')) {
-        printSuccess('Tag de modelo generativo verificado en URL de Cloudinary')
+      // Validar que la URL contenga transformaciones generativas de Cloudinary
+      if (data.imagen_url.includes('gen_background_replace')) {
+        printSuccess('Tag de reemplazo generativo oficial verificado en URL de Cloudinary')
       } else {
         printWarning('URL generada pero no contiene tags generativos explícitos')
       }

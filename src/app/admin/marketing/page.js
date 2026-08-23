@@ -57,8 +57,8 @@ export default function MarketingPage() {
   const [tono, setTono] = useState('persuasivo')
   const [contenidoGenerado, setContenidoGenerado] = useState(null)
   const [promptVisualManual, setPromptVisualManual] = useState('')
-  const [selectedModel, setSelectedModel] = useState('nano-banana-2')
-  const [modeloUtilizado, setModeloUtilizado] = useState('')
+  const [selectedStyle, setSelectedStyle] = useState('estudio-madera')
+  const [estiloUtilizado, setEstiloUtilizado] = useState('')
   const [imagenCloudinaryGenerada, setImagenCloudinaryGenerada] = useState(null)
   const [notificacion, setNotificacion] = useState(null)
   const [fechaProgramada, setFechaProgramada] = useState('')
@@ -170,7 +170,7 @@ export default function MarketingPage() {
         descuento: descuentoManual,
         evento: decision.evento?.nombre || '',
         brief_creativo: briefFinal,
-        modelo: selectedModel,
+        estilo: selectedStyle,
       }
 
       const res = await fetch('/api/admin/marketing/generar-imagen-cloudinary', {
@@ -183,10 +183,10 @@ export default function MarketingPage() {
 
       if (json.success && json.imagen_url) {
         setImagenCloudinaryGenerada(json.imagen_url)
-        setModeloUtilizado(json.modelo_utilizado || selectedModel)
+        setEstiloUtilizado(json.estilo_utilizado || selectedStyle)
         setNotificacion({
           tipo: 'exito',
-          texto: `✅ ¡Arte publicitario generado con Cloudinary AI (modelo: ${json.modelo_utilizado || selectedModel}) y precios reales inyectados desde la BD!`,
+          texto: `✅ ¡Arte publicitario generado con Cloudinary AI (Estilo: ${json.estilo_utilizado || selectedStyle}) y precios reales inyectados desde la BD!`,
         })
       } else {
         throw new Error(json.error || 'Error al generar imagen con Cloudinary')
@@ -808,14 +808,14 @@ export default function MarketingPage() {
                   </span>
                 </div>
 
-                {/* Selector de Modelo de IA para Cloudinary */}
+                {/* Selector de Estilo / Ambiente de Fondo con Cloudinary AI */}
                 <div style={{ backgroundColor: '#faf7f2', padding: '0.85rem', borderRadius: 10, border: '1px solid #e4dacb' }}>
                   <label className={styles.label} style={{ display: 'block', marginBottom: '0.35rem' }}>
-                    🎨 Modelo de IA para Generación
+                    🎨 Ambiente de Fondo IA (Cloudinary GenAI)
                   </label>
                   <select
-                    value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
+                    value={selectedStyle}
+                    onChange={(e) => setSelectedStyle(e.target.value)}
                     disabled={algunProcesoActivo}
                     className={styles.select}
                     style={{
@@ -829,20 +829,20 @@ export default function MarketingPage() {
                       outline: 'none',
                     }}
                   >
-                    <option value="nano-banana-1">⚡ Nano Banana 1 (Básico - Rápido)</option>
-                    <option value="nano-banana-2">⭐ Nano Banana 2 (Recomendado - Profesional)</option>
-                    <option value="flux-2-pro">🎨 Flux 2 Pro (Fotorrealista)</option>
-                    <option value="recraft-v4">📐 Recraft V4 (Vector/Ilustraciones)</option>
-                    <option value="gpt-image-2">📢 GPT Image 2 (Marketing/Campañas)</option>
-                    <option value="ideogram-v4-base">🖼️ Ideogram V4 (Realismo/Arte)</option>
+                    <option value="estudio-madera">🪵 Madera Rústica & Hierbas (Estudio Gourmet)</option>
+                    <option value="marmol-lujo">🏛️ Mármol Blanco & Luz Natural (Elegante)</option>
+                    <option value="desayuno-calido">☕ Mesa de Desayuno & Café (Luz Dorada)</option>
+                    <option value="rustico-artesanal">🌾 Cocina Artesanal & Espolvoreado Rústico</option>
+                    <option value="estudio-oscuro">🌑 Fondo Oscuro Gourmet (Spotlight Dramático)</option>
+                    <option value="evento-promo">🎉 Fiesta & Celebración (Bokeh Festivo)</option>
                   </select>
                   <p style={{ marginTop: '0.35rem', fontSize: '0.72rem', color: '#666', lineHeight: 1.4, margin: '0.35rem 0 0 0' }}>
-                    {selectedModel === 'nano-banana-2' && '⭐ Recomendado para Instagram - Calidad profesional, excelente con texto'}
-                    {selectedModel === 'nano-banana-1' && '⚡ Modelo básico para pruebas rápidas (calidad limitada)'}
-                    {selectedModel === 'flux-2-pro' && '🎨 Máximo fotorrealismo para productos premium'}
-                    {selectedModel === 'recraft-v4' && '📐 Ideal para gráficos, logos e ilustraciones'}
-                    {selectedModel === 'gpt-image-2' && '📢 Perfecto para campañas publicitarias con texto'}
-                    {selectedModel === 'ideogram-v4-base' && '🖼️ Realismo artístico para fotografía de estudio'}
+                    {selectedStyle === 'estudio-madera' && '🪵 Ideal para panes y chipas: fondo de madera cálida con textura natural'}
+                    {selectedStyle === 'marmol-lujo' && '🏛️ Acabado limpio y premium: superficie de mármol con iluminación difusa'}
+                    {selectedStyle === 'desayuno-calido' && '☕ Ambiente acogedor de mañana: taza de café y luz solar matutina'}
+                    {selectedStyle === 'rustico-artesanal' && '🌾 Estilo panadería de campo: madera rústica y ligera harina artesanal'}
+                    {selectedStyle === 'estudio-oscuro' && '🌑 Fotografía de revista culinaria con contraste alto y foco en el producto'}
+                    {selectedStyle === 'evento-promo' && '🎉 Configuración festiva y dinámica para promociones especiales'}
                   </p>
                 </div>
 
@@ -1030,7 +1030,7 @@ export default function MarketingPage() {
                         <span>✅</span> Arte Listo para Publicar (1080×1350px)
                       </div>
 
-                      {/* Info del Modelo Utilizado */}
+                      {/* Info del Estilo Utilizado */}
                       <div
                         style={{
                           width: '100%',
@@ -1043,7 +1043,7 @@ export default function MarketingPage() {
                         }}
                       >
                         <p style={{ margin: 0, fontSize: '0.78rem', color: '#065f46', fontWeight: 600 }}>
-                          ✅ Imagen generada con modelo: <strong style={{ color: '#047857' }}>{modeloUtilizado || selectedModel || 'nano-banana-2'}</strong>
+                          ✅ Fondo generado con IA: <strong style={{ color: '#047857' }}>{estiloUtilizado || selectedStyle || 'Madera Rústica'}</strong>
                         </p>
                       </div>
 
