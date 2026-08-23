@@ -41,9 +41,16 @@ Debes responder ÚNICAMENTE con un objeto JSON válido con la siguiente estructu
   "callToAction": "Pedí directo por nuestra web panfree.fit o escribinos al WhatsApp +595 984 589845 📲"
 }`
 
-    const ai = new GoogleGenAI({ apiKey })
+    const ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    })
     const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
+      model: 'gemini-2.5-flash',
       contents: prompt,
     })
 
@@ -55,7 +62,7 @@ Debes responder ÚNICAMENTE con un objeto JSON válido con la siguiente estructu
       return NextResponse.json({
         success: true,
         data: parsed,
-        source: 'gemini-3.7-flash',
+        source: 'gemini-2.5-flash',
       })
     } catch {
       return NextResponse.json({
@@ -66,7 +73,7 @@ Debes responder ÚNICAMENTE con un objeto JSON válido con la siguiente estructu
           hashtags: '#PanFree #SinGluten #SinTACC #Encarnacion #Paraguay #CeliacosParaguay',
           callToAction: '📲 Hacé tu pedido en panfree.fit o por WhatsApp al +595 984 589845',
         },
-        source: 'gemini-3.7-flash-raw',
+        source: 'gemini-2.5-flash-raw',
       })
     }
   } catch (error) {
