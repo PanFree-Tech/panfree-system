@@ -6,6 +6,45 @@ import { getCloudinaryClient } from '@/lib/cloudinary'
 export const dynamic = 'force-dynamic'
 
 /**
+ * Acorta y optimiza el prompt para Cloudinary Generative AI
+ * evitando URLs excesivamente largas que causen HTTP 400.
+ */
+function acortarPrompt(prompt, maxLength = 100) {
+  if (!prompt || typeof prompt !== 'string') return 'mesa rustica iluminacion calida'
+
+  // Limpiar caracteres conflictivos para URLs de Cloudinary
+  let promptCorto = prompt.replace(/[,/\\#%_]/g, ' ')
+
+  // Eliminar adjetivos y términos redundantes comunes
+  const palabrasEliminar = [
+    'fotografía', 'fotografia', 'gastronómica', 'gastronomica',
+    'apetitoso', 'apetitosa', 'profesional', 'artesanal', 'artesanales',
+    'acogedor', 'acogedora', 'elegante', 'alta resolución', 'alta resolucion',
+    'textura detallada', 'estilo', 'composición de estudio', 'composicion de estudio',
+    'espolvoreado con', 'espolvoreada con', 'paño de lino', 'paño de lino rústico',
+    'fondo desenfocado', 'bokeh', 'de una cocina de panadería', 'de una cocina', 'en rodajas'
+  ]
+
+  palabrasEliminar.forEach(palabra => {
+    promptCorto = promptCorto.replace(new RegExp(palabra, 'gi'), '')
+  })
+
+  // Limpiar espacios múltiples
+  promptCorto = promptCorto.replace(/\s+/g, ' ').trim()
+
+  // Si sigue superando el límite, cortar en el último espacio
+  if (promptCorto.length > maxLength) {
+    promptCorto = promptCorto.substring(0, maxLength)
+    const lastSpace = promptCorto.lastIndexOf(' ')
+    if (lastSpace > 20) {
+      promptCorto = promptCorto.substring(0, lastSpace)
+    }
+  }
+
+  return promptCorto.trim() || 'mesa rustica iluminacion calida'
+}
+
+/**
  * Descarga una imagen remota (Supabase, Cloudinary, etc.) y la devuelve
  * como Data URI base64. Esto evita que Cloudinary tenga que "fetchear"
  * la URL él mismo (lo cual puede estar bloqueado por la whitelist de
@@ -160,7 +199,9 @@ export async function POST(req) {
     console.log('✅ Imagen base guardada en Cloudinary:', finalPublicId, '| folder:', uploadResult.asset_folder)
 
     // 5. Definir transformaciones y generar la URL de entrega (on-the-fly, no hace llamada de red aquí)
-    const promptFondo = brief_creativo || `fotografía gastronómica de ${producto.nombre}, mesa rústica, iluminación cálida`
+    const promptBruto = brief_creativo || `fotografía gastronómica de ${producto.nombre}, mesa rústica, iluminación cálida`
+    const promptFondo = acortarPrompt(promptBruto, 100)
+    console.log(`🎨 Prompt de fondo optimizado (${promptFondo.length} caracteres): "${promptFondo}"`)
 
     const transformations = [
       { width: 1080, height: 1350, crop: 'fill', gravity: 'auto' },
@@ -168,13 +209,13 @@ export async function POST(req) {
       { quality: 'auto', fetch_format: 'auto' },
       { overlay: { font_family: 'Arial', font_size: 72, font_weight: 'bold', text: `${descuento}%25 OFF` }, color: 'rgb:FF6B00' },
       { flags: 'layer_apply', gravity: 'north_east', x: 50, y: 50 },
-      { overlay: { font_family: 'Arial', font_size: 48, font_weight: 'bold', text: producto.nombre }, color: 'rgb:FFFFFF' },
+      { overlay: { font_family: 'Arial', font_size: 48, font_weight: 'bold', text: encodeURIComponent(producto.nombre) }, color: 'rgb:FFFFFF' },
       { flags: 'layer_apply', gravity: 'south', y: 180 },
       { overlay: { font_family: 'Arial', font_size: 34, text: `G/${Number(producto.precio_venta).toLocaleString('es-PY')}` }, color: 'rgb:D1D5DB' },
       { flags: 'layer_apply', gravity: 'south', y: 130 },
       { overlay: { font_family: 'Arial', font_size: 54, font_weight: 'bold', text: `G/${Math.round(Number(producto.precio_venta) * (1 - Number(descuento) / 100)).toLocaleString('es-PY')}` }, color: 'rgb:FF6B00' },
       { flags: 'layer_apply', gravity: 'south', y: 75 },
-      { overlay: { font_family: 'Arial', font_size: 28, font_weight: 'bold', text: 'Pedi en panfree.fit | 100% Sin Gluten' }, color: 'rgb:F9FAFB' },
+      { overlay: { font_family: 'Arial', font_size: 28, font_weight: 'bold', text: encodeURIComponent('Pedi en panfree.fit | 100% Sin Gluten') }, color: 'rgb:F9FAFB' },
       { flags: 'layer_apply', gravity: 'south', y: 25 },
     ]
 
