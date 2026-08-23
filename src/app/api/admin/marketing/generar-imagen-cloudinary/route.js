@@ -110,7 +110,8 @@ export async function POST(req) {
     const cloudinary = getCloudinaryClient()
 
     const timestamp = Date.now()
-    const publicIdDestino = `product_${producto.id}_${timestamp}` // sin prefijo "marketing/"
+    const cleanId = String(producto.id || 'promo').replace(/-/g, '')
+    const publicIdDestino = `product_${cleanId}_${timestamp}` // sin prefijo "marketing/" y sin guiones
     const folderDestino = 'marketing'
 
     console.log('📤 Subiendo imagen base a Cloudinary...')
