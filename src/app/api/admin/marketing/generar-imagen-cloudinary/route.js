@@ -119,34 +119,64 @@ export async function POST(req) {
     let generatedImageUrl = null
     let generatedPublicId = `marketing/product_${producto.id || 'promo'}_${Date.now()}`
 
-    // 4. Procesar la imagen en el servidor de Cloudinary usando `uploader.upload()`
-    // Esto ejecuta la IA generativa en el servidor y genera una URL permanente, corta (< 255 chars) guardada en 'marketing/'
+    // 4. Procesar y guardar la imagen en Cloudinary Media Library ('marketing/')
     if (process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
-      try {
-        console.log('📤 Subiendo y transformando imagen en Cloudinary...')
-        console.log('🖼️ Fuente origen:', sourceForUpload)
-        console.log('📁 Carpeta destino: marketing/')
+      const publicIdDestino = `product_${producto.id || 'promo'}_${Date.now()}`
 
+      console.log('📤 Source a subir:', sourceForUpload)
+      console.log('📁 Carpeta destino: marketing/')
+      console.log('📤 Transformaciones a enviar:', JSON.stringify(resultadoTransformacion.transformations, null, 2))
+
+      try {
+        // Intento 1: Subir directamente aplicando las transformaciones en el servidor de Cloudinary
+        console.log('🚀 [Intento 1] Subiendo con transformaciones a Cloudinary...')
         const uploadResult = await cloudinaryClient.uploader.upload(sourceForUpload, {
           folder: 'marketing',
-          public_id: `product_${producto.id || 'promo'}_${Date.now()}`,
+          public_id: publicIdDestino,
           transformation: resultadoTransformacion.transformations,
           overwrite: true,
           resource_type: 'image',
           secure: true,
         })
 
-        console.log('🖼️ Public ID generado:', uploadResult.public_id)
-        console.log('✅ URL generada y guardada:', uploadResult.secure_url)
+        console.log('🖼️ [Intento 1] Public ID generado:', uploadResult.public_id)
+        console.log('✅ [Intento 1] URL generada y guardada:', uploadResult.secure_url)
 
         if (uploadResult && uploadResult.secure_url) {
           generatedImageUrl = uploadResult.secure_url
-          generatedPublicId = uploadResult.public_id || generatedPublicId
+          generatedPublicId = uploadResult.public_id || `marketing/${publicIdDestino}`
         }
       } catch (uploadErr) {
-        console.warn('⚠️ Error en uploader.upload, activando fallback a URL de transformación:', uploadErr.message)
-        // Fallback a URL de transformación directa de Cloudinary
-        generatedImageUrl = resultadoTransformacion.url
+        console.warn('⚠️ [Intento 1] Error en uploader.upload con transformaciones:', uploadErr.message)
+
+        try {
+          // Intento 2 (Enfoque alternativo): Subir la imagen base a 'marketing/' y aplicar transformaciones en la URL de entrega
+          console.log('🔄 [Intento 2] Subiendo imagen base a carpeta marketing/ y aplicando transformaciones en URL de entrega...')
+          const uploadBaseResult = await cloudinaryClient.uploader.upload(sourceForUpload, {
+            folder: 'marketing',
+            public_id: publicIdDestino,
+            overwrite: true,
+            resource_type: 'image',
+            secure: true,
+          })
+
+          const savedPublicId = uploadBaseResult.public_id || `marketing/${publicIdDestino}`
+          console.log('📁 [Intento 2] Imagen base guardada en marketing/:', savedPublicId)
+
+          // Generar URL con las transformaciones sobre el nuevo public_id guardado en marketing/
+          generatedImageUrl = cloudinaryClient.url(savedPublicId, {
+            transformation: resultadoTransformacion.transformations,
+            type: 'upload',
+            secure: true,
+          })
+          generatedPublicId = savedPublicId
+
+          console.log('✅ [Intento 2] URL de entrega con transformaciones generada:', generatedImageUrl)
+        } catch (uploadBaseErr) {
+          console.warn('⚠️ [Intento 2] Error al subir imagen base a marketing/:', uploadBaseErr.message)
+          // Fallback a URL de transformación directa sobre la imagen original
+          generatedImageUrl = resultadoTransformacion.url
+        }
       }
     } else {
       // Si no hay credenciales completas de Cloudinary configuradas
