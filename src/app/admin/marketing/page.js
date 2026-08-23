@@ -36,6 +36,104 @@ const P = {
   verdeClaro: '#eef6ed',
 }
 
+// Catálogo de motores de IA para generación de imágenes
+const MOTORES_INFO = {
+  gemini: {
+    id: 'gemini',
+    nombre: 'Google Gemini',
+    badge: 'RECOMENDADO',
+    plan: 'Créditos prepago (~$0.045/img)',
+    descripcion: 'Motor principal de Google. Excelente calidad fotográfica y comprensión semántica de briefs.',
+    gratuito: false,
+    modelos: [
+      { id: 'gemini-3.1-flash-image', nombre: 'Gemini 3.1 Flash Image (Recomendado)' },
+      { id: 'gemini-3-pro-image', nombre: 'Gemini 3 Pro Image (Máxima Fidelidad)' },
+    ],
+  },
+  pollinations: {
+    id: 'pollinations',
+    nombre: 'Pollinations.ai',
+    badge: '100% GRATIS',
+    plan: 'Gratuito e Ilimitado (Sin API Key requerida)',
+    descripcion: 'Acceso libre sin registro ni clave. Ideal para pruebas rápidas y volumen ilimitado.',
+    gratuito: true,
+    modelos: [
+      { id: 'flux', nombre: 'Flux (Ultra Realista)' },
+      { id: 'turbo', nombre: 'SDXL Turbo (Rápido)' },
+    ],
+  },
+  leonardo: {
+    id: 'leonardo',
+    nombre: 'Leonardo AI',
+    badge: 'PRODUCT PHOTO',
+    plan: '150 tokens/día (~15-30 imágenes gratis)',
+    descripcion: 'Especializado en fotografía gastronómica, iluminación de estudio y texturas artesanales.',
+    gratuito: false,
+    modelos: [
+      { id: 'aa77f04e-3eec-4034-9c07-d0f6196846fb', nombre: 'Leonardo Kino XL (Product Photography)' },
+      { id: 'b2614464-6028-4b72-8038-83223d2ff6c8', nombre: 'Leonardo Diffusion XL' },
+    ],
+  },
+  agnes: {
+    id: 'agnes',
+    nombre: 'Agnes AI',
+    badge: '100% GRATIS',
+    plan: '100% Gratuito e Ilimitado',
+    descripcion: 'Motor rápido sin límites de uso. Ideal para publicaciones continuas en Instagram.',
+    gratuito: true,
+    modelos: [
+      { id: 'agnes-image-2.1-flash', nombre: 'Agnes Image 2.1 Flash' },
+    ],
+  },
+  aihubmix: {
+    id: 'aihubmix',
+    nombre: 'AIHubMix',
+    badge: 'E-COMMERCE',
+    plan: '10 llamadas gratis / Pago por uso',
+    descripcion: 'Optimizado para composiciones de e-commerce y fotografía publicitaria de productos.',
+    gratuito: false,
+    modelos: [
+      { id: 'gpt-image-2-free', nombre: 'GPT Image 2 Free (E-commerce)' },
+      { id: 'flux-pro', nombre: 'Flux Pro' },
+    ],
+  },
+  nexa: {
+    id: 'nexa',
+    nombre: 'NexaAPI',
+    badge: 'ULTRA BARATO',
+    plan: '$0.003 por imagen',
+    descripcion: 'Extremadamente económico para alto volumen con arquitectura Flux de última generación.',
+    gratuito: false,
+    modelos: [
+      { id: 'flux-kontext', nombre: 'Flux Kontext' },
+    ],
+  },
+  cloudflare: {
+    id: 'cloudflare',
+    nombre: 'Cloudflare Workers AI',
+    badge: 'SERVERLESS EDGE',
+    plan: '10,000 neuronas/día gratis',
+    descripcion: 'Infraestructura global ultra rápida y escalable en el edge de Cloudflare.',
+    gratuito: false,
+    modelos: [
+      { id: '@cf/stabilityai/stable-diffusion-xl-base-1.0', nombre: 'SDXL Base 1.0' },
+      { id: '@cf/bytedance/stable-diffusion-xl-lightning', nombre: 'SDXL Lightning' },
+    ],
+  },
+  huggingface: {
+    id: 'huggingface',
+    nombre: 'Hugging Face Inference',
+    badge: 'OPEN SOURCE',
+    plan: '$0.10/mes en créditos',
+    descripcion: 'Acceso a los mejores modelos de la comunidad de código abierto (SDXL / FLUX).',
+    gratuito: false,
+    modelos: [
+      { id: 'stabilityai/stable-diffusion-xl-base-1.0', nombre: 'Stable Diffusion XL Base 1.0' },
+      { id: 'black-forest-labs/FLUX.1-schnell', nombre: 'FLUX.1 Schnell' },
+    ],
+  },
+}
+
 export default function MarketingPage() {
   const router = useRouter()
   const [tabActiva, setTabActiva] = useState('ia_marketing') // 'ia_marketing' | 'reglas' | 'eventos' | 'analisis'
@@ -57,13 +155,50 @@ export default function MarketingPage() {
   const [tono, setTono] = useState('persuasivo')
   const [contenidoGenerado, setContenidoGenerado] = useState(null)
   const [promptText, setPromptText] = useState('')
+  
+  // Motores de IA de imagen
+  const [motorSeleccionado, setMotorSeleccionado] = useState('gemini')
   const [selectedModel, setSelectedModel] = useState('gemini-3.1-flash-image')
+  const [estadoMotores, setEstadoMotores] = useState({})
   const [modeloUtilizado, setModeloUtilizado] = useState('')
+  const [motorUtilizadoNombre, setMotorUtilizadoNombre] = useState('')
+  const [tiempoGeneracion, setTiempoGeneracion] = useState(null)
   const [imagenCloudinaryGenerada, setImagenCloudinaryGenerada] = useState(null)
   const [notificacion, setNotificacion] = useState(null)
   const [fechaProgramada, setFechaProgramada] = useState('')
   const [urlCopiada, setUrlCopiada] = useState(false)
   const [captionCopiado, setCaptionCopiado] = useState(false)
+
+  // Consultar disponibilidad y estado de los motores de IA
+  useEffect(() => {
+    async function cargarEstadoMotores() {
+      try {
+        const res = await fetch('/api/admin/marketing/generar-imagen-cloudinary')
+        if (res.ok) {
+          const json = await res.json()
+          if (json.success && Array.isArray(json.motores)) {
+            const mapEstado = {}
+            json.motores.forEach((m) => {
+              mapEstado[m.id] = m
+            })
+            setEstadoMotores(mapEstado)
+          }
+        }
+      } catch (err) {
+        console.warn('No se pudo obtener estado de los motores:', err?.message)
+      }
+    }
+    cargarEstadoMotores()
+  }, [])
+
+  // Al cambiar de motor, ajustar el modelo por defecto del motor
+  const handleCambioMotor = (nuevoMotor) => {
+    setMotorSeleccionado(nuevoMotor)
+    const motorInfo = MOTORES_INFO[nuevoMotor]
+    if (motorInfo && motorInfo.modelos && motorInfo.modelos.length > 0) {
+      setSelectedModel(motorInfo.modelos[0].id)
+    }
+  }
 
   // Variable de bloqueo global cuando hay algún proceso activo
   const algunProcesoActivo =
@@ -155,7 +290,7 @@ export default function MarketingPage() {
     }
   }
 
-  // 2. GENERAR IMAGEN CON CLOUDINARY AI
+  // 2. GENERAR IMAGEN CON MOTOR DE IA SELECCIONADO Y CLOUDINARY
   const handleGenerarImagenCloudinary = async () => {
     if (!decision?.producto || algunProcesoActivo) return
 
@@ -170,6 +305,7 @@ export default function MarketingPage() {
         descuento: descuentoManual,
         evento: decision.evento?.nombre || '',
         brief_creativo: briefFinal,
+        motor: motorSeleccionado,
         modelo: selectedModel,
       }
 
@@ -184,8 +320,10 @@ export default function MarketingPage() {
       if (json.success && json.imagen_url) {
         setImagenCloudinaryGenerada(json.imagen_url)
         setModeloUtilizado(json.modelo_utilizado || selectedModel)
+        setMotorUtilizadoNombre(json.motor_nombre || MOTORES_INFO[motorSeleccionado]?.nombre || motorSeleccionado)
+        setTiempoGeneracion(json.tiempo_ms ? (json.tiempo_ms / 1000).toFixed(1) : null)
         
-        let mensajeExito = json.mensaje || `✅ ¡Arte generado con éxito! Referencia de Cloudinary (productos/) ➔ Gemini (${json.modelo_utilizado || selectedModel}) ➔ Guardado en Cloudinary (marketing/)`
+        let mensajeExito = json.mensaje || `✅ ¡Arte generado con éxito usando ${json.motor_nombre || motorSeleccionado}! Guardado en Cloudinary.`
         if (json.advertencia_acceso) {
           mensajeExito += ` ⚠️ Nota: ${json.advertencia_acceso}`
         }
@@ -195,12 +333,14 @@ export default function MarketingPage() {
           texto: mensajeExito,
         })
       } else {
-        throw new Error(json.error || 'Error al generar imagen con Gemini y Cloudinary')
+        const errorMsg = json.error || 'Error al generar imagen'
+        const sugerencia = json.sugerencia ? ` (${json.sugerencia})` : ''
+        throw new Error(`${errorMsg}${sugerencia}`)
       }
     } catch (err) {
       setNotificacion({
         tipo: 'error',
-        texto: `❌ Error en el generador de imágenes: ${err.message || 'Error en el servicio'}`,
+        texto: `❌ Error en el generador de imágenes: ${err.message || 'Error en el servicio'}. Puedes probar seleccionando otro motor como Pollinations.ai (100% gratuito sin clave) o Google Gemini.`,
       })
     } finally {
       setGenerandoImagenCloudinary(false)
@@ -789,7 +929,7 @@ export default function MarketingPage() {
             {/* ── COLUMNA DERECHA: 3. CLOUDINARY AI & 4. PUBLICACIÓN ────────────── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               
-              {/* 3. SECCIÓN: GENERADOR VISUAL CLOUDINARY AI */}
+              {/* 3. SECCIÓN: GENERADOR VISUAL CON MULTI-MOTOR DE IA & CLOUDINARY */}
               <div
                 style={{
                   backgroundColor: '#fff',
@@ -806,48 +946,125 @@ export default function MarketingPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span style={{ fontSize: '1.1rem' }}>🖼️</span>
                     <h2 style={{ fontSize: '1rem', fontWeight: 800, color: P.verde, margin: 0 }}>
-                      3. Generar Arte con Gemini & Cloudinary
+                      3. Generar Arte con Motores IA & Cloudinary
                     </h2>
                   </div>
                   <span className={`${styles.badge} ${styles.badgeGold}`}>
-                    PRODUCCIÓN REAL
+                    8 MOTORES IA
                   </span>
                 </div>
 
-                {/* Selector de Modelo de IA para Gemini Image Generation (Nano Banana) */}
+                {/* SELECTOR DE MOTOR DE IA */}
                 <div style={{ backgroundColor: '#faf7f2', padding: '0.85rem', borderRadius: 10, border: '1px solid #e4dacb' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                    <label className={styles.label} style={{ margin: 0, fontWeight: 700 }}>
-                      ⚡ Estrategia: Gemini Image API + Pixelz + Cloudinary
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem' }}>
+                    <label className={styles.label} style={{ margin: 0, fontWeight: 700, fontSize: '0.82rem' }}>
+                      🧠 Motor de Generación de Imagen:
                     </label>
-                    <span style={{ fontSize: '0.68rem', backgroundColor: '#e8f5e9', color: '#2e7d32', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
-                      NANO BANANA
+                    <span
+                      style={{
+                        fontSize: '0.68rem',
+                        backgroundColor: MOTORES_INFO[motorSeleccionado]?.gratuito ? '#e0f2fe' : '#fef3c7',
+                        color: MOTORES_INFO[motorSeleccionado]?.gratuito ? '#0369a1' : '#b45309',
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {MOTORES_INFO[motorSeleccionado]?.badge || 'IA'}
                     </span>
                   </div>
+
                   <select
-                    value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
+                    value={motorSeleccionado}
+                    onChange={(e) => handleCambioMotor(e.target.value)}
                     disabled={algunProcesoActivo}
                     className={styles.select}
                     style={{
                       width: '100%',
-                      padding: '0.5rem 0.65rem',
+                      padding: '0.55rem 0.65rem',
                       borderRadius: 8,
-                      border: '1px solid #d4c5b3',
+                      border: '1.5px solid #d4c5b3',
                       backgroundColor: '#fff',
-                      fontSize: '0.82rem',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
                       color: '#2d2a26',
                       outline: 'none',
+                      marginBottom: '0.5rem',
                     }}
                   >
-                    <option value="gemini-3.1-flash-image">⭐ Gemini 3.1 Flash (Recomendado - Calidad)</option>
-                    <option value="gemini-3-pro-image">🚀 Gemini 3 Pro (Máxima Calidad)</option>
+                    <option value="gemini">🌟 Google Gemini (Créditos Prepago · ~$0.045/img)</option>
+                    <option value="pollinations">🆓 Pollinations.ai (100% Gratuito e Ilimitado · Sin API Key)</option>
+                    <option value="leonardo">📸 Leonardo AI (150 tokens/día gratis · Fotografía Gastronómica)</option>
+                    <option value="agnes">⚡ Agnes AI (100% Gratuito e Ilimitado · Flash)</option>
+                    <option value="aihubmix">🛒 AIHubMix (10 gratis / Pago por uso · E-Commerce)</option>
+                    <option value="nexa">💰 NexaAPI (Ultra Económico ~$0.003/img · Flux)</option>
+                    <option value="cloudflare">☁️ Cloudflare Workers AI (10k neuronas/día gratis · SDXL)</option>
+                    <option value="huggingface">🤖 Hugging Face Inference (Créditos mensuales · Open Source)</option>
                   </select>
-                  <p style={{ marginTop: '0.35rem', fontSize: '0.72rem', color: '#666', lineHeight: 1.4, margin: '0.35rem 0 0 0' }}>
-                    1. 🎨 Generación directa de imagen completa con <strong>Google Gemini Image API</strong>.<br />
-                    2. 📐 Formato vertical 3:4 publicitario optimizado para redes sociales.<br />
-                    3. ☁️ Almacenamiento directo y seguro en <strong>Cloudinary</strong>.
-                  </p>
+
+                  {/* SUB-SELECTOR DE MODELO PARA EL MOTOR SELECCIONADO */}
+                  {MOTORES_INFO[motorSeleccionado]?.modelos?.length > 1 && (
+                    <div style={{ marginTop: '0.4rem', marginBottom: '0.5rem' }}>
+                      <label style={{ fontSize: '0.72rem', color: '#555', fontWeight: 600, display: 'block', marginBottom: '0.2rem' }}>
+                        ⚙️ Variante de Modelo para {MOTORES_INFO[motorSeleccionado].nombre}:
+                      </label>
+                      <select
+                        value={selectedModel}
+                        onChange={(e) => setSelectedModel(e.target.value)}
+                        disabled={algunProcesoActivo}
+                        style={{
+                          width: '100%',
+                          padding: '0.4rem 0.6rem',
+                          borderRadius: 6,
+                          border: '1px solid #d4c5b3',
+                          backgroundColor: '#fff',
+                          fontSize: '0.78rem',
+                          color: '#2d2a26',
+                          outline: 'none',
+                        }}
+                      >
+                        {MOTORES_INFO[motorSeleccionado].modelos.map((mod) => (
+                          <option key={mod.id} value={mod.id}>
+                            {mod.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* FICHA INFORMATIVA DEL MOTOR */}
+                  <div
+                    style={{
+                      marginTop: '0.45rem',
+                      padding: '0.55rem 0.75rem',
+                      borderRadius: 6,
+                      backgroundColor: '#f5f0e6',
+                      border: '1px solid #e2d4c0',
+                      fontSize: '0.73rem',
+                      color: '#4a443d',
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.2rem' }}>
+                      <span style={{ fontWeight: 700, color: P.verde }}>
+                        💳 Plan / Costo: {MOTORES_INFO[motorSeleccionado]?.plan}
+                      </span>
+                      {estadoMotores[motorSeleccionado]?.disponible ? (
+                        <span style={{ fontSize: '0.65rem', color: '#15803d', fontWeight: 700 }}>
+                          🟢 Listo para usar
+                        </span>
+                      ) : MOTORES_INFO[motorSeleccionado]?.gratuito ? (
+                        <span style={{ fontSize: '0.65rem', color: '#0369a1', fontWeight: 700 }}>
+                          🆓 Acceso Abierto
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.65rem', color: '#b45309', fontWeight: 600 }}>
+                          ⚠️ Requiere API Key en .env
+                        </span>
+                      )}
+                    </div>
+                    <div>{MOTORES_INFO[motorSeleccionado]?.descripcion}</div>
+                  </div>
                 </div>
 
                 {/* Campo editable de Prompt Visual (brief_creativo) */}
@@ -888,7 +1105,7 @@ export default function MarketingPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
                     <span style={{ fontSize: '0.68rem', color: '#888' }}>
                       {promptText.trim()
-                        ? 'Describe la imagen que quieres que genere Gemini.'
+                        ? `Describe la escena publicitaria para ${MOTORES_INFO[motorSeleccionado]?.nombre || 'el motor seleccionado'}.`
                         : 'Si está vacío, se creará un prompt fotográfico profesional automáticamente para el producto.'}
                     </span>
                     {promptText && (
@@ -943,10 +1160,10 @@ export default function MarketingPage() {
                           borderTopColor: '#fff',
                         }}
                       />
-                      <span>⏳ Generando imagen publicitaria con Gemini...</span>
+                      <span>⏳ Generando arte con {MOTORES_INFO[motorSeleccionado]?.nombre || 'IA'}...</span>
                     </span>
                   ) : (
-                    <span>🖼️ Generar Arte con Gemini & Cloudinary</span>
+                    <span>🖼️ Generar Arte con {MOTORES_INFO[motorSeleccionado]?.nombre || 'IA'} & Cloudinary</span>
                   )}
                 </button>
 
@@ -979,10 +1196,10 @@ export default function MarketingPage() {
                         }}
                       />
                       <h4 style={{ color: P.dorado, fontSize: '0.95rem', margin: '0 0 0.4rem 0' }}>
-                        ⏳ Generando fondo con Gemini Image API & ensamblando en Cloudinary...
+                        ⏳ Generando con {MOTORES_INFO[motorSeleccionado]?.nombre || 'Motor IA'} & subiendo a Cloudinary...
                       </h4>
                       <p style={{ fontSize: '0.78rem', color: '#aaa', margin: 0 }}>
-                        Recorte con Pixelz, fondo de estudio gastronómico con Gemini e inyección de precios reales de BD en Guaraníes.
+                        Pipeline: Prompt creativo ➔ Generación {MOTORES_INFO[motorSeleccionado]?.nombre} ➔ Optimización & Cloudinary ➔ Registro Supabase.
                       </p>
                     </div>
                   )}
@@ -1006,7 +1223,7 @@ export default function MarketingPage() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={imagenCloudinaryGenerada}
-                          alt="Arte Publicitario Generado con Gemini y Cloudinary"
+                          alt="Arte Publicitario Generado con IA y Cloudinary"
                           style={{
                             width: '100%',
                             height: '100%',
@@ -1016,25 +1233,43 @@ export default function MarketingPage() {
                         />
                       </div>
 
-                      {/* Badge informativo */}
-                      <div
-                        style={{
-                          backgroundColor: '#064e3b',
-                          color: '#6ee7b7',
-                          padding: '0.35rem 0.75rem',
-                          borderRadius: 20,
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.35rem',
-                          border: '1px solid #059669',
-                        }}
-                      >
-                        <span>✅</span> Arte Listo para Publicar (1080×1350px)
+                      {/* Badges informativos */}
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <div
+                          style={{
+                            backgroundColor: '#064e3b',
+                            color: '#6ee7b7',
+                            padding: '0.35rem 0.75rem',
+                            borderRadius: 20,
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            border: '1px solid #059669',
+                          }}
+                        >
+                          <span>✅</span> Arte Listo (1080×1350px)
+                        </div>
+
+                        {tiempoGeneracion && (
+                          <div
+                            style={{
+                              backgroundColor: '#1e293b',
+                              color: '#94a3b8',
+                              padding: '0.35rem 0.75rem',
+                              borderRadius: 20,
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              border: '1px solid #334155',
+                            }}
+                          >
+                            ⏱️ {tiempoGeneracion}s
+                          </div>
+                        )}
                       </div>
 
-                      {/* Info del Modelo Utilizado */}
+                      {/* Info del Motor y Modelo Utilizado */}
                       <div
                         style={{
                           width: '100%',
@@ -1047,7 +1282,8 @@ export default function MarketingPage() {
                         }}
                       >
                         <p style={{ margin: 0, fontSize: '0.78rem', color: '#065f46', fontWeight: 600 }}>
-                          ✅ Imagen generada con: <strong style={{ color: '#047857' }}>{modeloUtilizado || selectedModel || 'gemini-3.1-flash-image'}</strong>
+                          🧠 Motor: <strong style={{ color: '#047857' }}>{motorUtilizadoNombre || MOTORES_INFO[motorSeleccionado]?.nombre || motorSeleccionado}</strong>
+                          {modeloUtilizado && ` · Modelo: ${modeloUtilizado}`}
                         </p>
                       </div>
 
@@ -1122,8 +1358,8 @@ export default function MarketingPage() {
                       <h4 style={{ color: '#ccc', fontSize: '0.9rem', margin: '0 0 0.35rem 0' }}>
                         Aún no se ha generado la imagen publicitaria
                       </h4>
-                      <p style={{ fontSize: '0.78rem', color: '#888', maxWidth: 280, margin: '0 auto' }}>
-                        Haz clic en <strong>"Generar Imagen con Cloudinary AI"</strong> para componer el arte publicitario con fondo generado y precios oficiales.
+                      <p style={{ fontSize: '0.78rem', color: '#888', maxWidth: 320, margin: '0 auto' }}>
+                        Selecciona tu <strong>motor de IA preferido</strong> y haz clic en <strong>"Generar Arte"</strong> para crear la imagen publicitaria con subida a Cloudinary.
                       </p>
                     </div>
                   )}
