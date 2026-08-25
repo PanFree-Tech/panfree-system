@@ -1,7 +1,7 @@
 /**
  * 📁 UBICACIÓN: src/app/api/send-whatsapp-team/route.js
- * 📅 CREADO: 2026-08-19
- * 📌 DESCRIPCIÓN: Envía mensajes de WhatsApp al equipo usando Twilio/WhatsApp API
+ * 📅 ACTUALIZADO: 2026-08-25
+ * 📌 DESCRIPCIÓN: Envía mensajes y plantillas de WhatsApp al equipo usando WhatsApp Cloud API / Twilio
  * 
  * 🔒 SEGURIDAD: Solo admin (verifica rol en app_metadata o token interno)
  */
@@ -11,14 +11,18 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { supabase as supabaseAdmin, sanitizeSupabaseUrl, DEFAULT_SUPABASE_ANON_KEY } from '@/lib/supabase'
+import { enviarPlantillaWhatsApp } from '@/lib/whatsapp'
+import { WHATSAPP_TEMPLATES } from '@/lib/whatsapp-templates'
 
 export const dynamic = 'force-dynamic'
 
-// ── Validación ──
+// ── Validación de esquema ──
 const WhatsAppSchema = z.object({
-  mensaje: z.string().min(1),
+  mensaje: z.string().optional(),
   telefono: z.string().optional(),
-  tipo: z.enum(['pedido', 'alerta']).default('pedido'),
+  tipo: z.enum(['pedido', 'alerta', 'HELLO_WORLD', 'PEDIDO_CONFIRMADO', 'PEDIDO_LISTO', 'PROMOCION', 'ALERTA_EQUIPO']).default('ALERTA_EQUIPO'),
+  template: z.any().optional(),
+  datos: z.any().optional()
 })
 
 export async function POST(req) {
@@ -60,53 +64,46 @@ export async function POST(req) {
       throw new Error('No se especificó número de teléfono')
     }
 
-    // 4. Enviar mensaje (usando Twilio o WhatsApp Cloud API según configuración)
+    // 4. Enviar mediante Plantilla de WhatsApp Cloud API (o Twilio si está activo)
     const accountSid = process.env.TWILIO_ACCOUNT_SID
     const authToken = process.env.TWILIO_AUTH_TOKEN
     const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER
 
-    const waAccessToken = process.env.WHATSAPP_ACCESS_TOKEN
-    const waPhoneId = process.env.WHATSAPP_PHONE_NUMBER_ID
+    let envioResultado = null
 
     if (accountSid && authToken && fromNumber) {
       try {
         const twilioModule = await import('twilio')
         const twilioClient = (twilioModule.default || twilioModule)(accountSid, authToken)
-        await twilioClient.messages.create({
-          body: validated.mensaje,
+        const res = await twilioClient.messages.create({
+          body: validated.mensaje || 'Alerta operativa del sistema PanFree',
           from: `whatsapp:${fromNumber}`,
           to: `whatsapp:${telefono}`,
         })
+        envioResultado = { proveedor: 'twilio', sid: res.sid }
+        console.log(`✅ WhatsApp enviado vía Twilio a [${telefono}]`)
       } catch (twErr) {
         console.error('[Twilio Error]', twErr.message)
       }
-    } else if (waAccessToken && waPhoneId) {
-      try {
-        await fetch(`https://graph.facebook.com/v18.0/${waPhoneId}/messages`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${waAccessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            messaging_product: 'whatsapp',
-            to: telefono.replace(/\D/g, ''),
-            type: 'text',
-            text: { body: validated.mensaje },
-          }),
-        })
-      } catch (waErr) {
-        console.error('[WhatsApp Cloud API Error]', waErr.message)
-      }
     } else {
-      console.log('[WhatsApp Team Fallback Log] Mensaje:', validated.mensaje)
-      console.log('[WhatsApp Team Fallback Log] Para:', telefono)
+      // Usar WhatsApp Cloud API con plantillas
+      const templateTipo = validated.tipo === 'alerta' || validated.tipo === 'pedido' ? 'ALERTA_EQUIPO' : validated.tipo
+      const datosPlantilla = validated.datos || { titulo: 'Notificación Equipo PanFree', detalle: validated.mensaje }
+
+      envioResultado = await enviarPlantillaWhatsApp({
+        telefono,
+        tipo: templateTipo,
+        template: validated.template,
+        args: [datosPlantilla],
+        permitirFallback: true
+      })
     }
 
     // 5. Registrar en notificaciones_admin
+    const textoResumen = validated.mensaje || `Plantilla ${validated.tipo} enviada a ${telefono}`
     try {
       await supabaseAdmin.from('notificaciones_admin').insert({
-        mensaje: `📱 WhatsApp enviado al equipo: ${validated.mensaje.substring(0, 50)}...`,
+        mensaje: `📱 WhatsApp enviado: ${textoResumen.substring(0, 60)}...`,
         leida: false,
       })
     } catch (notifErr) {
@@ -115,13 +112,14 @@ export async function POST(req) {
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Mensaje enviado al equipo' 
+      message: 'Plantilla de WhatsApp enviada correctamente',
+      detalles: envioResultado
     })
 
   } catch (error) {
     console.error('Error en /api/send-whatsapp-team:', error)
     return NextResponse.json(
-      { error: error.message || 'Error interno' },
+      { error: error.message || 'Error interno al enviar WhatsApp' },
       { status: 500 }
     )
   }
