@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { supabase, sanitizeSupabaseUrl, DEFAULT_SUPABASE_ANON_KEY } from '@/lib/supabase'
+import { getCloudinaryClient } from '@/lib/cloudinary'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,31 +41,21 @@ export async function POST(req) {
 
     let finalImageUrl = null
 
-    // Si imageData es Base64, subir a Supabase Storage para obtener URL pública
+    // Si imageData es Base64, subir a Cloudinary para obtener URL pública
     if (typeof imageData === 'string') {
       if (imageData.startsWith('http://') || imageData.startsWith('https://')) {
         finalImageUrl = imageData
       } else if (imageData.startsWith('data:image') || imageData.length > 200) {
         try {
-          const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '')
-          const buffer = Buffer.from(base64Data, 'base64')
-          const fileName = `marketing/product_${productId || 'promo'}_${Date.now()}.jpg`
-
-          const { error: uploadError } = await supabaseAdmin.storage
-            .from('public-images')
-            .upload(fileName, buffer, {
-              contentType: 'image/jpeg',
-              upsert: true,
-            })
-
-          if (!uploadError) {
-            const { data: publicData } = supabaseAdmin.storage
-              .from('public-images')
-              .getPublicUrl(fileName)
-            finalImageUrl = publicData?.publicUrl || null
-          }
+          const cloudinary = getCloudinaryClient()
+          const dataUri = imageData.startsWith('data:') ? imageData : `data:image/jpeg;base64,${imageData}`
+          const uploadRes = await cloudinary.uploader.upload(dataUri, {
+            folder: 'marketing',
+            resource_type: 'image',
+          })
+          finalImageUrl = uploadRes.secure_url
         } catch (e) {
-          console.warn('Error subiendo imagen a Storage en publish-instagram:', e.message)
+          console.warn('Error subiendo imagen a Cloudinary en publish-instagram:', e.message)
         }
       }
     }

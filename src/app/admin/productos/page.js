@@ -36,7 +36,7 @@ const FORM_VACIO = {
   nombre: '', slug: '', descripcion: '', categoria: 'panes',
   precio_venta: '', precio_mayorista: '', stock_actual: 0,
   stock_minimo: 5, unidad_medida: 'unidad', imagen_url: '',
-  imagen_alt: '', imagenes_urls: [],
+  imagen_public_id: '', imagen_alt: '', imagenes_urls: [],
   en_promocion: false, precio_promocion: '',
   fecha_inicio_promo: '', fecha_fin_promo: '',
   is_active: true, is_featured: false, disponible_delivery: true,
@@ -50,9 +50,9 @@ function generarSlug(nombre) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Uploader imagen principal (sin cambios respecto al original)
+// Uploader imagen principal (Cloudinary Direct Unsigned Upload)
 // ─────────────────────────────────────────────────────────────
-function ImagenUploader({ imagenUrl, onChange }) {
+function ImagenUploader({ imagenUrl, imagenPublicId, onChange }) {
   const inputRef   = useRef(null)
   const [subiendo, setSubiendo] = useState(false)
   const [preview,  setPreview]  = useState(imagenUrl || '')
@@ -64,30 +64,41 @@ function ImagenUploader({ imagenUrl, onChange }) {
     if (!archivo) return
     const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
     if (!tiposPermitidos.includes(archivo.type)) { setErrorImg('Solo JPG, PNG, WEBP o GIF.'); return }
-    if (archivo.size > 5 * 1024 * 1024) { setErrorImg('Máximo 5MB.'); return }
+    if (archivo.size > 10 * 1024 * 1024) { setErrorImg('Máximo 10MB.'); return }
     setSubiendo(true); setErrorImg(null)
     try {
-      const ext    = archivo.name.split('.').pop().toLowerCase()
-      const nombre = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error: errUpload } = await supabase.storage
-        .from('productos').upload(`productos/${nombre}`, archivo, { cacheControl: '3600', upsert: false })
-      if (errUpload) throw errUpload
-      const { data: urlData } = supabase.storage.from('productos').getPublicUrl(`productos/${nombre}`)
-      setPreview(urlData.publicUrl)
-      onChange(urlData.publicUrl)
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'd7simx38'
+      const uploadPreset = process.env.NEXT_PUBLIC_UPLOAD_PRESET || 'panfree_upload'
+
+      const formData = new FormData()
+      formData.append('file', archivo)
+      formData.append('upload_preset', uploadPreset)
+      formData.append('folder', 'productos')
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        throw new Error(errorData?.error?.message || 'Error al subir imagen a Cloudinary')
+      }
+
+      const data = await res.json()
+      setPreview(data.secure_url)
+      onChange(data.secure_url, data.public_id)
     } catch (err) {
-      setErrorImg('Error al subir. Intentá de nuevo.')
+      console.error('Error Cloudinary upload:', err)
+      setErrorImg(err.message || 'Error al subir. Intentá de nuevo.')
     } finally {
       setSubiendo(false)
     }
   }
 
-  async function eliminarImagen() {
-    try {
-      const partes = preview.split('/storage/v1/object/public/productos/')
-      if (partes[1]) await supabase.storage.from('productos').remove([partes[1]])
-    } catch {}
-    setPreview(''); onChange('')
+  function eliminarImagen() {
+    setPreview('')
+    onChange('', '')
   }
 
   return (
@@ -108,7 +119,7 @@ function ImagenUploader({ imagenUrl, onChange }) {
           onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#b7996b'; const f = e.dataTransfer.files[0]; if (f) manejarArchivo(f) }}
           style={{ width: '160px', height: '160px', border: '2px dashed #b7996b', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backgroundColor: '#fdf8f4', marginBottom: '0.75rem' }}>
           {subiendo
-            ? <><div style={{ fontSize: '1.5rem', marginBottom: '0.4rem' }}>⏳</div><span style={{ fontSize: '0.78rem', color: '#999' }}>Subiendo…</span></>
+            ? <><div style={{ fontSize: '1.5rem', marginBottom: '0.4rem' }}>⏳</div><span style={{ fontSize: '0.78rem', color: '#999' }}>Subiendo a Cloudinary…</span></>
             : <><div style={{ fontSize: '2rem', marginBottom: '0.4rem' }}>📷</div><span style={{ fontSize: '0.78rem', color: '#999', textAlign: 'center', padding: '0 0.5rem' }}>Click o arrastrá<br />una imagen aquí</span></>
           }
         </div>
@@ -121,13 +132,13 @@ function ImagenUploader({ imagenUrl, onChange }) {
           style={{ ...S.btnGris, fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>🔄 Cambiar imagen</button>
       )}
       {errorImg && <p style={{ color: '#c62828', fontSize: '0.82rem', marginTop: '0.4rem' }}>{errorImg}</p>}
-      <p style={{ fontSize: '0.78rem', color: '#999', marginTop: '0.3rem' }}>JPG, PNG, WEBP o GIF · Máximo 5MB</p>
+      <p style={{ fontSize: '0.78rem', color: '#999', marginTop: '0.3rem' }}>Cloudinary CDN · JPG, PNG, WEBP o GIF · Máximo 10MB</p>
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────
-// Galería — subida múltiple, reordenar arrastrando, eliminar
+// Galería — subida múltiple a Cloudinary, reordenar arrastrando, eliminar
 // ─────────────────────────────────────────────────────────────
 function GaleriaUploader({ urls, onChange }) {
   const inputRef        = useRef(null)
@@ -137,14 +148,27 @@ function GaleriaUploader({ urls, onChange }) {
   const dragItem                  = useRef(null)
   const dragOver                  = useRef(null)
 
-  async function subirArchivo(archivo) {
-    const ext    = archivo.name.split('.').pop().toLowerCase()
-    const nombre = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { error } = await supabase.storage
-      .from('productos').upload(`productos/${nombre}`, archivo, { cacheControl: '3600', upsert: false })
-    if (error) throw error
-    const { data } = supabase.storage.from('productos').getPublicUrl(`productos/${nombre}`)
-    return data.publicUrl
+  async function subirArchivoCloudinary(archivo) {
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'd7simx38'
+    const uploadPreset = process.env.NEXT_PUBLIC_UPLOAD_PRESET || 'panfree_upload'
+
+    const formData = new FormData()
+    formData.append('file', archivo)
+    formData.append('upload_preset', uploadPreset)
+    formData.append('folder', 'productos/galeria')
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}))
+      throw new Error(errorData?.error?.message || 'Error al subir a Cloudinary')
+    }
+
+    const data = await res.json()
+    return data.secure_url
   }
 
   async function manejarArchivos(archivos) {
@@ -152,32 +176,29 @@ function GaleriaUploader({ urls, onChange }) {
     const tiposOk = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
     const invalidos = lista.filter(f => !tiposOk.includes(f.type))
     if (invalidos.length) { setErrorMsg('Solo JPG, PNG, WEBP o GIF.'); return }
-    const grandes = lista.filter(f => f.size > 5 * 1024 * 1024)
-    if (grandes.length) { setErrorMsg('Cada imagen tiene máximo 5MB.'); return }
+    const grandes = lista.filter(f => f.size > 10 * 1024 * 1024)
+    if (grandes.length) { setErrorMsg('Cada imagen tiene máximo 10MB.'); return }
     if (urls.length + lista.length > 8) { setErrorMsg('Máximo 8 imágenes en la galería.'); return }
 
     setSubiendo(true); setErrorMsg(null); setProgreso(0)
     try {
       const nuevas = []
       for (let i = 0; i < lista.length; i++) {
-        const url = await subirArchivo(lista[i])
+        const url = await subirArchivoCloudinary(lista[i])
         nuevas.push(url)
         setProgreso(i + 1)
       }
       onChange([...urls, ...nuevas])
-    } catch {
-      setErrorMsg('Error al subir alguna imagen. Intentá de nuevo.')
+    } catch (err) {
+      console.error('Error Galeria Cloudinary upload:', err)
+      setErrorMsg(err.message || 'Error al subir alguna imagen. Intentá de nuevo.')
     } finally {
       setSubiendo(false); setProgreso(0)
       if (inputRef.current) inputRef.current.value = ''
     }
   }
 
-  async function eliminar(idx) {
-    try {
-      const partes = urls[idx].split('/storage/v1/object/public/productos/')
-      if (partes[1]) await supabase.storage.from('productos').remove([partes[1]])
-    } catch {}
+  function eliminar(idx) {
     onChange(urls.filter((_, i) => i !== idx))
   }
 
@@ -337,6 +358,7 @@ export default function PaginaProductos() {
     setEditando(p.id)
     setForm({
       ...p,
+      imagen_public_id: p.imagen_public_id || '',
       // Normalizar imagenes_urls: puede venir como null o como array
       imagenes_urls: Array.isArray(p.imagenes_urls) ? p.imagenes_urls.filter(Boolean) : [],
     })
@@ -376,6 +398,7 @@ export default function PaginaProductos() {
         stock_minimo:        Number(form.stock_minimo) || 5,
         unidad_medida:       form.unidad_medida,
         imagen_url:          form.imagen_url || null,
+        imagen_public_id:    form.imagen_public_id || null,
         imagen_alt:          form.imagen_alt?.trim() || null,
         imagenes_urls:       Array.isArray(form.imagenes_urls) ? form.imagenes_urls.filter(Boolean) : [],
         is_active:           form.is_active,
@@ -570,7 +593,14 @@ export default function PaginaProductos() {
               <div style={{ gridColumn: '1 / -1' }}>
                 <ImagenUploader
                   imagenUrl={form.imagen_url}
-                  onChange={url => cambiarCampo('imagen_url', url)}
+                  imagenPublicId={form.imagen_public_id}
+                  onChange={(url, publicId) => {
+                    setForm(prev => ({
+                      ...prev,
+                      imagen_url: url,
+                      imagen_public_id: publicId !== undefined ? publicId : prev.imagen_public_id,
+                    }))
+                  }}
                 />
               </div>
 

@@ -1,29 +1,14 @@
 /**
  * 📁 UBICACIÓN: src/app/api/admin/marketing/upload-image/route.js
  * 📌 ENDPOINT: POST /api/admin/marketing/upload-image
- * 📖 DESCRIPCIÓN: Sube una imagen en formato Base64 a Supabase Storage (bucket 'public-images')
- *    y devuelve la URL pública persistente para ser utilizada en publicaciones de Instagram y archivo histórico.
+ * 📖 DESCRIPCIÓN: Sube una imagen en formato Base64 o Data URL directamente a Cloudinary
+ *    y devuelve la URL pública persistente y segura (res.cloudinary.com).
  */
 
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { sanitizeSupabaseUrl, DEFAULT_SUPABASE_ANON_KEY } from '@/lib/supabase'
+import { getCloudinaryClient } from '@/lib/cloudinary'
 
 export const dynamic = 'force-dynamic'
-
-const supabaseUrl = sanitizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL)
-// Preferir service role key para operaciones administrativas en Storage, con fallback seguro a anon key
-const supabaseKey =
-  (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY.trim()) ||
-  (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim()) ||
-  DEFAULT_SUPABASE_ANON_KEY
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-})
 
 export async function POST(req) {
   try {
@@ -37,68 +22,43 @@ export async function POST(req) {
       )
     }
 
-    // 1. Detectar tipo MIME (image/png, image/jpeg, image/webp) si viene como Data URL
-    let mimeType = 'image/jpeg'
-    const mimeMatch = image.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,/)
-    if (mimeMatch && mimeMatch[1]) {
-      mimeType = mimeMatch[1]
+    const cloudinary = getCloudinaryClient()
+
+    // Normalizar a Data URI si es Base64 plano
+    const dataUri = image.startsWith('data:') ? image : `data:image/jpeg;base64,${image}`
+
+    // Configurar opciones de subida en Cloudinary
+    const uploadOptions = {
+      folder: 'marketing',
+      resource_type: 'image',
     }
 
-    // Determinar extensión del archivo
-    let ext = 'jpg'
-    if (mimeType.includes('png')) ext = 'png'
-    else if (mimeType.includes('webp')) ext = 'webp'
-
-    // 2. Limpiar Base64 y convertir a Buffer binario
-    const base64Data = image.replace(/^data:image\/\w+;base64,/, '')
-    const buffer = Buffer.from(base64Data, 'base64')
-
-    // 3. Generar nombre de archivo único y seguro
-    const sanitizedFileName = fileName
-      ? fileName.replace(/[^a-zA-Z0-9._-]/g, '_')
-      : `product_${productId}_${Date.now()}.${ext}`
-
-    const filePath = `marketing/${sanitizedFileName}`
-
-    // 4. Subir a Supabase Storage bucket 'public-images'
-    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from('public-images')
-      .upload(filePath, buffer, {
-        contentType: mimeType,
-        upsert: true,
-      })
-
-    if (uploadError) {
-      console.error('Error al subir a Supabase Storage:', uploadError)
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Error al subir imagen a Supabase Storage: ${uploadError.message}`,
-        },
-        { status: 500 }
-      )
+    if (fileName) {
+      uploadOptions.public_id = fileName
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[^a-zA-Z0-9_-]/g, '_')
+    } else if (productId) {
+      uploadOptions.public_id = `product_${productId}_${Date.now()}`
     }
 
-    // 5. Obtener URL pública persistente
-    const { data: publicUrlData } = supabaseAdmin.storage
-      .from('public-images')
-      .getPublicUrl(filePath)
-
-    const publicUrl = publicUrlData?.publicUrl
+    // Subir a Cloudinary
+    const result = await cloudinary.uploader.upload(dataUri, uploadOptions)
 
     return NextResponse.json({
       success: true,
-      url: publicUrl,
-      path: filePath,
-      bucket: 'public-images',
-      size: buffer.length,
-      mimeType: mimeType,
+      url: result.secure_url,
+      public_id: result.public_id,
+      width: result.width,
+      height: result.height,
+      format: result.format,
+      bytes: result.bytes,
     })
   } catch (error) {
-    console.error('Error en upload-image route:', error)
+    console.error('Error en upload-image route (Cloudinary):', error)
     return NextResponse.json(
-      { success: false, error: error?.message || 'Error inesperado al procesar la imagen' },
+      { success: false, error: error?.message || 'Error inesperado al subir a Cloudinary' },
       { status: 500 }
     )
   }
 }
+
