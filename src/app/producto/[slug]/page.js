@@ -6,6 +6,7 @@
  */
 import { notFound } from 'next/navigation'
 import { supabase as supabaseServer } from '@/lib/supabase'
+import { normalizeProduct, resolveProductImageUrl } from '@/lib/image-utils'
 import PaginaProductoCliente from './ProductoCliente'
 
 const DOMINIO = 'https://panfree.fit'
@@ -33,6 +34,8 @@ export async function generateMetadata({ params }) {
       ? `${producto.descripcion} · ${formatPYG(producto.precio_venta)} · Delivery en Encarnación, Paraguay.`
       : `${producto.nombre} sin gluten · ${formatPYG(producto.precio_venta)} · Elaborado artesanalmente en Encarnación, Paraguay.`
 
+    const imagenValida = resolveProductImageUrl(producto)
+
     return {
       title       : titulo,
       description : desc,
@@ -43,15 +46,15 @@ export async function generateMetadata({ params }) {
         siteName   : 'PanFree — Panificados Sin Gluten',
         locale     : 'es_PY',
         type       : 'website',
-        images     : producto.imagen_url
-          ? [{ url: producto.imagen_url, width: 800, height: 800, alt: producto.nombre }]
+        images     : imagenValida
+          ? [{ url: imagenValida, width: 800, height: 800, alt: producto.nombre }]
           : [{ url: `${DOMINIO}/logopanfree.png`, width: 512, height: 512, alt: 'PanFree' }],
       },
       twitter: {
         card       : 'summary_large_image',
         title      : titulo,
         description: desc,
-        images     : producto.imagen_url ? [producto.imagen_url] : [`${DOMINIO}/logopanfree.png`],
+        images     : imagenValida ? [imagenValida] : [`${DOMINIO}/logopanfree.png`],
       },
     }
   } catch (err) {
@@ -95,10 +98,13 @@ export default async function PaginaProducto({ params }) {
       .neq('id', producto.id)
       .limit(4)
 
+    const productoNormalizado = normalizeProduct(producto)
+    const relacionadosNormalizados = (relacionados || []).map(normalizeProduct)
+
     return (
       <PaginaProductoCliente
-        producto={producto}
-        relacionados={relacionados || []}
+        producto={productoNormalizado}
+        relacionados={relacionadosNormalizados}
         disponible={disponible}
         requiereAnticipacion={requiereAnticipacion}
       />

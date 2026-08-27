@@ -12,6 +12,7 @@ const nextConfig = {
     serverComponentsExternalPackages: ['@axiomantic/llmlingua-2', '@huggingface/transformers', 'onnxruntime-node'],
   },
   images: {
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -20,8 +21,18 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'gbdrcaumghykiipqgbty.supabase.co',
-        pathname: '/storage/v1/object/public/**',
+        hostname: '**.supabase.co',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        pathname: '/**',
       },
     ],
   },

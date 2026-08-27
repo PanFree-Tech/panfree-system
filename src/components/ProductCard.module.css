@@ -4,6 +4,10 @@
  * - 60% Fondos: blanco (#ffffff) y crema (#fdfbf8)
  * - 30% Textos y bordes: verde bosque (#334c2b) y dorado sutil (#b7996b)
  * - 10% Acción: naranja (#f46e15) EXCLUSIVAMENTE para el botón de agregar
+ *
+ * OPTIMIZADO PARA MÓVIL:
+ * - Compatible con grilla de 2 columnas sin solapamientos
+ * - Badges y controles de compra con flexbox fluido
  */
 
 .card {
@@ -20,24 +24,78 @@
 }
 
 .card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(51, 76, 43, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(51, 76, 43, 0.1);
   border-color: #b7996b;
 }
 
-.badgeTopLeft {
+/* BADGES SUPERIORES */
+.badgesTopLeft {
   position: absolute;
   top: 8px;
   left: 8px;
   z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none;
+  max-width: 55%;
+}
+
+.badgeTopLeft {
   background-color: #334c2b;
   color: #eee6d9;
   font-size: 0.68rem;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 2px 7px;
   border-radius: 20px;
   border: 1px solid #b7996b;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  width: fit-content;
+  white-space: nowrap;
+}
+
+.promoBadge {
+  background-color: #dc2626;
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  width: fit-content;
+  white-space: nowrap;
+}
+
+.badgeTopRight {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #334c2b;
+  border: 1px solid #b7996b;
+  border-radius: 16px;
+  padding: 2px 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.badgeSinGlutenText {
+  color: #eee6d9;
+  font-size: 0.65rem;
+  fontWeight: 700;
+  letterSpacing: 0.3px;
+  text-transform: uppercase;
 }
 
 /* IMAGEN */
@@ -73,9 +131,28 @@
   background-color: #eee6d9;
 }
 
+.promoTimerOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(220, 38, 38, 0.92);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  backdrop-filter: blur(2px);
+  letter-spacing: 0.2px;
+  z-index: 5;
+}
+
 /* CUERPO */
 .body {
-  padding: 0.85rem;
+  padding: 0.75rem;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -83,12 +160,12 @@
 }
 
 .categoryBadge {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: #8f9a44;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.2rem;
   display: block;
 }
 
@@ -98,11 +175,11 @@
 }
 
 .title {
-  margin: 0 0 0.4rem 0;
-  font-size: 0.95rem;
+  margin: 0 0 0.3rem 0;
+  font-size: 0.92rem;
   font-weight: 600;
   color: #334c2b;
-  line-height: 1.3;
+  line-height: 1.25;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -111,22 +188,26 @@
 }
 
 .anticipacionNotice {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: #8f9a44;
   background-color: #f9f5f0;
-  padding: 3px 6px;
+  padding: 2px 6px;
   border-radius: 4px;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.35rem;
   font-weight: 600;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  width: fit-content;
 }
 
 /* PRECIO */
 .priceRow {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin: 0.4rem 0 0.6rem 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin: 0.35rem 0 0.5rem 0;
   padding-top: 0.35rem;
   border-top: 1px solid #f2ece3;
 }
@@ -134,45 +215,49 @@
 .priceContainer {
   display: flex;
   align-items: baseline;
-  gap: 3px;
-}
-
-.currencySymbol {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #334c2b;
+  flex-wrap: wrap;
+  gap: 5px;
+  width: 100%;
 }
 
 .priceAmount {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: #334c2b;
   letter-spacing: -0.3px;
+  line-height: 1.1;
 }
 
 .pricePromo {
+  font-size: 1.15rem;
+  font-weight: 900;
   color: #dc2626;
+  letter-spacing: -0.3px;
+  line-height: 1.1;
 }
 
 .oldPrice {
   text-decoration: line-through;
   color: #9ca3af;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  margin-left: 6px;
 }
 
-.promoBadge {
-  background-color: #dc2626;
-  color: #ffffff;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 20px;
-  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
+.savingsTag {
+  font-size: 0.68rem;
+  color: #991b1b;
+  font-weight: 800;
+  background-color: #fee2e2;
+  padding: 1px 5px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.unitMeasure {
+  font-size: 0.7rem;
+  color: #888;
+  font-weight: 500;
 }
 
 .priceAgotado {
@@ -181,7 +266,7 @@
 }
 
 .stockOutTag {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: #c62828;
   background-color: #fde8e8;
@@ -192,12 +277,14 @@
 /* ACCIONES */
 .actionRow {
   margin-top: auto;
+  width: 100%;
 }
 
 .purchaseControls {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.35rem;
   align-items: center;
+  width: 100%;
 }
 
 /* SELECTOR DE CANTIDAD */
@@ -207,18 +294,18 @@
   border: 1px solid #b7996b;
   border-radius: 6px;
   background-color: #fdfbf8;
-  height: 38px;
+  height: 36px;
   overflow: hidden;
   flex-shrink: 0;
 }
 
 .qtyButton {
-  width: 26px;
+  width: 24px;
   height: 100%;
   border: none;
   background: transparent;
   color: #334c2b;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
@@ -233,9 +320,9 @@
 }
 
 .qtyDisplay {
-  width: 22px;
+  width: 20px;
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #334c2b;
 }
@@ -243,14 +330,15 @@
 /* BOTÓN CTA EXCLUSIVO NARANJA #f46e15 */
 .addToCartBtn {
   flex: 1;
-  height: 38px;
-  min-height: 38px;
+  min-width: 0;
+  height: 36px;
+  min-height: 36px;
   background-color: #f46e15;
   color: #ffffff;
   border: none;
   border-radius: 6px;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-family: inherit;
   cursor: pointer;
   display: flex;
@@ -259,7 +347,7 @@
   gap: 4px;
   box-shadow: 0 2px 6px rgba(244, 110, 21, 0.25);
   transition: background-color 0.2s ease, transform 0.15s ease;
-  padding: 0 0.5rem;
+  padding: 0 6px;
   white-space: nowrap;
 }
 
@@ -279,13 +367,14 @@
 
 .whatsappOrderBtn {
   width: 100%;
-  height: 38px;
+  height: 36px;
+  min-height: 36px;
   background-color: #2e7d32;
   color: #ffffff;
   border: none;
   border-radius: 6px;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -298,38 +387,71 @@
   opacity: 0.9;
 }
 
-/* RESPONSIVE MOBILE */
+/* RESPONSIVE MOBILE (PANTALLAS PEQUEÑAS Y 2 COLUMNAS) */
 @media (max-width: 480px) {
   .body {
-    padding: 0.65rem;
+    padding: 0.55rem;
   }
 
   .title {
-    font-size: 0.88rem;
+    font-size: 0.82rem;
+    line-height: 1.2;
     min-height: 2.4em;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.2rem;
   }
 
-  .priceAmount {
-    font-size: 1.1rem;
+  .priceAmount,
+  .pricePromo {
+    font-size: 0.98rem;
   }
 
-  .addToCartBtn {
-    font-size: 0.78rem;
-    height: 36px;
-    min-height: 36px;
+  .oldPrice {
+    font-size: 0.72rem;
+  }
+
+  .savingsTag {
+    font-size: 0.62rem;
   }
 
   .qtyBox {
-    height: 36px;
+    height: 32px;
   }
 
   .qtyButton {
-    width: 22px;
+    width: 18px;
+    font-size: 0.85rem;
   }
 
   .qtyDisplay {
-    width: 18px;
-    font-size: 0.8rem;
+    width: 16px;
+    font-size: 0.75rem;
+  }
+
+  .addToCartBtn {
+    height: 32px;
+    min-height: 32px;
+    font-size: 0.75rem;
+    padding: 0 4px;
+    gap: 3px;
+  }
+
+  .whatsappOrderBtn {
+    height: 32px;
+    min-height: 32px;
+    font-size: 0.75rem;
+  }
+
+  .badgeTopLeft,
+  .promoBadge {
+    font-size: 0.6rem;
+    padding: 2px 5px;
+  }
+
+  .badgeTopRight {
+    padding: 2px 5px;
+  }
+
+  .badgeSinGlutenText {
+    font-size: 0.58rem;
   }
 }
