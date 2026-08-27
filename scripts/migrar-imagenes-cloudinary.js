@@ -3,7 +3,6 @@
  * 
  * Uso:
  *   node scripts/migrar-imagenes-cloudinary.js
- *   o mediante npm: npm run migrar-imagenes
  * 
  * Requisitos:
  *   Variables de entorno definidas en .env.local o entorno:
@@ -17,13 +16,21 @@
 const { createClient } = require('@supabase/supabase-js');
 const { v2: cloudinary } = require('cloudinary');
 
-// Cargar variables de entorno si existe dotenv
-try {
-  require('dotenv').config({ path: '.env.local' });
-  require('dotenv').config({ path: '.env' });
-} catch (e) {
-  // dotenv opcional
-}
+// Cargar variables de entorno
+require('dotenv').config({ path: '.env.local' });
+require('dotenv').config({ path: '.env' });
+
+// =====================================================
+// ⚠️ ESTA SECCIÓN ES SOLO PARA PRUEBAS LOCALES.
+// REEMPLAZA LOS VALORES CON TUS KEYS REALES.
+// =====================================================
+process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://gbdrcaumghykiipqgbty.supabase.co';
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjczNjIsImV4cCI6MjA4NzgwMzM2Mn0.OydRQxa51Ql42zvscWnQkEKJuU_3yeCS4qPQQoP6TuM';
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjIyNzM2MiwiZXhwIjoyMDg3ODAzMzYyfQ.EH97qcovn21hWpqdu196z54lcLQ2epAiHrC-pqDZsGY';
+process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME = 'd7simx38';
+process.env.CLOUDINARY_API_KEY = '485388826873525';
+process.env.CLOUDINARY_API_SECRET = 'ry5BfvM_YZqmjbhqnNHKqIkkKqk';
+// =====================================================
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -102,10 +109,11 @@ async function migrarImagenes() {
 
         console.log(`   ✓ Subida exitosa a Cloudinary. public_id: ${publicId}`);
 
-        // Actualizar el registro en Supabase conservando imagen_url
+        // Actualizar el registro en Supabase
         const { error: updateError } = await supabase
           .from('productos')
           .update({
+            imagen_url: uploadResult.secure_url, // ← ¡AHORA SÍ GUARDAMOS LA URL DE CLOUDINARY!
             imagen_public_id: publicId,
           })
           .eq('id', prod.id);
