@@ -10,6 +10,93 @@ import { supabase } from '../../../../lib/supabase'
 export const formatGs = (n) => `Gs. ${Number(n || 0).toLocaleString('es-PY')}`
 
 /**
+ * Parsea cualquier formato de fecha de Supabase/PostgreSQL a un objeto Date válido
+ */
+export function parseFechaPromo(val) {
+  if (!val) return null
+  if (val instanceof Date) return isNaN(val.getTime()) ? null : val
+  if (typeof val === 'number') {
+    const d = new Date(val)
+    return isNaN(d.getTime()) ? null : d
+  }
+  if (typeof val === 'string') {
+    let s = val.trim()
+    if (!s) return null
+    if (s.includes(' ') && !s.includes('T')) {
+      s = s.replace(' ', 'T')
+    }
+    s = s.replace(/([+-]\d{2})$/, '$1:00')
+    const d = new Date(s)
+    if (!isNaN(d.getTime())) return d
+
+    const fallback = new Date(val)
+    if (!isNaN(fallback.getTime())) return fallback
+  }
+  return null
+}
+
+/**
+ * Convierte una fecha ISO UTC a string 'YYYY-MM-DDTHH:mm' en la hora LOCAL para <input type="datetime-local">
+ */
+export function dateToLocalInputValue(val) {
+  if (!val) return ''
+  const d = parseFechaPromo(val)
+  if (!d) return ''
+  const pad = (n) => String(n).padStart(2, '0')
+  const y = d.getFullYear()
+  const m = pad(d.getMonth() + 1)
+  const day = pad(d.getDate())
+  const h = pad(d.getHours())
+  const min = pad(d.getMinutes())
+  return `${y}-${m}-${day}T${h}:${min}`
+}
+
+/**
+ * Convierte el valor de un <input type="datetime-local"> a string ISO UTC estándar para Supabase
+ */
+export function localInputValueToIso(val) {
+  if (!val) return null
+  const d = new Date(val)
+  if (isNaN(d.getTime())) return null
+  return d.toISOString()
+}
+
+/**
+ * Determina el estado temporal de una promoción de manera consistente
+ */
+export function getEstadoPromo(producto) {
+  if (!producto) {
+    return { activa: false, estado: 'inactiva', label: null, color: '#6b7280', bg: '#f3f4f6' }
+  }
+
+  const enPromo = producto.en_promocion === true || producto.en_promocion === 'true' || producto.en_promocion === 1
+  const precioBase = Number(producto.precio_venta ?? producto.precio ?? 0)
+  const precioPromo = Number(producto.precio_promocion ?? 0)
+
+  if (!enPromo || precioPromo <= 0) {
+    return { activa: false, estado: 'inactiva', label: null, color: '#6b7280', bg: '#f3f4f6' }
+  }
+
+  const nowMs = Date.now()
+
+  if (producto.fecha_inicio_promo) {
+    const inicio = parseFechaPromo(producto.fecha_inicio_promo)
+    if (inicio && nowMs < inicio.getTime()) {
+      return { activa: false, estado: 'programada', label: '⏰ Programada', color: '#b45309', bg: '#fef3c7' }
+    }
+  }
+
+  if (producto.fecha_fin_promo) {
+    const fin = parseFechaPromo(producto.fecha_fin_promo)
+    if (fin && nowMs > fin.getTime()) {
+      return { activa: false, estado: 'vencida', label: '⌛ Vencida', color: '#4b5563', bg: '#e5e7eb' }
+    }
+  }
+
+  return { activa: true, estado: 'activa', label: '🔥 Oferta Activa', color: '#dc2626', bg: '#fee2e2' }
+}
+
+/**
  * 📁 src/app/admin/productos/components/PromocionForm.jsx
  * Componente modular para administrar promociones de productos.
  * Soporta dos modos:
@@ -56,8 +143,8 @@ export default function PromocionForm({
     if (isStandalone && currentProd) {
       setLocalEnPromo(!!currentProd.en_promocion)
       setLocalPrecioPromo(currentProd.precio_promocion ? String(currentProd.precio_promocion) : '')
-      setLocalFechaInicio(currentProd.fecha_inicio_promo ? currentProd.fecha_inicio_promo.slice(0, 16) : '')
-      setLocalFechaFin(currentProd.fecha_fin_promo ? currentProd.fecha_fin_promo.slice(0, 16) : '')
+      setLocalFechaInicio(dateToLocalInputValue(currentProd.fecha_inicio_promo))
+      setLocalFechaFin(dateToLocalInputValue(currentProd.fecha_fin_promo))
       setMensajeExito(null)
       setErrorMsg(null)
     }
@@ -184,8 +271,8 @@ export default function PromocionForm({
       const payload = {
         en_promocion: !!enPromocion,
         precio_promocion: enPromocion && precioPromocion ? Number(precioPromocion) : null,
-        fecha_inicio_promo: enPromocion && fechaInicioPromo ? new Date(fechaInicioPromo).toISOString() : null,
-        fecha_fin_promo: enPromocion && fechaFinPromo ? new Date(fechaFinPromo).toISOString() : null,
+        fecha_inicio_promo: enPromocion && fechaInicioPromo ? localInputValueToIso(fechaInicioPromo) : null,
+        fecha_fin_promo: enPromocion && fechaFinPromo ? localInputValueToIso(fechaFinPromo) : null,
         updated_at: new Date().toISOString(),
       }
 
