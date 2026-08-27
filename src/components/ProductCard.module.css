@@ -150,6 +150,31 @@
   letter-spacing: -0.3px;
 }
 
+.pricePromo {
+  color: #dc2626;
+}
+
+.oldPrice {
+  text-decoration: line-through;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.promoBadge {
+  background-color: #dc2626;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
 .priceAgotado {
   color: #999;
   text-decoration: line-through;

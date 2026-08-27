@@ -22,10 +22,12 @@ import {
   AlertTriangle,
   Loader2,
   Save,
+  Tag,
 } from 'lucide-react'
 import { supabase } from '../../../lib/supabase'
 import { S, COLORS } from '../_styles'
 import { formatPYG } from '../lib/helpers'
+import PromocionForm from './components/PromocionForm'
 
 const CATEGORIAS = ['panes', 'dulces', 'salados', 'eventos']
 const UNIDADES   = ['unidad', 'kg', 'docena', 'pack']
@@ -35,6 +37,8 @@ const FORM_VACIO = {
   precio_venta: '', precio_mayorista: '', stock_actual: 0,
   stock_minimo: 5, unidad_medida: 'unidad', imagen_url: '',
   imagen_alt: '', imagenes_urls: [],
+  en_promocion: false, precio_promocion: '',
+  fecha_inicio_promo: '', fecha_fin_promo: '',
   is_active: true, is_featured: false, disponible_delivery: true,
 }
 
@@ -364,6 +368,10 @@ export default function PaginaProductos() {
         categoria:           form.categoria,
         precio_venta:        Number(form.precio_venta),
         precio_mayorista:    form.precio_mayorista ? Number(form.precio_mayorista) : null,
+        en_promocion:        !!form.en_promocion,
+        precio_promocion:    form.en_promocion && form.precio_promocion ? Number(form.precio_promocion) : null,
+        fecha_inicio_promo:  form.en_promocion && form.fecha_inicio_promo ? new Date(form.fecha_inicio_promo).toISOString() : null,
+        fecha_fin_promo:     form.en_promocion && form.fecha_fin_promo ? new Date(form.fecha_fin_promo).toISOString() : null,
         stock_actual:        Number(form.stock_actual) || 0,
         stock_minimo:        Number(form.stock_minimo) || 5,
         unidad_medida:       form.unidad_medida,
@@ -481,9 +489,26 @@ export default function PaginaProductos() {
                               <Star size={12} /> Destacado
                             </span>
                           )}
+                          {p.en_promocion && p.precio_promocion && (
+                            <span style={{ marginLeft: '0.4rem', fontSize: '0.75rem', backgroundColor: '#fee2e2', color: '#dc2626', padding: '0.1rem 0.4rem', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '0.2rem', fontWeight: 700 }}>
+                              <Tag size={12} /> Oferta
+                            </span>
+                          )}
                         </td>
                         <td style={S.td}>{p.categoria}</td>
-                        <td style={S.td}><strong>{formatPYG(p.precio_venta)}</strong></td>
+                        <td style={S.td}>
+                          {p.en_promocion && p.precio_promocion ? (
+                            <div>
+                              <strong style={{ color: '#dc2626' }}>{formatPYG(p.precio_promocion)}</strong>
+                              <br />
+                              <span style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: '0.8rem' }}>
+                                {formatPYG(p.precio_venta)}
+                              </span>
+                            </div>
+                          ) : (
+                            <strong>{formatPYG(p.precio_venta)}</strong>
+                          )}
+                        </td>
                         <td style={{ ...S.td, color: p.stock_actual <= p.stock_minimo ? '#c62828' : '#333' }}>
                           {p.stock_actual} {p.unidad_medida}
                           {p.stock_actual <= p.stock_minimo && <AlertTriangle size={14} color="#c62828" style={{ display: 'inline', marginLeft: '0.3rem', verticalAlign: 'middle' }} />}
@@ -604,6 +629,21 @@ export default function PaginaProductos() {
               <div>
                 <label style={S.label}>Precio mayorista (₲)</label>
                 <input style={S.input} type="number" value={form.precio_mayorista || ''} onChange={e => cambiarCampo('precio_mayorista', e.target.value)} placeholder="22000" />
+              </div>
+
+              {/* Oferta y Promoción */}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <PromocionForm
+                  enPromocion={!!form.en_promocion}
+                  setEnPromocion={val => cambiarCampo('en_promocion', val)}
+                  precioPromocion={form.precio_promocion || ''}
+                  setPrecioPromocion={val => cambiarCampo('precio_promocion', val)}
+                  precioBase={form.precio_venta}
+                  fechaInicioPromo={form.fecha_inicio_promo ? form.fecha_inicio_promo.slice(0, 16) : ''}
+                  setFechaInicioPromo={val => cambiarCampo('fecha_inicio_promo', val)}
+                  fechaFinPromo={form.fecha_fin_promo ? form.fecha_fin_promo.slice(0, 16) : ''}
+                  setFechaFinPromo={val => cambiarCampo('fecha_fin_promo', val)}
+                />
               </div>
 
               {/* Stock actual */}

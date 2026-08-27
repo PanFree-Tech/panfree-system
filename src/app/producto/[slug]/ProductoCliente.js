@@ -184,9 +184,28 @@ export default function PaginaProductoCliente({ producto, relacionados, disponib
 
   const sinStock = !disponible
 
+  const precioUnitario = (producto.en_promocion && producto.precio_promocion)
+    ? Number(producto.precio_promocion)
+    : Number(producto.precio_venta || producto.precio || 0)
+
+  const descuentoPorcentaje = (producto.en_promocion && producto.precio_promocion && producto.precio_venta)
+    ? Math.round((1 - Number(producto.precio_promocion) / Number(producto.precio_venta)) * 100)
+    : 0
+
   function handleAgregar() {
     if (sinStock) return
-    for (let i = 0; i < cantidad; i++) agregarAlCarrito(producto)
+    agregarAlCarrito({
+      id: producto.id || producto.slug || Date.now().toString(),
+      nombre: producto.nombre,
+      precio_venta: precioUnitario,
+      precio_original: Number(producto.precio_venta || producto.precio || 0),
+      en_promocion: !!(producto.en_promocion && producto.precio_promocion),
+      imagen_url: producto.imagen_url || (Array.isArray(producto.imagenes_urls) ? producto.imagenes_urls[0] : '') || '',
+      cantidad,
+      subtotal: precioUnitario * cantidad,
+      categoria: producto.categoria || '',
+      unidad_medida: producto.unidad_medida || null,
+    })
     setAgregado(true)
     setTimeout(() => setAgregado(false), 2000)
   }
@@ -221,6 +240,11 @@ export default function PaginaProductoCliente({ producto, relacionados, disponib
           />
           {/* Badges sobre el carrusel */}
           <div style={{ position: 'absolute', top: '1rem', left: '1rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', zIndex: 3 }}>
+            {producto.en_promocion && producto.precio_promocion && (
+              <span style={{ backgroundColor: '#dc2626', color: '#fff', padding: '0.3rem 0.7rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.3rem', boxShadow: '0 2px 6px rgba(220,38,38,0.35)' }}>
+                🔥 OFERTA -{descuentoPorcentaje}%
+              </span>
+            )}
             {producto.is_featured && (
               <span style={{ backgroundColor: '#f46e15', color: '#fff', padding: '0.3rem 0.7rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
                 <Star size={14} fill="currentColor" /> Destacado
@@ -244,9 +268,20 @@ export default function PaginaProductoCliente({ producto, relacionados, disponib
           </h1>
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 'clamp(1.6rem, 5vw, 2.2rem)', fontWeight: 800, color: '#f46e15' }}>
-              {formatPYG(producto.precio_venta)}
-            </span>
+            {producto.en_promocion && producto.precio_promocion ? (
+              <>
+                <span style={{ fontSize: 'clamp(1.6rem, 5vw, 2.2rem)', fontWeight: 800, color: '#dc2626' }}>
+                  {formatPYG(producto.precio_promocion)}
+                </span>
+                <span style={{ fontSize: '1.1rem', color: '#9ca3af', textDecoration: 'line-through', fontWeight: 600 }}>
+                  {formatPYG(producto.precio_venta)}
+                </span>
+              </>
+            ) : (
+              <span style={{ fontSize: 'clamp(1.6rem, 5vw, 2.2rem)', fontWeight: 800, color: '#f46e15' }}>
+                {formatPYG(producto.precio_venta)}
+              </span>
+            )}
             {producto.unidad_medida && producto.unidad_medida !== 'unidad' && (
               <span style={{ fontSize: '0.9rem', color: '#888' }}>por {producto.unidad_medida}</span>
             )}

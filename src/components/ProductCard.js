@@ -39,11 +39,15 @@ export default function ProductCard({
     e?.stopPropagation?.()
     if (agotado || !producto) return
 
-    const precioVenta = producto.precio_venta ?? producto.precio ?? 0
+    const precioVenta = (producto.en_promocion && producto.precio_promocion)
+      ? Number(producto.precio_promocion)
+      : (producto.precio_venta ?? producto.precio ?? 0)
     const payload = {
       id: producto.id || producto.slug || Date.now().toString(),
       nombre: producto.nombre,
       precio_venta: precioVenta,
+      precio_original: producto.precio_venta ?? producto.precio ?? 0,
+      en_promocion: !!(producto.en_promocion && producto.precio_promocion),
       imagen_url: producto.imagen_url || '',
       cantidad,
       subtotal: precioVenta * cantidad,
@@ -90,7 +94,7 @@ export default function ProductCard({
       role="article"
       aria-labelledby={`product-title-${productId}`}
     >
-      {/* Badges superiores: Destacado (izquierda) */}
+      {/* Badges superiores: Destacado y Promoción (izquierda) */}
       <div
         style={{
           position: 'absolute',
@@ -108,6 +112,11 @@ export default function ProductCard({
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <Star size={13} fill="currentColor" /> Destacado
             </span>
+          </div>
+        )}
+        {producto.en_promocion && producto.precio_promocion && (
+          <div className={styles.promoBadge}>
+            🔥 -{Math.round((1 - Number(producto.precio_promocion) / Number(producto.precio_venta || producto.precio || 1)) * 100)}%
           </div>
         )}
       </div>
@@ -199,9 +208,20 @@ export default function ProductCard({
         <div className={styles.priceRow}>
           <div className={styles.priceContainer}>
             <span className={styles.currencySymbol}>₲</span>
-            <span className={`${styles.priceAmount} ${agotado ? styles.priceAgotado : ''}`}>
-              {precioFormateado}
-            </span>
+            {producto.en_promocion && producto.precio_promocion ? (
+              <>
+                <span className={`${styles.priceAmount} ${styles.pricePromo} ${agotado ? styles.priceAgotado : ''}`}>
+                  {Number(producto.precio_promocion).toLocaleString('es-PY')}
+                </span>
+                <span className={styles.oldPrice}>
+                  ₲ {Number(producto.precio_venta || producto.precio || 0).toLocaleString('es-PY')}
+                </span>
+              </>
+            ) : (
+              <span className={`${styles.priceAmount} ${agotado ? styles.priceAgotado : ''}`}>
+                {precioFormateado}
+              </span>
+            )}
             {/* 👇 NUEVO: mostrar unidad de medida si existe y no es 'unidad' */}
             {producto.unidad_medida && producto.unidad_medida !== 'unidad' && (
               <span style={{
