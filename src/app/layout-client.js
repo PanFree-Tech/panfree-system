@@ -269,6 +269,10 @@ function Header() {
           <a href="/" className="header-social-desktop" style={{ color: '#334c2b', fontWeight: '700', fontSize: '0.92rem', padding: '0.4rem 0.6rem', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', minHeight: '44px' }}>
             Catálogo
           </a>
+          {/* Club PanFree y Dípticos */}
+          <a href="/canjear" className="header-social-desktop" style={{ color: '#f46e15', fontWeight: '700', fontSize: '0.92rem', padding: '0.4rem 0.6rem', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', minHeight: '44px' }}>
+            🎁 Club & Dípticos
+          </a>
           {/* UserGreeting */}
           <UserGreeting />
           {/* Botón Carrito Header */}
@@ -439,6 +443,15 @@ function Footer() {
               onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
             >
               Sobre Nosotros
+            </a>
+            {/* Club PanFree y Canje */}
+            <a
+              href="/canjear"
+              style={{ color: '#b7996b', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseOver={e => e.currentTarget.style.color = '#eee6d9'}
+              onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
+            >
+              🎁 Canjear Díptico
             </a>
             {/* NUEVO: Certificado Oficial */}
             <a
