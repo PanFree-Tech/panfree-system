@@ -33,7 +33,8 @@ import {
   CheckCircle,
   XCircle,
   CreditCard,
-  Sparkles
+  Sparkles,
+  Tag
 } from 'lucide-react'
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -294,6 +295,13 @@ export default function PaginaCheckout() {
   const [calculandoEnvio, setCalculandoEnvio] = useState(false)
   const [errorDelivery,   setErrorDelivery]   = useState(null)
   
+  // ── Estados de Cupones y Promociones ───────────────────────────────────────
+  const [codigoCupon,       setCodigoCupon]       = useState('')
+  const [cuponAplicado,     setCuponAplicado]     = useState(null)
+  const [descuentoAplicado, setDescuentoAplicado] = useState(0)
+  const [aplicandoCupon,    setAplicandoCupon]    = useState(false)
+  const [mensajeCupon,      setMensajeCupon]      = useState(null)
+
   const debounceRef = useRef(null)
   
   const costoDelivery = (() => {
@@ -302,8 +310,58 @@ export default function PaginaCheckout() {
     return 0
   })()
   
-  const totalFinal = total + costoDelivery
+  const subtotalConDescuento = Math.max(0, total - descuentoAplicado)
+  const totalFinal = subtotalConDescuento + costoDelivery
   const items = carrito
+
+  // ── Aplicar o remover cupón ────────────────────────────────────────────────
+  const manejarAplicarCupon = async (e) => {
+    e?.preventDefault?.()
+    if (!codigoCupon.trim()) return
+    setAplicandoCupon(true)
+    setMensajeCupon(null)
+    try {
+      const res = await fetch('/api/cupones/validar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          codigo: codigoCupon.trim(),
+          clienteId: usuario?.id || null,
+          subtotal: total,
+        }),
+      })
+      const data = await res.json()
+      if (data.valido) {
+        setDescuentoAplicado(data.descuento)
+        setCuponAplicado(data.cupon)
+        setMensajeCupon({
+          type: 'success',
+          text: `Cupón ${data.cupon.codigo} aplicado: -${formatPYG(data.descuento)}`
+        })
+      } else {
+        setDescuentoAplicado(0)
+        setCuponAplicado(null)
+        setMensajeCupon({
+          type: 'error',
+          text: data.mensaje || 'Cupón no válido'
+        })
+      }
+    } catch (err) {
+      setMensajeCupon({
+        type: 'error',
+        text: 'Error de conexión al validar el cupón'
+      })
+    } finally {
+      setAplicandoCupon(false)
+    }
+  }
+
+  const manejarQuitarCupon = () => {
+    setCodigoCupon('')
+    setDescuentoAplicado(0)
+    setCuponAplicado(null)
+    setMensajeCupon(null)
+  }
 
   // GA4: begin_checkout — una sola vez, cuando el usuario llega con productos
   useEffect(() => {
@@ -491,6 +549,8 @@ export default function PaginaCheckout() {
         : null
       
       console.log('📌 3. Creando pedido...')
+      const puntosGanados = Math.floor(totalFinal / 1000)
+
       const { data: pedidoDB, error: errPedido } = await supabase
         .from('pedidos')
         .insert({
@@ -503,6 +563,10 @@ export default function PaginaCheckout() {
           entrega_lat:           deliveryInfo?.lat            || null,
           entrega_lng:           deliveryInfo?.lng            || null,
           subtotal:              total,
+          cupon_codigo:          cuponAplicado?.codigo        || null,
+          descuento_monto:       descuentoAplicado            || 0,
+          puntos_ganados:        puntosGanados,
+          puntos_usados:         0,
           total_final:           totalFinal,
           estado_pago:           'pendiente',
           metodo_pago:           metodoPago,
@@ -518,6 +582,51 @@ export default function PaginaCheckout() {
       
       const numeroPedido = pedidoDB.numero_pedido
       console.log('✅ Pedido creado:', numeroPedido)
+
+      // Registrar canje de cupón si aplica
+      if (cuponAplicado && descuentoAplicado > 0) {
+        try {
+          await supabase.from('cupones_canjeados').insert({
+            cupon_id: cuponAplicado.id,
+            cliente_id: clienteId,
+            pedido_id: pedidoDB.id,
+            descuento_obtenido: descuentoAplicado,
+          })
+          const { data: cData } = await supabase
+            .from('cupones_descuento')
+            .select('usos_actuales')
+            .eq('id', cuponAplicado.id)
+            .single()
+          await supabase
+            .from('cupones_descuento')
+            .update({ usos_actuales: (cData?.usos_actuales || 0) + 1 })
+            .eq('id', cuponAplicado.id)
+        } catch (cErr) {
+          console.warn('⚠️ No se pudo registrar canje de cupón:', cErr)
+        }
+      }
+
+      // Actualizar puntos de fidelidad del cliente
+      try {
+        const { data: cInfo } = await supabase
+          .from('clientes')
+          .select('puntos_fidelidad')
+          .eq('id', clienteId)
+          .single()
+        const nuevosPuntos = (cInfo?.puntos_fidelidad || 0) + puntosGanados
+        let nivelCliente = 'bronce'
+        if (nuevosPuntos >= 5000) nivelCliente = 'vip'
+        else if (nuevosPuntos >= 1500) nivelCliente = 'oro'
+        else if (nuevosPuntos >= 500) nivelCliente = 'plata'
+
+        await supabase.from('clientes').update({
+          puntos_fidelidad: nuevosPuntos,
+          nivel_cliente: nivelCliente,
+        }).eq('id', clienteId)
+      } catch (fErr) {
+        console.warn('⚠️ No se pudo actualizar puntos de fidelidad:', fErr)
+      }
+
       console.log('📌 4. Creando detalle del pedido...')
       
       const detalles = items.map(item => ({
@@ -669,6 +778,12 @@ export default function PaginaCheckout() {
               <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', fontSize: '0.88rem', marginBottom: '0.25rem' }}>
                 <span>Subtotal</span><span>{formatPYG(total)}</span>
               </div>
+              {descuentoAplicado > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#2e7d32', fontSize: '0.88rem', marginBottom: '0.25rem', fontWeight: '600' }}>
+                  <span>Descuento cupón ({cuponAplicado?.codigo})</span>
+                  <span>-{formatPYG(descuentoAplicado)}</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', fontSize: '0.88rem', marginBottom: '0.25rem' }}>
                 <span>Envío</span>
                 <span style={{ color: costoDelivery === 0 && metodoEntrega === 'delivery' ? '#2e7d32' : '#333' }}>
@@ -688,6 +803,92 @@ export default function PaginaCheckout() {
                 <span style={{ color: '#f46e15' }}>{formatPYG(totalFinal)}</span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* ── Cupón de Descuento ── */}
+        <div style={S.card}>
+          <div style={{ ...S.head, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Tag size={18} /> ¿Tenés un cupón de descuento?
+          </div>
+          <div style={S.body}>
+            {!cuponAplicado ? (
+              <form onSubmit={manejarAplicarCupon} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <input
+                  style={{
+                    ...S.input,
+                    marginBottom: 0,
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    fontWeight: 700,
+                    fontFamily: 'monospace'
+                  }}
+                  type="text"
+                  placeholder="Ej: BIENVENIDO10"
+                  value={codigoCupon}
+                  onChange={e => setCodigoCupon(e.target.value.toUpperCase())}
+                  disabled={aplicandoCupon}
+                />
+                <button
+                  type="submit"
+                  disabled={aplicandoCupon || !codigoCupon.trim()}
+                  style={{
+                    ...S.btnNaranja,
+                    width: 'auto',
+                    minWidth: '100px',
+                    minHeight: '42px',
+                    padding: '0 1.2rem',
+                    fontSize: '0.88rem',
+                    opacity: aplicandoCupon || !codigoCupon.trim() ? 0.6 : 1
+                  }}
+                >
+                  {aplicandoCupon ? 'Validando…' : 'Aplicar'}
+                </button>
+              </form>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#e8f5e9', border: '1px solid #c8e6c9', borderRadius: '6px', padding: '0.75rem 1rem' }}>
+                <div>
+                  <div style={{ fontWeight: 700, color: '#2e7d32', fontSize: '0.92rem' }}>
+                    ✅ Cupón: {cuponAplicado.codigo}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#388e3c' }}>
+                    {cuponAplicado.tipo_descuento === 'porcentaje'
+                      ? `${cuponAplicado.valor_descuento}% de descuento aplicado (-${formatPYG(descuentoAplicado)})`
+                      : `Descuento fijo de -${formatPYG(descuentoAplicado)}`}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={manejarQuitarCupon}
+                  style={{
+                    background: 'none',
+                    border: '1px solid #c62828',
+                    color: '#c62828',
+                    borderRadius: '4px',
+                    padding: '0.3rem 0.6rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Quitar
+                </button>
+              </div>
+            )}
+
+            {mensajeCupon && !cuponAplicado && (
+              <div style={{
+                marginTop: '0.6rem',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '6px',
+                fontSize: '0.82rem',
+                backgroundColor: mensajeCupon.type === 'error' ? '#fde8e8' : '#e8f5e9',
+                color: mensajeCupon.type === 'error' ? '#c62828' : '#2e7d32',
+                border: `1px solid ${mensajeCupon.type === 'error' ? '#fca5a5' : '#a7f3d0'}`
+              }}>
+                {mensajeCupon.text}
+              </div>
+            )}
           </div>
         </div>
         <div style={S.card}>
