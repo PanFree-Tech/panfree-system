@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import {
   ShoppingCart,
@@ -10,14 +10,14 @@ import {
   Star,
   Clock,
   WheatOff,
-  Tag,
   Timer,
 } from 'lucide-react'
 import styles from './ProductCard.module.css'
 import { useCart } from '../context/CartContext'
 import { useAnalytics } from '../hooks/useAnalytics'
+import { resolveProductImageUrl } from '@/lib/image-utils'
 
-const formatGs = (n) => `Gs. ${Number(n || 0).toLocaleString('es-PY')}`
+export const formatGs = (n) => `Gs. ${Number(n || 0).toLocaleString('es-PY')}`
 
 /**
  * Parsea cualquier formato de fecha de Supabase/PostgreSQL a un objeto Date válido
@@ -85,6 +85,7 @@ export default function ProductCard({
 }) {
   const [cantidad, setCantidad] = useState(1)
   const [isAdded, setIsAdded] = useState(false)
+  const [imgError, setImgError] = useState(false)
   const [tiempoRestante, setTiempoRestante] = useState(null)
   const [promoActiva, setPromoActiva] = useState(() => checkPromoActiva(producto))
 
@@ -100,7 +101,7 @@ export default function ProductCard({
 
   // Temporizador en tiempo real para promociones con fecha_fin_promo
   useEffect(() => {
-    if (!producto?.en_promocion || !producto?.precio_promocion) {
+    if (!producto || !checkPromoActiva(producto)) {
       setPromoActiva(false)
       setTiempoRestante(null)
       return
@@ -133,7 +134,7 @@ export default function ProductCard({
 
         const dias = Math.floor(distancia / (1000 * 60 * 60 * 24))
         const horas = Math.floor((distancia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        const minutos = Math.floor((distancia % (1000 * 60 * 60)) / (1000 * 60))
+        const minutos = Math.floor((distancia % (1000 * 60)) / (1000 * 60))
         const segundos = Math.floor((distancia % (1000 * 60)) / 1000)
 
         if (dias > 0) {
@@ -153,8 +154,16 @@ export default function ProductCard({
     return () => clearInterval(intervalo)
   }, [producto])
 
-  const agotado = !disponible
+  if (!producto) return null
 
+  const esDestacado = Boolean(
+    producto.is_featured === true ||
+    producto.is_featured === 'true' ||
+    producto.destacado === true ||
+    producto.destacado === 'true'
+  )
+
+  const agotado = !disponible
   const precioBase = Number(producto?.precio_venta ?? producto?.precio ?? 0)
   const precioPromo = Number(producto?.precio_promocion ?? 0)
   const precioFinal = promoActiva ? precioPromo : precioBase
@@ -162,58 +171,52 @@ export default function ProductCard({
   const porcentajeDescuento =
     promoActiva && precioBase > 0 ? Math.round((1 - precioPromo / precioBase) * 100) : 0
 
-  const manejarAgregar = useCallback(
-    (e) => {
-      e?.preventDefault?.()
-      e?.stopPropagation?.()
-      if (agotado || !producto) return
+  const manejarAgregar = (e) => {
+    e?.preventDefault?.()
+    e?.stopPropagation?.()
+    if (agotado || !producto) return
 
-      const payload = {
-        id: producto.id || producto.slug || Date.now().toString(),
-        nombre: producto.nombre,
-        precio_venta: precioFinal,
-        precio_original: precioBase,
-        en_promocion: promoActiva,
-        imagen_url: producto.imagen_url || '',
-        cantidad,
-        subtotal: precioFinal * cantidad,
-        categoria: producto.categoria || '',
-        unidad_medida: producto.unidad_medida || null,
-      }
+    const payload = {
+      id: producto.id || producto.slug || Date.now().toString(),
+      nombre: producto.nombre,
+      precio_venta: precioFinal,
+      precio_original: precioBase,
+      en_promocion: promoActiva,
+      imagen_url: imagenValida || '',
+      cantidad,
+      subtotal: precioFinal * cantidad,
+      categoria: producto.categoria || '',
+      unidad_medida: producto.unidad_medida || null,
+    }
 
-      agregarAlCarrito(payload)
-      onAddToCart?.(payload)
-      trackAddToCart(producto, cantidad)
-      showToast?.(`${producto.nombre} agregado al carrito`)
-      setIsAdded(true)
-      setTimeout(() => setIsAdded(false), 1400)
-      setCantidad(1)
-    },
-    [agotado, producto, precioFinal, precioBase, promoActiva, cantidad, agregarAlCarrito, onAddToCart, trackAddToCart, showToast]
-  )
+    agregarAlCarrito(payload)
+    onAddToCart?.(payload)
+    trackAddToCart?.(producto, cantidad)
+    showToast?.(`${producto.nombre} agregado al carrito`)
+    setIsAdded(true)
+    setTimeout(() => setIsAdded(false), 1400)
+    setCantidad(1)
+  }
 
-  const manejarPedidoEspecial = useCallback(
-    (e) => {
-      e?.preventDefault?.()
-      e?.stopPropagation?.()
-      if (!producto) return
+  const manejarPedidoEspecial = (e) => {
+    e?.preventDefault?.()
+    e?.stopPropagation?.()
+    if (!producto) return
 
-      const msg = encodeURIComponent(
-        `¡Hola PanFree! 🍞 Me gustaría encargar el siguiente producto:\n\n` +
-          `*Producto:* ${producto.nombre}\n` +
-          `*Categoría:* ${producto.categoria || 'Panadería'}\n` +
-          `*Precio:* ${formatGs(precioFinal)}\n\n` +
-          `¿Podrían confirmarme disponibilidad y tiempo de entrega? ¡Gracias!`
-      )
-      window.open(`https://wa.me/595984589845?text=${msg}`, '_blank', 'noopener,noreferrer')
-    },
-    [producto, precioFinal]
-  )
+    const msg = encodeURIComponent(
+      `¡Hola PanFree! 🍞 Me gustaría encargar el siguiente producto:\n\n` +
+        `*Producto:* ${producto.nombre}\n` +
+        `*Categoría:* ${producto.categoria || 'Panadería'}\n` +
+        `*Precio:* ${formatGs(precioFinal)}\n\n` +
+        `¿Podrían confirmarme disponibilidad y tiempo de entrega? ¡Gracias!`
+    )
+    window.open(`https://wa.me/595984589845?text=${msg}`, '_blank', 'noopener,noreferrer')
+  }
 
-  if (!producto) return null
-
+  const imagenValida = resolveProductImageUrl(producto)
   const slugUrl = producto?.slug ? `/producto/${producto.slug}` : '#'
   const productId = producto?.id ?? producto?.slug ?? producto?.nombre?.slice(0, 12) ?? 'item'
+  const tieneImagen = Boolean(imagenValida && !imgError)
 
   return (
     <article
@@ -222,84 +225,49 @@ export default function ProductCard({
       role="article"
       aria-labelledby={`product-title-${productId}`}
     >
-      {/* Badges superiores: Destacado y Promoción */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '8px',
-          left: '8px',
-          zIndex: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '6px',
-          pointerEvents: 'none',
-        }}
-      >
-        {producto.destacado || producto.is_featured ? (
-          <div className={styles.badgeTopLeft}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <Star size={13} fill="currentColor" /> Destacado
-            </span>
-          </div>
-        ) : null}
+      {/* Badges superiores izquierdos: Destacado y Oferta */}
+      {(esDestacado || promoActiva) && (
+        <div className={styles.badgesTopLeft}>
+          {esDestacado && (
+            <div className={styles.badgeTopLeft}>
+              <Star size={12} fill="currentColor" />
+              <span>Destacado</span>
+            </div>
+          )}
 
-        {promoActiva && (
-          <div className={styles.promoBadge}>
-            🔥 -{porcentajeDescuento}% OFF
-          </div>
-        )}
-      </div>
+          {promoActiva && (
+            <div className={styles.promoBadge}>
+              🔥 -{porcentajeDescuento}% OFF
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* Badge Sin Gluten */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '8px',
-          right: '8px',
-          zIndex: 2,
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
-          backgroundColor: '#334c2b',
-          border: '1px solid #b7996b',
-          borderRadius: '16px',
-          padding: '4px 10px 4px 6px',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
-          pointerEvents: 'none',
-        }}
-      >
+      {/* Badge Sin Gluten Superior Derecho */}
+      <div className={styles.badgeTopRight}>
         <WheatOff
-          size={16}
+          size={14}
           strokeWidth={2.5}
           color="#f7d875"
           style={{
-            filter: 'drop-shadow(0 0 6px rgba(255,215,0,0.5)) drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
+            filter: 'drop-shadow(0 0 4px rgba(255,215,0,0.5))',
           }}
         />
-        <span
-          style={{
-            color: '#eee6d9',
-            fontSize: '0.7rem',
-            fontWeight: 700,
-            letterSpacing: '0.3px',
-            textTransform: 'uppercase',
-          }}
-        >
-          Sin Gluten
-        </span>
+        <span className={styles.badgeSinGlutenText}>Sin Gluten</span>
       </div>
 
-      {/* 1. IMAGEN */}
+      {/* 1. IMAGEN DEL PRODUCTO */}
       <a href={slugUrl} className={styles.imageLink} aria-label={`Ver detalle de ${producto.nombre}`}>
         <div className={styles.imageWrapper}>
-          {producto.imagen_url ? (
+          {tieneImagen ? (
             <Image
-              src={producto.imagen_url}
+              src={imagenValida}
               alt={producto.nombre}
               fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
+              sizes="(max-width: 480px) 50vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 280px"
               className={styles.productImage}
-              priority={Boolean(producto.destacado || producto.is_featured)}
+              priority={esDestacado}
+              onError={() => setImgError(true)}
             />
           ) : (
             <div className={styles.imageFallback}>
@@ -309,25 +277,7 @@ export default function ProductCard({
 
           {/* Banner de cuenta regresiva sobre la imagen */}
           {promoActiva && tiempoRestante && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                backgroundColor: 'rgba(220, 38, 38, 0.92)',
-                color: '#ffffff',
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                padding: '4px 8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '4px',
-                backdropFilter: 'blur(2px)',
-                letterSpacing: '0.2px',
-              }}
-            >
+            <div className={styles.promoTimerOverlay}>
               <Timer size={13} className="animate-pulse" />
               <span>Termina en: {tiempoRestante}</span>
             </div>
@@ -337,55 +287,46 @@ export default function ProductCard({
 
       {/* 2. CUERPO DE LA TARJETA */}
       <div className={styles.body}>
-        {/* Categoría */}
-        {producto.categoria && <span className={styles.categoryBadge}>{producto.categoria}</span>}
+        <div>
+          {/* Categoría */}
+          {producto.categoria && <span className={styles.categoryBadge}>{producto.categoria}</span>}
 
-        {/* 3. TÍTULO */}
-        <a href={slugUrl} className={styles.titleLink}>
-          <h3 id={`product-title-${productId}`} className={styles.title}>
-            {producto.nombre}
-          </h3>
-        </a>
+          {/* Título */}
+          <a href={slugUrl} className={styles.titleLink}>
+            <h3 id={`product-title-${productId}`} className={styles.title}>
+              {producto.nombre}
+            </h3>
+          </a>
 
-        {/* Badge de anticipación */}
-        {!agotado && requiereAnticipacion && (
-          <div className={styles.anticipacionNotice}>
-            <Clock size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
-            Pedido con 24h de anticipación
-          </div>
-        )}
+          {/* Badge de anticipación */}
+          {!agotado && requiereAnticipacion && (
+            <div className={styles.anticipacionNotice}>
+              <Clock size={12} />
+              <span>Pedido con 24h</span>
+            </div>
+          )}
+        </div>
 
-        {/* 4. PRECIO CON UNIDAD DE MEDIDA Y DESCUENTO */}
-        <div className={styles.priceRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '3px' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: '6px', width: '100%' }}>
+        {/* 3. PRECIO CON UNIDAD DE MEDIDA Y DESCUENTO */}
+        <div className={styles.priceRow}>
+          <div className={styles.priceContainer}>
             {promoActiva ? (
               <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
-                  <span style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: '0.85rem', fontWeight: 600 }}>
+                  <span className={styles.oldPrice}>
                     {formatGs(precioBase)}
                   </span>
-                  <span style={{ color: '#dc2626', fontSize: '1.2rem', fontWeight: 800 }}>
+                  <span className={styles.pricePromo}>
                     {formatGs(precioPromo)}
                   </span>
                   {producto.unidad_medida && producto.unidad_medida !== 'unidad' && (
-                    <span style={{ fontSize: '0.72rem', color: '#888', fontWeight: 500 }}>
+                    <span className={styles.unitMeasure}>
                       / {producto.unidad_medida}
                     </span>
                   )}
                 </div>
                 {ahorroGs > 0 && (
-                  <span
-                    style={{
-                      fontSize: '0.72rem',
-                      color: '#991b1b',
-                      fontWeight: 800,
-                      backgroundColor: '#fee2e2',
-                      padding: '1px 6px',
-                      borderRadius: '4px',
-                      alignSelf: 'flex-start',
-                      marginTop: '2px',
-                    }}
-                  >
+                  <span className={styles.savingsTag}>
                     AHORRAS {formatGs(ahorroGs)}
                   </span>
                 )}
@@ -396,7 +337,7 @@ export default function ProductCard({
                   {formatGs(precioBase)}
                 </span>
                 {producto.unidad_medida && producto.unidad_medida !== 'unidad' && (
-                  <span style={{ fontSize: '0.72rem', color: '#888', fontWeight: 500 }}>
+                  <span className={styles.unitMeasure}>
                     / {producto.unidad_medida}
                   </span>
                 )}
@@ -407,7 +348,7 @@ export default function ProductCard({
           {agotado && <span className={styles.stockOutTag}>Sin stock</span>}
         </div>
 
-        {/* 5. BOTÓN DE COMPRA */}
+        {/* 4. BOTONES DE ACCIÓN */}
         <div className={styles.actionRow}>
           {!agotado ? (
             <div className={styles.purchaseControls}>
@@ -441,12 +382,12 @@ export default function ProductCard({
                 aria-label={`Agregar ${cantidad} ${producto.nombre} al carrito`}
               >
                 {isAdded ? (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                    <CheckCircle size={16} /> ¡Agregado!
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <CheckCircle size={15} /> ¡Agregado!
                   </span>
                 ) : (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                    <ShoppingCart size={16} /> Agregar
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <ShoppingCart size={15} /> Agregar
                   </span>
                 )}
               </button>
@@ -458,8 +399,8 @@ export default function ProductCard({
               className={styles.whatsappOrderBtn}
               aria-label={`Encargar ${producto.nombre} por WhatsApp`}
             >
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                <Mail size={16} /> Encargar
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <Mail size={15} /> Encargar
               </span>
             </button>
           )}

@@ -27,12 +27,23 @@ export function sanitizeSupabaseUrl(url) {
   }
 }
 
+export function sanitizeSupabaseKey(key) {
+  if (!key || typeof key !== 'string') return DEFAULT_SUPABASE_ANON_KEY
+  const clean = key.trim()
+  const parts = clean.split('.')
+  // A valid Supabase JWT token MUST have 3 parts (header.payload.signature)
+  if (parts.length !== 3 || clean.length < 50) {
+    return DEFAULT_SUPABASE_ANON_KEY
+  }
+  return clean
+}
+
 // ✅ Usar valores sanitizados
 const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
 const rawKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
 
 const supabaseUrl = sanitizeSupabaseUrl(rawUrl)
-const supabaseAnonKey = (rawKey && typeof rawKey === 'string' && rawKey.trim()) ? rawKey.trim() : DEFAULT_SUPABASE_ANON_KEY
+const supabaseAnonKey = sanitizeSupabaseKey(rawKey)
 
 export const createClient = () => {
   if (typeof window !== 'undefined') {

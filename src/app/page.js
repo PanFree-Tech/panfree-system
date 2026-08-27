@@ -1,41 +1,59 @@
 /**
  * UBICACION: src/app/page.js
- * ACTUALIZADO: 2026-03-06
- * CAMBIOS:
- *  - Convertido a Server Component (elimina 'use client')
- *  - Datos cargados en servidor con revalidate: 300 (5 min)
- *  - Estado e interactividad delegados a TiendaCliente.js
- *  - Mismo patrón que layout.js → layout-client.js
- *  - ✅ FIX: Eliminar fallback inseguro de Supabase
- *  - ✅ FIX: Lanzar error claro si faltan variables de entorno
+ * ACTUALIZADO: 2026-08-27
+ * DESCRIPCION:
+ *  - Server Component con revalidación optimizada
+ *  - Carga segura de productos activos y disponibilidad
+ *  - Normalización estricta de is_featured/destacado para evitar falsos positivos
  */
 import { supabase } from '@/lib/supabase'
+import { normalizeProduct } from '@/lib/image-utils'
 import TiendaCliente from './TiendaCliente'
 
 // Caché: revalidar cada 5 minutos
-// Cambiar a 60 si Luciana actualiza insumos varias veces por hora
 export const revalidate = 300
 
 async function cargarDatos() {
   try {
-    const [{ data: productos }, { data: disponibilidad }] = await Promise.all([
+    const [{ data: productos, error: errProd }, { data: disponibilidad, error: errDisp }] = await Promise.all([
       supabase
         .from('productos')
         .select('*')
         .eq('is_active', true)
         .order('is_featured', { ascending: false })
-        .order('nombre',      { ascending: true }),
+        .order('nombre', { ascending: true }),
       supabase
         .from('vista_disponibilidad_productos')
-        .select('producto_id, disponible, tandas_posibles, ingredientes_faltantes, requiere_anticipacion'),
+        .select('*'),
     ])
+
+    if (errProd) {
+      console.error('Error cargando productos:', errProd)
+    }
+    if (errDisp) {
+      console.warn('Nota: vista_disponibilidad_productos no disponible:', errDisp?.message)
+    }
+
+    // Normalizar productos: asegurar que is_featured/destacado sea booleano estricto y resolver URLs de imagen válidas
+    const productosNormalizados = (productos || []).map((p) => {
+      const prodNorm = normalizeProduct(p)
+      const enPromo = p.en_promocion === true || p.en_promocion === 'true' || p.en_promocion === 1
+      return {
+        ...prodNorm,
+        en_promocion: enPromo,
+      }
+    })
 
     // Mapa rápido: producto_id → disponibilidad
     const dispMap = {}
-    ;(disponibilidad || []).forEach(d => { dispMap[d.producto_id] = d })
+    ;(disponibilidad || []).forEach((d) => {
+      if (d?.producto_id) {
+        dispMap[d.producto_id] = d
+      }
+    })
 
     return {
-      productos:     productos || [],
+      productos: productosNormalizados,
       disponibilidad: dispMap,
     }
   } catch (err) {
