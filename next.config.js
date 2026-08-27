@@ -15,6 +15,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'gbdrcaumghykiipqgbty.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
