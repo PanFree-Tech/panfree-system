@@ -34,6 +34,7 @@ import {
   X,
   Loader2,
   Tag,
+  QrCode,
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase-client'
 import NotificacionesAdmin from './notificaciones'
@@ -128,6 +129,7 @@ export default function AdminLayout({ children }) {
     { href: '/admin/costos', icon: DollarSign, label: 'Costos' },
     { href: '/admin/maquinarias', icon: Settings, label: 'Maquinarias' },
     { href: '/admin/marketing', icon: Megaphone, label: 'Marketing' },
+    { href: '/admin/dipticos', icon: QrCode, label: 'Dípticos' },
     { href: '/admin/cupones', icon: Tag, label: 'Cupones' },
     { href: '/admin/correos', icon: Mail, label: 'Correos' },
     { href: '/admin/reportes', icon: TrendingUp, label: 'Reportes' },

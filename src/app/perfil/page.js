@@ -22,6 +22,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import {
@@ -42,7 +43,12 @@ import {
   Building2,
   Banknote,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Award,
+  QrCode,
+  Gift,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react'
 
 const formatPYG   = n => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
@@ -109,6 +115,9 @@ export default function PaginaPerfil() {
   const [mensajePass, setMensajePass]     = useState(null)
   const [mostrarPass, setMostrarPass]     = useState(false)
 
+  // — Fidelidad y Puntos
+  const [fidelidad, setFidelidad]             = useState({ puntos: 0, nivel: 'bronce' })
+
   // — Pedidos
   const [pedidos, setPedidos]                 = useState([])
   const [cargandoPedidos, setCargandoPedidos] = useState(false)
@@ -124,7 +133,7 @@ export default function PaginaPerfil() {
     if (!usuario) return
     supabase
       .from('clientes')
-      .select('nombre_completo, telefono, direccion_calle, direccion_numero, direccion_piso_dept, direccion_ciudad, direccion_provincia, notas_cliente, prefiere_retiro, prefiere_delivery')
+      .select('nombre_completo, telefono, direccion_calle, direccion_numero, direccion_piso_dept, direccion_ciudad, direccion_provincia, notas_cliente, prefiere_retiro, prefiere_delivery, puntos_fidelidad, nivel_cliente')
       .eq('user_id', usuario.id)
       .single()
       .then(({ data }) => {
@@ -143,6 +152,10 @@ export default function PaginaPerfil() {
           }
           setPerfil(p)
           setPerfilOriginal(p)
+          setFidelidad({
+            puntos: data.puntos_fidelidad || 0,
+            nivel: data.nivel_cliente || 'bronce'
+          })
         }
       })
     cargarPedidos()
@@ -298,6 +311,110 @@ export default function PaginaPerfil() {
       </div>
 
       <div style={S.main}>
+
+        {/* ── 0. Club PanFree Fidelidad & Dípticos ── */}
+        <div style={{
+          backgroundColor: '#fff',
+          border: '2px solid #b7996b',
+          borderRadius: '8px',
+          marginBottom: '1.5rem',
+          overflow: 'hidden',
+          boxShadow: '0 4px 15px rgba(51, 76, 43, 0.06)'
+        }}>
+          <div style={{
+            backgroundColor: '#334c2b',
+            color: '#eee6d9',
+            padding: '0.85rem 1.25rem',
+            fontWeight: '700',
+            fontSize: '0.98rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.5rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Award size={20} color="#f46e15" />
+              <span>Club PanFree Fidelidad</span>
+            </div>
+            <span style={{
+              backgroundColor: 'rgba(238, 230, 217, 0.15)',
+              border: '1px solid #b7996b',
+              padding: '0.2rem 0.6rem',
+              borderRadius: '12px',
+              fontSize: '0.78rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Nivel {fidelidad.nivel || 'bronce'}
+            </span>
+          </div>
+
+          <div style={{ padding: '1.25rem' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              marginBottom: '1rem'
+            }}>
+              <div>
+                <div style={{ fontSize: '0.8rem', color: '#8f9a44', fontWeight: '700', textTransform: 'uppercase' }}>
+                  Tus Puntos Acumulados
+                </div>
+                <div style={{ fontSize: '2.2rem', fontWeight: '900', color: '#f46e15', lineHeight: '1.1' }}>
+                  {(fidelidad.puntos || 0).toLocaleString('es-PY')} <span style={{ fontSize: '1rem', color: '#666', fontWeight: '600' }}>pts</span>
+                </div>
+                <div style={{ fontSize: '0.82rem', color: '#666', marginTop: '0.2rem' }}>
+                  Canjeá códigos de dípticos físicos o compras por premios exclusivos.
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <Link
+                  href="/canjear"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    backgroundColor: '#f46e15',
+                    color: '#fff',
+                    textDecoration: 'none',
+                    padding: '0.6rem 1rem',
+                    borderRadius: '6px',
+                    fontWeight: '700',
+                    fontSize: '0.88rem',
+                    boxShadow: '0 2px 6px rgba(244, 110, 21, 0.25)'
+                  }}
+                >
+                  <QrCode size={16} />
+                  <span>Canjear Díptico</span>
+                </Link>
+
+                <Link
+                  href="/perfil/puntos"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    backgroundColor: '#334c2b',
+                    color: '#eee6d9',
+                    textDecoration: 'none',
+                    padding: '0.6rem 1rem',
+                    borderRadius: '6px',
+                    fontWeight: '700',
+                    fontSize: '0.88rem'
+                  }}
+                >
+                  <Gift size={16} />
+                  <span>Ver Premios</span>
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* ── 1. Información personal ── */}
         <div style={S.card}>
