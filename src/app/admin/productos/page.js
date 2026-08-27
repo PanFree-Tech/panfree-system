@@ -31,7 +31,13 @@ import {
 } from 'lucide-react'
 import { supabase } from '../../../lib/supabase'
 import { S, COLORS } from '../_styles'
-import PromocionForm, { formatGs } from './components/PromocionForm'
+import PromocionForm, {
+  formatGs,
+  parseFechaPromo,
+  dateToLocalInputValue,
+  localInputValueToIso,
+  getEstadoPromo,
+} from './components/PromocionForm'
 
 const CATEGORIAS = ['panes', 'dulces', 'salados', 'eventos']
 const UNIDADES = ['unidad', 'kg', 'docena', 'pack']
@@ -67,32 +73,6 @@ function generarSlug(nombre) {
     .replace(/[^a-z0-9\s-]/g, '')
     .trim()
     .replace(/\s+/g, '-')
-}
-
-/**
- * Determina el estado temporal de una promoción
- */
-function getEstadoPromo(producto) {
-  if (!producto.en_promocion || !producto.precio_promocion) {
-    return { activa: false, label: null, color: '#6b7280', bg: '#f3f4f6' }
-  }
-
-  const now = new Date()
-  if (producto.fecha_inicio_promo) {
-    const inicio = new Date(producto.fecha_inicio_promo)
-    if (now < inicio) {
-      return { activa: false, label: '⏰ Programada', color: '#b45309', bg: '#fef3c7' }
-    }
-  }
-
-  if (producto.fecha_fin_promo) {
-    const fin = new Date(producto.fecha_fin_promo)
-    if (now > fin) {
-      return { activa: false, label: '⌛ Vencida', color: '#4b5563', bg: '#e5e7eb' }
-    }
-  }
-
-  return { activa: true, label: '🔥 Oferta Activa', color: '#dc2626', bg: '#fee2e2' }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -551,8 +531,8 @@ export default function PaginaProductos() {
       ...p,
       imagen_public_id: p.imagen_public_id || '',
       imagenes_urls: Array.isArray(p.imagenes_urls) ? p.imagenes_urls.filter(Boolean) : [],
-      fecha_inicio_promo: p.fecha_inicio_promo ? p.fecha_inicio_promo.slice(0, 16) : '',
-      fecha_fin_promo: p.fecha_fin_promo ? p.fecha_fin_promo.slice(0, 16) : '',
+      fecha_inicio_promo: dateToLocalInputValue(p.fecha_inicio_promo),
+      fecha_fin_promo: dateToLocalInputValue(p.fecha_fin_promo),
     })
     setError(null)
     setModalAbierto(true)
@@ -593,8 +573,8 @@ export default function PaginaProductos() {
         precio_mayorista: form.precio_mayorista ? Number(form.precio_mayorista) : null,
         en_promocion: !!form.en_promocion,
         precio_promocion: form.en_promocion && form.precio_promocion ? Number(form.precio_promocion) : null,
-        fecha_inicio_promo: form.en_promocion && form.fecha_inicio_promo ? new Date(form.fecha_inicio_promo).toISOString() : null,
-        fecha_fin_promo: form.en_promocion && form.fecha_fin_promo ? new Date(form.fecha_fin_promo).toISOString() : null,
+        fecha_inicio_promo: form.en_promocion && form.fecha_inicio_promo ? localInputValueToIso(form.fecha_inicio_promo) : null,
+        fecha_fin_promo: form.en_promocion && form.fecha_fin_promo ? localInputValueToIso(form.fecha_fin_promo) : null,
         stock_actual: Number(form.stock_actual) || 0,
         stock_minimo: Number(form.stock_minimo) || 5,
         unidad_medida: form.unidad_medida,
@@ -837,7 +817,9 @@ export default function PaginaProductos() {
                               {(p.fecha_inicio_promo || p.fecha_fin_promo) && (
                                 <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '3px' }}>
                                   <Clock size={11} />
-                                  {p.fecha_fin_promo ? `Hasta ${new Date(p.fecha_fin_promo).toLocaleDateString('es-PY')}` : 'Sin límite'}
+                                  {p.fecha_fin_promo
+                                    ? `Hasta ${parseFechaPromo(p.fecha_fin_promo)?.toLocaleDateString('es-PY') || p.fecha_fin_promo}`
+                                    : 'Sin límite'}
                                 </div>
                               )}
                             </div>

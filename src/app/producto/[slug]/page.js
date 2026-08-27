@@ -89,7 +89,7 @@ export default async function PaginaProducto({ params }) {
     // Productos relacionados
     const { data: relacionados } = await supabaseServer
       .from('productos')
-      .select('id, slug, nombre, precio_venta, imagen_url, imagen_alt, categoria, stock_actual')
+      .select('id, slug, nombre, precio_venta, precio_promocion, en_promocion, fecha_inicio_promo, fecha_fin_promo, imagen_url, imagen_alt, categoria, stock_actual')
       .eq('categoria', producto.categoria)
       .eq('is_active', true)
       .neq('id', producto.id)

@@ -20,23 +20,60 @@ import { useAnalytics } from '../hooks/useAnalytics'
 const formatGs = (n) => `Gs. ${Number(n || 0).toLocaleString('es-PY')}`
 
 /**
+ * Parsea cualquier formato de fecha de Supabase/PostgreSQL a un objeto Date válido
+ */
+export function parseFechaPromo(val) {
+  if (!val) return null
+  if (val instanceof Date) return isNaN(val.getTime()) ? null : val
+  if (typeof val === 'number') {
+    const d = new Date(val)
+    return isNaN(d.getTime()) ? null : d
+  }
+  if (typeof val === 'string') {
+    let s = val.trim()
+    if (!s) return null
+    if (s.includes(' ') && !s.includes('T')) {
+      s = s.replace(' ', 'T')
+    }
+    s = s.replace(/([+-]\d{2})$/, '$1:00')
+    const d = new Date(s)
+    if (!isNaN(d.getTime())) return d
+
+    const fallback = new Date(val)
+    if (!isNaN(fallback.getTime())) return fallback
+  }
+  return null
+}
+
+/**
  * Calcula si la promoción de un producto está activa en este instante
  */
 export function checkPromoActiva(producto) {
-  if (!producto || !producto.en_promocion) return false
+  if (!producto) return false
+  const enPromo = producto.en_promocion === true || producto.en_promocion === 'true' || producto.en_promocion === 1
+  if (!enPromo) return false
+
   const precioBase = Number(producto.precio_venta ?? producto.precio ?? 0)
   const precioPromo = Number(producto.precio_promocion ?? 0)
-  if (precioPromo <= 0 || precioPromo >= precioBase) return false
+  if (precioPromo <= 0) return false
+  if (precioBase > 0 && precioPromo >= precioBase) return false
 
-  const now = new Date()
+  const nowMs = Date.now()
+
   if (producto.fecha_inicio_promo) {
-    const inicio = new Date(producto.fecha_inicio_promo)
-    if (now < inicio) return false
+    const inicio = parseFechaPromo(producto.fecha_inicio_promo)
+    if (inicio && nowMs < inicio.getTime()) {
+      return false
+    }
   }
+
   if (producto.fecha_fin_promo) {
-    const fin = new Date(producto.fecha_fin_promo)
-    if (now > fin) return false
+    const fin = parseFechaPromo(producto.fecha_fin_promo)
+    if (fin && nowMs > fin.getTime()) {
+      return false
+    }
   }
+
   return true
 }
 
@@ -79,8 +116,13 @@ export default function ProductCard({
       }
 
       if (producto.fecha_fin_promo) {
-        const ahora = new Date().getTime()
-        const fin = new Date(producto.fecha_fin_promo).getTime()
+        const finDate = parseFechaPromo(producto.fecha_fin_promo)
+        if (!finDate) {
+          setTiempoRestante(null)
+          return
+        }
+        const ahora = Date.now()
+        const fin = finDate.getTime()
         const distancia = fin - ahora
 
         if (distancia <= 0) {
