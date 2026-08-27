@@ -27,7 +27,7 @@ Thumbs.db
 
 # Docker (opcional)
 Dockerfile
-.dockerignore".next/" 
-"node_modules/" 
-".env.local" 
-".env.*.local" 
+.dockerignore
+
+# PROTECCIÓN DE SCRIPTS CON CLAVES (¡CRÍTICO!)
+scripts/*.js
