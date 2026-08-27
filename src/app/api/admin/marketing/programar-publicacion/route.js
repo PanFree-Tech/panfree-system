@@ -2,7 +2,7 @@
  * 📁 UBICACIÓN: src/app/api/admin/marketing/programar-publicacion/route.js
  * 📌 ENDPOINT: POST /api/admin/marketing/programar-publicacion
  * 📖 DESCRIPCIÓN: Programa o publica de inmediato una promoción inteligente en Instagram.
- *    - Persiste imágenes Base64 en Supabase Storage (bucket 'public-images') antes de publicar.
+ *    - Persiste imágenes Base64 directamente en Cloudinary antes de publicar.
  *    - Publica en Instagram Graph API usando la URL pública persistente (evitando rechazos por Base64).
  *    - Utiliza variables de entorno estrictamente privadas del servidor (sin NEXT_PUBLIC_).
  *    - Registra la trazabilidad completa en la tabla `promociones_historico` de Supabase.
@@ -13,6 +13,7 @@ import { createClient } from '@supabase/supabase-js'
 import { supabase, sanitizeSupabaseUrl, DEFAULT_SUPABASE_ANON_KEY } from '@/lib/supabase'
 import { sendEmail, DEFAULT_ADMIN_EMAIL } from '@/lib/resend'
 import { templatePublicacionInstagram } from '@/lib/email-templates'
+import { getCloudinaryClient } from '@/lib/cloudinary'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,9 +31,9 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
 })
 
 /**
- * Helper: Sube imagen Base64 a Supabase Storage y retorna la URL pública persistente
+ * Helper: Sube imagen Base64 a Cloudinary y retorna la URL pública persistente
  */
-async function uploadImageToSupabase(imageData, productId = 'promo') {
+async function uploadImageToCloudinary(imageData, productId = 'promo') {
   if (!imageData || typeof imageData !== 'string') {
     return null
   }
@@ -42,41 +43,18 @@ async function uploadImageToSupabase(imageData, productId = 'promo') {
     return imageData
   }
 
-  // Si es Base64 o Data URL, procesar y subir a Storage
+  // Si es Base64 o Data URL, procesar y subir a Cloudinary
   try {
-    let mimeType = 'image/jpeg'
-    const mimeMatch = imageData.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,/)
-    if (mimeMatch && mimeMatch[1]) {
-      mimeType = mimeMatch[1]
-    }
-
-    let ext = 'jpg'
-    if (mimeType.includes('png')) ext = 'png'
-    else if (mimeType.includes('webp')) ext = 'webp'
-
-    const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '')
-    const buffer = Buffer.from(base64Data, 'base64')
-    const fileName = `marketing/product_${productId || 'promo'}_${Date.now()}.${ext}`
-
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from('public-images')
-      .upload(fileName, buffer, {
-        contentType: mimeType,
-        upsert: true,
-      })
-
-    if (uploadError) {
-      console.warn('Advertencia al subir imagen a Supabase Storage:', uploadError.message)
-      return null
-    }
-
-    const { data: publicData } = supabaseAdmin.storage
-      .from('public-images')
-      .getPublicUrl(fileName)
-
-    return publicData?.publicUrl || null
+    const cloudinary = getCloudinaryClient()
+    const dataUri = imageData.startsWith('data:') ? imageData : `data:image/jpeg;base64,${imageData}`
+    const result = await cloudinary.uploader.upload(dataUri, {
+      folder: 'marketing',
+      resource_type: 'image',
+      public_id: `marketing_promo_${productId || 'promo'}_${Date.now()}`,
+    })
+    return result.secure_url || null
   } catch (err) {
-    console.error('Error procesando imagen para Supabase Storage:', err.message)
+    console.error('Error procesando imagen para Cloudinary:', err.message)
     return null
   }
 }
@@ -127,12 +105,12 @@ export async function POST(req) {
       }
     }
 
-    // 2. Persistir imagen en Supabase Storage si viene en Base64
+    // 2. Persistir imagen en Cloudinary si viene en Base64
     const rawImage = imageData || imagen_url
     let persistentImageUrl = null
 
     if (rawImage) {
-      persistentImageUrl = await uploadImageToSupabase(rawImage, producto_id)
+      persistentImageUrl = await uploadImageToCloudinary(rawImage, producto_id)
     }
 
     // Fallback de URL pública para Instagram si no hubo imagen propia
