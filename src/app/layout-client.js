@@ -12,6 +12,7 @@ Header limpio con acceso rápido a catálogo, WhatsApp, usuario y carrito
 'use client'
 import React from 'react'
 import { usePathname } from 'next/navigation'
+import { supabase } from '../lib/supabase'
 import { AuthProvider, useAuth } from '../context/AuthContext'
 import { CartProvider, useCart } from '../context/CartContext'
 import CartSidebar from '../components/CartSidebar'
@@ -129,9 +130,29 @@ function BannerEnvioGratis() {
 function Header() {
   const { cantidadItems, setVisible } = useCart()
   const { usuario } = useAuth()
+  const [logoActual, setLogoActual] = React.useState('/images/logo-panfree.svg')
 
   const role = usuario?.raw_user_meta_data?.role || usuario?.user_metadata?.role || usuario?.app_metadata?.role
   const isAdmin = role === 'admin'
+
+  // Cargar logo dinámico (normal o Octubre Rosa) desde configuracion_sitio
+  React.useEffect(() => {
+    supabase
+      .from('configuracion_sitio')
+      .select('logo_url, logo_rosa_url, usar_logo_rosa')
+      .eq('id', 1)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          if (data.usar_logo_rosa && data.logo_rosa_url) {
+            setLogoActual(data.logo_rosa_url)
+          } else if (data.logo_url) {
+            setLogoActual(data.logo_url)
+          }
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Soporte para long-press en móvil (si se mantiene presionado el logo 1.2s va a /admin)
   const timerRef = React.useRef(null)
@@ -194,11 +215,15 @@ function Header() {
             <div style={{ position: 'relative' }}>
               <img
                 className="header-logo-img"
-                src="/images/logo-panfree.svg"
+                src={logoActual}
                 alt="PanFree"
                 width={54} height={54}
                 style={{ objectFit: 'contain', display: 'block' }}
-                onError={e => { e.target.style.display = 'none' }}
+                onError={e => {
+                  if (e.target.src !== '/images/logo-panfree.svg') {
+                    e.target.src = '/images/logo-panfree.svg'
+                  }
+                }}
               />
               {isAdmin && (
                 <span

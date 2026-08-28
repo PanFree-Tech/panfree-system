@@ -34,7 +34,7 @@ const CATEGORIAS = [
   { id: 'eventos', label: 'Eventos', Icon: PartyPopper },
 ]
 
-export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
+export default function TiendaCliente({ productos = [], disponibilidad = {}, configuracion = null }) {
   const [categoriaActiva, setCategoriaActiva] = useState('todos')
   const [busqueda, setBusqueda] = useState('')
   const { agregarAlCarrito } = useCart()
@@ -73,20 +73,32 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productosFiltrados, categoriaActiva])
 
+  const bannerImg = configuracion?.banner_url
+  const bannerTitulo = configuracion?.banner_titulo || 'Panificados y Repostería Sin Gluten'
+  const bannerSubtitulo = configuracion?.banner_subtitulo || 'Elaboración artesanal en Encarnación con ingredientes seleccionados y la máxima seguridad para celíacos.'
+
   return (
     <div className="page-container" id="catalogo">
       {/* ============================================================ */}
-      {/* 1. HERO SECTION ORDENADO Y DE ALTA CONVERSIÓN */}
+      {/* 1. HERO / BANNER SECTION ORDENADO Y DE ALTA CONVERSIÓN */}
       {/* ============================================================ */}
       <section
         id="hero-section"
         style={{
-          backgroundColor: '#fdfbf8',
-          border: '1px solid #e0d5c5',
+          position: 'relative',
           borderRadius: '12px',
-          padding: '2rem 1.5rem',
+          overflow: 'hidden',
+          padding: bannerImg ? '3rem 1.5rem' : '2rem 1.5rem',
           marginBottom: '2rem',
-          boxShadow: '0 2px 8px rgba(51, 76, 43, 0.04)',
+          border: '1px solid #e0d5c5',
+          boxShadow: '0 2px 8px rgba(51, 76, 43, 0.06)',
+          backgroundColor: '#fdfbf8',
+          ...(bannerImg ? {
+            backgroundImage: `linear-gradient(rgba(20, 30, 15, 0.65), rgba(20, 30, 15, 0.75)), url(${bannerImg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            color: '#ffffff',
+          } : {}),
         }}
       >
         <div
@@ -106,7 +118,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              backgroundColor: '#334c2b',
+              backgroundColor: bannerImg ? 'rgba(255,255,255,0.2)' : '#334c2b',
               color: '#eee6d9',
               fontSize: '0.85rem',
               fontWeight: 700,
@@ -115,6 +127,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
               border: '1px solid #b7996b',
               marginBottom: '1rem',
               letterSpacing: '0.3px',
+              backdropFilter: bannerImg ? 'blur(4px)' : 'none',
             }}
           >
             <WheatOff size={16} /> 100% Sin Gluten
@@ -124,25 +137,27 @@ export default function TiendaCliente({ productos = [], disponibilidad = {} }) {
             className="hero-title"
             style={{
               margin: '0 0 0.75rem 0',
-              color: '#334c2b',
+              color: bannerImg ? '#ffffff' : '#334c2b',
               fontWeight: 800,
               lineHeight: 1.25,
+              textShadow: bannerImg ? '0 2px 4px rgba(0,0,0,0.4)' : 'none',
             }}
           >
-            Panificados y Repostería Sin Gluten
+            {bannerTitulo}
           </h1>
           {/* Subtítulo Conciso */}
           <p
             className="hero-subtitle"
             style={{
               fontSize: '1.05rem',
-              color: '#4a5d3f',
+              color: bannerImg ? '#f0ede6' : '#4a5d3f',
               maxWidth: '580px',
               margin: '0 0 1.5rem 0',
               lineHeight: 1.5,
+              textShadow: bannerImg ? '0 1px 3px rgba(0,0,0,0.5)' : 'none',
             }}
           >
-            Elaboración artesanal en Encarnación con ingredientes seleccionados y la máxima seguridad para celíacos.
+            {bannerSubtitulo}
           </p>
           {/* Badges de Confianza en Línea Horizontal */}
           <div
