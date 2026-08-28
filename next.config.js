@@ -12,11 +12,17 @@ const nextConfig = {
     serverComponentsExternalPackages: ['@axiomantic/llmlingua-2', '@huggingface/transformers', 'onnxruntime-node'],
   },
   images: {
+    domains: ['res.cloudinary.com', 'images.unsplash.com', 'picsum.photos'],
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.cloudinary.com',
         pathname: '/**',
       },
       {
