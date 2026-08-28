@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS public.configuracion_sitio (
     logo_url TEXT,
     logo_rosa_url TEXT,
     usar_logo_rosa BOOLEAN NOT NULL DEFAULT false,
+    logo_variantes JSONB DEFAULT '[]'::jsonb,
+    logo_variante_activa TEXT DEFAULT NULL,
     banner_url TEXT,
     banner_titulo TEXT DEFAULT 'Panificados y Repostería 100% Sin Gluten',
     banner_subtitulo TEXT DEFAULT 'Elaborados artesanalmente en Encarnación con ingredientes certificados.',

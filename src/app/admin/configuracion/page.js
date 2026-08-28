@@ -1,9 +1,11 @@
 /**
  * 📁 UBICACIÓN: src/app/admin/configuracion/page.js
  * 📅 CREADO: 2026-08-28
- * 📌 DESCRIPCIÓN: Panel de Configuración General del Sitio y Usuarios de PanFree.
- *    - Gestión de Branding: Logo normal, Logo Octubre Rosa, Favicon.
- *    - Gestión de Banners de la tienda (Hero).
+ * 📌 DESCRIPCIÓN: Panel de Configuración General del Sitio, Branding y Usuarios de PanFree.
+ *    - Logo Principal (Oficial Base).
+ *    - Galería de Variantes Temáticas (Octubre Rosa, Navidad, San Valentín, etc.).
+ *    - Selector de Variante Activa para Header y Footer.
+ *    - Banners de la tienda (Hero) y Favicon.
  *    - Gestión de Usuarios / Administradores con avatares en Cloudinary.
  *    - Subida directa a Cloudinary (carpetas: 'logos', 'banners', 'usuarios').
  *    - Persistencia en tablas `configuracion_sitio` y `usuarios` de Supabase.
@@ -13,7 +15,6 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import {
   ArrowLeft,
   Settings,
@@ -23,15 +24,17 @@ import {
   UploadCloud,
   CheckCircle2,
   AlertCircle,
-  Heart,
-  Globe,
   Trash2,
   Plus,
-  Shield,
   UserCheck,
   Sparkles,
   RefreshCw,
   Eye,
+  Check,
+  Palette,
+  Star,
+  Edit2,
+  Layers,
 } from 'lucide-react'
 import { supabase } from '../../../lib/supabase'
 import { S } from '../_styles'
@@ -39,7 +42,7 @@ import { S } from '../_styles'
 // ─────────────────────────────────────────────────────────────
 // Subidor de Archivos a Cloudinary
 // ─────────────────────────────────────────────────────────────
-async function subirACloudinary(archivo, carpeta = 'branding') {
+async function subirACloudinary(archivo, carpeta = 'logos') {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'd7simx38'
   const uploadPreset = process.env.NEXT_PUBLIC_UPLOAD_PRESET || 'panfree_upload'
 
@@ -70,7 +73,7 @@ function SingleImageUploader({
   sublabel,
   currentUrl,
   fallbackUrl,
-  folder = 'branding',
+  folder = 'logos',
   onChange,
   aspectRatio = '1 / 1',
   maxWidth = '180px',
@@ -218,8 +221,8 @@ export default function PaginaConfiguracionAdmin() {
     id: 1,
     nombre_tienda: 'PanFree',
     logo_url: '',
-    logo_rosa_url: '',
-    usar_logo_rosa: false,
+    logo_variantes: [],
+    logo_variante_activa: '',
     banner_url: '',
     banner_titulo: 'Panificados y Repostería 100% Sin Gluten',
     banner_subtitulo: 'Elaborados artesanalmente en Encarnación con ingredientes certificados.',
@@ -229,6 +232,18 @@ export default function PaginaConfiguracionAdmin() {
     instagram_handle: '@panfree.py',
     direccion_fisica: 'Encarnación, Itapúa, Paraguay',
   })
+
+  // Modal para agregar/editar variante de logo
+  const [modalVariante, setModalVariante] = useState(false)
+  const [varianteEditandoIndex, setVarianteEditandoIndex] = useState(null)
+  const [formVariante, setFormVariante] = useState({
+    id: '',
+    nombre: '',
+    url: '',
+  })
+  const [subiendoVariante, setSubiendoVariante] = useState(false)
+  const [errorVariante, setErrorVariante] = useState(null)
+  const fileVarianteInputRef = useRef(null)
 
   // Estado de Usuarios
   const [usuarios, setUsuarios] = useState([])
@@ -258,13 +273,45 @@ export default function PaginaConfiguracionAdmin() {
         .single()
 
       if (configData) {
-        setConfig((prev) => ({ ...prev, ...configData }))
+        // Asegurar que logo_variantes sea un array
+        let variantes = []
+        if (Array.isArray(configData.logo_variantes)) {
+          variantes = configData.logo_variantes
+        } else if (typeof configData.logo_variantes === 'string') {
+          try {
+            variantes = JSON.parse(configData.logo_variantes)
+          } catch {
+            variantes = []
+          }
+        }
+
+        // Migración suave si existía logo_rosa_url y no está en la galería
+        if (configData.logo_rosa_url && !variantes.some((v) => v.nombre?.toLowerCase().includes('rosa'))) {
+          variantes.push({
+            id: 'octubre-rosa',
+            nombre: 'Octubre Rosa',
+            url: configData.logo_rosa_url,
+            creada_en: new Date().toISOString(),
+          })
+        }
+
+        let varianteActiva = configData.logo_variante_activa || ''
+        if (!varianteActiva && configData.usar_logo_rosa && configData.logo_rosa_url) {
+          varianteActiva = 'octubre-rosa'
+        }
+
+        setConfig((prev) => ({
+          ...prev,
+          ...configData,
+          logo_variantes: variantes,
+          logo_variante_activa: varianteActiva,
+        }))
       } else if (errConfig && errConfig.code === 'PGRST116') {
-        // No existe la fila 1 aún, podemos insertarla al guardar
+        // No existe la fila 1 aún, se creará al guardar
       }
 
       // 2. Cargar Usuarios
-      const { data: usuariosData, error: errUsers } = await supabase
+      const { data: usuariosData } = await supabase
         .from('usuarios')
         .select('*')
         .order('nombre')
@@ -286,6 +333,8 @@ export default function PaginaConfiguracionAdmin() {
       const payload = {
         ...config,
         id: 1,
+        logo_variantes: config.logo_variantes || [],
+        logo_variante_activa: config.logo_variante_activa || null,
         updated_at: new Date().toISOString(),
       }
 
@@ -295,7 +344,7 @@ export default function PaginaConfiguracionAdmin() {
 
       if (error) throw error
 
-      setMensaje({ tipo: 'ok', texto: 'Configuración guardada exitosamente.' })
+      setMensaje({ tipo: 'ok', texto: 'Configuración y variantes guardadas exitosamente.' })
       setTimeout(() => setMensaje(null), 3500)
     } catch (err) {
       console.error('Error guardando configuración:', err)
@@ -305,7 +354,133 @@ export default function PaginaConfiguracionAdmin() {
     }
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // Operaciones de Galería de Variantes
+  // ─────────────────────────────────────────────────────────────
+  function abrirNuevaVariante() {
+    setVarianteEditandoIndex(null)
+    setFormVariante({
+      id: `var-${Date.now()}`,
+      nombre: '',
+      url: '',
+    })
+    setErrorVariante(null)
+    setModalVariante(true)
+  }
+
+  function abrirEditarVariante(index) {
+    const v = config.logo_variantes[index]
+    if (!v) return
+    setVarianteEditandoIndex(index)
+    setFormVariante({
+      id: v.id || `var-${Date.now()}`,
+      nombre: v.nombre || '',
+      url: v.url || '',
+    })
+    setErrorVariante(null)
+    setModalVariante(true)
+  }
+
+  async function handleSubirArchivoVariante(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setSubiendoVariante(true)
+    setErrorVariante(null)
+    try {
+      const url = await subirACloudinary(file, 'logos')
+      setFormVariante((prev) => ({
+        ...prev,
+        url,
+        nombre: prev.nombre || file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
+      }))
+    } catch (err) {
+      setErrorVariante(err.message || 'Error al subir imagen a Cloudinary')
+    } finally {
+      setSubiendoVariante(false)
+      if (fileVarianteInputRef.current) fileVarianteInputRef.current.value = ''
+    }
+  }
+
+  function guardarVarianteModal() {
+    if (!formVariante.url) {
+      setErrorVariante('Debes subir o indicar la imagen de la variante.')
+      return
+    }
+    if (!formVariante.nombre.trim()) {
+      setErrorVariante('Por favor escribe un nombre para la variante (ej: Navidad, Octubre Rosa).')
+      return
+    }
+
+    const nuevaVariante = {
+      id: formVariante.id || `var-${Date.now()}`,
+      nombre: formVariante.nombre.trim(),
+      url: formVariante.url,
+      creada_en: new Date().toISOString(),
+    }
+
+    let nuevasVariantes = [...(config.logo_variantes || [])]
+    if (varianteEditandoIndex !== null) {
+      nuevasVariantes[varianteEditandoIndex] = {
+        ...nuevasVariantes[varianteEditandoIndex],
+        ...nuevaVariante,
+      }
+    } else {
+      nuevasVariantes.push(nuevaVariante)
+    }
+
+    setConfig({ ...config, logo_variantes: nuevasVariantes })
+    setModalVariante(false)
+  }
+
+  function eliminarVariante(index) {
+    const variante = config.logo_variantes[index]
+    if (!variante) return
+    if (!confirm(`¿Eliminar la variante "${variante.nombre}"?`)) return
+
+    const nuevasVariantes = config.logo_variantes.filter((_, i) => i !== index)
+    let nuevaActiva = config.logo_variante_activa
+
+    // Si la variante eliminada era la activa, volver al logo base
+    if (nuevaActiva === variante.id || nuevaActiva === variante.url) {
+      nuevaActiva = ''
+    }
+
+    setConfig({
+      ...config,
+      logo_variantes: nuevasVariantes,
+      logo_variante_activa: nuevaActiva,
+    })
+  }
+
+  function seleccionarVarianteActiva(identificador) {
+    setConfig({
+      ...config,
+      logo_variante_activa: identificador || '',
+    })
+  }
+
+  // Obtener logo que se mostraría actualmente en tienda
+  function getLogoActivoPreview() {
+    if (config.logo_variante_activa) {
+      const variante = (config.logo_variantes || []).find(
+        (v) => v.id === config.logo_variante_activa || v.url === config.logo_variante_activa
+      )
+      if (variante?.url) return { url: variante.url, nombre: variante.nombre, esVariante: true }
+      if (config.logo_variante_activa.startsWith('http')) {
+        return { url: config.logo_variante_activa, nombre: 'Variante personalizada', esVariante: true }
+      }
+    }
+    return {
+      url: config.logo_url || '/images/logo-panfree.svg',
+      nombre: 'Logo Principal Oficial (Base)',
+      esVariante: false,
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
   // Operaciones de Usuario
+  // ─────────────────────────────────────────────────────────────
   function abrirNuevoUsuario() {
     setUsuarioEditando(null)
     setFormUsuario({
@@ -380,6 +555,8 @@ export default function PaginaConfiguracionAdmin() {
       alert(err.message || 'Error al eliminar usuario')
     }
   }
+
+  const logoActualTienda = getLogoActivoPreview()
 
   return (
     <div style={S.page}>
@@ -483,12 +660,154 @@ export default function PaginaConfiguracionAdmin() {
         ) : (
           <>
             {/* ════════════════════════════════════════════════════════════════ */}
-            {/* TAB 1: IDENTIDAD Y LOGOS */}
+            {/* TAB 1: IDENTIDAD Y LOGOS (SIMPLIFICADO Y OPTIMIZADO) */}
             {/* ════════════════════════════════════════════════════════════════ */}
             {tabActiva === 'branding' && (
               <div style={{ display: 'grid', gap: '1.5rem' }}>
+                {/* 1. SELECCIÓN DE VARIANTE ACTIVA EN TIENDA */}
+                <div
+                  style={{
+                    ...S.card,
+                    border: logoActualTienda.esVariante ? '2px solid #b7996b' : '1px solid #e0d5c5',
+                    backgroundColor: '#fffdf9',
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: '1rem 1.25rem',
+                      borderBottom: '1px solid #f0e6d6',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '0.75rem',
+                    }}
+                  >
+                    <div>
+                      <h2 style={{ margin: 0, fontSize: '1.05rem', color: '#334c2b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Palette size={20} color="#f46e15" /> Variante de Logo Activa en la Tienda
+                      </h2>
+                      <span style={{ fontSize: '0.82rem', color: '#666' }}>
+                        El logo seleccionado se aplicará de inmediato en el Header y Footer de la tienda pública.
+                      </span>
+                    </div>
+
+                    {/* Selector Rápido */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334c2b' }}>
+                        Variante Actual:
+                      </label>
+                      <select
+                        style={{
+                          ...S.input,
+                          padding: '0.4rem 0.8rem',
+                          fontSize: '0.88rem',
+                          fontWeight: 700,
+                          borderColor: '#b7996b',
+                          minWidth: '220px',
+                        }}
+                        value={config.logo_variante_activa || ''}
+                        onChange={(e) => seleccionarVarianteActiva(e.target.value)}
+                      >
+                        <option value="">🏛️ Logo Principal (Oficial Base)</option>
+                        {(config.logo_variantes || []).map((v) => (
+                          <option key={v.id} value={v.id}>
+                            🎨 {v.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Estado y Vista Previa en Vivo del Header */}
+                  <div style={{ padding: '1.25rem', backgroundColor: '#fcfaf6' }}>
+                    <div
+                      style={{
+                        backgroundColor: '#eee6d9',
+                        border: '2px solid #b7996b',
+                        borderRadius: '8px',
+                        padding: '0.85rem 1.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        gap: '1rem',
+                        boxShadow: '0 2px 6px rgba(51,76,43,0.08)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+                        <div
+                          style={{
+                            width: '54px',
+                            height: '54px',
+                            backgroundColor: '#fff',
+                            borderRadius: '8px',
+                            padding: '4px',
+                            border: '1.5px solid #b7996b',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <img
+                            src={logoActualTienda.url}
+                            alt="Logo Activo"
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#334c2b', lineHeight: 1.2 }}>
+                            {config.nombre_tienda || 'PanFree'}
+                          </div>
+                          <div style={{ fontSize: '0.78rem', color: '#8f9a44', fontWeight: 600 }}>
+                            100% Sin Gluten · Encarnación
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            padding: '0.3rem 0.75rem',
+                            borderRadius: '16px',
+                            fontSize: '0.82rem',
+                            fontWeight: 700,
+                            backgroundColor: logoActualTienda.esVariante ? '#fdf2f8' : '#e8f5e9',
+                            color: logoActualTienda.esVariante ? '#9d174d' : '#2e7d32',
+                            border: `1px solid ${logoActualTienda.esVariante ? '#f472b6' : '#a5d6a7'}`,
+                          }}
+                        >
+                          <Check size={14} /> Mostrando: <strong>{logoActualTienda.nombre}</strong>
+                        </span>
+
+                        {logoActualTienda.esVariante && (
+                          <button
+                            type="button"
+                            onClick={() => seleccionarVarianteActiva('')}
+                            style={{
+                              ...S.btnGris,
+                              padding: '0.3rem 0.65rem',
+                              fontSize: '0.8rem',
+                              color: '#334c2b',
+                            }}
+                          >
+                            Restablecer al Base
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. LOGO PRINCIPAL BASE Y NOMBRE DE MARCA */}
                 <div style={S.card}>
-                  <h2 style={{ ...S.cardHead, margin: 0 }}>🎨 Identidad Visual & Logos Oficiales</h2>
+                  <h2 style={{ ...S.cardHead, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Star size={18} color="#b7996b" /> 1. Logo Principal (Oficial Base)
+                  </h2>
                   <div style={{ ...S.cardBody, display: 'grid', gap: '1.5rem' }}>
                     {/* Nombre del Sitio */}
                     <div>
@@ -501,100 +820,246 @@ export default function PaginaConfiguracionAdmin() {
                       />
                     </div>
 
-                    {/* Selector de Modo Octubre Rosa */}
-                    <div
-                      style={{
-                        backgroundColor: '#fdf2f8',
-                        border: '1.5px solid #f472b6',
-                        borderRadius: '8px',
-                        padding: '1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        gap: '1rem',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div
-                          style={{
-                            backgroundColor: '#fbcfe8',
-                            color: '#db2777',
-                            padding: '0.5rem',
-                            borderRadius: '50%',
-                          }}
-                        >
-                          <Heart size={24} fill="#db2777" />
-                        </div>
-                        <div>
-                          <strong style={{ color: '#9d174d', display: 'block', fontSize: '0.95rem' }}>
-                            Modo Campaña Octubre Rosa
-                          </strong>
-                          <span style={{ fontSize: '0.8rem', color: '#be185d' }}>
-                            Al activarse, la tienda utilizará automáticamente el logotipo rosa en el Header y Footer.
-                          </span>
-                        </div>
-                      </div>
-
-                      <label
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          color: '#9d174d',
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={config.usar_logo_rosa}
-                          onChange={(e) => setConfig({ ...config, usar_logo_rosa: e.target.checked })}
-                          style={{ width: '18px', height: '18px', accentColor: '#db2777' }}
-                        />
-                        {config.usar_logo_rosa ? '✅ Logo Rosa Activo' : 'Desactivado'}
-                      </label>
-                    </div>
-
-                    {/* Grilla de Subida de Logos */}
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                        gap: '1.5rem',
-                      }}
-                    >
-                      {/* Logo Estándar */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                      {/* Logo Principal */}
                       <SingleImageUploader
-                        label="Logo Principal (Oficial)"
-                        sublabel="Formato SVG o PNG transparente (recomendado 200x200px)"
+                        label="Logo Base Oficial"
+                        sublabel="El logo permanente de PanFree (SVG o PNG transparente, 200x200px)"
                         currentUrl={config.logo_url}
                         fallbackUrl="/images/logo-panfree.svg"
                         folder="logos"
                         onChange={(url) => setConfig({ ...config, logo_url: url })}
                       />
 
-                      {/* Logo Octubre Rosa */}
-                      <SingleImageUploader
-                        label="Logo Edición Octubre Rosa"
-                        sublabel="Variante con listón o tono rosa para el mes de concientización"
-                        currentUrl={config.logo_rosa_url}
-                        fallbackUrl="/images/logo-panfree.svg"
-                        folder="logos"
-                        onChange={(url) => setConfig({ ...config, logo_rosa_url: url })}
-                      />
-
                       {/* Favicon */}
                       <SingleImageUploader
-                        label="Favicon / Icono de Navegador"
-                        sublabel="Icono pequeño para la pestaña del navegador (32x32 o 64x64)"
+                        label="Favicon / Icono de Pestaña"
+                        sublabel="Icono pequeño para el navegador (32x32 o 64x64px)"
                         currentUrl={config.favicon_url}
                         fallbackUrl="/favicon.ico"
                         folder="logos"
-                        maxWidth="100px"
+                        maxWidth="90px"
                         onChange={(url) => setConfig({ ...config, favicon_url: url })}
                       />
                     </div>
+                  </div>
+                </div>
+
+                {/* 3. GALERÍA DE VARIANTES TEMÁTICAS */}
+                <div style={S.card}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.85rem 1.25rem',
+                      backgroundColor: '#334c2b',
+                      color: '#eee6d9',
+                    }}
+                  >
+                    <div>
+                      <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Layers size={18} /> 2. Galería de Variantes Temáticas ({config.logo_variantes?.length || 0})
+                      </h2>
+                      <span style={{ fontSize: '0.78rem', color: '#d0c5b4' }}>
+                        Logos estilizados para fechas especiales (Octubre Rosa, Navidad, San Valentín, Pascua, Aniversario, etc.)
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={abrirNuevaVariante}
+                      style={{
+                        ...S.btnNaranja,
+                        padding: '0.4rem 0.85rem',
+                        fontSize: '0.82rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                      }}
+                    >
+                      <Plus size={15} /> Subir Nueva Variante
+                    </button>
+                  </div>
+
+                  <div style={S.cardBody}>
+                    {(!config.logo_variantes || config.logo_variantes.length === 0) ? (
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          padding: '3rem 1.5rem',
+                          backgroundColor: '#fcfaf6',
+                          borderRadius: '8px',
+                          border: '1.5px dashed #b7996b',
+                        }}
+                      >
+                        <Sparkles size={38} color="#b7996b" style={{ margin: '0 auto 0.75rem' }} />
+                        <h3 style={{ margin: '0 0 0.4rem 0', color: '#334c2b', fontSize: '1.05rem' }}>
+                          No hay variantes temáticas en la galería
+                        </h3>
+                        <p style={{ margin: '0 0 1.25rem 0', color: '#666', fontSize: '0.88rem', maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto' }}>
+                          Podés subir variantes con listones, gorros navideños, corazones o colores conmemorativos para activarlas en cualquier momento con un solo clic.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={abrirNuevaVariante}
+                          style={{ ...S.btnVerde, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                        >
+                          <Plus size={16} /> Subir primera variante
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                          gap: '1.25rem',
+                        }}
+                      >
+                        {config.logo_variantes.map((v, idx) => {
+                          const estaActiva = config.logo_variante_activa === v.id || config.logo_variante_activa === v.url
+
+                          return (
+                            <div
+                              key={v.id || idx}
+                              style={{
+                                backgroundColor: '#ffffff',
+                                border: estaActiva ? '2.5px solid #2e7d32' : '1px solid #e0d5c5',
+                                borderRadius: '10px',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                boxShadow: estaActiva ? '0 4px 12px rgba(46, 125, 50, 0.15)' : '0 2px 6px rgba(0,0,0,0.04)',
+                                transition: 'all 0.2s ease',
+                                position: 'relative',
+                              }}
+                            >
+                              {/* Badge Activa */}
+                              {estaActiva && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    top: '8px',
+                                    right: '8px',
+                                    backgroundColor: '#2e7d32',
+                                    color: '#ffffff',
+                                    fontSize: '0.72rem',
+                                    fontWeight: 800,
+                                    padding: '0.15rem 0.5rem',
+                                    borderRadius: '10px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.25rem',
+                                    zIndex: 2,
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                  }}
+                                >
+                                  <Check size={12} /> ACTIVA
+                                </div>
+                              )}
+
+                              {/* Preview de la imagen */}
+                              <div
+                                style={{
+                                  height: '140px',
+                                  backgroundColor: '#f9f6f0',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  padding: '12px',
+                                  borderBottom: '1px solid #eee',
+                                }}
+                              >
+                                <img
+                                  src={v.url}
+                                  alt={v.nombre}
+                                  style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                                />
+                              </div>
+
+                              {/* Información */}
+                              <div style={{ padding: '0.85rem', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#334c2b', marginBottom: '0.75rem' }}>
+                                  {v.nombre}
+                                </div>
+
+                                <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                  {estaActiva ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => seleccionarVarianteActiva('')}
+                                      style={{
+                                        ...S.btnGris,
+                                        width: '100%',
+                                        padding: '0.45rem',
+                                        fontSize: '0.8rem',
+                                        color: '#334c2b',
+                                        fontWeight: 700,
+                                      }}
+                                    >
+                                      Desactivar (Usar Oficial)
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => seleccionarVarianteActiva(v.id)}
+                                      style={{
+                                        ...S.btnVerde,
+                                        width: '100%',
+                                        padding: '0.45rem',
+                                        fontSize: '0.8rem',
+                                        fontWeight: 700,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '0.35rem',
+                                      }}
+                                    >
+                                      <Check size={14} /> Activar en Tienda
+                                    </button>
+                                  )}
+
+                                  <div style={{ display: 'flex', gap: '0.35rem' }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => abrirEditarVariante(idx)}
+                                      style={{
+                                        ...S.btnGris,
+                                        flex: 1,
+                                        padding: '0.3rem',
+                                        fontSize: '0.75rem',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '0.25rem',
+                                      }}
+                                    >
+                                      <Edit2 size={12} /> Editar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => eliminarVariante(idx)}
+                                      style={{
+                                        ...S.btnGris,
+                                        padding: '0.3rem 0.5rem',
+                                        fontSize: '0.75rem',
+                                        color: '#c62828',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                      }}
+                                      title="Eliminar variante"
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -840,6 +1305,124 @@ export default function PaginaConfiguracionAdmin() {
           </>
         )}
       </main>
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* MODAL: AGREGAR / EDITAR VARIANTE DE LOGO */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {modalVariante && (
+        <div style={S.overlay} onClick={(e) => { if (e.target === e.currentTarget) setModalVariante(false) }}>
+          <div style={{ ...S.modal, maxWidth: '480px' }}>
+            <h2 style={{ color: '#334c2b', marginTop: 0, marginBottom: '1.25rem', fontSize: '1.15rem' }}>
+              {varianteEditandoIndex !== null ? 'Editar Variante de Logo' : 'Subir Nueva Variante de Logo'}
+            </h2>
+
+            <div style={{ display: 'grid', gap: '1.2rem' }}>
+              {/* Nombre de la Variante */}
+              <div>
+                <label style={S.label}>Nombre de la Ocasión / Temática *</label>
+                <input
+                  style={S.input}
+                  value={formVariante.nombre}
+                  onChange={(e) => setFormVariante({ ...formVariante, nombre: e.target.value })}
+                  placeholder="Ej: Octubre Rosa, Navidad 2026, San Valentín..."
+                />
+              </div>
+
+              {/* Subida de Imagen */}
+              <div>
+                <label style={S.label}>Imagen de la Variante *</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.35rem' }}>
+                  <div
+                    style={{
+                      width: '100px',
+                      height: '100px',
+                      backgroundColor: '#f8f5f0',
+                      border: '2px dashed #b7996b',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      position: 'relative',
+                    }}
+                  >
+                    {formVariante.url ? (
+                      <img
+                        src={formVariante.url}
+                        alt="Variante"
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }}
+                      />
+                    ) : (
+                      <ImageIcon size={30} color="#b7996b" />
+                    )}
+
+                    {subiendoVariante && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          backgroundColor: 'rgba(255,255,255,0.85)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          color: '#334c2b',
+                        }}
+                      >
+                        Subiendo…
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => fileVarianteInputRef.current?.click()}
+                      disabled={subiendoVariante}
+                      style={{
+                        ...S.btnVerde,
+                        padding: '0.45rem 0.85rem',
+                        fontSize: '0.85rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                      }}
+                    >
+                      <UploadCloud size={16} /> {formVariante.url ? 'Cambiar archivo' : 'Seleccionar imagen'}
+                    </button>
+                    <p style={{ margin: '0.35rem 0 0', fontSize: '0.75rem', color: '#666' }}>
+                      Se guardará en la carpeta <strong>'logos'</strong> de Cloudinary.
+                    </p>
+                    <input
+                      ref={fileVarianteInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleSubirArchivoVariante}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {errorVariante && (
+                <div style={{ color: '#c62828', fontSize: '0.82rem', fontWeight: 600 }}>
+                  ⚠️ {errorVariante}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem', justifyContent: 'flex-end' }}>
+              <button onClick={() => setModalVariante(false)} style={S.btnGris}>
+                Cancelar
+              </button>
+              <button onClick={guardarVarianteModal} style={S.btnNaranja} disabled={subiendoVariante}>
+                Guardar Variante
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Usuario */}
       {modalUsuario && (
