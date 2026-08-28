@@ -76,194 +76,40 @@ function generarSlug(nombre) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Uploader imagen principal (Cloudinary Direct Unsigned Upload)
+// Gestor Integral de Imágenes de Producto (Cloudinary + Supabase)
 // ─────────────────────────────────────────────────────────────
-function ImagenUploader({ imagenUrl, imagenPublicId, onChange }) {
-  const inputRef = useRef(null)
-  const [subiendo, setSubiendo] = useState(false)
-  const [preview, setPreview] = useState(imagenUrl || '')
-  const [errorImg, setErrorImg] = useState(null)
-
-  useEffect(() => {
-    setPreview(imagenUrl || '')
-  }, [imagenUrl])
-
-  async function manejarArchivo(archivo) {
-    if (!archivo) return
-    const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    if (!tiposPermitidos.includes(archivo.type)) {
-      setErrorImg('Solo JPG, PNG, WEBP o GIF.')
-      return
-    }
-    if (archivo.size > 10 * 1024 * 1024) {
-      setErrorImg('Máximo 10MB.')
-      return
-    }
-    setSubiendo(true)
-    setErrorImg(null)
-    try {
-      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'd7simx38'
-      const uploadPreset = process.env.NEXT_PUBLIC_UPLOAD_PRESET || 'panfree_upload'
-
-      const formData = new FormData()
-      formData.append('file', archivo)
-      formData.append('upload_preset', uploadPreset)
-      formData.append('folder', 'productos')
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}))
-        throw new Error(errorData?.error?.message || 'Error al subir imagen a Cloudinary')
-      }
-
-      const data = await res.json()
-      setPreview(data.secure_url)
-      onChange(data.secure_url, data.public_id)
-    } catch (err) {
-      console.error('Error Cloudinary upload:', err)
-      setErrorImg(err.message || 'Error al subir. Intentá de nuevo.')
-    } finally {
-      setSubiendo(false)
-    }
-  }
-
-  function eliminarImagen() {
-    setPreview('')
-    onChange('', '')
-  }
-
-  return (
-    <div>
-      <label style={S.label}>📷 Imagen principal</label>
-      {preview ? (
-        <div style={{ position: 'relative', display: 'inline-block', marginBottom: '0.75rem' }}>
-          <img
-            src={preview}
-            alt="Preview"
-            style={{
-              width: '160px',
-              height: '160px',
-              objectFit: 'cover',
-              borderRadius: '8px',
-              border: '2px solid #b7996b',
-              display: 'block',
-            }}
-            onError={(e) => {
-              e.target.src = ''
-              e.target.style.display = 'none'
-            }}
-          />
-          <button
-            type="button"
-            onClick={eliminarImagen}
-            title="Eliminar imagen"
-            style={{
-              position: 'absolute',
-              top: '6px',
-              right: '6px',
-              backgroundColor: 'rgba(198,40,40,0.9)',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '50%',
-              width: '28px',
-              height: '28px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: '700',
-            }}
-          >
-            ×
-          </button>
-        </div>
-      ) : (
-        <div
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => {
-            e.preventDefault()
-            e.currentTarget.style.borderColor = '#f46e15'
-          }}
-          onDragLeave={(e) => {
-            e.currentTarget.style.borderColor = '#b7996b'
-          }}
-          onDrop={(e) => {
-            e.preventDefault()
-            e.currentTarget.style.borderColor = '#b7996b'
-            const f = e.dataTransfer.files[0]
-            if (f) manejarArchivo(f)
-          }}
-          style={{
-            width: '160px',
-            height: '160px',
-            border: '2px dashed #b7996b',
-            borderRadius: '8px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            backgroundColor: '#fdf8f4',
-            marginBottom: '0.75rem',
-          }}
-        >
-          {subiendo ? (
-            <>
-              <div style={{ fontSize: '1.5rem', marginBottom: '0.4rem' }}>⏳</div>
-              <span style={{ fontSize: '0.78rem', color: '#999' }}>Subiendo a Cloudinary…</span>
-            </>
-          ) : (
-            <>
-              <div style={{ fontSize: '2rem', marginBottom: '0.4rem' }}>📷</div>
-              <span style={{ fontSize: '0.78rem', color: '#999', textAlign: 'center', padding: '0 0.5rem' }}>
-                Click o arrastrá
-                <br />
-                una imagen aquí
-              </span>
-            </>
-          )}
-        </div>
-      )}
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
-        style={{ display: 'none' }}
-        onChange={(e) => {
-          const f = e.target.files?.[0]
-          if (f) manejarArchivo(f)
-        }}
-      />
-      {preview && !subiendo && (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          style={{ ...S.btnGris, fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
-        >
-          🔄 Cambiar imagen
-        </button>
-      )}
-      {errorImg && <p style={{ color: '#c62828', fontSize: '0.82rem', marginTop: '0.4rem' }}>{errorImg}</p>}
-      <p style={{ fontSize: '0.78rem', color: '#999', marginTop: '0.3rem' }}>Cloudinary CDN · JPG, PNG, WEBP o GIF · Máximo 10MB</p>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
-// Galería — subida múltiple a Cloudinary
-// ─────────────────────────────────────────────────────────────
-function GaleriaUploader({ urls, onChange }) {
+function GestorImagenesProducto({ imagenUrl, imagenesUrls = [], onChange }) {
   const inputRef = useRef(null)
   const [subiendo, setSubiendo] = useState(false)
   const [errorMsg, setErrorMsg] = useState(null)
-  const [progreso, setProgreso] = useState(0)
+  const [progreso, setProgreso] = useState({ actual: 0, total: 0 })
   const dragItem = useRef(null)
   const dragOver = useRef(null)
+
+  // Combinar lista sin duplicados asegurando que la principal sea la primera
+  const listaImagenes = (() => {
+    const arr = []
+    if (imagenUrl && typeof imagenUrl === 'string' && imagenUrl.trim()) {
+      arr.push(imagenUrl.trim())
+    }
+    if (Array.isArray(imagenesUrls)) {
+      imagenesUrls.forEach((u) => {
+        if (u && typeof u === 'string' && u.trim() && !arr.includes(u.trim())) {
+          arr.push(u.trim())
+        }
+      })
+    }
+    return arr
+  })()
+
+  function actualizarLista(nuevaLista) {
+    const limpia = nuevaLista.filter((u) => u && typeof u === 'string' && u.trim())
+    const principal = limpia[0] || ''
+    onChange({
+      imagen_url: principal,
+      imagenes_urls: limpia,
+    })
+  }
 
   async function subirArchivoCloudinary(archivo) {
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'd7simx38'
@@ -272,7 +118,7 @@ function GaleriaUploader({ urls, onChange }) {
     const formData = new FormData()
     formData.append('file', archivo)
     formData.append('upload_preset', uploadPreset)
-    formData.append('folder', 'productos/galeria')
+    formData.append('folder', 'productos')
 
     const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
       method: 'POST',
@@ -281,7 +127,7 @@ function GaleriaUploader({ urls, onChange }) {
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}))
-      throw new Error(errorData?.error?.message || 'Error al subir a Cloudinary')
+      throw new Error(errorData?.error?.message || 'Error al subir imagen a Cloudinary')
     }
 
     const data = await res.json()
@@ -289,191 +135,272 @@ function GaleriaUploader({ urls, onChange }) {
   }
 
   async function manejarArchivos(archivos) {
+    if (!archivos || archivos.length === 0) return
     const lista = Array.from(archivos)
     const tiposOk = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
     const invalidos = lista.filter((f) => !tiposOk.includes(f.type))
     if (invalidos.length) {
-      setErrorMsg('Solo JPG, PNG, WEBP o GIF.')
+      setErrorMsg('Solo se permiten formatos JPG, PNG, WEBP o GIF.')
       return
     }
     const grandes = lista.filter((f) => f.size > 10 * 1024 * 1024)
     if (grandes.length) {
-      setErrorMsg('Cada imagen tiene máximo 10MB.')
-      return
-    }
-    if (urls.length + lista.length > 8) {
-      setErrorMsg('Máximo 8 imágenes en la galería.')
+      setErrorMsg('Cada imagen debe tener un tamaño máximo de 10MB.')
       return
     }
 
     setSubiendo(true)
     setErrorMsg(null)
-    setProgreso(0)
+    setProgreso({ actual: 0, total: lista.length })
+
     try {
-      const nuevas = []
+      const nuevasUrls = []
       for (let i = 0; i < lista.length; i++) {
+        setProgreso({ actual: i + 1, total: lista.length })
         const url = await subirArchivoCloudinary(lista[i])
-        nuevas.push(url)
-        setProgreso(i + 1)
+        if (url) nuevasUrls.push(url)
       }
-      onChange([...urls, ...nuevas])
+
+      const listaCombinada = [...listaImagenes, ...nuevasUrls]
+      actualizarLista(listaCombinada)
     } catch (err) {
-      console.error('Error Galeria Cloudinary upload:', err)
-      setErrorMsg(err.message || 'Error al subir alguna imagen. Intentá de nuevo.')
+      console.error('Error Cloudinary upload:', err)
+      setErrorMsg(err.message || 'Error al subir imagen. Intentá de nuevo.')
     } finally {
       setSubiendo(false)
-      setProgreso(0)
+      setProgreso({ actual: 0, total: 0 })
       if (inputRef.current) inputRef.current.value = ''
     }
   }
 
-  function eliminar(idx) {
-    onChange(urls.filter((_, i) => i !== idx))
+  function hacerPrincipal(idx) {
+    if (idx === 0 || idx >= listaImagenes.length) return
+    const copia = [...listaImagenes]
+    const [elegida] = copia.splice(idx, 1)
+    copia.unshift(elegida)
+    actualizarLista(copia)
+  }
+
+  function eliminarFoto(idx) {
+    const copia = listaImagenes.filter((_, i) => i !== idx)
+    actualizarLista(copia)
   }
 
   function onDragStart(idx) {
     dragItem.current = idx
   }
+
   function onDragEnter(idx) {
     dragOver.current = idx
   }
+
   function onDragEnd() {
-    const copia = [...urls]
+    if (dragItem.current === null || dragOver.current === null || dragItem.current === dragOver.current) {
+      dragItem.current = null
+      dragOver.current = null
+      return
+    }
+    const copia = [...listaImagenes]
     const [movida] = copia.splice(dragItem.current, 1)
     copia.splice(dragOver.current, 0, movida)
     dragItem.current = null
     dragOver.current = null
-    onChange(copia)
+    actualizarLista(copia)
   }
 
   return (
     <div>
-      <label style={S.label}>
-        🖼️ Galería adicional
-        <span style={{ fontWeight: 400, color: '#888', marginLeft: '0.5rem' }}>
-          ({urls.length}/8) — se muestran en el carrusel de la página del producto
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <label style={{ ...S.label, margin: 0 }}>
+          📸 Galería de Fotos del Producto
+          <span style={{ fontWeight: 400, color: '#888', marginLeft: '0.5rem' }}>
+            ({listaImagenes.length} foto{listaImagenes.length !== 1 ? 's' : ''})
+          </span>
+        </label>
+        <span style={{ fontSize: '0.78rem', color: '#6b7280' }}>
+          La 1ra foto es la <strong>Portada Principal</strong>
         </span>
-      </label>
+      </div>
 
-      {urls.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '0.75rem' }}>
-          {urls.map((url, idx) => (
-            <div
-              key={url}
-              draggable
-              onDragStart={() => onDragStart(idx)}
-              onDragEnter={() => onDragEnter(idx)}
-              onDragEnd={onDragEnd}
-              onDragOver={(e) => e.preventDefault()}
-              title="Arrastrá para reordenar"
-              style={{
-                position: 'relative',
-                cursor: 'grab',
-                border: '2px solid #b7996b',
-                borderRadius: '6px',
-                overflow: 'hidden',
-                width: '80px',
-                height: '80px',
-                flexShrink: 0,
-              }}
-            >
-              <img
-                src={url}
-                alt={`Foto ${idx + 1}`}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                onError={(e) => {
-                  e.target.style.opacity = '0.3'
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: '3px',
-                  left: '4px',
-                  backgroundColor: 'rgba(0,0,0,0.55)',
-                  color: '#fff',
-                  fontSize: '0.65rem',
-                  fontWeight: 700,
-                  padding: '1px 5px',
-                  borderRadius: '8px',
-                }}
-              >
-                {idx + 1}
-              </div>
-              <button
-                type="button"
-                onClick={() => eliminar(idx)}
-                title="Eliminar esta foto"
-                style={{
-                  position: 'absolute',
-                  top: '3px',
-                  right: '3px',
-                  backgroundColor: 'rgba(198,40,40,0.88)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '22px',
-                  height: '22px',
-                  cursor: 'pointer',
-                  fontSize: '0.85rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: '700',
-                }}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {urls.length < 8 && (
+      {/* Grid de Fotos Existentes */}
+      {listaImagenes.length > 0 && (
         <div
-          onClick={() => !subiendo && inputRef.current?.click()}
-          onDragOver={(e) => {
-            e.preventDefault()
-            e.currentTarget.style.borderColor = '#f46e15'
-            e.currentTarget.style.backgroundColor = '#fff8f3'
-          }}
-          onDragLeave={(e) => {
-            e.currentTarget.style.borderColor = '#b7996b'
-            e.currentTarget.style.backgroundColor = '#fdf8f4'
-          }}
-          onDrop={(e) => {
-            e.preventDefault()
-            e.currentTarget.style.borderColor = '#b7996b'
-            e.currentTarget.style.backgroundColor = '#fdf8f4'
-            if (!subiendo) manejarArchivos(e.dataTransfer.files)
-          }}
           style={{
-            border: '2px dashed #b7996b',
-            borderRadius: '8px',
-            padding: '1rem',
-            textAlign: 'center',
-            cursor: subiendo ? 'default' : 'pointer',
-            backgroundColor: '#fdf8f4',
-            transition: 'border-color 0.15s, background-color 0.15s',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+            gap: '0.75rem',
+            marginBottom: '0.9rem',
           }}
         >
-          {subiendo ? (
-            <div>
-              <div style={{ fontSize: '1.3rem', marginBottom: '0.3rem' }}>⏳</div>
-              <span style={{ fontSize: '0.82rem', color: '#666' }}>
-                Subiendo {progreso} de {progreso}… aguardá
-              </span>
-            </div>
-          ) : (
-            <div>
-              <div style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>➕</div>
-              <span style={{ fontSize: '0.82rem', color: '#888' }}>
-                Click o arrastrá fotos aquí · Podés seleccionar varias a la vez
-              </span>
-            </div>
-          )}
+          {listaImagenes.map((url, idx) => {
+            const esPrincipal = idx === 0
+            return (
+              <div
+                key={`${url}-${idx}`}
+                draggable
+                onDragStart={() => onDragStart(idx)}
+                onDragEnter={() => onDragEnter(idx)}
+                onDragEnd={onDragEnd}
+                onDragOver={(e) => e.preventDefault()}
+                title="Arrastrá para reordenar"
+                style={{
+                  position: 'relative',
+                  cursor: 'grab',
+                  border: esPrincipal ? '2.5px solid #f46e15' : '1.5px solid #b7996b',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  backgroundColor: '#fdf8f4',
+                  boxShadow: esPrincipal ? '0 2px 8px rgba(244,110,21,0.25)' : 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                {/* Imagen */}
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '1', backgroundColor: '#eee6d9' }}>
+                  <img
+                    src={url}
+                    alt={`Foto ${idx + 1}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    onError={(e) => {
+                      e.target.style.opacity = '0.3'
+                    }}
+                  />
+
+                  {/* Badge Principal / Número */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '4px',
+                      left: '4px',
+                      backgroundColor: esPrincipal ? '#f46e15' : 'rgba(0,0,0,0.65)',
+                      color: '#fff',
+                      fontSize: '0.65rem',
+                      fontWeight: 800,
+                      padding: '2px 6px',
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '3px',
+                      backdropFilter: 'blur(2px)',
+                    }}
+                  >
+                    {esPrincipal ? '⭐ Portada' : `#${idx + 1}`}
+                  </div>
+
+                  {/* Botón Eliminar */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      eliminarFoto(idx)
+                    }}
+                    title="Eliminar esta foto"
+                    style={{
+                      position: 'absolute',
+                      top: '4px',
+                      right: '4px',
+                      backgroundColor: 'rgba(198,40,40,0.92)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '24px',
+                      height: '24px',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: '700',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {/* Botón Hacer Portada */}
+                {!esPrincipal && (
+                  <button
+                    type="button"
+                    onClick={() => hacerPrincipal(idx)}
+                    style={{
+                      border: 'none',
+                      borderTop: '1px solid #e0d5c5',
+                      backgroundColor: '#fff',
+                      color: '#334c2b',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      padding: '0.35rem',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'background-color 0.15s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#fff3e0'
+                      e.currentTarget.style.color = '#e65100'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#fff'
+                      e.currentTarget.style.color = '#334c2b'
+                    }}
+                  >
+                    ⭐ Hacer portada
+                  </button>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
+
+      {/* Zona de Subida Drag & Drop */}
+      <div
+        onClick={() => !subiendo && inputRef.current?.click()}
+        onDragOver={(e) => {
+          e.preventDefault()
+          e.currentTarget.style.borderColor = '#f46e15'
+          e.currentTarget.style.backgroundColor = '#fff8f3'
+        }}
+        onDragLeave={(e) => {
+          e.currentTarget.style.borderColor = '#b7996b'
+          e.currentTarget.style.backgroundColor = '#fdf8f4'
+        }}
+        onDrop={(e) => {
+          e.preventDefault()
+          e.currentTarget.style.borderColor = '#b7996b'
+          e.currentTarget.style.backgroundColor = '#fdf8f4'
+          if (!subiendo) manejarArchivos(e.dataTransfer.files)
+        }}
+        style={{
+          border: '2px dashed #b7996b',
+          borderRadius: '8px',
+          padding: '1.25rem',
+          textAlign: 'center',
+          cursor: subiendo ? 'default' : 'pointer',
+          backgroundColor: '#fdf8f4',
+          transition: 'border-color 0.15s, background-color 0.15s',
+        }}
+      >
+        {subiendo ? (
+          <div>
+            <div style={{ fontSize: '1.4rem', marginBottom: '0.3rem' }}>⏳</div>
+            <p style={{ margin: 0, fontWeight: 700, color: '#334c2b', fontSize: '0.88rem' }}>
+              Subiendo a Cloudinary ({progreso.actual} de {progreso.total})…
+            </p>
+            <span style={{ fontSize: '0.78rem', color: '#666' }}>Por favor aguardá un instante</span>
+          </div>
+        ) : (
+          <div>
+            <div style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>📷 ➕</div>
+            <p style={{ margin: '0 0 0.25rem 0', fontWeight: 700, color: '#334c2b', fontSize: '0.9rem' }}>
+              Subir fotos a Cloudinary
+            </p>
+            <span style={{ fontSize: '0.8rem', color: '#888' }}>
+              Click aquí o arrastrá tus fotos · Podés subir una por una o varias juntas (JPG, PNG, WEBP)
+            </span>
+          </div>
+        )}
+      </div>
 
       <input
         ref={inputRef}
@@ -486,7 +413,14 @@ function GaleriaUploader({ urls, onChange }) {
         }}
       />
 
-      {errorMsg && <p style={{ color: '#c62828', fontSize: '0.82rem', marginTop: '0.4rem' }}>{errorMsg}</p>}
+      {errorMsg && (
+        <p style={{ color: '#c62828', fontSize: '0.82rem', marginTop: '0.4rem', fontWeight: 600 }}>
+          ⚠️ {errorMsg}
+        </p>
+      )}
+      <p style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.35rem' }}>
+        Cloudinary Media Storage · Arrastrá las fotos para cambiar su orden · Máx 10MB por foto
+      </p>
     </div>
   )
 }
@@ -527,10 +461,25 @@ export default function PaginaProductos() {
 
   function abrirEditar(p) {
     setEditando(p.id)
+
+    // Consolidar lista de imágenes sin duplicados preservando la principal
+    const fotosExistentes = []
+    if (p.imagen_url && typeof p.imagen_url === 'string' && p.imagen_url.trim()) {
+      fotosExistentes.push(p.imagen_url.trim())
+    }
+    if (Array.isArray(p.imagenes_urls)) {
+      p.imagenes_urls.forEach((u) => {
+        if (u && typeof u === 'string' && u.trim() && !fotosExistentes.includes(u.trim())) {
+          fotosExistentes.push(u.trim())
+        }
+      })
+    }
+
     setForm({
       ...p,
+      imagen_url: p.imagen_url || fotosExistentes[0] || '',
       imagen_public_id: p.imagen_public_id || '',
-      imagenes_urls: Array.isArray(p.imagenes_urls) ? p.imagenes_urls.filter(Boolean) : [],
+      imagenes_urls: fotosExistentes,
       fecha_inicio_promo: dateToLocalInputValue(p.fecha_inicio_promo),
       fecha_fin_promo: dateToLocalInputValue(p.fecha_fin_promo),
     })
@@ -564,6 +513,15 @@ export default function PaginaProductos() {
       if (!form.slug.trim()) throw new Error('El slug es obligatorio.')
       if (!form.precio_venta) throw new Error('El precio de venta es obligatorio.')
 
+      const todasLasImagenes = Array.isArray(form.imagenes_urls)
+        ? form.imagenes_urls.filter((u) => u && typeof u === 'string' && u.trim())
+        : []
+      const principal = (form.imagen_url && form.imagen_url.trim()) || todasLasImagenes[0] || null
+
+      const listaFinalUrls = principal
+        ? [principal, ...todasLasImagenes.filter((u) => u !== principal)]
+        : todasLasImagenes
+
       const payload = {
         nombre: form.nombre.trim(),
         slug: form.slug.trim(),
@@ -578,10 +536,10 @@ export default function PaginaProductos() {
         stock_actual: Number(form.stock_actual) || 0,
         stock_minimo: Number(form.stock_minimo) || 5,
         unidad_medida: form.unidad_medida,
-        imagen_url: form.imagen_url || null,
+        imagen_url: principal,
         imagen_public_id: form.imagen_public_id || null,
         imagen_alt: form.imagen_alt?.trim() || null,
-        imagenes_urls: Array.isArray(form.imagenes_urls) ? form.imagenes_urls.filter(Boolean) : [],
+        imagenes_urls: listaFinalUrls,
         is_active: form.is_active,
         is_featured: form.is_featured,
         disponible_delivery: form.disponible_delivery,
@@ -998,26 +956,18 @@ export default function PaginaProductos() {
             </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              {/* Imagen principal */}
+              {/* Gestor Integral de Imágenes (Múltiples fotos, portada y eliminación) */}
               <div style={{ gridColumn: '1 / -1' }}>
-                <ImagenUploader
+                <GestorImagenesProducto
                   imagenUrl={form.imagen_url}
-                  imagenPublicId={form.imagen_public_id}
-                  onChange={(url, publicId) => {
+                  imagenesUrls={form.imagenes_urls}
+                  onChange={({ imagen_url, imagenes_urls }) => {
                     setForm((prev) => ({
                       ...prev,
-                      imagen_url: url,
-                      imagen_public_id: publicId !== undefined ? publicId : prev.imagen_public_id,
+                      imagen_url,
+                      imagenes_urls,
                     }))
                   }}
-                />
-              </div>
-
-              {/* Galería adicional */}
-              <div style={{ gridColumn: '1 / -1' }}>
-                <GaleriaUploader
-                  urls={Array.isArray(form.imagenes_urls) ? form.imagenes_urls : []}
-                  onChange={(nuevas) => cambiarCampo('imagenes_urls', nuevas)}
                 />
               </div>
 
