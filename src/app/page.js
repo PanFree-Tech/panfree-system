@@ -15,7 +15,11 @@ export const revalidate = 300
 
 async function cargarDatos() {
   try {
-    const [{ data: productos, error: errProd }, { data: disponibilidad, error: errDisp }] = await Promise.all([
+    const [
+      { data: productos, error: errProd },
+      { data: disponibilidad, error: errDisp },
+      { data: configSitio },
+    ] = await Promise.all([
       supabase
         .from('productos')
         .select('*')
@@ -25,6 +29,11 @@ async function cargarDatos() {
       supabase
         .from('vista_disponibilidad_productos')
         .select('*'),
+      supabase
+        .from('configuracion_sitio')
+        .select('*')
+        .eq('id', 1)
+        .single(),
     ])
 
     if (errProd) {
@@ -55,23 +64,26 @@ async function cargarDatos() {
     return {
       productos: productosNormalizados,
       disponibilidad: dispMap,
+      configuracion: configSitio || null,
     }
   } catch (err) {
     console.error('Error cargando datos de Supabase:', err)
     return {
       productos: [],
       disponibilidad: {},
+      configuracion: null,
     }
   }
 }
 
 export default async function PaginaInicio() {
-  const { productos, disponibilidad } = await cargarDatos()
+  const { productos, disponibilidad, configuracion } = await cargarDatos()
 
   return (
     <TiendaCliente
       productos={productos}
       disponibilidad={disponibilidad}
+      configuracion={configuracion}
     />
   )
 }

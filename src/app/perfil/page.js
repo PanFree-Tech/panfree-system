@@ -48,7 +48,9 @@ import {
   QrCode,
   Gift,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Camera,
+  UploadCloud,
 } from 'lucide-react'
 
 const formatPYG   = n => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
@@ -85,8 +87,31 @@ const S = {
   err:        { backgroundColor: '#ffebee', color: '#c62828', border: '1px solid #ef9a9a' },
 }
 
+async function subirAvatarACloudinary(archivo) {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'd7simx38'
+  const uploadPreset = process.env.NEXT_PUBLIC_UPLOAD_PRESET || 'panfree_upload'
+
+  const formData = new FormData()
+  formData.append('file', archivo)
+  formData.append('upload_preset', uploadPreset)
+  formData.append('folder', 'usuarios')
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: 'POST',
+    body: formData,
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err?.error?.message || 'Error al subir avatar a Cloudinary')
+  }
+
+  const data = await res.json()
+  return data.secure_url
+}
+
 const PERFIL_VACIO = {
-  nombre_completo: '', telefono: '',
+  nombre_completo: '', telefono: '', avatar_url: '', foto_url: '',
   direccion_calle: '', direccion_numero: '', direccion_piso_dept: '',
   direccion_ciudad: 'Encarnación', direccion_provincia: 'Itapúa',
   notas_cliente: '', prefiere_retiro: false, prefiere_delivery: true,
@@ -102,6 +127,7 @@ export default function PaginaPerfil() {
   const [guardandoPerfil, setGuardandoPerfil] = useState(false)
   const [mensajePerfil, setMensajePerfil]     = useState(null)
   const [perfilDirty, setPerfilDirty]         = useState(false)
+  const [subiendoAvatar, setSubiendoAvatar]   = useState(false)
 
   // — Email confirmación
   const [enviandoConfirm, setEnviandoConfirm] = useState(false)
@@ -133,7 +159,7 @@ export default function PaginaPerfil() {
     if (!usuario) return
     supabase
       .from('clientes')
-      .select('nombre_completo, telefono, direccion_calle, direccion_numero, direccion_piso_dept, direccion_ciudad, direccion_provincia, notas_cliente, prefiere_retiro, prefiere_delivery, puntos_fidelidad, nivel_cliente')
+      .select('nombre_completo, telefono, avatar_url, foto_url, direccion_calle, direccion_numero, direccion_piso_dept, direccion_ciudad, direccion_provincia, notas_cliente, prefiere_retiro, prefiere_delivery, puntos_fidelidad, nivel_cliente')
       .eq('user_id', usuario.id)
       .single()
       .then(({ data }) => {
@@ -141,6 +167,8 @@ export default function PaginaPerfil() {
           const p = {
             nombre_completo:     data.nombre_completo     || '',
             telefono:            data.telefono            || '',
+            avatar_url:          data.avatar_url || data.foto_url || usuario.user_metadata?.avatar_url || '',
+            foto_url:            data.foto_url || data.avatar_url || '',
             direccion_calle:     data.direccion_calle     || '',
             direccion_numero:    data.direccion_numero    || '',
             direccion_piso_dept: data.direccion_piso_dept || '',
@@ -169,6 +197,23 @@ export default function PaginaPerfil() {
     })
   }
 
+  async function handleAvatarChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setSubiendoAvatar(true)
+    setMensajePerfil(null)
+    try {
+      const url = await subirAvatarACloudinary(file)
+      actualizarPerfil('avatar_url', url)
+      actualizarPerfil('foto_url', url)
+      setMensajePerfil({ tipo: 'ok', texto: 'Avatar subido. Hacé clic en "Guardar datos" para confirmar.' })
+    } catch (err) {
+      setMensajePerfil({ tipo: 'err', texto: err.message || 'Error al subir avatar.' })
+    } finally {
+      setSubiendoAvatar(false)
+    }
+  }
+
   // ── Guardar perfil ───────────────────────────────────────────────────────
   async function guardarPerfil() {
     if (!perfil.nombre_completo.trim()) {
@@ -182,6 +227,8 @@ export default function PaginaPerfil() {
         .update({
           nombre_completo:     perfil.nombre_completo.trim(),
           telefono:            perfil.telefono.trim() || null,
+          avatar_url:          perfil.avatar_url || null,
+          foto_url:            perfil.avatar_url || null,
           direccion_calle:     perfil.direccion_calle.trim() || null,
           direccion_numero:    perfil.direccion_numero.trim() || null,
           direccion_piso_dept: perfil.direccion_piso_dept.trim() || null,
@@ -194,6 +241,13 @@ export default function PaginaPerfil() {
         })
         .eq('user_id', usuario.id)
       if (error) throw error
+
+      if (perfil.avatar_url) {
+        await supabase.auth.updateUser({
+          data: { avatar_url: perfil.avatar_url }
+        }).catch(() => {})
+      }
+
       setPerfilOriginal({ ...perfil })
       setPerfilDirty(false)
       setMensajePerfil({ tipo: 'ok', texto: 'Datos actualizados correctamente.' })
@@ -301,8 +355,32 @@ export default function PaginaPerfil() {
 
       {/* Hero */}
       <div style={S.hero}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-          <User size={48} color="#eee6d9" />
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+          <div
+            style={{
+              position: 'relative',
+              width: '72px',
+              height: '72px',
+              borderRadius: '50%',
+              overflow: 'hidden',
+              backgroundColor: '#eee6d9',
+              border: '3px solid #b7996b',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {perfil.avatar_url ? (
+              <img
+                src={perfil.avatar_url}
+                alt={perfil.nombre_completo || 'Avatar'}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              <User size={42} color="#334c2b" />
+            )}
+          </div>
         </div>
         <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700' }}>Mi Cuenta</h1>
         <p style={{ margin: '0.4rem 0 0', color: '#b7996b', fontSize: '0.95rem' }}>
@@ -429,6 +507,62 @@ export default function PaginaPerfil() {
                 <span>{mensajePerfil.texto}</span>
               </div>
             )}
+
+            {/* Avatar Uploader */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
+              <div
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  backgroundColor: '#eee6d9',
+                  border: '2px solid #b7996b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                {perfil.avatar_url ? (
+                  <img
+                    src={perfil.avatar_url}
+                    alt="Foto de perfil"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <User size={36} color="#334c2b" />
+                )}
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    ...S.btnVerde,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.45rem 0.9rem',
+                    fontSize: '0.85rem',
+                    cursor: subiendoAvatar ? 'not-allowed' : 'pointer',
+                    opacity: subiendoAvatar ? 0.7 : 1,
+                  }}
+                >
+                  <Camera size={16} />
+                  <span>{subiendoAvatar ? 'Subiendo foto…' : 'Cambiar foto de perfil'}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    disabled={subiendoAvatar}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+                <p style={{ margin: '0.3rem 0 0', fontSize: '0.75rem', color: '#666' }}>
+                  JPG, PNG o WEBP. Guardado en Cloudinary.
+                </p>
+              </div>
+            </div>
 
             <label style={S.label}>Nombre completo *</label>
             <input
