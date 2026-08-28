@@ -1,322 +1,318 @@
-# Base de Datos (Supabase) — Panfree System
+# 🗄️ PanFree System — Esquema de Base de Datos (Supabase / PostgreSQL)
 
-**Última revisión:** 2026-08-18
-
-**⚠️ ATENCIÓN:** Esta documentación combina columnas inferidas desde el código con recomendaciones. Donde la definición real no está disponible, marco **"Pendiente de revisar en Supabase"**.
-
----
-
-## Tablas
-
-### clientes
-
-| Columna | Tipo | Nulabilidad | Default | Descripción |
-|---------|------|-------------|---------|-------------|
-| `id` | `uuid` | **NO** | `gen_random_uuid()` | PK |
-| `nombre_completo` | `text` | **NO** | - | Nombre del cliente |
-| `email` | `text` | **NO** | - | Email (único) |
-| `telefono` | `text` | SÍ | - | Teléfono |
-| `direccion_calle` | `text` | SÍ | - | Calle |
-| `direccion_numero` | `text` | SÍ | - | Número |
-| `direccion_ciudad` | `text` | SÍ | `'Encarnación'` | Ciudad por defecto |
-| `direccion_provincia` | `text` | SÍ | `'Itapúa'` | Provincia por defecto |
-| `user_id` | `uuid` | SÍ | - | FK → `auth.users.id` |
-| `is_active` | `boolean` | **NO** | `true` | Cliente activo |
-| `created_at` | `timestamptz` | **NO** | `now()` | Registro creado |
-| `updated_at` | `timestamptz` | SÍ | `now()` | Última modificación |
-
-**Nota:** El código en checkout hace `select/update/insert` sobre esta tabla.
+**Motor:** PostgreSQL 15 (Supabase)  
+**Versión del Esquema:** 2.0.0  
+**Última actualización:** 2026-08-28  
 
 ---
 
-### pedidos
+## 📑 Diagrama Entidad-Relación (ERD) Conceptual
 
-| Columna | Tipo | Nulabilidad | Default | Descripción |
-|---------|------|-------------|---------|-------------|
-| `id` | `uuid` | **NO** | `gen_random_uuid()` | PK |
-| `numero_pedido` | `text` | **NO** | - | Formato `PF-YYYY-XXXX` (generado) |
-| `cliente_id` | `uuid` | **NO** | - | FK → `clientes.id` |
-| `estado` | `text` | **NO** | `'pendiente'` | `pendiente`, `confirmado`, `en_produccion`, `listo`, `entregado`, `cancelado` |
-| `metodo_entrega` | `text` | **NO** | `'retiro'` | `'delivery'` o `'retiro'` |
-| `entrega_direccion` | `text` | SÍ | - | Dirección completa |
-| `entrega_costo` | `numeric` | **NO** | `0` | Costo de envío |
-| `entrega_distancia_km` | `numeric` | SÍ | - | Distancia en km |
-| `entrega_lat` | `numeric` | SÍ | - | Latitud |
-| `entrega_lng` | `numeric` | SÍ | - | Longitud |
-| `subtotal` | `numeric` | **NO** | `0` | Subtotal del pedido |
-| `total_final` | `numeric` | **NO** | `0` | Total final |
-| `estado_pago` | `text` | **NO** | `'pendiente'` | `pendiente`, `confirmado`, `rechazado` |
-| `metodo_pago` | `text` | **NO** | `'efectivo'` | `'efectivo'` o `'transferencia'` |
-| `creado_por` | `uuid` | SÍ | `null` | `user_id` del admin o cliente |
-| `created_at` | `timestamptz` | **NO** | `now()` | Fecha de creación |
-| `updated_at` | `timestamptz` | SÍ | `now()` | Última modificación |
-
-**Observación:** Checkout inserta con `estado='pendiente'` y `estado_pago='pendiente'`.
-
----
-
-### detalle_pedido
-
-| Columna | Tipo | Nulabilidad | Default | Descripción |
-|---------|------|-------------|---------|-------------|
-| `id` | `uuid` | **NO** | `gen_random_uuid()` | PK |
-| `pedido_id` | `uuid` | **NO** | - | FK → `pedidos.id` |
-| `producto_id` | `uuid` | **NO** | - | FK → `productos.id` |
-| `cantidad` | `integer` | **NO** | `1` | Cantidad |
-| `precio_unitario` | `numeric` | **NO** | `0` | Precio unitario |
-
----
-
-### productos
-
-| Columna | Tipo | Nulabilidad | Default | Descripción |
-|---------|------|-------------|---------|-------------|
-| `id` | `uuid` | **NO** | `gen_random_uuid()` | PK |
-| `slug` | `text` | **NO** | - | URL amigable |
-| `nombre` | `text` | **NO** | - | Nombre del producto |
-| `descripcion` | `text` | SÍ | - | Descripción |
-| `precio_venta` | `numeric` | **NO** | `0` | Precio de venta |
-| `is_active` | `boolean` | **NO** | `true` | Producto activo |
-| `is_featured` | `boolean` | **NO** | `false` | Producto destacado |
-| `imagen_url` | `text` | SÍ | - | URL de imagen |
-| `categoria` | `text` | SÍ | - | Categoría |
-| `unidad_medida` | `text` | SÍ | - | Unidad de medida |
-| `stock` | `integer` | SÍ | `null` | Stock físico (si se maneja) |
-| `created_at` | `timestamptz` | **NO** | `now()` | Fecha de creación |
-
----
-
-### vista_disponibilidad_productos (VIEW)
-
-**Columnas:**
-- `producto_id` (uuid)
-- `disponible` (boolean)
-- `tandas_posibles` (integer)
-- `ingredientes_faltantes` (text[] o json)
-- `requiere_anticipacion` (boolean)
-
-**Definición:** Pendiente de revisar en Supabase.
-
-**SQL Sugerido:**
-```sql
-CREATE VIEW vista_disponibilidad_productos AS
-SELECT 
-  p.id AS producto_id,
-  (p.stock IS NULL OR p.stock > 0) AS disponible,
-  CASE WHEN p.stock IS NULL THEN 0 ELSE FLOOR(p.stock / p.rendimiento) END AS tandas_posibles,
-  ARRAY[]::text[] AS ingredientes_faltantes,
-  false AS requiere_anticipacion
-FROM productos p;
-
-Relaciones (Foreign Keys)
-Relación	Tabla Origen	Tabla Destino
-pedidos.cliente_id → clientes.id	pedidos	clientes
-detalle_pedido.pedido_id → pedidos.id	detalle_pedido	pedidos
-detalle_pedido.producto_id → productos.id	detalle_pedido	productos
-clientes.user_id → auth.users.id	clientes	auth.users
-Diagrama ER (ASCII)
-text
-┌─────────────┐         ┌─────────────┐         ┌──────────────────┐
-│  clientes   │─────────│   pedidos   │─────────│  detalle_pedido  │
-│─────────────│   1:N    │─────────────│   1:N    │──────────────────│
-│ id (PK)     │         │ id (PK)     │         │ id (PK)          │
-│ nombre      │         │ numero      │         │ pedido_id (FK)   │
-│ email       │         │ cliente_id  │         │ producto_id (FK) │
-│ telefono    │         │ estado      │         │ cantidad         │
-│ user_id     │         │ metodo      │         │ precio_unitario  │
-│ ...         │         │ ...         │         │ ...              │
-└─────────────┘         └─────────────┘         └──────────────────┘
-                              │                           │
-                              │                           │
-                              ▼                           ▼
-                         ┌────────────────────────────────────┐
-                         │            productos              │
-                         │────────────────────────────────────│
-                         │ id (PK)                           │
-                         │ slug                             │
-                         │ nombre                           │
-                         │ precio_venta                     │
-                         │ is_active                        │
-                         │ ...                              │
-                         └────────────────────────────────────┘
-Triggers y Funciones (Sugeridas)
-generar_numero_pedido()
-Descripción: Asigna numero_pedido en formato PF-YYYY-XXXX incremental por año.
-
-sql
-CREATE FUNCTION generar_numero_pedido() RETURNS trigger LANGUAGE plpgsql AS $$
-DECLARE
-  seq int;
-  year text := to_char(NEW.created_at, 'YYYY');
-BEGIN
-  SELECT nextval('seq_numero_pedido') INTO seq;
-  NEW.numero_pedido := format('PF-%s-%04s', year, seq);
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER trg_generar_numero_pedido
-BEFORE INSERT ON pedidos
-FOR EACH ROW
-EXECUTE FUNCTION generar_numero_pedido();
-crear_notificacion_pedido()
-Descripción: Crea registro en notificaciones_admin al insertar pedido.
-
-sql
-CREATE FUNCTION crear_notificacion_pedido() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  INSERT INTO notificaciones_admin(pedido_id, mensaje, created_at)
-  VALUES (NEW.id, 'Nuevo pedido ' || NEW.numero_pedido, now());
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER trg_notificar_nuevo_pedido
-AFTER INSERT ON pedidos
-FOR EACH ROW
-EXECUTE FUNCTION crear_notificacion_pedido();
-### Políticas RLS (Recomendadas)
-Roles: `anon`, `authenticated`, `admin` (en `raw_user_meta_data.role` o `user_metadata.role`)
-
-#### Función Helper
-```sql
-CREATE OR REPLACE FUNCTION auth.is_admin()
-RETURNS boolean AS $$
-BEGIN
-  RETURN (
-    coalesce(auth.jwt() -> 'user_metadata' ->> 'role', '') = 'admin' OR
-    coalesce(auth.jwt() -> 'raw_user_meta_data' ->> 'role', '') = 'admin' OR
-    coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') = 'admin'
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
-
-#### productos
-```sql
-ALTER TABLE productos ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "select_publico_productos" ON productos
-FOR SELECT USING (true);
-
-CREATE POLICY "admin_all_productos" ON productos
-FOR ALL TO authenticated USING (auth.is_admin()) WITH CHECK (auth.is_admin());
-```
-
-#### clientes
-```sql
-ALTER TABLE clientes ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "clientes_insert_publico" ON clientes
-FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "clientes_select_own_or_admin" ON clientes
-FOR SELECT USING (auth.is_admin() OR user_id = auth.uid());
-
-CREATE POLICY "clientes_update_own_or_admin" ON clientes
-FOR UPDATE USING (auth.is_admin() OR user_id = auth.uid())
-WITH CHECK (auth.is_admin() OR user_id = auth.uid());
-```
-
-#### pedidos
-```sql
-ALTER TABLE pedidos ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "pedidos_insert_web" ON pedidos
-FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "pedidos_admin_all" ON pedidos
-FOR ALL TO authenticated USING (auth.is_admin()) WITH CHECK (auth.is_admin());
-
-CREATE POLICY "pedidos_select_own" ON pedidos
-FOR SELECT USING (
-  cliente_id IN (SELECT id FROM clientes WHERE user_id = auth.uid())
-);
-```
-
-#### detalle_pedido
-```sql
-ALTER TABLE detalle_pedido ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "detalle_pedido_insert_web" ON detalle_pedido
-FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "detalle_pedido_admin_all" ON detalle_pedido
-FOR ALL TO authenticated USING (auth.is_admin()) WITH CHECK (auth.is_admin());
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│   proveedores   │◄──────│     insumos     │◄──────│ recetas_lineas  │
+└─────────────────┘  1:N  └────────┬────────┘  1:N  └────────┬────────┘
+                                   │                         │ N:1
+                                   │ 1:N                     ▼
+                                   │                ┌─────────────────┐
+                                   ▼                │    productos    │◄─────┐
+                          ┌─────────────────┐       └────────┬────────┘      │
+                          │ detalle_compra  │                │ 1:N           │ 1:N
+                          └────────┬────────┘                ▼               │
+                                   │ N:1            ┌─────────────────┐      │
+                                   ▼                │ detalle_pedido  │      │
+                          ┌─────────────────┐       └────────┬────────┘      │
+                          │     compras     │                │ N:1           │
+                          └─────────────────┘                ▼               │
+                                                    ┌─────────────────┐      │
+                                                    │     pedidos     │      │
+                                                    └────────┬────────┘      │
+                                                             │ N:1           │
+                                                             ▼               │
+                                                    ┌─────────────────┐      │
+                                                    │    clientes     │      │
+                                                    └────────┬────────┘      │
+                                                             │ 1:N           │
+                                   ┌─────────────────────────┴─────────┐     │
+                                   ▼                                   ▼     │
+                          ┌─────────────────┐                 ┌────────┴─────┴──┐
+                          │ canjes_dipticos │                 │   produccion    │
+                          └────────┬────────┘                 └─────────────────┘
+                                   │ N:1
+                                   ▼
+                          ┌─────────────────┐
+                          │ codigos_dipticos│
+                          └─────────────────┘
 ```
 
 ---
 
-## Módulo de Marketing Inteligente
+## 1. Módulo Comercial & E-commerce
 
-### reglas_promocion
+### 1.1. `productos`
+Almacena el catálogo de panificados y dulces artesanales sin gluten, con soporte para promociones, costos y capacidad Made-To-Order.
 
-| Columna | Tipo | Nulabilidad | Default | Descripción |
-|---------|------|-------------|---------|-------------|
-| `id` | `uuid` | **NO** | `gen_random_uuid()` | PK |
-| `nombre` | `text` | **NO** | - | Nombre identificador de la regla |
-| `descripcion` | `text` | SÍ | - | Detalle o propósito de la regla |
-| `condicion` | `jsonb` | **NO** | `'{}'` | Criterios de activación (tipo, stock, evento, etc.) |
-| `tipo_costo` | `text` | SÍ | `'competitivo'` | `competitivo`, `objetivo`, `premium` |
-| `descuento_min` | `integer` | **NO** | `5` | Porcentaje mínimo de descuento |
-| `descuento_max` | `integer` | **NO** | `20` | Porcentaje máximo de descuento |
-| `prioridad` | `integer` | **NO** | `1` | Nivel de precedencia ante múltiples reglas |
-| `activo` | `boolean` | **NO** | `true` | Estado de la regla |
-| `created_at` | `timestamptz` | **NO** | `now()` | Fecha de creación |
-| `updated_at` | `timestamptz` | **NO** | `now()` | Última actualización |
-
-### eventos_calendario
-
-| Columna | Tipo | Nulabilidad | Default | Descripción |
-|---------|------|-------------|---------|-------------|
-| `id` | `uuid` | **NO** | `gen_random_uuid()` | PK |
-| `nombre` | `text` | **NO** | - | Nombre de la festividad o evento |
-| `fecha_inicio` | `date` | **NO** | - | Fecha de inicio del evento |
-| `fecha_fin` | `date` | **NO** | - | Fecha de finalización |
-| `categoria` | `text` | SÍ | `'festividad'` | Categoría (`festividad`, `salud`, `familiar`, etc.) |
-| `productos_relacionados` | `text[]` | SÍ | `'{}'` | Lista de nombres o categorías de productos |
-| `activo` | `boolean` | **NO** | `true` | Evento habilitado |
-| `created_at` | `timestamptz` | **NO** | `now()` | Fecha de registro |
-
-### promociones_historico
-
-| Columna | Tipo | Nulabilidad | Default | Descripción |
-|---------|------|-------------|---------|-------------|
-| `id` | `uuid` | **NO** | `gen_random_uuid()` | PK |
-| `producto_id` | `uuid` | SÍ | `null` | FK → `productos.id` |
-| `regla_id` | `uuid` | SÍ | `null` | FK → `reglas_promocion.id` |
-| `descuento_aplicado` | `integer` | **NO** | `0` | Porcentaje de descuento aplicado |
-| `precio_final` | `numeric` | **NO** | `0` | Precio en Guaraníes con descuento |
-| `captions_generados` | `jsonb` | SÍ | `'{}'` | Objeto con hook, caption, hashtags y CTA |
-| `imagen_url` | `text` | SÍ | - | URL pública o referencia de la creatividad |
-| `post_id` | `text` | SÍ | - | ID retornado por Instagram Graph API |
-| `publicada` | `boolean` | **NO** | `false` | Indica si fue publicada o solo programada |
-| `fecha_programada` | `timestamptz` | SÍ | - | Fecha y hora de programación |
-| `fecha_publicacion` | `timestamptz` | SÍ | - | Fecha y hora efectiva de publicación |
-| `engagement` | `integer` | **NO** | `0` | Métrica de interacciones / clics |
-| `created_at` | `timestamptz` | **NO** | `now()` | Registro de la promoción |
-
-### instagram_posts
-
-| Columna | Tipo | Nulabilidad | Default | Descripción |
-|---------|------|-------------|---------|-------------|
-| `id` | `uuid` | **NO** | `gen_random_uuid()` | PK |
-| `product_id` | `uuid` | SÍ | `null` | FK → `productos.id` |
-| `product_name` | `text` | **NO** | - | Nombre del producto |
-| `caption` | `text` | **NO** | - | Copy publicado en Instagram |
-| `post_id` | `text` | SÍ | - | ID del post en Instagram |
-| `post_url` | `text` | SÍ | - | Enlace directo a la publicación |
-| `format` | `text` | SÍ | `'feed_4_5'` | Formato visual empleado |
-| `status` | `text` | SÍ | `'publicado'` | Estado del post |
-| `created_at` | `timestamptz` | **NO** | `now()` | Fecha y hora |
+| Columna | Tipo | Nulable | Por Defecto | Descripción |
+|---|---|---|---|---|
+| `id` | `uuid` | NO | `gen_random_uuid()` | Clave primaria |
+| `slug` | `text` | NO | - | Identificador único en URL amigable |
+| `nombre` | `text` | NO | - | Nombre comercial del producto |
+| `descripcion` | `text` | SÍ | - | Descripción detallada e ingredientes |
+| `precio_venta` | `numeric(12,2)` | NO | `0` | Precio de venta al público en PYG (₲) |
+| `categoria` | `text` | SÍ | `'panes'` | Categoría (`panes`, `dulces`, `salados`, `congelados`) |
+| `unidad_medida` | `text` | SÍ | `'unidad'` | Unidad de venta (`unidad`, `kg`, `pack`) |
+| `imagen_url` | `text` | SÍ | - | URL pública de la imagen en Cloudinary |
+| `is_active` | `boolean` | NO | `true` | Habilitado para la venta |
+| `is_featured` | `boolean` | NO | `false` | Destacado en la portada de la tienda |
+| `stock` | `integer` | SÍ | `null` | Stock físico disponible |
+| `production_capacity` | `integer` | NO | `10` | Capacidad máxima de producción diaria |
+| `current_orders` | `integer` | NO | `0` | Órdenes activas recibidas en el día |
+| `lead_time` | `integer` | NO | `24` | Tiempo estimado de elaboración en horas |
+| `order_available` | `boolean` | NO | `true` | Disponibilidad para recibir nuevos pedidos |
+| `availability_status` | `text` | NO | `'DISPONIBLE'` | Estado (`DISPONIBLE`, `CAPACIDAD LIMITADA`, `CERRADO`) |
+| `en_promocion` | `boolean` | NO | `false` | Indica si el producto tiene oferta activa |
+| `precio_promocion` | `numeric(12,2)` | SÍ | `null` | Precio con descuento en PYG (₲) |
+| `fecha_inicio_promo` | `timestamptz` | SÍ | `null` | Inicio de vigencia de la oferta |
+| `fecha_fin_promo` | `timestamptz` | SÍ | `null` | Fin de vigencia de la oferta |
+| `rendimiento_kg` | `numeric(10,3)` | SÍ | `1` | Rendimiento en peso de la tanda |
+| `peso_promedio_unidad`| `numeric(10,3)` | SÍ | `null` | Peso promedio por unidad (kg) |
+| `tiempo_prep_min` | `integer` | SÍ | `0` | Tiempo de preparación (minutos) |
+| `tiempo_coccion_min` | `integer` | SÍ | `0` | Tiempo de horneado (minutos) |
+| `tiempo_reposo_min` | `integer` | SÍ | `0` | Tiempo de fermentación/enfriado |
+| `temperatura_horno_c` | `integer` | SÍ | `null` | Temperatura del horno en °C |
+| `notas_produccion` | `text` | SÍ | - | Instrucciones técnicas para operarios |
+| `dificultad` | `text` | SÍ | `'media'` | Complejidad de elaboración |
+| `created_at` | `timestamptz` | NO | `now()` | Fecha de creación del registro |
 
 ---
 
-Pendiente de Revisar en Supabase
-✅ Exportar schema completo (pg_dump)
+### 1.2. `clientes`
+Registro de compradores y clientes registrados en el programa de fidelización.
 
-✅ Listar RLS policies reales
+| Columna | Tipo | Nulable | Por Defecto | Descripción |
+|---|---|---|---|---|
+| `id` | `uuid` | NO | `gen_random_uuid()` | Clave primaria |
+| `user_id` | `uuid` | SÍ | `null` | FK a `auth.users.id` si está registrado |
+| `nombre_completo` | `text` | NO | - | Nombre y apellido del cliente |
+| `email` | `text` | NO | - | Correo electrónico de contacto |
+| `telefono` | `text` | SÍ | - | Teléfono / WhatsApp |
+| `direccion_calle` | `text` | SÍ | - | Dirección de entrega (calle principal) |
+| `direccion_numero` | `text` | SÍ | - | Número de casa o departamento |
+| `direccion_ciudad` | `text` | SÍ | `'Encarnación'` | Ciudad |
+| `direccion_provincia`| `text` | SÍ | `'Itapúa'` | Departamento / Provincia |
+| `puntos_fidelidad` | `integer` | NO | `0` | Balance actual de puntos acumulados |
+| `nivel_cliente` | `text` | NO | `'bronce'` | Nivel (`bronce`, `plata`, `oro`, `vip`) |
+| `role` | `text` | NO | `'cliente'` | Rol en la aplicación |
+| `avatar_url` | `text` | SÍ | - | URL de avatar en Cloudinary |
+| `is_active` | `boolean` | NO | `true` | Estado activo |
+| `created_at` | `timestamptz` | NO | `now()` | Fecha de registro |
+| `updated_at` | `timestamptz` | SÍ | `now()` | Última actualización |
 
-✅ Revisar triggers existentes
+---
 
-✅ Confirmar tablas auxiliares (notificaciones_admin, zonas delivery)
+### 1.3. `pedidos`
+Órdenes de compra generadas desde la tienda online o cargadas manualmente por administración.
+
+| Columna | Tipo | Nulable | Por Defecto | Descripción |
+|---|---|---|---|---|
+| `id` | `uuid` | NO | `gen_random_uuid()` | Clave primaria |
+| `numero_pedido` | `text` | NO | - | Identificador único (Ej: `PF-2026-0042`) |
+| `cliente_id` | `uuid` | NO | - | FK a `clientes.id` |
+| `estado` | `text` | NO | `'pendiente'` | `pendiente`, `confirmado`, `en_produccion`, `listo`, `entregado`, `cancelado` |
+| `metodo_entrega` | `text` | NO | `'retiro'` | `'retiro'` o `'delivery'` |
+| `entrega_direccion` | `text` | SÍ | - | Dirección completa de destino |
+| `entrega_costo` | `numeric(12,2)`| NO | `0` | Tarifa de envío en PYG (₲) |
+| `entrega_distancia_km`| `numeric(8,2)`| SÍ | - | Distancia calculada en kilómetros |
+| `entrega_lat` | `numeric(10,6)`| SÍ | - | Latitud geográfica de destino |
+| `entrega_lng` | `numeric(10,6)`| SÍ | - | Longitud geográfica de destino |
+| `subtotal` | `numeric(12,2)`| NO | `0` | Subtotal de productos en PYG (₲) |
+| `descuento_monto` | `numeric(12,2)`| NO | `0` | Descuento total aplicado |
+| `cupon_codigo` | `text` | SÍ | - | Código de cupón utilizado |
+| `puntos_ganados` | `integer` | NO | `0` | Puntos otorgados por esta compra |
+| `puntos_usados` | `integer` | NO | `0` | Puntos canjeados en esta compra |
+| `total_final` | `numeric(12,2)`| NO | `0` | Total a pagar en PYG (₲) |
+| `metodo_pago` | `text` | NO | `'efectivo'` | `'efectivo'` o `'transferencia'` |
+| `estado_pago` | `text` | NO | `'pendiente'` | `pendiente`, `confirmado`, `rechazado` |
+| `creado_por` | `uuid` | SÍ | `null` | ID del usuario creador |
+| `created_at` | `timestamptz` | NO | `now()` | Fecha de creación de la orden |
+| `updated_at` | `timestamptz` | SÍ | `now()` | Última actualización de estado |
+
+---
+
+### 1.4. `detalle_pedido`
+Líneas de productos que integran cada pedido.
+
+| Columna | Tipo | Nulable | Por Defecto | Descripción |
+|---|---|---|---|---|
+| `id` | `uuid` | NO | `gen_random_uuid()` | Clave primaria |
+| `pedido_id` | `uuid` | NO | - | FK a `pedidos.id` (ON DELETE CASCADE) |
+| `producto_id` | `uuid` | NO | - | FK a `productos.id` |
+| `cantidad` | `integer` | NO | `1` | Cantidad de unidades |
+| `precio_unitario` | `numeric(12,2)`| NO | `0` | Precio unitario congelado en la venta |
+
+---
+
+## 2. Módulo de Inventario, Insumos & Proveedores
+
+### 2.1. `proveedores`
+Directorio de proveedores de materias primas sin gluten certificadas.
+
+| Columna | Tipo | Nulable | Por Defecto | Descripción |
+|---|---|---|---|---|
+| `id` | `uuid` | NO | `gen_random_uuid()` | Clave primaria |
+| `nombre_empresa` | `text` | NO | - | Razón social o nombre comercial |
+| `contacto_nombre` | `text` | SÍ | - | Nombre de la persona de contacto |
+| `telefono` | `text` | SÍ | - | Teléfono de ventas |
+| `email` | `text` | SÍ | - | Correo de pedidos |
+| `ruc` | `text` | SÍ | - | Registro Único del Contribuyente |
+| `direccion` | `text` | SÍ | - | Dirección física o ciudad |
+| `condiciones_pago`| `text` | SÍ | `'contado'` | Contado, 30 días, etc. |
+| `is_active` | `boolean` | NO | `true` | Proveedor activo |
+| `created_at` | `timestamptz` | NO | `now()` | Fecha de registro |
+
+---
+
+### 2.2. `insumos`
+Maestro de materias primas (harinas sin gluten, féculas, levaduras, endulzantes, etc.).
+
+| Columna | Tipo | Nulable | Por Defecto | Descripción |
+|---|---|---|---|---|
+| `id` | `uuid` | NO | `gen_random_uuid()` | Clave primaria |
+| `nombre` | `text` | NO | - | Nombre del insumo (Ej: Fécula de Mandioca) |
+| `categoria` | `text` | NO | `'harinas'` | `harinas`, `féculas`, `levaduras`, `grasas`, `endulzantes`, `aditivos`, `envases` |
+| `unidad_medida` | `text` | NO | `'kg'` | `kg`, `g`, `lt`, `ml`, `unidad` |
+| `stock_actual` | `numeric(12,3)`| NO | `0` | Existencia física actual en depósito |
+| `stock_minimo` | `numeric(12,3)`| NO | `1` | Nivel mínimo de alerta de reposición |
+| `stock_maximo` | `numeric(12,3)`| SÍ | `null` | Capacidad máxima de almacenamiento |
+| `precio_compra_actual`| `numeric(12,2)`| NO | `0` | Precio de la última compra |
+| `ppp_actual` | `numeric(12,2)`| NO | `0` | Precio Promedio Ponderado contable |
+| `factor_conversion`| `numeric(8,4)` | NO | `1` | Factor de ajuste de unidad |
+| `proveedor_id` | `uuid` | SÍ | `null` | FK a `proveedores.id` |
+| `requiere_control_lote`| `boolean` | NO | `false` | Exige número de lote por vencimiento |
+| `is_active` | `boolean` | NO | `true` | Insumo activo |
+| `created_at` | `timestamptz` | NO | `now()` | Fecha de registro |
+| `updated_at` | `timestamptz` | SÍ | `now()` | Última actualización |
+
+---
+
+### 2.3. `compras` & `detalle_compra`
+Registro de órdenes de compra a proveedores.
+
+**Tabla `compras`:**
+- `id` (UUID, PK)
+- `numero_compra` (TEXT, Ej: `COMP-20260828-102`)
+- `proveedor_id` (UUID, FK a `proveedores.id`)
+- `total` (NUMERIC)
+- `descuento` (NUMERIC)
+- `estado` (`pendiente`, `confirmada`, `recepcionada`, `cancelada`)
+- `estado_pago` (`pendiente`, `parcial`, `pagado`)
+- `metodo_pago` (TEXT)
+- `fecha_compra` (TIMESTAMPTZ)
+- `fecha_recepcion` (TIMESTAMPTZ)
+
+**Tabla `detalle_compra`:**
+- `id` (UUID, PK)
+- `compra_id` (UUID, FK a `compras.id`)
+- `insumo_id` (UUID, FK a `insumos.id`)
+- `cantidad` (NUMERIC)
+- `precio_unitario` (NUMERIC)
+- `subtotal` (NUMERIC)
+
+---
+
+## 3. Módulo de Recetas, Producción y Maquinarias
+
+### 3.1. `recetas_lineas`
+Composición técnica de ingredientes requeridos por cada producto.
+
+| Columna | Tipo | Nulable | Por Defecto | Descripción |
+|---|---|---|---|---|
+| `id` | `uuid` | NO | `gen_random_uuid()` | Clave primaria |
+| `producto_id` | `uuid` | NO | - | FK a `productos.id` (ON DELETE CASCADE) |
+| `insumo_id` | `uuid` | NO | - | FK a `insumos.id` |
+| `cantidad` | `numeric(10,4)`| NO | - | Cantidad requerida para la receta |
+| `unidad_medida` | `text` | NO | `'kg'` | Unidad de la receta |
+| `es_opcional` | `boolean` | NO | `false` | Ingrediente secundario/opcional |
+| `notas` | `text` | SÍ | - | Instrucciones específicas de incorporación |
+
+---
+
+### 3.2. `produccion`
+Registro de lotes de horneado y control de mermas.
+
+| Columna | Tipo | Nulable | Por Defecto | Descripción |
+|---|---|---|---|---|
+| `id` | `uuid` | NO | `gen_random_uuid()` | Clave primaria |
+| `numero_lote` | `text` | NO | - | Identificador de lote (Ej: `PROD-2026-0015`) |
+| `producto_id` | `uuid` | NO | - | FK a `productos.id` |
+| `cantidad_producida` | `numeric(10,2)`| NO | - | Unidades o KG terminados |
+| `unidad_medida` | `text` | NO | `'unidad'` | Unidad de producción |
+| `costo_materia_prima`| `numeric(12,2)`| NO | `0` | Costo calculado de insumos consumidos |
+| `costo_mano_obra` | `numeric(12,2)`| NO | `0` | Costo laboral asignado |
+| `costo_indirectos` | `numeric(12,2)`| NO | `0` | Costo de energía/servicios |
+| `merma_porcentaje` | `numeric(5,2)` | NO | `0` | Porcentaje de merma o descarte |
+| `merma_observaciones`| `text` | SÍ | - | Motivo de la merma |
+| `responsable_nombre` | `text` | SÍ | - | Maestro panadero / Operario a cargo |
+| `estado` | `text` | NO | `'en_proceso'` | `en_proceso`, `finalizado`, `mermado`, `cancelado` |
+| `fecha_inicio` | `timestamptz` | NO | `now()` | Inicio de tanda |
+| `fecha_fin` | `timestamptz` | SÍ | `null` | Finalización de tanda |
+
+---
+
+### 3.3. `maquinarias` & `costos_fijos_mensuales`
+Control de equipamiento, consumo eléctrico y estructura contable.
+
+**Tabla `maquinarias`:**
+- `id` (UUID, PK)
+- `nombre` (TEXT, Ej: Horno Convector Rotativo)
+- `tipo_uso` (`activa` [consume solo en horneado] | `permanente` [24/7 heladera/freezer])
+- `potencia_kw` (NUMERIC)
+- `horas_uso_por_tanda` (NUMERIC)
+- `tandas_por_mes` (NUMERIC)
+- `precio_kwh` (NUMERIC, Tarifa eléctrica ANDE en PYG)
+- `is_active` (BOOLEAN)
+
+**Tabla `costos_fijos_mensuales`:**
+- `id` (UUID, PK)
+- `periodo` (DATE, Ej: `2026-08-01`)
+- `alquiler` (NUMERIC)
+- `salarios` (NUMERIC)
+- `electricidad` (NUMERIC)
+- `agua_internet` (NUMERIC)
+- `mantenimiento` (NUMERIC)
+- `marketing` (NUMERIC)
+- `otros` (NUMERIC)
+- `total_costos_fijos` (NUMERIC, Suma calculada)
+
+---
+
+## 4. Módulo de Gamificación, Fidelización & Dípticos
+
+- **`codigos_dipticos`:** Lotes de códigos alfanuméricos de 6 caracteres impresos en folletos (`codigo`, `lote_id`, `canjeado`, `canjeado_por`, `canjeado_en`).
+- **`canjes_dipticos`:** Registro de puntos otorgados al escanear QR (`codigo_id`, `cliente_id`, `puntos_ganados`).
+- **`premios`:** Catálogo de recompensas canjeables (`nombre`, `costo_puntos`, `tipo`, `valor`, `activo`).
+- **`canjes_premios`:** Registro de recompensas reclamadas por clientes (`premio_id`, `cliente_id`, `cupon_generado`).
+- **`cupones_descuento`:** Códigos de promoción online (`codigo`, `tipo_descuento`, `valor_descuento`, `monto_minimo_compra`, `activo`).
+- **`cupones_canjeados`:** Auditoría de cupones usados en checkout (`cupon_id`, `cliente_id`, `pedido_id`).
+
+---
+
+## 5. Módulo de Marketing Inteligente & Auditoría
+
+- **`reglas_promocion`:** Políticas comerciales automáticas (`condicion` en JSONB, `descuento_min`, `descuento_max`, `prioridad`).
+- **`eventos_calendario`:** Fechas clave de Encarnación y gastronomía celíaca (`nombre`, `fecha_inicio`, `fecha_fin`, `productos_relacionados`).
+- **`promociones_historico`:** Registro de promociones generadas por IA (`producto_id`, `regla_id`, `captions_generados`, `estado`).
+- **`instagram_posts`:** Trazabilidad de publicaciones en Meta Graph API (`post_id`, `caption`, `image_url`, `status`).
+- **`email_logs`:** Registro auditado de correos enviados vía Resend (`to_email`, `subject`, `status`, `resend_id`, `error_message`).
+- **`logs_auditoria`:** Registro de eventos de seguridad y cambios administrativos (`accion`, `detalle`, `usuario_id`, `ip`).
+- **`configuracion_sitio`:** Identidad de marca (`nombre_tienda`, `logo_url`, `logo_rosa_url`, `logo_variantes` en JSONB, `banner_titulo`).
+- **`usuarios`:** Personal administrativo (`email`, `nombre`, `rol`: `admin`, `operador`, `repartidor`, `marketing`).
+
+---
+
+## 6. Vistas SQL Principales
+
+1. **`vista_costo_receta`:** Agrupa los ingredientes por producto, suma el costo total de materias primas basado en el PPP actual, calcula el costo por KG y genera los precios sugeridos para márgenes del 20%, 40% y 60%.
+2. **`vista_energia_mensual`:** Calcula el costo mensual acumulado de energía eléctrica de todas las maquinarias activas y permanentes.
+3. **`vista_disponibilidad_productos`:** Evalúa si cada producto tiene stock o capacidad de producción suficiente según las órdenes activas en el modelo Made-To-Order.
+4. **`vista_resumen_produccion`:** Totaliza lotes del mes, cantidades producidas y costos acumulados de producción.

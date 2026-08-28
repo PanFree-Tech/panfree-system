@@ -1,221 +1,265 @@
+# 🏛️ PanFree System — Arquitectura del Sistema
 
-## 📄 `ARCHITECTURE.md` - COMPLETO
-
-**COPIA TODO ESTO (desde el inicio hasta el final):**
-
-```markdown
-# Panfree System — Arquitectura
-
-**Última revisión:** 2026-08-18
-**Autor:** Auditoría automática (basado en archivos del repositorio)
+**Versión:** 2.0.0  
+**Última revisión:** 2026-08-28  
+**Tipo de Sistema:** ERP Integral de Producción y Costos + E-commerce B2C para Panadería Sin Gluten  
 
 ---
 
-## 1. ¿Qué es Panfree System?
+## 1. Visión General del Sistema
 
-Panfree System es una aplicación web de **e‑commerce (tienda pública)** con **panel de administración**. 
-
-- **Frontend:** Next.js App Router (Next 14) con Server y Client Components
-- **Backend:** Supabase (Auth + Postgres)
-- **Integraciones:** Cloudinary, n8n (webhooks), WhatsApp, PWA, notificaciones push
-- **Analytics:** Google Analytics 4 (GA4) para tracking de usuarios y eventos de e-commerce
+PanFree System es una solución de software empresarial híbrida que integra en un único ecosistema:
+1. **Tienda Online (Storefront B2C):** Aplicación web progresiva (PWA) optimizada para conversión, catálogo de panificados y dulces sin gluten, cálculo geográfico de delivery, checkout en un paso, seguimiento de pedidos en tiempo real y gamificación mediante códigos QR.
+2. **Panel de Gestión ERP (Backoffice):** Sistema administrativo modular que cubre la cadena de valor completa: gestión de proveedores, compras con cálculo automatizado de Precio Promedio Ponderado (PPP), inventario de insumos, fichas técnicas de recetas, control de lotes de producción (Made-To-Order), cálculo de costos energéticos por maquinaria (kWh), análisis de margen real (bruto + costos fijos prorrateados), mercadotecnia automatizada con IA y gestión de usuarios.
 
 ---
 
-## 2. Estructura del Proyecto
-panfree-system/
-├── package.json # Dependencias y scripts
-├── next.config.js # (Pendiente de revisar) Configuración Next.js y next-pwa
-├── .env.example # (Si existe) Variables de entorno de ejemplo
-├── src/
-│ ├── app/
-│ │ ├── layout.js # Root layout (Server Component) — metadata, viewport
-│ │ ├── layout-client.js # (Client) Provider wrapper, CartInitializer, GA4
-│ │ ├── page.js # Home (Server Component) — carga productos y disponibilidad
-│ │ ├── checkout/
-│ │ │ └── page.js # Checkout (Client Component) — lógica completa de compra
-│ │ ├── pedido/
-│ │ │ └── [numero]/
-│ │ │ └── page.js # Seguimiento de pedido (público)
-│ │ ├── api/ # API routes (App Router)
-│ │ └── TiendaCliente.js # Componente cliente usado por la home
-│ ├── components/ # Componentes reutilizables
-│ │ ├── ProductCard.js
-│ │ ├── CartSidebar.js
-│ │ ├── GAScript.jsx # Carga de Google Analytics 4
-│ │ └── ...
-│ ├── context/
-│ │ ├── CartContext.js # Carrito: localStorage, API legacy
-│ │ └── AuthContext.js # Autenticación con Supabase
-│ ├── hooks/ # Hooks personalizados
-│ │ └── useAnalytics.js # Hook de Google Analytics 4
-│ ├── lib/
-│ │ └── supabase.js # Cliente Supabase + helper
-│ ├── middleware.js # Protege rutas /admin/* (Supabase SSR)
-│ └── globals.css # Estilos globales
-├── scripts/
-│ └── migrar-imagenes-cloudinary.js # Script migración imágenes
-├── public/
-│ ├── icons/ # Íconos de la app
-│ ├── manifest.json # PWA manifest
-│ └── og-image.jpg # Open Graph image
-└── README.md # Documentación del repo
+## 2. Diagrama de Arquitectura General
 
-text
-
----
-
-## 3. Patrones de Diseño y Decisiones
-
-### 3.1 Context API
-
-- **CartContext:** Única fuente de verdad del carrito.
-- **AuthContext:** Gestión de autenticación con Supabase.
-- **Razón:** Estado limitado (carrito, auth), Redux no justificado.
-
-### 3.2 Server vs Client Components (Next.js App Router)
-
-| Tipo | Uso | Ejemplos |
-|------|-----|----------|
-| **Server Components** | Fetch inicial, SEO, render estático | Home (`/`), Layout |
-| **Client Components** | Interactividad, eventos, localStorage, hooks | Checkout, CartSidebar, Providers, useAnalytics |
-
-### 3.3 Arquitectura "Backend-Lite"
-
-La app escribe directamente a Supabase desde el cliente usando la **anon key**. Esto requiere **políticas RLS seguras** o migrar a server-side para mayor control.
-
-### 3.4 Event-Driven Legacy
-
-`window.__PANFREE_CART` con `EventTarget` listeners para compatibilidad con código antiguo.
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   CLIENT LAYER                                         │
+│  ┌──────────────────────────────────────────┐  ┌────────────────────────────────────┐  │
+│  │       Tienda Online (Clientes B2C)       │  │        Panel ERP (Staff/Admin)     │  │
+│  │  - Catálogo & Ficha de Producto          │  │  - Dashboard & Reportes            │  │
+│  │  - Carrito Reactivo (CartContext)        │  │  - Pedidos, Clientes & Cupones     │  │
+│  │  - Checkout & Cálculo de Delivery        │  │  - Insumos, Compras & Recetas      │  │
+│  │  - Tracking de Pedidos en Vivo           │  │  - Producción, Maquinarias & Costos│  │
+│  │  - Portal de Puntos & Canje de Dípticos  │  │  - Marketing Inteligente & Canvas  │  │
+│  │  - PWA Service Worker & Push             │  │  - Configuración & Branding        │  │
+│  └──────────────────────────────────────────┘  └────────────────────────────────────┘  │
+└──────────────────────────────────────────┬─────────────────────────────────────────────┘
+                                           │ HTTPS (JSON / FormData / SSE)
+┌──────────────────────────────────────────▼─────────────────────────────────────────────┐
+│                               NEXT.JS APPLICATION LAYER                                │
+│                                                                                        │
+│  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
+│  │ Edge Middleware (src/middleware.js): Supabase SSR Auth, RBAC Route Protection   │  │
+│  └──────────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                        │
+│  ┌──────────────────────────────────────┐    ┌──────────────────────────────────────┐  │
+│  │  React Server Components (RSC)       │    │  Next.js Server API Routes (/api/*)  │  │
+│  │  - SSR initial data fetching         │    │  - Delivery Calculation Engine       │  │
+│  │  - Static metadata & SEO generation  │    │  - Coupon & Diptico Validation       │  │
+│  │  - Layouts & Root Providers          │    │  - Notification Dispatcher (WA/Mail) │  │
+│  │                                      │    │  - Gemini AI Marketing Decision Engine│ │
+│  │                                      │    │  - Webhook Handlers (Resend, n8n)    │  │
+│  │                                      │    │  - Analytics & Audit Logger (Service)│  │
+│  └──────────────────────────────────────┘    └──────────────────────────────────────┘  │
+└──────────────────────────────────────────┬─────────────────────────────────────────────┘
+                                           │
+         ┌─────────────────────────────────┼─────────────────────────────────┐
+         │                                 │                                 │
+┌────────▼──────────────┐       ┌──────────▼───────────┐         ┌───────────▼───────────┐
+│   PERSISTENCIA & AUTH │       │    MEDIA STORAGE     │         │ SERVICIOS EXTERNOS    │
+│   (Supabase / Postgres)│      │    (Cloudinary CDN)  │         │                       │
+│ - PostgreSQL 15 Engine │      │ - Catálogo Productos │         │ - Google Gemini SDK   │
+│ - Row Level Security  │       │ - Variantes de Logos │         │ - Resend Email API    │
+│ - Triggers & Functions│       │ - Banners & Favicon  │         │ - Meta WhatsApp Cloud │
+│ - Views & Calculators │       │ - Avatares Usuarios  │         │ - n8n Webhook Engine  │
+│ - Supabase Auth       │       │ - Diseños Canvas     │         │ - Google Analytics 4  │
+└───────────────────────┘       └──────────────────────┘         └───────────────────────┘
+```
 
 ---
 
-## 4. Flujo de Datos
-┌─────────────────────────────────────────────────────────────────┐
-│ BROWSER │
-├─────────────────────────────────────────────────────────────────┤
-│ ┌───────────────────┐ ┌───────────────────┐ │
-│ │ CartContext │ │ AuthContext │ │
-│ │ (localStorage) │ │ (Supabase Client) │ │
-│ └────────┬──────────┘ └────────┬──────────┘ │
-│ │ │ │
-│ └──────────┬─────────────┘ │
-│ ▼ │
-│ ┌──────────────────────────────────────────────────────┐ │
-│ │ Client Components (UI) │ │
-│ │ - Checkout - CartSidebar - TiendaCliente │ │
-│ │ - useAnalytics (GA4 eventos) - GAScript │ │
-│ └──────────────────────┬───────────────────────────────┘ │
-│ │ │
-│ ▼ │
-│ ┌──────────────────────────────────────────────────────┐ │
-│ │ Server Components (Fetch) │ │
-│ │ - Home (productos + disponibilidad) │ │
-│ └──────────────────────┬───────────────────────────────┘ │
-│ │ │
-├─────────────────────────┼──────────────────────────────────────┤
-│ ▼ │
-│ ┌──────────────────────────────────────────────────────┐ │
-│ │ SUPABASE (Auth + Postgres) │ │
-│ │ - productos - clientes - pedidos - detalle_pedido│ │
-│ │ - vista_disponibilidad_productos │ │
-│ └──────────────────────┬───────────────────────────────┘ │
-│ │ │
-│ ▼ │
-│ ┌──────────────────────────────────────────────────────┐ │
-│ │ INTEGRACIONES EXTERNAS │ │
-│ │ - n8n (webhooks) - WhatsApp (wa.me) - Cloudinary │ │
-│ │ - Google Analytics 4 (gtag.js) │ │
-│ └──────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+## 3. Topología de Módulos y Directorios
 
-text
+```text
+src/
+├── app/
+│   ├── layout.js                     # Root layout del sistema con metadatos globales
+│   ├── layout-client.js              # Proveedor cliente (AuthContext, CartContext, GA4, Clarity)
+│   ├── page.js                       # Home interactiva de la tienda online
+│   ├── TiendaCliente.js              # Vista de catálogo con filtrado por categoría y buscador
+│   ├── catalogo/                     # Catálogo extendido de productos
+│   ├── producto/[slug]/              # Ficha técnica individual y alérgenos
+│   ├── checkout/                     # Checkout interactivo con cotización de delivery
+│   ├── pedido/[numero]/              # Tracking en tiempo real del pedido
+│   ├── perfil/                       # Historial de compras y fidelización
+│   │   └── puntos/                   # Consulta de puntos y canje de premios
+│   ├── canjear/                      # Landing pública para canje de códigos QR de dípticos
+│   ├── bio/                          # Enlaces rápidos para biografía de Instagram
+│   ├── sobre-nosotros/               # Historia y certificaciones celíacas
+│   ├── admin/                        # Núcleo del ERP Administrativo
+│   │   ├── layout.js                 # Layout con barra de navegación lateral y verificación de rol
+│   │   ├── page.js                   # Dashboard ejecutivo con métricas de ventas y pedidos
+│   │   ├── pedidos/                  # Gestión operativa de órdenes, estados y envíos
+│   │   ├── productos/                # Catálogo maestro, fotos, promociones y Made-To-Order
+│   │   ├── clientes/                 # CRM de clientes, nivel de fidelidad (Bronce/Plata/Oro/VIP)
+│   │   ├── insumos/                  # Inventario de materia prima y alertas de stock mínimo
+│   │   ├── compras/                  # Órdenes de compra a proveedores y actualización de PPP
+│   │   ├── proveedores/              # Directorio de proveedores de materias primas
+│   │   ├── recetas/                  # Fichas técnicas, ingredientes, rendimientos y mermas
+│   │   ├── produccion/               # Lotes de elaboración diaria (PROD-YYYY-NNNN)
+│   │   ├── maquinarias/              # Inventario de equipamiento y consumo eléctrico (kWh)
+│   │   ├── costos/                   # Análisis financiero: Margen Bruto, Costos Fijos y Margen Real
+│   │   ├── marketing/                # Motor de marketing inteligente con IA y diseñador Canvas
+│   │   ├── cupones/                  # Administración de cupones de descuento
+│   │   ├── dipticos/                 # Control de lotes de dípticos impresos y códigos QR
+│   │   ├── correos/                  # Centro de despacho de correos con Resend y plantillas HTML
+│   │   ├── reportes/                 # Estadísticas avanzadas, productos top y horas pico
+│   │   ├── configuracion/            # Configuración de tienda, logos temáticos y usuarios
+│   │   └── ayuda/                    # Manuales y guías operativas integradas
+│   └── api/                          # Endpoints REST del backend de Next.js
+├── components/                       # Componentes visuales desacoplados
+├── context/                          # Context API de React para estado global
+├── hooks/                            # Custom hooks (analítica, responsive, estado)
+├── lib/                              # Clientes SDK, conectores y utilitarios
+└── services/                         # Capas de servicio (notificaciones, web push, recordatorios)
+```
 
 ---
 
-## 5. Seguridad
+## 4. Flujos de Trabajo Operativos Clave
 
-### 5.1 Middleware
+### 4.1. Flujo de Compra y Ciclo de Vida del Pedido (E-commerce)
 
-`src/middleware.js` usa `createServerClient` (@supabase/ssr):
+```
+[Cliente en Tienda] ──> Agrega productos al Carrito (CartContext)
+        │
+        ▼
+[Checkout /checkout] ──> Ingresa datos + Selecciona Entrega (Retiro / Delivery)
+        │
+        ├──> Cotiza costo de delivery (/api/calcular-delivery)
+        ├──> Valida cupón de descuento si aplica (/api/cupones/validar)
+        │
+        ▼
+[Confirmación de Compra]
+        │
+        ├──> INSERT en tabla `clientes` (o actualización si existe)
+        ├──> INSERT en tabla `pedidos` (estado: 'pendiente', estado_pago: 'pendiente')
+        ├──> INSERT en tabla `detalle_pedido` (productos y cantidades)
+        ├──> UPDATE `productos` (incrementa `current_orders` para cálculo Made-To-Order)
+        ├──> POST /api/notificar-pedido (dispara webhook a n8n y alerta admin)
+        ├──> POST /api/send-email (envía comprobante al cliente y alerta a la panadería)
+        └──> Abre enlace de WhatsApp con mensaje preformateado hacia la tienda
+        │
+        ▼
+[Seguimiento /pedido/[numero]] ──> Cliente consulta el estado en tiempo real
+        │
+        ▼
+[Admin ERP /admin/pedidos] ──> Actualiza estado: pendiente ➔ confirmado ➔ en_produccion ➔ listo ➔ entregado
+        └──> Dispara notificaciones automáticas por WhatsApp / Correo según el estado
+```
 
-- **Capa 1:** Verifica sesión válida (`supabase.auth.getUser()`)
-- **Capa 2:** Verifica rol `admin` en `user.app_metadata.role` o `user.user_metadata.role`
-- **Protege:** Rutas `/admin/*` (excepto `/admin/login`)
-- **Redirección:** Sin sesión → `/admin/login`; Sin admin → `/`
+### 4.2. Flujo de Compras, Inventario y Recálculo del PPP
 
-### 5.2 Autenticación
+```
+[Admin crea Orden de Compra] ──> Estado: 'pendiente' (registra proveedor e insumos)
+        │
+        ▼
+[Recepción de Mercadería] ──> Admin marca estado: 'recepcionada'
+        │
+        ├──> 1. Aumenta stock físico: stock_actual = stock_actual + cantidad_comprada
+        ├──> 2. Recalcula Precio Promedio Ponderado (PPP):
+        │       nuevo_ppp = ((stock_anterior * ppp_anterior) + (cantidad * precio_unitario)) / nuevo_stock
+        ├──> 3. Actualiza `precio_compra_actual` del insumo
+        └──> 4. Registra evento en `logs_auditoria`
+        │
+        ▼
+[Impacto en Recetas y Costos] ──> Las vistas `vista_costo_receta` y `vista_costo_por_producto`
+                                   se recalculan automáticamente reflejando el costo actualizado
+```
 
-- **Cliente:** Supabase Auth (email + password)
-- **AuthContext:** Gestiona sesión en cliente
-- **Roles:** `admin` (panel), `authenticated` (usuarios), `anon` (invitados)
+### 4.3. Flujo de Producción y Control de Mermas
 
-### 5.3 Políticas RLS (Recomendadas)
+```
+[Planificación de Tanda] ──> Admin selecciona receta y cantidad a producir
+        │
+        ├──> Sistema consulta costo de materia prima desde la ficha de la receta
+        ├──> Asigna número de lote correlativo: PROD-YYYY-NNNN
+        │
+        ▼
+[Elaboración en Horno] ──> Estado: 'en_proceso' (registra tiempos y temperaturas)
+        │
+        ▼
+[Cierre de Lote] ──> Estado: 'finalizado' o 'mermado'
+        ├──> Registra unidades finales obtenidas y porcentaje de merma
+        ├──> Registra responsable de producción y notas técnicas
+        └──> Actualiza disponibilidad y stock de producto terminado
+```
 
-| Tabla | Política | Descripción |
-|-------|----------|-------------|
-| `productos` | SELECT público | Solo lectura pública |
-| `clientes` | INSERT/UPDATE propio | Solo user_id = auth.uid() o admin |
-| `pedidos` | INSERT validado | Solo con validaciones (subtotal > 0, etc.) |
-| `detalle_pedido` | INSERT con FK válido | Validar integridad de precios |
+### 4.4. Flujo del Sistema de Marketing Inteligente (IA + Canvas)
 
-### 5.4 Google Analytics 4 (GA4)
+```
+[Cron n8n / Solicitud Admin]
+        │
+        ▼
+[Motor de Decisión (/api/admin/marketing/decidir-promocion)]
+        ├── Consulta: Eventos del calendario comercial de Paraguay
+        ├── Consulta: Disponibilidad y capacidad de productos
+        └── Evalúa: Reglas de promoción dinámicas activas
+        │
+        ▼
+[Generador de Contenido Gemini AI (/api/admin/marketing/generar-contenido)]
+        ├── Genera: Gancho de atención (Hook)
+        ├── Genera: Copy persuasivo optimizado para público sin gluten
+        ├── Genera: Hashtags estratégicos locales (#Encarnacion #SinGluten)
+        └── Genera: Llamado a la acción (CTA) con enlace al producto
+        │
+        ▼
+[Diseñador Visual HTML5 Canvas]
+        ├── Compone diseño con foto en alta calidad desde Cloudinary
+        ├── Inserta badges de descuento, logo temático de PanFree y sellos celíacos
+        └── Exporta en formato Story (9:16), Post (4:5) o Cuadrado (1:1)
+        │
+        ▼
+[Publicación & Auditoría]
+        ├── POST /api/admin/marketing/publish-instagram (Instagram Graph API)
+        └── Registra en `promociones_historico` y `instagram_posts`
+```
 
-**Integración:** GA4 está implementado para tracking de usuarios y eventos de e-commerce.
+---
 
-#### Componentes GA4
+## 5. Arquitectura de Seguridad y Roles (RBAC)
 
-| Componente | Ubicación | Función |
-|------------|-----------|---------|
-| `GAScript.jsx` | `src/components/` | Carga gtag.js con `next/script` |
-| `useAnalytics.js` | `src/hooks/` | Hook con eventos GA4 |
+### 5.1. Capas de Seguridad
 
-#### Eventos Implementados
+1. **Middleware de Rutas (`src/middleware.js`):**
+   - Intercepta todas las peticiones a `/admin/*` (excepto `/admin/login`).
+   - Valida la sesión activa con `supabase.auth.getUser()`.
+   - Verifica los roles administrativos autorizados en `user.app_metadata.role` o `user.user_metadata.role`.
+   - Redirecciona usuarios sin sesión a `/admin/login` y usuarios sin privilegios a `/unauthorized`.
+2. **Row Level Security (RLS) en PostgreSQL:**
+   - La base de datos aplica reglas estrictas a nivel de fila.
+   - Tablas públicas (`productos`, `configuracion_sitio`, `premios`) permiten `SELECT` libre.
+   - Tablas transaccionales (`pedidos`, `clientes`, `cupones_canjeados`) permiten inserciones validadas desde el cliente.
+   - Tablas operativas (`insumos`, `recetas`, `produccion`, `costos_fijos`, `logs_auditoria`) están restringidas exclusivamente a usuarios con rol administrativo autenticado.
+3. **Aislamiento de Operaciones Sensibles (Service Role):**
+   - Operaciones críticas (auditoría en `logs_auditoria`, logging de correos en `email_logs`, notificaciones masivas) se ejecutan del lado del servidor mediante `SUPABASE_SERVICE_ROLE_KEY`, evitando exponer credenciales maestras en el frontend.
 
-```javascript
-// Eventos de e-commerce estándar
-pageview(url)           // Vista de página
-viewItem(producto)      // Vista de producto
-viewItemList(productos) // Vista de catálogo
-selectItem(producto)    // Selección de producto
-addToCart(producto)     // Agregar al carrito
-removeFromCart(producto)// Eliminar del carrito
-beginCheckout(items)    // Inicio de checkout
-purchase(pedido)        // Compra completada
-Consentimiento
-javascript
-// Activar
-localStorage.setItem('panfree_ga_consent', 'granted');
+### 5.2. Matriz de Roles y Permisos
 
-// Desactivar
-localStorage.setItem('panfree_ga_consent', 'denied');
-Variables de entorno
-env
-NEXT_PUBLIC_GA_MEASUREMENT_ID=G-QE8GQS3MSR
-Documentación completa: GA4-IMPLEMENTACION.md
+| Módulo / Recurso | Cliente (`cliente`) | Operador (`operador`) | Marketing (`marketing`) | Repartidor (`repartidor`) | Administrador (`admin`) |
+|---|---|---|---|---|---|
+| Tienda & Checkout | ✅ Total | ✅ Total | ✅ Total | ✅ Total | ✅ Total |
+| Ver Perfil & Puntos | ✅ Propios | ✅ Propios | ✅ Propios | ✅ Propios | ✅ Todos |
+| Gestión de Pedidos | ❌ No | ✅ Ver / Cambiar Estado | ❌ No | ✅ Ver / Estado Entrega | ✅ Total |
+| Productos & Precios | ❌ No | 👁️ Solo Lectura | 👁️ Solo Lectura | ❌ No | ✅ Total |
+| Insumos & Recetas | ❌ No | 👁️ Solo Lectura | ❌ No | ❌ No | ✅ Total |
+| Producción & Lotes | ❌ No | ✅ Registrar Lotes | ❌ No | ❌ No | ✅ Total |
+| Compras & Proveedores | ❌ No | ✅ Registrar Recepción | ❌ No | ❌ No | ✅ Total |
+| Costos & Finanzas | ❌ No | ❌ No | ❌ No | ❌ No | ✅ Total |
+| Marketing & Canvas | ❌ No | ❌ No | ✅ Total | ❌ No | ✅ Total |
+| Configuración & Roles | ❌ No | ❌ No | ❌ No | ❌ No | ✅ Total |
 
-5.5 ⚠️ Advertencias Críticas
-Credenciales en código: Revisar src/lib/supabase.js (fallback con JWT parcial)
+---
 
-Writes desde cliente: El checkout escribe directamente en Supabase desde el cliente → requiere RLS estrictas
+## 6. Estado y Almacenamiento en Cliente
 
-Webhook expuesto: NEXT_PUBLIC_N8N_WEBHOOK_URL visible en cliente → mover a server-side
+- **`CartContext`:** Gestiona el estado reactivo del carrito de compras. Sincroniza con `localStorage` bajo la clave `panfree_cart` e implementa listeners con `EventTarget` para eventos concurrentes.
+- **`AuthContext`:** Mantiene la sesión del usuario cliente o administrador, suscribiéndose a `supabase.auth.onAuthStateChange`.
+- **Consentimiento de Analítica:** Almacena la preferencia de consentimiento de cookies/tracking en `localStorage` bajo la clave `panfree_ga_consent` (`granted` o `denied`).
 
-window.* expuestos: window.confirmarPedido y window.__PANFREE_CART → remover en producción
+---
 
-6. Recomendaciones Inmediatas
-✅ Revisar políticas RLS en Supabase (prioritario)
+## 7. Integraciones Externas
 
-✅ Mover llamadas sensibles a API server-side
-
-✅ Remover window.confirmarPedido en producción
-
-✅ Rotar cualquier secreto expuesto en repo
-
-✅ Añadir tests e2e para flujo de checkout
-
-✅ Implementar rate limiting en endpoints públicos
-
-✅ Activar Google Analytics 4 DebugView para verificar eventos
-
-✅ Configurar conversiones en GA4 (purchase como objetivo)
+1. **Supabase (PostgreSQL 15):** Motor de base de datos relacional, autenticación GoTrue y políticas RLS.
+2. **Cloudinary CDN:** Gestión y entrega optimizada de imágenes de catálogo, avatares de staff, banners promocionales y variantes temáticas del logo corporativo.
+3. **Google Gemini AI (`@google/genai`):** Modelos `gemini-2.5-flash` y `gemini-3.5-flash` para redacción de contenido publicitario y análisis de reglas de marketing.
+4. **Resend Email API:** Envío confiable de correos electrónicos transaccionales (confirmaciones de compra, avisos de despacho, alertas del sistema) y campañas de marketing.
+5. **WhatsApp (Meta Cloud API / Twilio):** Notificaciones instantáneas al cliente y al equipo de panadería.
+6. **n8n Automation Engine:** Orquestador de webhooks para flujos de trabajo asíncronos y automatizaciones programadas.
+7. **Google Analytics 4 & Microsoft Clarity:** Monitoreo analítico de embudo de e-commerce y mapas de calor de navegación.
