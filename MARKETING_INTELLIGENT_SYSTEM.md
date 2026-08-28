@@ -1,160 +1,172 @@
 # 🤖 Sistema de Marketing Inteligente y Automatización para PanFree
 
-Documentación técnica y operativa completa del **Sistema de Marketing Inteligente** implementado para PanFree (panadería 100% libre de gluten en Encarnación, Paraguay).
+**Versión:** 2.0.0  
+**Última actualización:** 2026-08-28  
+**Ubicación de Módulo:** `/src/app/admin/marketing/`  
+**Objetivo:** Automatizar la toma de decisiones comerciales, la generación de creatividades publicitarias con IA y la publicación multiformato en Instagram para PanFree (Encarnación, Paraguay).
 
 ---
 
-## 📌 Tabla de Contenidos
-1. [Arquitectura General](#1-arquitectura-general)
-2. [Estructura de Base de Datos (Supabase)](#2-estructura-de-base-de-datos-supabase)
-3. [Motor de Automatización (n8n Workflow)](#3-motor-de-automatización-n8n-workflow)
-4. [Endpoints de la API (Next.js App Router)](#4-endpoints-de-la-api-nextjs-app-router)
-5. [Módulos y Componentes Frontend](#5-módulos-y-componentes-frontend)
-6. [Flujo de Trabajo Operativo](#6-flujo-de-trabajo-operativo)
-7. [Variables de Entorno y Configuración](#7-variables-de-entorno-y-configuración)
+## 📌 1. Arquitectura General del Sistema
 
----
-
-## 1. Arquitectura General
-
-El sistema automatiza el ciclo completo de decisión comercial, generación creativa y publicación en redes sociales mediante el siguiente flujo:
+El módulo de Marketing Inteligente combina inteligencia artificial generativa, renderizado gráfico interactivo en cliente (HTML5 Canvas) y automatizaciones programadas para potenciar las ventas sin requerir intervención manual constante.
 
 ```
-[Cron n8n / Admin UI]
-         │
-         ▼
-[1. Motor de Decisión] ─── Consulta: Calendario Festivo + Inventario + Reglas de Negocio
-         │
-         ▼
-[2. Copywriting & Prompt Multimodal] ─── Gemini AI (gemini-2.5-flash / gemini-3.5-flash)
-         │
-         ▼
-[3. Diseñador Canvas / Composición Visual] ─── HTML5 Canvas + Plantillas PanFree
-         │
-         ▼
-[4. Publicación & Auditoría] ─── Instagram Graph API + Supabase Audit Logs
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                              DISPARADORES / TRIGGERS                              │
+│         [Cron n8n (Lunes, Miércoles, Viernes)]  /  [Panel Manual de Admin]        │
+└────────────────────────────────────────┬──────────────────────────────────────────┘
+                                         │
+                                         ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                      1. MOTOR DE DECISIÓN COMERCIAL                               │
+│              Endpoint: GET /api/admin/marketing/decidir-promocion                 │
+│  - Consulta: Festividades y eventos en `eventos_calendario` (Semana Santa, etc.)  │
+│  - Consulta: Disponibilidad y capacidad Made-To-Order en `productos`              │
+│  - Evalúa: Prioridades, márgenes y tipos de costo en `reglas_promocion`            │
+│  - Resultado: Promoción óptima calculada (producto, % de descuento, justificación) │
+└────────────────────────────────────────┬──────────────────────────────────────────┘
+                                         │
+                                         ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                      2. COPYWRITING PERSUASIVO CON IA                             │
+│             Endpoint: POST /api/admin/marketing/generar-contenido                 │
+│  - Modelo: Google Gemini (gemini-2.5-flash / gemini-3.5-flash vía @google/genai) │
+│  - Genera: Hook de alto impacto, caption persuasivo, hashtags locales y CTA       │
+└────────────────────────────────────────┬──────────────────────────────────────────┘
+                                         │
+                                         ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                   3. COMPOSICIÓN VISUAL (DISEÑADOR CANVAS)                        │
+│                 Componente: HTML5 Canvas + Cloudinary Media Engine                │
+│  - Formatos: Feed Vertical (4:5 - 1080x1350), Story (9:16 - 1080x1920), Cuadrado │
+│  - Overlays: Logos temáticos (Octubre Rosa/Base), badges de descuento, sellos     │
+│  - Renderizado: Exportación directa en PNG/JPEG de alta resolución                │
+└────────────────────────────────────────┬──────────────────────────────────────────┘
+                                         │
+                                         ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                     4. PUBLICACIÓN DIRECTA & AUDITORÍA                            │
+│             Endpoint: POST /api/admin/marketing/publish-instagram                 │
+│  - Publica: Meta Instagram Graph API (Feed / Stories)                             │
+│  - Registra: `promociones_historico`, `instagram_posts` y `logs_auditoria`        │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Estructura de Base de Datos (Supabase)
-
-Archivo DDL: `/migrations/create_marketing_smart_tables.sql`
+## 🗄️ 2. Estructura de Base de Datos (Supabase)
 
 ### 2.1. `reglas_promocion`
-Configura las políticas dinámicas de descuento y márgenes.
+Define los parámetros de activación automática de ofertas.
 - `id` (UUID, PK)
 - `nombre` (TEXT)
 - `descripcion` (TEXT)
-- `condicion` (JSONB) - Ej: `{"tipo": "evento_calendario", "dias_antelacion": 7}`
-- `tipo_costo` (TEXT) - `competitivo` | `objetivo` | `premium`
-- `descuento_min` (INTEGER)
-- `descuento_max` (INTEGER)
-- `prioridad` (INTEGER, 1-10)
+- `condicion` (JSONB) — Criterios de activación (Ej: `{"tipo": "evento_calendario", "dias_antelacion": 7}`)
+- `tipo_costo` (TEXT) — `competitivo`, `objetivo`, `premium`
+- `descuento_min` (INTEGER) — Porcentaje mínimo
+- `descuento_max` (INTEGER) — Porcentaje máximo
+- `prioridad` (INTEGER, 1 al 10)
 - `activo` (BOOLEAN)
 
 ### 2.2. `eventos_calendario`
-Fechas gastronómicas y festividades de Paraguay / Encarnación.
+Fechas clave, conmemoraciones celíacas y festividades tradicionales de Paraguay y Encarnación.
 - `id` (UUID, PK)
-- `nombre` (TEXT) - Ej: Semana Santa, Día del Celíaco, San Juan
+- `nombre` (TEXT) — Ej: Día Nacional del Celíaco, San Juan Ára, Semana Santa, Navidad
 - `fecha_inicio` (DATE)
 - `fecha_fin` (DATE)
-- `categoria` (TEXT)
-- `productos_relacionados` (TEXT[]) - Nombres de productos clave
+- `categoria` (TEXT) — `festividad`, `salud`, `gastronomia`, `estacional`
+- `productos_relacionados` (TEXT[]) — Lista de productos estratégicos
 - `activo` (BOOLEAN)
 
 ### 2.3. `promociones_historico`
-Registro de todas las decisiones y publicaciones generadas.
+Registro de todas las sugerencias, decisiones y publicaciones generadas.
 - `id` (UUID, PK)
 - `producto_id` (UUID, FK a `productos`)
 - `regla_id` (UUID, FK a `reglas_promocion`)
 - `descuento_aplicado` (INTEGER)
-- `precio_original` (NUMERIC)
-- `precio_promocion` (NUMERIC)
-- `fecha_inicio` (TIMESTAMP)
-- `fecha_fin` (TIMESTAMP)
-- `estado` (TEXT) - `sugerido` | `aprobado` | `publicado` | `cancelado`
-- `publicado_instagram` (BOOLEAN)
-- `captions_generados` (JSONB)
-- `engagement_score` (NUMERIC)
+- `precio_final` (NUMERIC)
+- `captions_generados` (JSONB) — Objeto con hook, caption, hashtags y CTA
+- `imagen_url` (TEXT)
+- `post_id` (TEXT)
+- `publicada` (BOOLEAN)
+- `fecha_programada` (TIMESTAMPTZ)
+- `fecha_publicacion` (TIMESTAMPTZ)
+- `engagement` (INTEGER)
 
 ### 2.4. `instagram_posts`
-Auditoría y trazabilidad directa de publicaciones en Meta Graph API.
+Auditoría y enlaces directos de las publicaciones en Instagram.
 - `id` (UUID, PK)
-- `post_id` (TEXT)
+- `product_id` (UUID, FK a `productos`)
+- `product_name` (TEXT)
 - `caption` (TEXT)
-- `image_url` (TEXT)
-- `published_at` (TIMESTAMP)
+- `post_id` (TEXT)
+- `post_url` (TEXT)
+- `format` (TEXT) — `feed_4_5`, `story_9_16`, `feed_1_1`
 - `status` (TEXT)
 
 ---
 
-## 3. Motor de Automatización (n8n Workflow)
+## 🔌 3. Endpoints de la API
 
-Archivo de Workflow: `/n8n/marketing_automation_workflow.json`
-
-Nodos configurados:
-1. **Schedule Trigger**: Ejecución periódica (Lunes, Miércoles y Viernes 08:00 AM).
-2. **HTTP: Decidir Promoción**: Llama a `/api/admin/marketing/decidir-promocion`.
-3. **HTTP: Generar Contenido**: Llama a `/api/admin/marketing/generar-contenido` con la recomendación del decisor.
-4. **Switch: Aprobación**: Si requiere aprobación manual, envía notificación por Telegram/Email; si está en modo 100% automático, avanza directo.
-5. **HTTP: Programar/Publicar**: Llama a `/api/admin/marketing/programar-publicacion` y publica en Instagram.
-6. **Supabase: Audit Log**: Actualiza `promociones_historico` y `logs_auditoria`.
-
----
-
-## 4. Endpoints de la API (Next.js App Router)
-
-| Endpoint | Método | Descripción |
+| Endpoint | Método | Función |
 |---|---|---|
-| `/api/admin/marketing/decidir-promocion` | `GET` | Evalúa eventos, catálogo y reglas activas para devolver la promoción óptima y alternativas. |
-| `/api/admin/marketing/generar-contenido` | `POST` | Genera hook, caption persuasivo, hashtags y prompt de diseño con Gemini AI. |
-| `/api/admin/marketing/programar-publicacion` | `POST` | Publica inmediatamente a Instagram o agenda fecha en `promociones_historico`. |
-| `/api/admin/marketing/analizar-resultados` | `GET` | Calcula KPIs de conversión, promociones publicadas y efectividad de reglas. |
+| `/api/admin/marketing/decidir-promocion` | `GET` / `POST` | Evalúa reglas, calendario y catálogo para recomendar la promoción óptima. |
+| `/api/admin/marketing/generar-contenido` | `POST` | Redacta copies, ganchos y hashtags con Google Gemini AI. |
+| `/api/admin/marketing/publish-instagram` | `POST` | Publica la imagen y caption a la cuenta de Instagram Business. |
+| `/api/admin/marketing/programar-publicacion` | `POST` | Agenda la fecha/hora de publicación en `promociones_historico`. |
+| `/api/admin/marketing/analizar-resultados` | `GET` | Retorna KPIs de efectividad, publicaciones activas y engagement. |
+| `/api/admin/marketing/consultar-disponibilidad` | `GET` | Consulta capacidad y stock de productos para promociones. |
+| `/api/admin/marketing/actualizar-capacidad` | `POST` | Actualiza límites de producción diaria Made-To-Order. |
+| `/api/admin/marketing/upload-image` | `POST` | Sube la imagen del Canvas a Cloudinary para obtener URL pública. |
 
 ---
 
-## 5. Módulos y Componentes Frontend
+## 🎨 4. Módulos y Pestañas de la Interfaz
 
-Ubicación: `/src/app/admin/marketing/`
+Ubicación: `/src/app/admin/marketing/page.js`
 
-Pestañas disponibles en el Panel de Marketing:
-1. 🤖 **Decisiones Inteligentes (IA)** (`DecisionPanel.jsx`):
-   - Sugerencia principal y justificación algorítmica.
-   - Ajuste interactivo de descuento con cálculo en tiempo real en Guaraníes (PYG).
-   - Generación instantánea de copy con Gemini AI.
-   - Botón *"Cargar en Diseñador"* para enviar textos y producto directamente al Canvas.
-   - Publicación y programación con un clic.
-2. 🎨 **Diseñador Visual (Canvas)**:
-   - Renderizador HTML5 Canvas con descarga PNG/JPG en alta resolución (1080x1350, 1080x1080, 1080x1920).
-   - Simulador de celular interactivo.
-   - Panel de publicación manual asistido por IA.
-3. 📋 **Reglas de Promoción** (`RulesManager.jsx`):
-   - CRUD completo con activación/desactivación instantánea.
-   - Configuración de prioridades, tipos de costo (`competitivo`, `objetivo`, `premium`) y rangos de descuento.
-4. 📅 **Calendario de Eventos** (`EventCalendar.jsx`):
-   - Fechas clave de Encarnación y festividades celíacas/gastronómicas.
-   - Vinculación de productos estrella por evento.
-5. 📊 **Métricas & Historial** (`AnalyticsView.jsx` y `ScheduledPosts.jsx`):
-   - Tarjetas de KPIs (Total promociones, publicaciones activas, descuento medio).
-   - Tabla de publicaciones con estado y enlaces a Instagram.
+1. **🤖 Decisiones Inteligentes (`DecisionPanel.jsx`):**
+   - Muestra la promoción recomendada por el algoritmo y su justificación comercial.
+   - Simulador de precios en Guaraníes con slider interactivo de descuento.
+   - Generador instantáneo de copy con IA y botón *"Cargar en Diseñador"*.
+2. **🎨 Diseñador Visual Canvas (`useCanvasRenderer.js` / `canvasUtils.js`):**
+   - Lienzo HTML5 interactivo con soporte para fotos de Cloudinary en alta definición.
+   - Selector de proporciones: 4:5 (Feed vertical), 9:16 (Stories/Reels) y 1:1 (Cuadrado).
+   - Paletas cromáticas oficiales de PanFree (Verde PanFree, Dorado, Naranja artesanal).
+   - Aplicación automática de logotipos temáticos (Octubre Rosa, Oficial Base).
+   - Descarga directa en JPG/PNG o publicación con 1 clic en Instagram.
+3. **📋 Gestor de Reglas (`RulesManager.jsx`):**
+   - Creación y edición de reglas comerciales con activación/desactivación instantánea.
+   - Configuración de prioridades y límites de descuento mínimo/máximo.
+4. **📅 Calendario de Eventos (`EventCalendar.jsx`):**
+   - Agenda anual con festividades de Encarnación y fechas del rubro celíaco.
+   - Asociación de productos destacados por fecha.
+5. **📊 Rendimiento & Publicaciones (`AnalyticsView.jsx` y `ScheduledPosts.jsx`):**
+   - Tarjetas de métricas (promociones ejecutadas, descuento promedio, alcance estimado).
+   - Historial de publicaciones en Instagram con enlace directo.
 
 ---
 
-## 6. Variables de Entorno
+## ⚙️ 5. Variables de Entorno del Módulo
 
-Asegurar en el archivo `.env.local`:
+Asegurar en `.env.local` y Vercel:
 
 ```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
-SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
-
 # Gemini AI
 GEMINI_API_KEY=tu-gemini-api-key
+GEMINI_MODEL=gemini-2.5-flash
 
-# Instagram Graph API (Opcional para publicación directa)
-INSTAGRAM_PAGE_ID=tu-instagram-page-id
-INSTAGRAM_ACCESS_TOKEN=tu-access-token
+# Meta / Instagram Graph API
+INSTAGRAM_ACCESS_TOKEN=tu-meta-user-access-token
+INSTAGRAM_BUSINESS_ID=tu-instagram-business-account-id
+
+# Cloudinary
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=d7simx38
+CLOUDINARY_API_KEY=tu-cloudinary-api-key
+CLOUDINARY_API_SECRET=tu-cloudinary-api-secret
+
+# Automatización n8n
+N8N_WEBHOOK_URL=https://tu-instancia.n8n.cloud/webhook/pedido
+N8N_WEBHOOK_TOKEN=tu-token-secreto
 ```

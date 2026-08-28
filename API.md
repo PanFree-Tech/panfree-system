@@ -1,145 +1,386 @@
-# API — Panfree System
+# 🔌 PanFree System — Catálogo de APIs y Endpoints
 
-**Última revisión:** 2026-08-18
+**Versión:** 2.0.0  
+**Última actualización:** 2026-08-28  
+**Formato de Intercambio:** JSON (`application/json`)  
+**Base URL Local:** `http://localhost:3000`  
+**Base URL Producción:** `https://panfree.fit`  
 
 ---
 
-## Endpoints Existentes (Detectados)
+## 📋 Resumen de Endpoints
 
-### POST /api/calcular-delivery
+### 🛒 E-commerce & Checkout Público
+- `POST /api/calcular-delivery` — Cotiza costo y disponibilidad de envío según zona o coordenadas.
+- `POST /api/cupones/validar` — Valida cupones de descuento y calcula ahorro.
+- `POST /api/dipticos/canjear` — Canjea códigos QR de dípticos físicos y suma puntos de fidelidad.
+- `POST /api/premios/canjear` — Canjea premios del catálogo con puntos de fidelización.
+- `POST /api/webhook-pedido` — Webhook de procesamiento y despacho de pedidos.
 
-**Descripción:** Calcula costo de envío según zona/dirección y subtotal.
+### 🔔 Notificaciones y Comunicaciones
+- `POST /api/notificar-pedido` — Envía orden al orquestador n8n y alerta al staff.
+- `POST /api/send-email` — Envío de correos transaccionales con Resend y logging en `email_logs`.
+- `POST /api/send-whatsapp` — Envío de mensajes al cliente vía WhatsApp Cloud API / Twilio.
+- `POST /api/send-whatsapp-team` — Envío de alertas operativas al grupo del equipo de panadería.
+- `POST /api/push-suscribir` — Registra token de suscripción para notificaciones Web Push (VAPID).
+- `POST /api/push-notificar` — Despacha notificaciones Web Push a clientes o staff.
+- `POST /api/resend-webhook` — Receptor de eventos de entrega/rebote de Resend.
+
+### 📊 Métricas, Analítica y Diagnóstico
+- `POST /api/ga4/measurement` — Envía eventos a Google Analytics 4 vía Measurement Protocol (Server-Side).
+- `GET /api/resumen-diario` — Resumen ejecutivo diario de ventas y pedidos para el ERP.
+- `GET /api/admin/diagnostico` — Chequeo de salud del sistema, conectividad de base de datos y servicios.
+- `GET /api/admin/ga-metrics` — Reporte de métricas de adquisición y conversiones de GA4.
+
+### 🤖 Marketing Inteligente & Redes Sociales
+- `GET /api/admin/marketing/decidir-promocion` — Algoritmo de recomendación de productos y promociones óptimas.
+- `POST /api/admin/marketing/generar-contenido` — Generación de copies publicitarios, hooks y hashtags con Gemini AI.
+- `POST /api/admin/marketing/programar-publicacion` — Programa o publica contenido en Instagram Graph API.
+- `GET /api/admin/marketing/analizar-resultados` — Análisis de rendimiento e impacto de campañas.
+- `GET /api/admin/marketing/consultar-disponibilidad` — Consulta disponibilidad y stock para promocionar.
+- `POST /api/admin/marketing/actualizar-capacidad` — Ajusta capacidades de producción Made-To-Order.
+- `POST /api/admin/marketing/publish-instagram` — Publicación directa a Instagram Feed/Stories.
+- `POST /api/admin/marketing/upload-image` — Carga y procesamiento de creatividades visuales a Cloudinary.
+
+---
+
+## 🛠️ Detalle de Endpoints
+
+### 1. `POST /api/calcular-delivery`
+Calcula la tarifa de envío a domicilio según el barrio/zona seleccionada o distancia en kilómetros desde el local en Encarnación.
+
+**Autenticación:** Pública  
+**Request Body:**
+```json
+{
+  "zona": "Centro",
+  "direccion": "Mcal. Estigarribia c/ Tomás Romero Pereira",
+  "subtotal": 120000,
+  "lat": -27.3305,
+  "lng": -55.8667
+}
+```
+**Response (200 OK):**
+```json
+{
+  "disponible": true,
+  "costo": 10000,
+  "distancia_km": 2.4,
+  "zona": "Centro",
+  "tiempo_estimado_min": 30,
+  "mensaje": "Entrega disponible en tu zona"
+}
+```
+
+---
+
+### 2. `POST /api/cupones/validar`
+Verifica la validez, vigencia, monto mínimo y límite de uso de un cupón de descuento en el checkout.
+
+**Autenticación:** Pública  
+**Request Body:**
+```json
+{
+  "codigo": "BIENVENIDA10",
+  "clienteId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "subtotal": 85000
+}
+```
+**Response (200 OK):**
+```json
+{
+  "valido": true,
+  "cupon": {
+    "codigo": "BIENVENIDA10",
+    "tipo_descuento": "porcentaje",
+    "valor_descuento": 10,
+    "monto_minimo_compra": 50000
+  },
+  "descuento": 8500,
+  "totalConDescuento": 76500
+}
+```
+
+---
+
+### 3. `POST /api/dipticos/canjear`
+Permite a un cliente autenticado canjear un código de 6 caracteres impreso en los dípticos físicos entregados con las compras.
+
+**Autenticación:** Sesión de usuario activa (Cookie Supabase SSR o Bearer Token)  
+**Request Body:**
+```json
+{
+  "codigo": "PF9X2K",
+  "clienteId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "puntos": 100,
+  "mensaje": "¡Código canjeado con éxito! +100 puntos añadidos a tu cuenta.",
+  "canje": {
+    "id": "c1d2e3f4-5678-90ab-cdef-1234567890ab",
+    "puntos_ganados": 100
+  }
+}
+```
+
+---
+
+### 4. `POST /api/premios/canjear`
+Permite canjear puntos de fidelidad acumulados por un premio del catálogo (descuento, delivery gratis o producto obsequio).
+
+**Autenticación:** Usuario autenticado  
+**Request Body:**
+```json
+{
+  "premioId": "p1r2e3m4-5678-90ab-cdef-1234567890ab",
+  "clienteId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "mensaje": "¡Premio canjeado con éxito!",
+  "cuponGenerado": "PREMIO-DELIV-8X2K",
+  "puntosRestantes": 350
+}
+```
+
+---
+
+### 5. `POST /api/notificar-pedido`
+Endpoint server-side que recibe un pedido recién creado, valida los datos mediante Zod, lo reenvía al webhook de automatización de n8n y registra la alerta en `notificaciones_admin`.
+
+**Autenticación:** `Authorization: Bearer <N8N_WEBHOOK_TOKEN>` (opcional si es llamado internamente)  
+**Request Body:**
+```json
+{
+  "pedido": {
+    "numero": "PF-2026-0042",
+    "total": 145000,
+    "metodoPago": "transferencia",
+    "metodoEntrega": "delivery",
+    "items": [
+      {
+        "nombre": "Pan de Molde Clásico Sin Gluten",
+        "cantidad": 2,
+        "precio": 35000
+      },
+      {
+        "nombre": "Alfajor de Maicena Artesanal",
+        "cantidad": 3,
+        "precio": 25000
+      }
+    ]
+  },
+  "cliente": {
+    "nombre": "María González",
+    "email": "maria@ejemplo.com",
+    "telefono": "+595981123456",
+    "direccion": "Barrio San Roque, Encarnación"
+  }
+}
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Pedido notificado a n8n"
+}
+```
+
+---
+
+### 6. `POST /api/send-email`
+Envía correos electrónicos utilizando la API oficial de Resend y registra de forma auditada cada envío en la tabla `email_logs`.
+
+**Autenticación:** Server-Side / Clientes autorizados  
+**Request Body:**
+```json
+{
+  "to": "cliente@correo.com",
+  "subject": "Tu pedido PF-2026-0042 ha sido confirmado - PanFree",
+  "html": "<h1>¡Hola María!</h1><p>Tu pedido ya está en preparación artesanal...</p>",
+  "from": "PanFree <contacto@panfree.fit>",
+  "metadata": {
+    "pedido_numero": "PF-2026-0042",
+    "tipo": "confirmacion_pedido"
+  }
+}
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "id": "resend_msg_123456789",
+  "log_id": "9f8e7d6c-5b4a-3210-fedc-ba9876543210",
+  "to": "cliente@correo.com",
+  "from": "PanFree <contacto@panfree.fit>",
+  "message": "Correo enviado exitosamente con Resend"
+}
+```
+
+---
+
+### 7. `POST /api/send-whatsapp`
+Despacha notificaciones de WhatsApp vía Meta Cloud API o Twilio con plantillas homologadas.
 
 **Request Body:**
 ```json
 {
-  "zona": "string",
-  "direccion": "string (opcional)",
-  "subtotal": "number (opcional)"
-}
-Response:
-
-json
-{
-  "disponible": "boolean",
-  "costo": "number",
-  "distancia_km": "number (opcional)",
-  "lat": "number (opcional)",
-  "lng": "number (opcional)",
-  "mensaje": "string (opcional)"
-}
-Autenticación: Pública (llamado desde cliente)
-
-Observaciones:
-
-Implementación no inspeccionada
-
-Validar inputs y sanitizar dirección
-
-Aplicar rate limiting
-
-Implementación sugerida:
-// src/app/api/calcular-delivery/route.js
-import { NextResponse } from 'next/server'
-
-export async function POST(req) {
-  const { zona, direccion, subtotal } = await req.json()
-  // Validaciones básicas
-  // Lógica: tabla de zonas, cálculo costo
-  return NextResponse.json({ 
-    disponible: true, 
-    costo: 5000, 
-    distancia_km: 3.2, 
-    mensaje: 'Entrega disponible' 
-  })
-}
-
-POST (client → external) N8N Webhook
-URL: NEXT_PUBLIC_N8N_WEBHOOK_URL
-
-Descripción: Recibe payload con pedido y cliente.
-
-Payload:
-{
-  "pedido": {
-    "numero": "string",
-    "total": "number",
-    "metodoPago": "string",
-    "metodoEntrega": "string",
-    "items": [
-      { "nombre": "string", "cantidad": "number", "precio": "number" }
-    ]
-  },
-  "cliente": {
-    "nombre": "string",
-    "email": "string",
-    "telefono": "string",
-    "direccion": "string"
+  "telefono": "595981123456",
+  "tipo": "confirmacion",
+  "datos": {
+    "nombre": "María",
+    "pedido": "PF-2026-0042",
+    "total": "145.000 ₲"
   }
 }
-WhatsApp Link (No es endpoint)
-Descripción: Checkout crea link https://wa.me/<WA_NUMBER>?text=... para que cliente notifique por WhatsApp.
-
-Endpoints Sugeridos / Pendientes de Implementar
-POST /api/notificar-pedido
-Descripción: Endpoint server-side que recibe el pedido recién creado y:
-
-Envía a n8n (con secreto en server)
-
-Envía notificación push (si aplica)
-
-Crea registro en notificaciones_admin
-
-Autenticación: Servidor (service_role o token interno)
-
-POST /api/send-whatsapp-team
-Descripción: Envía mensajes al equipo/WhatsApp.
-
-Request Body:
-
-json
+```
+**Response (200 OK):**
+```json
 {
-  "mensaje": "string",
-  "telefono": "string (opcional)",
-  "tipo": "pedido | alert"
+  "success": true,
+  "messageId": "wamid.HBgNNTk1OTgxMTIzNDU2FQIA..."
 }
-Autenticación: Solo admin / token
+```
 
-POST /api/push-suscribir
-Descripción: Registra suscripción web-push del cliente.
+---
 
-Request Body:
+### 8. `GET /api/resumen-diario`
+Provee un resumen ejecutivo de las ventas, cantidad de órdenes por estado y productos con stock crítico del día en curso.
 
-json
+**Autenticación:** Admin / Operador  
+**Response (200 OK):**
+```json
 {
-  "endpoint": "string",
-  "keys": "object",
-  "user_id": "string (opcional)"
+  "fecha": "2026-08-28",
+  "total_ventas_pyg": 1850000,
+  "pedidos_totales": 14,
+  "pedidos_pendientes": 3,
+  "pedidos_en_produccion": 5,
+  "pedidos_entregados": 6,
+  "alertas_stock_insumos": 2
 }
-Autenticación: Pública (validar origen)
+```
 
-POST /api/push-notificar
-Descripción: Envía push a suscripción(es) — usado por admin/n8n.
+---
 
-Autenticación: Admin / token
+### 9. `POST /api/ga4/measurement`
+Envía eventos analíticos de servidor directamente a Google Analytics 4 mediante el protocolo de medición Measurement Protocol.
 
-GET /api/resumen-diario
-Descripción: Devuelve resumen de ventas (totales, pedidos por estado) para dashboard admin.
+**Request Body:**
+```json
+{
+  "client_id": "ga4_client_id_12345",
+  "events": [
+    {
+      "name": "purchase",
+      "params": {
+        "transaction_id": "PF-2026-0042",
+        "value": 145000,
+        "currency": "PYG",
+        "items": [
+          { "item_id": "pan-molde-clasico", "item_name": "Pan de Molde Clásico", "price": 35000, "quantity": 2 }
+        ]
+      }
+    }
+  ]
+}
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "events_tracked": 1
+}
+```
 
-Autenticación: Admin
+---
 
-Buenas Prácticas
-Práctica	Descripción
-Validación	Usar Zod o Joi para validar inputs
-Secretos	No exponer en cliente; mover a server-side
-Rate Limiting	50-200 req/min en endpoints públicos
-Logs	Registrar errores completos en server
-Manejo de errores	Devolver { error: message }con status adecuado
-CORS	Bloquear orígenes no autorizados
-Autenticación	JWT con role admin o service token
+### 10. `GET /api/admin/marketing/decidir-promocion`
+Analiza las reglas comerciales configuradas, las festividades en el calendario astronómico/gastronómico y el stock actual para recomendar la mejor promoción.
 
-Seguridad (CORS / Rate Limiting / Auth)
-Configuración	Valor Sugerido
-CORS	Permitir https://panfree.fit y localhost:3000
-Rate Limiting	50-200 req/min por IP
-Autenticación	Admin: JWT con role admin o service token
+**Autenticación:** Admin / Marketing  
+**Response (200 OK):**
+```json
+{
+  "promocion_sugerida": {
+    "producto": {
+      "id": "prod_1",
+      "nombre": "Pan de Queso Sin Gluten",
+      "precio_regular": 30000,
+      "precio_oferta": 24000
+    },
+    "descuento_porcentaje": 20,
+    "regla_aplicada": "Semana del Celíaco",
+    "justificacion": "Alta coincidencia con festividad gastronómica y margen disponible de 48%."
+  },
+  "alternativas": []
+}
+```
+
+---
+
+### 11. `POST /api/admin/marketing/generar-contenido`
+Genera ganchos persuasivos, copies completos, hashtags e ideas de diseño utilizando Google Gemini AI.
+
+**Autenticación:** Admin / Marketing  
+**Request Body:**
+```json
+{
+  "producto_nombre": "Pan Dulce Tradicional Sin Gluten",
+  "descuento": 15,
+  "evento": "Fiestas de Fin de Año",
+  "tono": "cálido y familiar"
+}
+```
+**Response (200 OK):**
+```json
+{
+  "hook": "¡La tradición navideña que todos pueden disfrutar en su mesa! 🎄✨",
+  "caption": "Nuestro Pan Dulce Artesanal 100% libre de gluten está elaborado con frutos secos seleccionados...",
+  "hashtags": ["#PanFree", "#SinGlutenParaguay", "#Encarnacion", "#CeliacosParaguay"],
+  "cta": "Pedilo hoy mismo desde panfree.fit y asegurá tu mesa navideña."
+}
+```
+
+---
+
+### 12. `POST /api/admin/marketing/publish-instagram`
+Publica imágenes y stories directamente en la cuenta oficial de Instagram Business a través de Meta Graph API.
+
+**Autenticación:** Admin / Marketing  
+**Request Body:**
+```json
+{
+  "image_url": "https://res.cloudinary.com/d7simx38/image/upload/v1/marketing/promo-pan-dulce.jpg",
+  "caption": "¡La tradición navideña sin gluten! Pedí online en panfree.fit",
+  "format": "feed_4_5"
+}
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "post_id": "18029384756192837",
+  "permalink": "https://www.instagram.com/p/DB123456789/"
+}
+```
+
+---
+
+## 🔒 Estándares de Seguridad y Códigos de Respuesta
+
+| Código HTTP | Significado | Causa Habitual |
+|---|---|---|
+| `200 OK` | Operación exitosa | Petición procesada correctamente |
+| `400 Bad Request` | Parámetros inválidos | Fallo en validación Zod o campos obligatorios faltantes |
+| `401 Unauthorized` | No autenticado | Token ausente, expirado o sesión SSR no iniciada |
+| `403 Forbidden` | Acceso denegado | Rol de usuario insuficiente para la operación |
+| `404 Not Found` | Recurso no encontrado | ID de producto, pedido, cupón o código QR inexistente |
+| `500 Internal Error` | Error de servidor | Fallo de conexión con servicios externos (Resend, Supabase, Meta) |

@@ -1,134 +1,82 @@
-Contenido de CONTRIBUTING.md:
-# Contribuir a Panfree System
+# 🤝 Guía de Contribución — PanFree System
 
-Gracias por querer contribuir. Este archivo contiene guía práctica para colaborar de forma ordenada y segura.
-
----
-
-## Código de Conducta
-
-- Tratar a todos con respeto
-- Discutir decisiones técnicas con fundamento y empatía
-- En caso de conflicto, llevarlo a maintainers o crear issue para mediar
+¡Gracias por tu interés en contribuir al desarrollo de **PanFree System**! Este documento establece los estándares de código, flujos de trabajo con Git, normas de seguridad y convenciones arquitectónicas del proyecto.
 
 ---
 
-## Cómo Contribuir
+## 1. Código de Conducta y Principios
 
-### Flujo Recomendado
-
-1. **Fork** del repositorio o crear rama desde el repo principal
-
-2. **Crear una rama** con nombre claro:
-   - `feature/nombre-descriptivo`
-   - `fix/descripcion-bug`
-   - `docs/update-readme`
-
-3. **Hacer cambios localmente** y usar **commits atómicos y descriptivos**:
-   ```bash
-   git checkout -b feature/nueva-funcionalidad
-   # cambios...
-   git add .
-   git commit -m "feat: agregar validación de email en checkout"
-   git push origin feature/nueva-funcionalidad
-   Abrir Pull Request contra main (o rama de integración definida)
-
-Incluir descripción del cambio
-
-Capturas si aplica
-
-Checklist de qué se probó
-
-Revisión:
-
-Maintainers revisan y solicitan cambios si hace falta
-
-Una vez aprobado, mergear según política (Squash o Merge commit)
-
-Comandos Rápidos
-
-# 1. Crear rama
-git checkout -b feature/nueva-funcionalidad
-
-# 2. Hacer cambios
-# ... editar archivos ...
-
-# 3. Commit
-git add .
-git commit -m "feat: descripción clara"
-
-# 4. Subir y crear PR
-git push origin feature/nueva-funcionalidad
-Estándares de Código
-ESLint
-Usar npm run lint para verificar
-
-Seguir reglas de eslint-config-next
-
-Convenciones Next.js/React
-Componentes que usan DOM o localStorage → 'use client'
-
-Lógica de fetch → Server Components (cuando sea posible)
-Convenciones de Nombres
-Elemento	Convención	Ejemplo
-Ramas	feature/, fix/, chore/	feature/checkout-validacion
-Commits	Conventional Commits	feat: agregar validación
-Archivos	camelCase o kebab-case	CartSidebar.js
-
-Server vs Client Components
-Componente	Uso	Ejemplos
-Server Components	Data fetching, render estático, SEO	page.js (home), layout.js
-Client Components	Interactividad, eventos, localStorage	Checkout, CartSidebar
-Estilos y UI
-Paleta de Colores
-Color	Hex	Uso
-Verde oscuro	#334c2b	Primario
-Naranja	#f46e15	CTA, acentos
-Marfil	#b7996b	Secundario
-Beige	#eee6d9	Fondo
-Estilos
-globals.css para tokens y estilos base
-
-Componentes pueden usar estilos inline (patrón actual)
-
-Para nuevas features: considerar CSS Modules o Tailwind
-
-Testing (Recomendado)
-Unit Tests
-Añadir tests para utilidades (Jest/React Testing Library)
-
-E2E Tests
-Cypress / Playwright para flujo crítico (checkout)
-
-Pull Request Template (Sugerido)
-
-## Descripción
-[Qué cambió y por qué]
-
-## Screenshots
-[Si aplica]
-
-## Checklist
-- [ ] `npm run lint` pasó
-- [ ] Pruebas locales pasaron
-- [ ] Variables de entorno actualizadas (si aplica)
-- [ ] Documentación actualizada (si aplica)
-
-Seguridad y Manejo de Secretos
-❌ No subir .env.local ni secretos a git
-
-❌ No hardcodear keys
-
-✅ Si detectás claves en el repo → avisar inmediatamente y rotarlas
-
-Subir Documentación Nueva
-Documentación técnica en root: ARCHITECTURE.md, DATABASE.md, API.md, DEPLOYMENT.md
-
-Mantener README.md actualizado con enlaces
-
-Contacto
-Abrir issue para dudas o mejoras
-
-Para cambios grandes: abrir discusión/issue antes de implementar
+- **Calidad y Claridad:** Escribe código limpio, autodocumentado y con responsabilidades bien delimitadas.
+- **Seguridad Primero:** Nunca agregues credenciales, tokens o secretos en el código fuente ni en commits de Git.
+- **Rendimiento y Accesibilidad:** Mantén tiempos de carga rápidos, optimización de imágenes con Cloudinary y contraste adecuado en la interfaz.
 
 ---
+
+## 2. Flujo de Trabajo con Git
+
+### 2.1. Ramas de Trabajo
+Crea siempre una rama descriptiva a partir de la rama principal (`main` o `develop`):
+- `feat/nombre-de-la-funcionalidad` (para nuevas características)
+- `fix/descripcion-del-bug` (para corrección de errores)
+- `docs/actualizacion-documentacion` (para mejoras en documentación)
+- `refactor/modulo-optimizado` (para reestructuraciones de código)
+
+### 2.2. Convención de Commits (Conventional Commits)
+Utiliza mensajes de commit claros en español o inglés siguiendo el estándar:
+```bash
+git commit -m "feat(pedidos): agregar filtro por rango de fechas en panel admin"
+git commit -m "fix(checkout): corregir redondeo de delivery en zonas periféricas"
+git commit -m "docs(api): documentar endpoint de canje de premios"
+```
+
+---
+
+## 3. Estándares Técnicos y Arquitectura
+
+### 3.1. Next.js App Router & Componentes
+- **Server Components por Defecto:** Mantén las páginas y layouts como Server Components (`layout.js`, `page.js`) a menos que requieran interactividad del usuario.
+- **Uso de `'use client'`:** Agrégalo al inicio del archivo únicamente cuando utilices React hooks (`useState`, `useEffect`, `useContext`), listeners del DOM o APIs del navegador (`localStorage`).
+- **Rutas de API (`src/app/api/*`):** Valida siempre los payloads de entrada utilizando **Zod**. Nunca expongas la `SUPABASE_SERVICE_ROLE_KEY` ni claves secretas al navegador.
+
+### 3.2. Estilos y Diseño Visual
+- **Paleta Cromática Oficial de PanFree:**
+  - **Verde Principal (Brand):** `#334c2b`
+  - **Naranja Acento (CTA / Alertas):** `#f46e15`
+  - **Dorado / Marfil Secundario:** `#b7996b`
+  - **Fondo Suave / Neutro:** `#fcfaf7` / `#eee6d9`
+- **Iconografía:** Emplea exclusivamente íconos de la librería `lucide-react`. No crees SVGs inline salvo que sea estrictamente necesario.
+- **Animaciones:** Utiliza `framer-motion` para transiciones fluidas de entrada, salida y modales.
+
+### 3.3. Base de Datos y Supabase
+- Si tu cambio requiere nuevas tablas, columnas o vistas, agrega un archivo SQL con numeración/nombre claro dentro del directorio `/migrations/`.
+- Configura siempre las correspondientes **Políticas de Seguridad a Nivel de Fila (Row Level Security - RLS)** para proteger los datos.
+
+---
+
+## 4. Comandos de Desarrollo y Verificación
+
+```bash
+# Iniciar servidor de desarrollo en puerto 3000
+npm run dev
+
+# Ejecutar el linter para comprobar sintaxis y reglas
+npm run lint
+
+# Construir la versión de producción y verificar tipos/rutas
+npm run build
+
+# Iniciar servidor de producción local
+npm start
+```
+
+---
+
+## 5. Checklist para Pull Requests
+
+Antes de enviar un Pull Request, verifica los siguientes puntos:
+
+- [ ] `npm run lint` pasa sin advertencias ni errores críticos.
+- [ ] `npm run build` compila con éxito localmente.
+- [ ] No hay archivos `.env`, `.env.local` ni claves secretas en el commit.
+- [ ] Las consultas a base de datos respetan los tipos y las políticas RLS.
+- [ ] La documentación relevante (`API.md`, `DATABASE.md`, `README.md`) ha sido actualizada si se crearon o modificaron endpoints o tablas.
