@@ -2,96 +2,51 @@
  * 📁 UBICACIÓN: src/lib/image-utils.js
  * 📌 DESCRIPCIÓN: Utilidades centrales para validación, resolución y sanitización
  *    de URLs de imágenes de productos y recursos estáticos.
- *    Previene errores 404 de upstream image optimization de Next.js por URLs inválidas o placeholders.
+ *    Usa directamente las URLs de Cloudinary / base de datos sin mapeos fijos ni bloqueos erróneos.
  */
 
-// Mapeo conocido de imágenes reales verificadas en Supabase Storage
-export const KNOWN_PRODUCT_STORAGE_IMAGES = {
-  'masa-chipa-cruda-500g': 'https://gbdrcaumghykiipqgbty.supabase.co/storage/v1/object/public/productos/productos/1773103970210-ze02jdnrxho.jpg',
-  'budin-naranja': 'https://gbdrcaumghykiipqgbty.supabase.co/storage/v1/object/public/productos/productos/1772917706729-bfkqsqwioyq.jpg',
-}
-
 /**
- * Verifica si una URL es un placeholder inválido o contiene patrones malformados
+ * Verifica si una URL es vacía, nula o un string inválido
  */
 export function isInvalidImageUrl(url) {
   if (!url || typeof url !== 'string') return true
   const clean = url.trim()
-  if (!clean || clean.length < 5) return true
-
-  // Detectar caracteres de corchete o codificados que indican placeholders
-  if (
-    clean.includes('[') ||
-    clean.includes(']') ||
-    clean.includes('%5B') ||
-    clean.includes('%5b') ||
-    clean.includes('%5D') ||
-    clean.includes('%5d')
-  ) {
+  if (!clean || clean.length < 5 || clean === 'null' || clean === 'undefined') {
     return true
   }
-
-  // Detectar textos placeholder específicos
-  if (
-    clean.includes('nombre_real') ||
-    clean.includes('public_id_real') ||
-    clean.includes('undefined') ||
-    clean.includes('null')
-  ) {
-    return true
-  }
-
-  // Detectar URL de Cloudinary con ID no existente que fue movido a Supabase
-  if (clean.includes('res.cloudinary.com') && clean.includes('ze02jdnrxho')) {
-    return true
-  }
-
   return false
 }
 
 /**
  * Resuelve la URL de imagen válida para un producto o string de URL
+ * Usa directamente la columna imagen_url (o imagenes_urls) de la base de datos
  */
 export function resolveProductImageUrl(productoOrUrl) {
   if (!productoOrUrl) return null
 
   // Si se pasa directamente una URL en string
   if (typeof productoOrUrl === 'string') {
-    if (productoOrUrl.includes('ze02jdnrxho')) {
-      return KNOWN_PRODUCT_STORAGE_IMAGES['masa-chipa-cruda-500g']
-    }
-    return isInvalidImageUrl(productoOrUrl) ? null : productoOrUrl
+    const clean = productoOrUrl.trim()
+    return isInvalidImageUrl(clean) ? null : clean
   }
 
   const producto = productoOrUrl
 
-  // 1. Revisar si tiene mapeo directo por slug
-  if (producto.slug && KNOWN_PRODUCT_STORAGE_IMAGES[producto.slug]) {
-    return KNOWN_PRODUCT_STORAGE_IMAGES[producto.slug]
-  }
-
-  // 2. Revisar imagen_url principal
+  // 1. Revisar imagen_url principal
   if (producto.imagen_url && typeof producto.imagen_url === 'string') {
-    if (producto.imagen_url.includes('ze02jdnrxho')) {
-      return KNOWN_PRODUCT_STORAGE_IMAGES['masa-chipa-cruda-500g']
-    }
-    if (!isInvalidImageUrl(producto.imagen_url)) {
-      return producto.imagen_url
+    const clean = producto.imagen_url.trim()
+    if (!isInvalidImageUrl(clean)) {
+      return clean
     }
   }
 
-  // 3. Revisar array imagenes_urls
-  if (Array.isArray(producto.imagenes_urls)) {
+  // 2. Revisar array imagenes_urls
+  if (Array.isArray(producto.imagenes_urls) && producto.imagenes_urls.length > 0) {
     for (const u of producto.imagenes_urls) {
       if (u && typeof u === 'string') {
-        if (u.includes('ze02jdnrxho')) {
-          return KNOWN_PRODUCT_STORAGE_IMAGES['masa-chipa-cruda-500g']
-        }
-        if (u.includes('1772917706729-bfkqsqwioyq.jpg')) {
-          return KNOWN_PRODUCT_STORAGE_IMAGES['budin-naranja']
-        }
-        if (!isInvalidImageUrl(u) && (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('/'))) {
-          return u
+        const clean = u.trim()
+        if (!isInvalidImageUrl(clean)) {
+          return clean
         }
       }
     }
@@ -115,14 +70,16 @@ export function normalizeProduct(producto) {
 
   const imagenesUrlsValidas = Array.isArray(producto.imagenes_urls)
     ? producto.imagenes_urls
-        .map(u => (typeof u === 'string' && u.includes('ze02jdnrxho') ? KNOWN_PRODUCT_STORAGE_IMAGES['masa-chipa-cruda-500g'] : u))
-        .filter(u => u && !isInvalidImageUrl(u))
+        .filter(u => typeof u === 'string' && !isInvalidImageUrl(u))
+        .map(u => u.trim())
     : []
 
   return {
     ...producto,
     imagen_url: validImageUrl,
-    imagenes_urls: validImageUrl ? [validImageUrl, ...imagenesUrlsValidas.filter(u => u !== validImageUrl)] : imagenesUrlsValidas,
+    imagenes_urls: validImageUrl
+      ? [validImageUrl, ...imagenesUrlsValidas.filter(u => u !== validImageUrl)]
+      : imagenesUrlsValidas,
     is_featured: esDestacado,
     destacado: esDestacado,
   }

@@ -354,8 +354,8 @@ export default function PaginaProductoCliente({
   const imagenPrincipal = resolveProductImageUrl(producto)
   const imagenesAdicionales = Array.isArray(producto.imagenes_urls)
     ? producto.imagenes_urls
-        .map(u => (typeof u === 'string' && u.includes('ze02jdnrxho') ? 'https://gbdrcaumghykiipqgbty.supabase.co/storage/v1/object/public/productos/productos/1773103970210-ze02jdnrxho.jpg' : u))
         .filter(u => u && !isInvalidImageUrl(u))
+        .map(u => (typeof u === 'string' ? u.trim() : u))
     : []
 
   const imagenes = [
