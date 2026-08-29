@@ -22,6 +22,16 @@ import { enviarPlantillaWhatsApp } from './whatsapp'
 import webpush from 'web-push'
 
 /**
+ * Regex estándar para validar UUID v4 (8-4-4-4-12 caracteres)
+ */
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function isValidUUID(value) {
+  if (!value || typeof value !== 'string') return false
+  return UUID_REGEX.test(value.trim())
+}
+
+/**
  * Obtiene el cliente Supabase adecuado (usa service_role si está disponible en entorno server)
  */
 function getSupabaseClient() {
@@ -72,6 +82,12 @@ function getWebPushInstance() {
 export async function enviarPushAdmin({ userId, titulo, mensaje, url = '/admin/pedidos' }) {
   if (!userId) return { success: false, enviadas: 0, error: 'userId requerido' }
 
+  const cleanUserId = typeof userId === 'string' ? userId.trim() : String(userId).trim()
+  if (!isValidUUID(cleanUserId)) {
+    console.warn(`⚠️ [Push] userId inválido recibido ("${cleanUserId}"). Se requiere formato UUID válido.`)
+    return { success: false, enviadas: 0, error: `UUID inválido: ${cleanUserId}` }
+  }
+
   try {
     const wp = getWebPushInstance()
     if (!wp) {
@@ -83,10 +99,10 @@ export async function enviarPushAdmin({ userId, titulo, mensaje, url = '/admin/p
     const { data: subs, error } = await db
       .from('push_subscriptions')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', cleanUserId)
 
     if (error || !subs || subs.length === 0) {
-      console.log(`ℹ️ [Push] Usuario ${userId} no tiene suscripciones push activas.`)
+      console.log(`ℹ️ [Push] Usuario ${cleanUserId} no tiene suscripciones push activas.`)
       return { success: true, enviadas: 0, message: 'Usuario no suscrito' }
     }
 
@@ -172,6 +188,7 @@ export async function enviarPushATodosLosAdmins({ titulo, mensaje, url = '/admin
         adminUserIds = admins
           .map((a) => a.auth_user_id || a.id)
           .filter(Boolean)
+          .filter(isValidUUID)
       }
     } catch (e) {
       console.warn('⚠️ [Push] Error consultando tabla usuarios para admins:', e.message)
