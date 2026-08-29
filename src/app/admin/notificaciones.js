@@ -12,11 +12,24 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Bell, Sparkles, Check, X, Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import {
+  Bell,
+  Sparkles,
+  Check,
+  X,
+  Loader2,
+  Package,
+  AlertTriangle,
+  XCircle,
+  Info,
+  ExternalLink,
+} from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { formatFecha } from './lib/helpers'
 
 export default function NotificacionesAdmin() {
+  const router = useRouter()
   const [notificaciones, setNotificaciones] = useState([])
   const [contador, setContador] = useState(0)
   const [mostrar, setMostrar] = useState(false)
@@ -46,28 +59,40 @@ export default function NotificacionesAdmin() {
     }
   }, [mostrar])
 
-  useEffect(() => {
-    let canal = null
+  const cargarNotificaciones = async () => {
+    try {
+      setCargando(true)
+      const { data, error } = await supabase
+        .from('notificaciones_admin')
+        .select('*')
+        .or('leido.eq.false,leida.eq.false')
+        .order('created_at', { ascending: false })
+        .limit(50)
 
-    async function cargarNotificaciones() {
-      try {
-        setCargando(true)
-        const { data, error } = await supabase
+      if (error) {
+        // Fallback simple si la columna leido vs leida difiere
+        const { data: fallbackData } = await supabase
           .from('notificaciones_admin')
           .select('*')
-          .eq('leida', false)
           .order('created_at', { ascending: false })
           .limit(50)
-
-        if (error) throw error
+        
+        const noLeidas = (fallbackData || []).filter(n => n.leido === false || n.leida === false)
+        setNotificaciones(noLeidas)
+        setContador(noLeidas.length)
+      } else {
         setNotificaciones(data || [])
         setContador(data?.length || 0)
-      } catch (err) {
-        console.error('[PanFree] Error cargando notificaciones admin:', err)
-      } finally {
-        setCargando(false)
       }
+    } catch (err) {
+      console.error('[PanFree] Error cargando notificaciones admin:', err)
+    } finally {
+      setCargando(false)
     }
+  }
+
+  useEffect(() => {
+    let canal = null
 
     cargarNotificaciones()
 
@@ -84,10 +109,11 @@ export default function NotificacionesAdmin() {
           },
           (payload) => {
             const nueva = payload.new
-            if (!nueva.leida) {
+            const esNoLeida = nueva.leido === false || nueva.leida === false
+            if (esNoLeida) {
               setNotificaciones((prev) => [nueva, ...prev.filter((n) => n.id !== nueva.id)])
               setContador((prev) => prev + 1)
-              
+
               if (audioRef.current) {
                 audioRef.current.play().catch(() => {})
               }
@@ -95,13 +121,16 @@ export default function NotificacionesAdmin() {
               // Mostrar Toast emergente
               setToast({
                 id: nueva.id || Date.now(),
+                titulo: nueva.titulo || 'Nueva notificación',
                 mensaje: nueva.mensaje,
+                link: nueva.link,
+                tipo: nueva.tipo,
                 timestamp: Date.now(),
               })
 
               setTimeout(() => {
                 setToast((current) => (current?.id === (nueva.id || Date.now()) ? null : current))
-              }, 5000)
+              }, 6000)
             }
           }
         )
@@ -115,11 +144,12 @@ export default function NotificacionesAdmin() {
     }
   }, [])
 
-  const marcarComoLeida = async (id) => {
+  const handleMarcarLeida = async (id, e) => {
+    if (e) e.stopPropagation()
     try {
       await supabase
         .from('notificaciones_admin')
-        .update({ leida: true })
+        .update({ leido: true, leida: true })
         .eq('id', id)
 
       setNotificaciones((prev) => prev.filter((n) => n.id !== id))
@@ -129,20 +159,41 @@ export default function NotificacionesAdmin() {
     }
   }
 
-  const marcarTodasComoLeidas = async () => {
+  const handleMarcarTodas = async () => {
     const ids = notificaciones.map((n) => n.id)
     if (ids.length === 0) return
 
     try {
       await supabase
         .from('notificaciones_admin')
-        .update({ leida: true })
+        .update({ leido: true, leida: true })
         .in('id', ids)
 
       setNotificaciones([])
       setContador(0)
     } catch (err) {
-      console.error('[PanFree] Error marcando todas las notificaciones:', err)
+      console.error('[PanFree] Error marcando todas:', err)
+    }
+  }
+
+  const irANotificacion = (notif) => {
+    handleMarcarLeida(notif.id)
+    setMostrar(false)
+    if (notif.link) {
+      router.push(notif.link)
+    }
+  }
+
+  const obtenerIconoTipo = (tipo) => {
+    switch (tipo) {
+      case 'nuevo_pedido':
+        return <Package size={18} color="#f46e15" />
+      case 'stock_bajo':
+        return <AlertTriangle size={18} color="#c62828" />
+      case 'cancelacion':
+        return <XCircle size={18} color="#c62828" />
+      default:
+        return <Info size={18} color="#334c2b" />
     }
   }
 
@@ -151,6 +202,12 @@ export default function NotificacionesAdmin() {
       {/* Toast emergente flotante */}
       {toast && (
         <div
+          onClick={() => {
+            if (toast.link) {
+              setToast(null)
+              router.push(toast.link)
+            }
+          }}
           style={{
             position: 'fixed',
             bottom: '2rem',
@@ -158,27 +215,39 @@ export default function NotificacionesAdmin() {
             backgroundColor: '#334c2b',
             color: '#eee6d9',
             padding: '1rem 1.4rem',
-            borderRadius: '8px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+            borderRadius: '10px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.35)',
             zIndex: 2000,
             maxWidth: '400px',
-            borderLeft: '5px solid #f46e15',
+            borderLeft: `6px solid ${toast.tipo === 'stock_bajo' || toast.tipo === 'cancelacion' ? '#c62828' : '#f46e15'}`,
             animation: 'panfreeSlideIn 0.3s ease',
+            cursor: toast.link ? 'pointer' : 'default',
             fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-            <Bell size={20} color="#f46e15" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div style={{ flexShrink: 0, marginTop: '2px' }}>
+              {obtenerIconoTipo(toast.tipo)}
+            </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: '700', fontSize: '0.88rem', color: '#b7996b', marginBottom: '0.2rem' }}>
-                Nueva notificación
+              <div style={{ fontWeight: '700', fontSize: '0.9rem', color: '#b7996b', marginBottom: '0.2rem' }}>
+                {toast.titulo}
               </div>
               <div style={{ fontSize: '0.85rem', color: '#eee6d9', lineHeight: '1.4' }}>
                 {toast.mensaje}
               </div>
+              {toast.link && (
+                <div style={{ fontSize: '0.75rem', color: '#f46e15', marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '3px', fontWeight: '600' }}>
+                  <span>Ver detalles</span>
+                  <ExternalLink size={12} />
+                </div>
+              )}
             </div>
             <button
-              onClick={() => setToast(null)}
+              onClick={(e) => {
+                e.stopPropagation()
+                setToast(null)
+              }}
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -247,14 +316,14 @@ export default function NotificacionesAdmin() {
             position: 'absolute',
             top: 'calc(100% + 8px)',
             right: '0',
-            width: '360px',
-            maxWidth: '90vw',
-            maxHeight: '420px',
+            width: '380px',
+            maxWidth: '92vw',
+            maxHeight: '460px',
             overflowY: 'auto',
             backgroundColor: '#fff',
             border: '2px solid #b7996b',
-            borderRadius: '8px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+            borderRadius: '10px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
             zIndex: 1000,
             padding: '1rem',
             fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif',
@@ -273,18 +342,18 @@ export default function NotificacionesAdmin() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Bell size={16} color="#334c2b" />
               <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#334c2b', fontWeight: '700' }}>
-                Notificaciones
+                Notificaciones ({contador})
               </h3>
             </div>
             {contador > 0 && (
               <button
                 type="button"
-                onClick={marcarTodasComoLeidas}
+                onClick={handleMarcarTodas}
                 style={{
                   background: 'transparent',
                   border: '1px solid #b7996b',
                   borderRadius: '4px',
-                  padding: '0.2rem 0.6rem',
+                  padding: '0.25rem 0.6rem',
                   cursor: 'pointer',
                   fontSize: '0.72rem',
                   color: '#334c2b',
@@ -311,53 +380,72 @@ export default function NotificacionesAdmin() {
               </p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {notificaciones.map((notif) => (
-                <div
-                  key={notif.id}
-                  style={{
-                    padding: '0.65rem 0.85rem',
-                    backgroundColor: '#faf7f2',
-                    borderRadius: '6px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    gap: '0.5rem',
-                    borderLeft: '4px solid #f46e15',
-                    border: '1px solid #ede4d6',
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#333', fontWeight: '500', lineHeight: '1.4' }}>
-                      {notif.mensaje}
-                    </p>
-                    {notif.created_at && (
-                      <span style={{ fontSize: '0.72rem', color: '#888', marginTop: '0.25rem', display: 'block' }}>
-                        {formatFecha(notif.created_at)}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => marcarComoLeida(notif.id)}
-                    title="Marcar como leída"
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              {notificaciones.map((notif) => {
+                const borderAccent =
+                  notif.tipo === 'stock_bajo' || notif.tipo === 'cancelacion'
+                    ? '#c62828'
+                    : '#f46e15'
+
+                return (
+                  <div
+                    key={notif.id}
+                    onClick={() => irANotificacion(notif)}
                     style={{
-                      background: '#fff',
-                      border: '1px solid #b7996b',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      color: '#2e7d32',
-                      fontSize: '0.85rem',
-                      padding: '0.2rem 0.4rem',
+                      padding: '0.75rem 0.85rem',
+                      backgroundColor: '#faf7f2',
+                      borderRadius: '8px',
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: '0.6rem',
+                      borderLeft: `4px solid ${borderAccent}`,
+                      border: '1px solid #ede4d6',
+                      cursor: notif.link ? 'pointer' : 'default',
+                      transition: 'background-color 0.15s ease',
                     }}
                   >
-                    <Check size={14} />
-                  </button>
-                </div>
-              ))}
+                    <div style={{ flexShrink: 0, marginTop: '2px' }}>
+                      {obtenerIconoTipo(notif.tipo)}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      {notif.titulo && (
+                        <div style={{ fontWeight: '700', fontSize: '0.85rem', color: '#334c2b', marginBottom: '0.15rem' }}>
+                          {notif.titulo}
+                        </div>
+                      )}
+                      <p style={{ margin: 0, fontSize: '0.82rem', color: '#444', lineHeight: '1.4' }}>
+                        {notif.mensaje}
+                      </p>
+                      {notif.created_at && (
+                        <span style={{ fontSize: '0.7rem', color: '#888', marginTop: '0.3rem', display: 'block' }}>
+                          {formatFecha(notif.created_at)}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => handleMarcarLeida(notif.id, e)}
+                      title="Marcar como leída"
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #b7996b',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        color: '#2e7d32',
+                        fontSize: '0.85rem',
+                        padding: '0.25rem 0.45rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Check size={14} />
+                    </button>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
@@ -382,3 +470,4 @@ export default function NotificacionesAdmin() {
     </div>
   )
 }
+
