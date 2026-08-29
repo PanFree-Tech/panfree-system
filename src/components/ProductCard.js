@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import {
@@ -16,6 +15,7 @@ import styles from './ProductCard.module.css'
 import { useCart } from '../context/CartContext'
 import { useAnalytics } from '../hooks/useAnalytics'
 import { resolveProductImageUrl } from '@/lib/image-utils'
+import FavoritoButton from './FavoritoButton' // <-- Nuevo import
 
 export const formatGs = (n) => `Gs. ${Number(n || 0).toLocaleString('es-PY')}`
 
@@ -38,7 +38,6 @@ export function parseFechaPromo(val) {
     s = s.replace(/([+-]\d{2})$/, '$1:00')
     const d = new Date(s)
     if (!isNaN(d.getTime())) return d
-
     const fallback = new Date(val)
     if (!isNaN(fallback.getTime())) return fallback
   }
@@ -52,28 +51,23 @@ export function checkPromoActiva(producto) {
   if (!producto) return false
   const enPromo = producto.en_promocion === true || producto.en_promocion === 'true' || producto.en_promocion === 1
   if (!enPromo) return false
-
   const precioBase = Number(producto.precio_venta ?? producto.precio ?? 0)
   const precioPromo = Number(producto.precio_promocion ?? 0)
   if (precioPromo <= 0) return false
   if (precioBase > 0 && precioPromo >= precioBase) return false
-
   const nowMs = Date.now()
-
   if (producto.fecha_inicio_promo) {
     const inicio = parseFechaPromo(producto.fecha_inicio_promo)
     if (inicio && nowMs < inicio.getTime()) {
       return false
     }
   }
-
   if (producto.fecha_fin_promo) {
     const fin = parseFechaPromo(producto.fecha_fin_promo)
     if (fin && nowMs > fin.getTime()) {
       return false
     }
   }
-
   return true
 }
 
@@ -88,7 +82,6 @@ export default function ProductCard({
   const [imgError, setImgError] = useState(false)
   const [tiempoRestante, setTiempoRestante] = useState(null)
   const [promoActiva, setPromoActiva] = useState(() => checkPromoActiva(producto))
-
   const imgRef = useRef(null)
   const { agregarAlCarrito, showToast } = useCart()
   const { viewItem, addToCart: trackAddToCart } = useAnalytics()
@@ -106,16 +99,13 @@ export default function ProductCard({
       setTiempoRestante(null)
       return
     }
-
     const actualizarTimer = () => {
       const activa = checkPromoActiva(producto)
       setPromoActiva(activa)
-
       if (!activa) {
         setTiempoRestante(null)
         return
       }
-
       if (producto.fecha_fin_promo) {
         const finDate = parseFechaPromo(producto.fecha_fin_promo)
         if (!finDate) {
@@ -125,18 +115,15 @@ export default function ProductCard({
         const ahora = Date.now()
         const fin = finDate.getTime()
         const distancia = fin - ahora
-
         if (distancia <= 0) {
           setPromoActiva(false)
           setTiempoRestante(null)
           return
         }
-
         const dias = Math.floor(distancia / (1000 * 60 * 60 * 24))
         const horas = Math.floor((distancia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
         const minutos = Math.floor((distancia % (1000 * 60)) / (1000 * 60))
         const segundos = Math.floor((distancia % (1000 * 60)) / 1000)
-
         if (dias > 0) {
           setTiempoRestante(`${dias}d ${String(horas).padStart(2, '0')}h ${String(minutos).padStart(2, '0')}m`)
         } else {
@@ -148,7 +135,6 @@ export default function ProductCard({
         setTiempoRestante(null)
       }
     }
-
     actualizarTimer()
     const intervalo = setInterval(actualizarTimer, 1000)
     return () => clearInterval(intervalo)
@@ -162,7 +148,6 @@ export default function ProductCard({
     producto.destacado === true ||
     producto.destacado === 'true'
   )
-
   const agotado = !disponible
   const precioBase = Number(producto?.precio_venta ?? producto?.precio ?? 0)
   const precioPromo = Number(producto?.precio_promocion ?? 0)
@@ -175,7 +160,6 @@ export default function ProductCard({
     e?.preventDefault?.()
     e?.stopPropagation?.()
     if (agotado || !producto) return
-
     const payload = {
       id: producto.id || producto.slug || Date.now().toString(),
       nombre: producto.nombre,
@@ -188,7 +172,6 @@ export default function ProductCard({
       categoria: producto.categoria || '',
       unidad_medida: producto.unidad_medida || null,
     }
-
     agregarAlCarrito(payload)
     onAddToCart?.(payload)
     trackAddToCart?.(producto, cantidad)
@@ -202,7 +185,6 @@ export default function ProductCard({
     e?.preventDefault?.()
     e?.stopPropagation?.()
     if (!producto) return
-
     const msg = encodeURIComponent(
       `¡Hola PanFree! 🍞 Me gustaría encargar el siguiente producto:\n\n` +
         `*Producto:* ${producto.nombre}\n` +
@@ -221,10 +203,15 @@ export default function ProductCard({
   return (
     <article
       id={`product-card-${productId}`}
-      className={styles.card}
+      className={`${styles.card} relative`}
       role="article"
       aria-labelledby={`product-title-${productId}`}
     >
+      {/* Botón de favorito en la esquina superior derecha */}
+      <div className="absolute top-2 right-2 z-10">
+        <FavoritoButton productoId={producto.id} size={20} />
+      </div>
+
       {/* Badges superiores izquierdos: Destacado y Oferta */}
       {(esDestacado || promoActiva) && (
         <div className={styles.badgesTopLeft}>
@@ -234,7 +221,6 @@ export default function ProductCard({
               <span>Destacado</span>
             </div>
           )}
-
           {promoActiva && (
             <div className={styles.promoBadge}>
               🔥 -{porcentajeDescuento}% OFF
@@ -274,7 +260,6 @@ export default function ProductCard({
               <Package size={32} color="#334c2b" />
             </div>
           )}
-
           {/* Banner de cuenta regresiva sobre la imagen */}
           {promoActiva && tiempoRestante && (
             <div className={styles.promoTimerOverlay}>
@@ -290,14 +275,12 @@ export default function ProductCard({
         <div>
           {/* Categoría */}
           {producto.categoria && <span className={styles.categoryBadge}>{producto.categoria}</span>}
-
           {/* Título */}
           <a href={slugUrl} className={styles.titleLink}>
             <h3 id={`product-title-${productId}`} className={styles.title}>
               {producto.nombre}
             </h3>
           </a>
-
           {/* Badge de anticipación */}
           {!agotado && requiereAnticipacion && (
             <div className={styles.anticipacionNotice}>
@@ -344,7 +327,6 @@ export default function ProductCard({
               </div>
             )}
           </div>
-
           {agotado && <span className={styles.stockOutTag}>Sin stock</span>}
         </div>
 
