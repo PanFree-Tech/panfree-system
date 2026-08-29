@@ -1,4 +1,11 @@
 /** @type {import('next').NextConfig} */
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  skipWaiting: true,
+})
+
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
@@ -9,7 +16,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    serverComponentsExternalPackages: ['@axiomantic/llmlingua-2', '@huggingface/transformers', 'onnxruntime-node'],
+    serverComponentsExternalPackages: ['@axiomantic/llmlingua-2', '@huggingface/transformers', 'onnxruntime-node', 'web-push'],
   },
   images: {
     domains: ['res.cloudinary.com', 'images.unsplash.com', 'picsum.photos'],
@@ -44,4 +51,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withPWA(nextConfig)

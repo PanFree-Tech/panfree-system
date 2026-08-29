@@ -1,6 +1,6 @@
 {
   "name": "PanFree",
-  "description": "PanFree bakery management and online ordering web application",
+  "description": "PanFree bakery management and online ordering web application with VAPID Web Push Notifications and PWA support",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

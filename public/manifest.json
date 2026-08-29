@@ -1,14 +1,27 @@
 {
-  "name": "PanFree - Panificados Sin Gluten",
+  "name": "PanFree - Panadería Sin Gluten",
   "short_name": "PanFree",
-  "description": "Panificados artesanales sin gluten en Encarnación, Paraguay",
+  "description": "Panificados y repostería artesanal 100% libre de gluten en Encarnación, Paraguay",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#eee6d9",
   "theme_color": "#334c2b",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "scope": "/",
+  "id": "panfree-pwa",
   "icons": [
+    {
+      "src": "/logo192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "/icons/icon-72x72.png",
       "sizes": "72x72",
@@ -58,8 +71,7 @@
       "purpose": "any maskable"
     }
   ],
-  "splash_pages": null,
-  "categories": ["food", "shopping"],
-  "lang": "es",
+  "categories": ["food", "shopping", "lifestyle"],
+  "lang": "es-PY",
   "dir": "ltr"
 }
