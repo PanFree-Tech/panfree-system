@@ -1,8 +1,12 @@
 /**
  * 📁 UBICACIÓN: src/app/admin/layout.js
- * 📅 ACTUALIZADO: 2026-08-20 (OPTIMIZACIÓN RESPONSIVE MOBILE & TABLET)
- * 📌 DESCRIPCIÓN: Layout del panel administrativo con Sidebar responsivo (drawer móvil + toggle escritorio),
- *    navegación modular completa, verificación de rol admin y notificaciones en tiempo real.
+ * 📅 ACTUALIZADO: 2026-08-28
+ * 📌 DESCRIPCIÓN: Layout del panel administrativo con:
+ *    - Sidebar responsivo (drawer móvil + toggle escritorio)
+ *    - Navegación modular completa y verificación de rol admin
+ *    - Notificaciones en tiempo real (tabla notificaciones_admin)
+ *    - Integración nativa de Notificaciones Push Web (VAPID) con autologin/suscripción
+ *    - Banner intuitivo para activación de permisos push si está en estado 'default'
  */
 
 'use client'
@@ -37,11 +41,15 @@ import {
   Loader2,
   Tag,
   QrCode,
+  BellRing,
+  CheckCircle2,
+  Volume2,
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase-client'
 import NotificacionesAdmin from './notificaciones'
 import { AUDIT_ACTIONS, registrarAuditoria } from './lib/audit'
 import { useMobile } from '../../hooks/useMobile'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
 import styles from './admin.module.css'
 
 export default function AdminLayout({ children }) {
@@ -51,8 +59,22 @@ export default function AdminLayout({ children }) {
 
   const [verificando, setVerificando] = useState(true)
   const [adminConfirmado, setAdminConfirmado] = useState(false)
+  const [adminUser, setAdminUser] = useState(null)
   const [sidebarAbierto, setSidebarAbierto] = useState(true)
   const [sidebarMovilAbierto, setSidebarMovilAbierto] = useState(false)
+  const [mostrarPromptPush, setMostrarPromptPush] = useState(true)
+  const [activandoPush, setActivandoPush] = useState(false)
+  const [mensajePushTest, setMensajePushTest] = useState(null)
+
+  // Hook de Notificaciones Push
+  const {
+    isSupported: pushSupported,
+    permission: pushPermission,
+    isSubscribed: pushSubscribed,
+    subscribe: pushSubscribe,
+    sendTestNotification,
+    loading: pushLoading,
+  } = usePushNotifications()
 
   // Cerrar sidebar móvil automáticamente al cambiar de ruta
   useEffect(() => {
@@ -62,7 +84,7 @@ export default function AdminLayout({ children }) {
   // Ajustar estado por defecto del sidebar según tamaño de pantalla
   useEffect(() => {
     if (isMobile || isTablet) {
-      setSidebarAbierto(true) // En móvil siempre es ancho completo dentro del drawer
+      setSidebarAbierto(true)
     }
   }, [isMobile, isTablet])
 
@@ -88,6 +110,7 @@ export default function AdminLayout({ children }) {
         }
 
         if (mounted) {
+          setAdminUser(session.user)
           setAdminConfirmado(true)
           setVerificando(false)
         }
@@ -108,6 +131,8 @@ export default function AdminLayout({ children }) {
       const rol = session.user?.raw_user_meta_data?.role || session.user?.user_metadata?.role || session.user?.app_metadata?.role
       if (rol !== 'admin') {
         if (mounted) router.replace('/')
+      } else {
+        if (mounted) setAdminUser(session.user)
       }
     })
 
@@ -116,6 +141,44 @@ export default function AdminLayout({ children }) {
       subscription.unsubscribe()
     }
   }, [router])
+
+  // ── Auto-suscripción automática a Push si el permiso ya está concedido ('granted') ──
+  useEffect(() => {
+    if (adminConfirmado && adminUser?.id && pushSupported && pushPermission === 'granted' && !pushSubscribed && !pushLoading) {
+      pushSubscribe(adminUser.id).catch((err) => {
+        console.warn('⚠️ Auto-suscripción push admin:', err.message)
+      })
+    }
+  }, [adminConfirmado, adminUser, pushSupported, pushPermission, pushSubscribed, pushLoading, pushSubscribe])
+
+  const handleActivarPush = async () => {
+    try {
+      setActivandoPush(true)
+      const res = await pushSubscribe(adminUser?.id)
+      if (res?.success) {
+        setMostrarPromptPush(false)
+      }
+    } catch (err) {
+      console.error('Error activando push:', err)
+    } finally {
+      setActivandoPush(false)
+    }
+  }
+
+  const handleTestPush = async () => {
+    setMensajePushTest('Enviando...')
+    const res = await sendTestNotification(
+      '🍞 ¡Prueba de Notificación Push!',
+      'Si estás viendo esto, las notificaciones push de PanFree están activas y funcionando correctamente.'
+    )
+    if (res?.success) {
+      setMensajePushTest('¡Notificación enviada!')
+      setTimeout(() => setMensajePushTest(null), 3500)
+    } else {
+      setMensajePushTest('Error al enviar')
+      setTimeout(() => setMensajePushTest(null), 3500)
+    }
+  }
 
   // ── Menú de navegación con Lucide Icons ──
   const menuItems = [
@@ -275,10 +338,135 @@ export default function AdminLayout({ children }) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            {/* Indicador y botón de prueba de Push Web */}
+            {pushSubscribed ? (
+              <button
+                type="button"
+                onClick={handleTestPush}
+                title="Notificaciones push activadas en este dispositivo. Haz clic para enviar prueba."
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  color: '#eee6d9',
+                  borderRadius: '20px',
+                  padding: '0.3rem 0.65rem',
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <BellRing size={14} color="#81c784" />
+                <span style={{ display: esPantallaPequena ? 'none' : 'inline' }}>
+                  {mensajePushTest || 'Push Activo'}
+                </span>
+              </button>
+            ) : pushSupported && pushPermission !== 'denied' ? (
+              <button
+                type="button"
+                onClick={handleActivarPush}
+                disabled={activandoPush}
+                title="Activar notificaciones push en este navegador"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  backgroundColor: '#f46e15',
+                  border: 'none',
+                  color: '#fff',
+                  borderRadius: '20px',
+                  padding: '0.3rem 0.75rem',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                }}
+              >
+                {activandoPush ? <Loader2 size={13} className="animate-spin" /> : <BellRing size={13} />}
+                <span>Activar Push</span>
+              </button>
+            ) : null}
+
             <NotificacionesAdmin />
           </div>
         </header>
+
+        {/* Banner para activar Notificaciones Push cuando el permiso está en 'default' */}
+        {pushSupported && pushPermission === 'default' && mostrarPromptPush && (
+          <div
+            style={{
+              backgroundColor: '#334c2b',
+              color: '#eee6d9',
+              padding: '0.75rem 1.25rem',
+              margin: '0.75rem 1rem 0',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              borderLeft: '5px solid #f46e15',
+              fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: '240px' }}>
+              <BellRing size={22} color="#f46e15" style={{ flexShrink: 0 }} />
+              <div>
+                <p style={{ margin: 0, fontWeight: '700', fontSize: '0.88rem', color: '#fff' }}>
+                  ¿Deseas recibir alertas de nuevos pedidos al instante?
+                </p>
+                <p style={{ margin: '0.15rem 0 0', fontSize: '0.78rem', color: '#d5cbb8', lineHeight: '1.3' }}>
+                  Te notificaremos inmediatamente en tu navegador cuando entre un nuevo pedido, incluso si tienes el panel minimizado.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={handleActivarPush}
+                disabled={activandoPush}
+                style={{
+                  backgroundColor: '#f46e15',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '0.4rem 0.9rem',
+                  borderRadius: '6px',
+                  fontWeight: '700',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                {activandoPush ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                Activar Notificaciones
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMostrarPromptPush(false)}
+                title="Cerrar aviso"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: '1px solid rgba(238, 230, 217, 0.4)',
+                  color: '#eee6d9',
+                  padding: '0.4rem 0.75rem',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                }}
+              >
+                Ahora no
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Área de trabajo de cada página */}
         <main className={styles.mainContent}>
