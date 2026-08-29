@@ -263,6 +263,23 @@ function BotonNotificaciones() {
   )
 }
 
+// ── Función auxiliar para contar registros ──────────────────────────────────
+async function safeCount(tabla, filterFn = null) {
+  try {
+    let query = supabase.from(tabla).select('*', { count: 'exact', head: true })
+    if (filterFn) query = filterFn(query)
+    const { count, error } = await query
+    if (!error && count !== null) return count
+
+    let fallback = supabase.from(tabla).select('id')
+    if (filterFn) fallback = filterFn(fallback)
+    const { data } = await fallback
+    return data ? data.length : 0
+  } catch {
+    return 0
+  }
+}
+
 // ── Dashboard principal ───────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const [metricas, setMetricas] = useState({
@@ -282,71 +299,31 @@ export default function AdminDashboard() {
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token
 
-      // 2. Intentar cargar resumen diario desde API con token en header y cookies
-      let resumenApi = null
-      try {
-        const headers = { 'Content-Type': 'application/json' }
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`
-        }
-        const res = await fetch('/api/resumen-diario', {
-          headers,
-          credentials: 'include',
-        })
-        if (res.ok) {
-          resumenApi = await res.json()
-        }
-      } catch (errApi) {
-        console.warn('[Dashboard] Fallback API resumen-diario:', errApi)
-      }
-
-      const safeCount = async (tabla, filterFn = null) => {
-        try {
-          let query = supabase.from(tabla).select('*', { count: 'exact', head: true })
-          if (filterFn) query = filterFn(query)
-          const { count, error } = await query
-          if (!error && count !== null) return count
-
-          let fallback = supabase.from(tabla).select('id')
-          if (filterFn) fallback = filterFn(fallback)
-          const { data } = await fallback
-          return data ? data.length : 0
-        } catch {
-          return 0
-        }
-      }
-
-      const [
-        totalProductos,
-        productosActivos,
-        totalClientes,
-        totalInsumos,
-        pedidosPendientes,
-      ] = await Promise.all([
+      // 2. Obtener métricas básicas
+      const [totalProductos, productosActivos, totalClientes, totalInsumos] = await Promise.all([
         safeCount('productos'),
         safeCount('productos', (q) => q.eq('is_active', true)),
         safeCount('clientes'),
         safeCount('insumos'),
-        resumenApi?.resumen?.estados?.pendiente !== undefined
-          ? Promise.resolve(resumenApi.resumen.estados.pendiente)
-          : safeCount('pedidos', (q) => q.eq('estado', 'pendiente')),
       ])
 
-      let ultimosPedidos = resumenApi?.resumen?.ultimos_pedidos || []
-      if (ultimosPedidos.length === 0) {
-        try {
-          const { data: pedidosData } = await supabase
-            .from('pedidos')
-            .select('id, numero_pedido, estado, total_final, subtotal, metodo_entrega, metodo_pago, created_at, clientes(nombre_completo)')
-            .order('created_at', { ascending: false })
-            .limit(5)
+      // 3. Obtener pedidos pendientes DIRECTAMENTE (sin depender de la API)
+      const pedidosPendientes = await safeCount('pedidos', (q) => q.eq('estado', 'pendiente'))
 
-          if (pedidosData) {
-            ultimosPedidos = pedidosData
-          }
-        } catch (errPed) {
-          console.warn('[Dashboard] Fallback ultimos pedidos:', errPed)
+      // 4. Obtener últimos pedidos
+      let ultimosPedidos = []
+      try {
+        const { data: pedidosData } = await supabase
+          .from('pedidos')
+          .select('id, numero_pedido, estado, total_final, subtotal, metodo_entrega, metodo_pago, created_at, clientes(nombre_completo)')
+          .order('created_at', { ascending: false })
+          .limit(5)
+
+        if (pedidosData) {
+          ultimosPedidos = pedidosData
         }
+      } catch (errPed) {
+        console.warn('[Dashboard] Error cargando últimos pedidos:', errPed)
       }
 
       setMetricas({
@@ -355,7 +332,7 @@ export default function AdminDashboard() {
         totalClientes: totalClientes ?? 0,
         totalInsumos: totalInsumos ?? 0,
         pedidosPendientes: pedidosPendientes ?? 0,
-        ultimosPedidos,
+        ultimosPedidos: ultimosPedidos || [],
         loading: false,
       })
     } catch (err) {
