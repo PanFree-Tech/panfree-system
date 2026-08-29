@@ -1,19 +1,18 @@
 /**
- * 📁 UBICACIÓN: src/app/layout-client.js
- * 📌 DESCRIPCIÓN: Layout general del cliente para PanFree.
- *    - Header con botón de menú hamburguesa y Drawer lateral animado.
- *    - Integración de contextos AuthProvider y CartProvider.
- *    - Carrito unificado (CartSidebar), BottomNav móvil, AuthModal y ToastNotification.
- *    - Google Analytics 4, Microsoft Clarity y Footer completo.
- */
-
+📁 UBICACIÓN: src/app/layout-client.js
+📌 DESCRIPCIÓN: Layout general del cliente para PanFree.
+Header con botón de menú hamburguesa y Drawer lateral animado.
+Integración de contextos AuthProvider, CartProvider y FavoritosProvider.
+Carrito unificado (CartSidebar), BottomNav móvil, AuthModal y ToastNotification.
+Google Analytics 4, Microsoft Clarity y Footer completo.
+*/
 'use client'
-
 import React, { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import { AuthProvider, useAuth } from '../context/AuthContext'
 import { CartProvider, useCart } from '../context/CartContext'
+import { FavoritosProvider } from '@/context/FavoritosContext' // <-- Nuevo import
 import CartSidebar from '../components/CartSidebar'
 import AuthModal from '../components/AuthModal'
 import ErrorBoundary from '../components/ErrorBoundary'
@@ -34,7 +33,7 @@ function IconWhatsApp({ size = 24, color = '#25D366' }) {
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M12 2C6.477 2 2 6.477 2 12c0 1.89.524 3.655 1.435 5.163L2 22l4.956-1.406A9.944 9.944 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm-1.177 5.83c-.198-.442-.407-.451-.596-.459l-.507-.007c-.176 0-.462.066-.704.33-.242.264-.924.903-.924 2.2 0 1.299.946 2.553 1.078 2.729.132.176 1.826 2.903 4.493 3.953 2.222.877 2.667.703 3.148.659.48-.044 1.55-.634 1.77-1.247.218-.613.218-1.138.153-1.248-.066-.11-.242-.176-.507-.308-.264-.132-1.562-.77-1.804-.858-.242-.088-.418-.132-.594.132-.176.264-.682.857-.836 1.033-.154.176-.308.198-.572.066-.264-.132-1.114-.411-2.122-1.308-.784-.698-1.314-1.56-1.468-1.824-.154-.264-.016-.407.116-.538.118-.118.264-.308.396-.462.132-.154.176-.264.264-.44.088-.176.044-.33-.022-.462-.066-.132-.574-1.43-.79-1.957z"
+        d="M12 2C6.477 2 2 6.477 2 12c0 1.89.524 3.655 1.435 5.163L2 22l4.956-1.406A9.944 9.944 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm-1.177 5.83c-.198-.442-.407-.451-.596-.459l-.5 07-.007c-.176 0-.462.066-.704.33-.242.264-.924.903-.924 2.2 0 1.299.946 2.553 1.078 2.729.132.176 1.826 2.903 4.493 3.953 2.222.877 2.667.703 3.148.659.48-.044 1.55-.634 1.77-1.247 .218-.613.218-1.138.153-1.248-.066-.11-.242-.176-.507-.308-.264-.132-1.562-.77-1.804-.858-.242-.088-.418-.132-.594.132-.176.264-.682.857-.836 1.033-.154.176-.308.198-.572.066-.264-.132-1.114-.411-2.122-1.308-.784-.698-1.314-1.56-1.468-1.824-.154-.264-.016-.407.116-.538.118-.118.264-.308.396-.462.132-.154.176-.264.264-.44.088-.176.044-.33-.022-.462-.066-.132-.574-1.43-.79-1.957z"
         fill={color}
       />
     </svg>
@@ -69,7 +68,6 @@ const ENVIO_GRATIS_DESDE = 50000 // ₲ 50.000
 // ─── Función para resolver logo ──────────────────────────────────────────────
 function resolverLogoTienda(data) {
   if (!data) return '/images/logo-panfree.svg'
-
   if (data.logo_variante_activa) {
     let variantes = []
     if (Array.isArray(data.logo_variantes)) {
@@ -81,7 +79,6 @@ function resolverLogoTienda(data) {
     if (found?.url) return found.url
     if (data.logo_variante_activa.startsWith('http')) return data.logo_variante_activa
   }
-
   if (data.usar_logo_rosa && data.logo_rosa_url) return data.logo_rosa_url
   if (data.logo_url) return data.logo_url
   return '/images/logo-panfree.svg'
@@ -91,13 +88,11 @@ function resolverLogoTienda(data) {
 function AnalyticsPageTracker() {
   const pathname = usePathname()
   const { pageview } = useAnalytics()
-
   useEffect(() => {
     if (typeof pageview === 'function') {
       pageview(pathname)
     }
   }, [pathname, pageview])
-
   return null
 }
 
@@ -106,7 +101,9 @@ export default function LayoutClient({ children }) {
   return (
     <AuthProvider>
       <CartProvider>
-        <LayoutContent>{children}</LayoutContent>
+        <FavoritosProvider>
+          <LayoutContent>{children}</LayoutContent>
+        </FavoritosProvider>
       </CartProvider>
     </AuthProvider>
   )
@@ -119,7 +116,6 @@ function LayoutContent({ children }) {
   const { usuario } = useAuth()
   const { isOpen, openDrawer, closeDrawer } = useDrawer()
   const [logoActual, setLogoActual] = useState('/images/logo-panfree.svg')
-
   const role = usuario?.raw_user_meta_data?.role || usuario?.user_metadata?.role || usuario?.app_metadata?.role
   const isAdmin = role === 'admin'
 
@@ -156,7 +152,6 @@ function LayoutContent({ children }) {
   const handleTouchEnd = () => {
     if (timerRef.current) clearTimeout(timerRef.current)
   }
-
   const handleDoubleClick = (e) => {
     e.preventDefault()
     if (typeof window !== 'undefined') {
@@ -169,7 +164,6 @@ function LayoutContent({ children }) {
       <GAScript />
       <AnalyticsPageTracker />
       <ClarityScript />
-
       {/* ============================================================ */}
       {/* HEADER con Logo + Hamburguesa + Redes + Carrito */}
       {/* ============================================================ */}
@@ -201,7 +195,6 @@ function LayoutContent({ children }) {
             >
               <Menu size={24} className="text-[#334c2b]" />
             </button>
-
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <a
                 href={isAdmin ? '/admin' : '/'}
@@ -290,11 +283,8 @@ function LayoutContent({ children }) {
             <a href={IG_URL} target="_blank" rel="noopener noreferrer" className="header-social-desktop p-2 hover:bg-gray-100 rounded-full transition">
               <IconInstagram size={22} />
             </a>
-
             <div className="header-social-desktop" style={{ width: '1px', height: '24px', backgroundColor: '#b7996b', margin: '0 0.25rem' }} />
-
             <UserGreeting />
-
             {/* Carrito */}
             <button
               onClick={() => setVisible(true)}
@@ -345,15 +335,15 @@ function LayoutContent({ children }) {
 
       {/* Drawer lateral */}
       <Drawer isOpen={isOpen} onClose={closeDrawer} />
-
+      
       {/* Banner de envío gratis */}
       <BannerEnvioGratis />
-
+      
       {/* Contenido principal */}
       <ErrorBoundary>
         <main>{children}</main>
       </ErrorBoundary>
-
+      
       {/* Carrito, Auth, Footer, BottomNav, Toast */}
       <CartSidebar />
       <AuthModal />
@@ -389,7 +379,6 @@ function BannerEnvioGratis() {
 // ─── Footer ────────────────────────────────────────────────────────────────────
 function Footer() {
   const [logoFooter, setLogoFooter] = useState('/images/logo-panfree.svg')
-
   useEffect(() => {
     supabase
       .from('configuracion_sitio')
@@ -414,19 +403,17 @@ function Footer() {
         }}>
           <div style={{ maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div
-                style={{
-                  width: '42px',
-                  height: '42px',
-                  backgroundColor: '#eee6d9',
-                  borderRadius: '6px',
-                  padding: '3px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: '1px solid #b7996b',
-                }}
-              >
+              <div style={{
+                width: '42px',
+                height: '42px',
+                backgroundColor: '#eee6d9',
+                borderRadius: '6px',
+                padding: '3px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid #b7996b',
+              }}>
                 <img
                   src={logoFooter}
                   alt="PanFree"
@@ -446,7 +433,6 @@ function Footer() {
               El placer de volver a comer libremente. Panificados, dulces y salados 100% artesanales sin gluten.
             </p>
           </div>
-
           <div>
             <p style={{ fontWeight: '700', fontSize: '0.85rem', color: '#b7996b', marginBottom: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
               Ubicación & Pedidos
@@ -461,7 +447,6 @@ function Footer() {
               📞 +595 984 589845
             </a>
           </div>
-
           <div>
             <p style={{ fontWeight: '700', fontSize: '0.85rem', color: '#b7996b', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
               Atención Directa
@@ -500,7 +485,6 @@ function Footer() {
             </div>
           </div>
         </div>
-
         <div style={{ borderTop: '1px solid rgba(183,153,107,0.3)', paddingTop: '1.25rem' }}>
           <div style={{
             display: 'flex',
