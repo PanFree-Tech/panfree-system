@@ -1,9 +1,10 @@
 /**
  * 📁 UBICACIÓN: src/app/layout-client.js
- * 📌 DESCRIPCIÓN: Layout general del cliente para PanFree con soporte de
- *    - Logo Principal y Variantes Temáticas Activas en Header y Footer.
- *    - Carrito unificado, Google Analytics 4, Clarity, Auth modal y BottomNav móvil.
- *    - Drawer lateral con menú hamburguesa integrado.
+ * 📌 DESCRIPCIÓN: Layout general del cliente para PanFree.
+ *    - Header con botón de menú hamburguesa y Drawer lateral animado.
+ *    - Integración de contextos AuthProvider y CartProvider.
+ *    - Carrito unificado (CartSidebar), BottomNav móvil, AuthModal y ToastNotification.
+ *    - Google Analytics 4, Microsoft Clarity y Footer completo.
  */
 
 'use client'
@@ -60,12 +61,12 @@ function IconInstagram({ size = 24 }) {
   )
 }
 
-// ─── Constantes de contacto ────────────────────────────────────────────────────
+// ─── Constantes ───────────────────────────────────────────────────────────────
 const WA_URL             = 'https://wa.me/595984589845'
 const IG_URL             = 'https://www.instagram.com/panfree.py'
-const ENVIO_GRATIS_DESDE = 50000  // ₲ 50.000
+const ENVIO_GRATIS_DESDE = 50000 // ₲ 50.000
 
-// ─── Función para resolver logo (Variante activa > Principal > Fallback) ──────
+// ─── Función para resolver logo ──────────────────────────────────────────────
 function resolverLogoTienda(data) {
   if (!data) return '/images/logo-panfree.svg'
 
@@ -74,34 +75,15 @@ function resolverLogoTienda(data) {
     if (Array.isArray(data.logo_variantes)) {
       variantes = data.logo_variantes
     } else if (typeof data.logo_variantes === 'string') {
-      try {
-        variantes = JSON.parse(data.logo_variantes)
-      } catch {
-        variantes = []
-      }
+      try { variantes = JSON.parse(data.logo_variantes) } catch {}
     }
-
-    const varianteEncontrada = variantes.find(
-      (v) => v.id === data.logo_variante_activa || v.url === data.logo_variante_activa
-    )
-
-    if (varianteEncontrada?.url) {
-      return varianteEncontrada.url
-    }
-
-    if (data.logo_variante_activa.startsWith('http')) {
-      return data.logo_variante_activa
-    }
+    const found = variantes.find(v => v.id === data.logo_variante_activa || v.url === data.logo_variante_activa)
+    if (found?.url) return found.url
+    if (data.logo_variante_activa.startsWith('http')) return data.logo_variante_activa
   }
 
-  if (data.usar_logo_rosa && data.logo_rosa_url) {
-    return data.logo_rosa_url
-  }
-
-  if (data.logo_url) {
-    return data.logo_url
-  }
-
+  if (data.usar_logo_rosa && data.logo_rosa_url) return data.logo_rosa_url
+  if (data.logo_url) return data.logo_url
   return '/images/logo-panfree.svg'
 }
 
@@ -111,7 +93,9 @@ function AnalyticsPageTracker() {
   const { pageview } = useAnalytics()
 
   useEffect(() => {
-    pageview(pathname)
+    if (typeof pageview === 'function') {
+      pageview(pathname)
+    }
   }, [pathname, pageview])
 
   return null
@@ -141,13 +125,7 @@ function LayoutContent({ children }) {
 
   // Ocultar header en admin y auth
   if (pathname?.startsWith('/admin') || pathname?.startsWith('/login') || pathname?.startsWith('/register')) {
-    return (
-      <>
-        <GAScript />
-        <ClarityScript />
-        <main>{children}</main>
-      </>
-    )
+    return <>{children}</>
   }
 
   // Cargar logo dinámico
@@ -306,11 +284,9 @@ function LayoutContent({ children }) {
 
           {/* Derecha: Acciones */}
           <div className="flex items-center gap-1">
-            {/* WhatsApp Desktop */}
             <a href={WA_URL} target="_blank" rel="noopener noreferrer" className="header-social-desktop p-2 hover:bg-gray-100 rounded-full transition">
               <IconWhatsApp size={22} color="#25D366" />
             </a>
-            {/* Instagram Desktop */}
             <a href={IG_URL} target="_blank" rel="noopener noreferrer" className="header-social-desktop p-2 hover:bg-gray-100 rounded-full transition">
               <IconInstagram size={22} />
             </a>
