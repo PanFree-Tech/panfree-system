@@ -2,10 +2,11 @@
  * 📁 UBICACIÓN: src/app/api/push-notificar/route.js
  * 📅 ACTUALIZADO: 2026-08-28
  * 📌 DESCRIPCIÓN: Endpoint para enviar notificaciones Push Web (VAPID) con web-push:
+ *    - Validación estricta y sanitización de UUIDs (evita errores PostgreSQL 22P02)
  *    - Envío a un usuario específico (user_id / userId) o a todos los administradores (rol = 'admin')
  *    - Deduplicación por endpoint (un dispositivo real = 1 notificación)
  *    - Limpieza automática de suscripciones vencidas o desinstaladas (HTTP 410 Gone / 404 Not Found)
- *    - Soporta invocación directa server-side o desde panel administrativo
+ *    - Respuestas detalladas y tolerantes a fallos
  */
 
 import { NextResponse } from 'next/server'
@@ -14,6 +15,21 @@ import webpush from 'web-push'
 import { sanitizeSupabaseUrl, sanitizeSupabaseKey } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
+
+/**
+ * Regex estándar para validar UUID v4 (8-4-4-4-12 caracteres hexadecimales)
+ */
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * Valida si un valor es un string con formato UUID válido
+ * @param {any} value 
+ * @returns {boolean}
+ */
+function isValidUUID(value) {
+  if (!value || typeof value !== 'string') return false
+  return UUID_REGEX.test(value.trim())
+}
 
 /**
  * Configura VAPID en web-push usando variables de entorno
@@ -61,12 +77,18 @@ export async function POST(request) {
     if (!wp) {
       return NextResponse.json({
         success: false,
-        warning: 'Servicio Push no configurado: faltan claves VAPID en .env',
+        warning: 'Servicio Push no configurado: faltan variables NEXT_PUBLIC_VAPID_PUBLIC_KEY o VAPID_PRIVATE_KEY en Vercel',
         enviadas: 0,
       }, { status: 200 })
     }
 
-    const body = await request.json()
+    let body = {}
+    try {
+      body = await request.json()
+    } catch (e) {
+      return NextResponse.json({ error: 'Cuerpo de solicitud JSON inválido' }, { status: 400 })
+    }
+
     const {
       titulo,
       title,
@@ -90,13 +112,26 @@ export async function POST(request) {
     const finalBadge = badge || '/icons/icon-96x96.png'
     const finalTag = tag || `panfree-${Date.now()}`
 
-    const targetUserId = user_id || userId
-    const db = getDbClient()
+    // Sanitizar y limpiar el ID de usuario recibido
+    const rawUserId = user_id || userId
+    const targetUserId = typeof rawUserId === 'string' ? rawUserId.trim() : null
 
+    const db = getDbClient()
     let subscriptions = []
 
-    // 1. Caso: Enviar a usuario específico
+    // ── 1. Caso: Enviar a un usuario específico ──
     if (targetUserId) {
+      // Validar formato UUID antes de consultar PostgreSQL para evitar error 22P02
+      if (!isValidUUID(targetUserId)) {
+        console.error(`❌ [Push] UUID inválido recibido en targetUserId: "${targetUserId}" (longitud: ${targetUserId.length} caracteres, esperado: 36)`)
+        return NextResponse.json({
+          success: false,
+          error: `El ID de usuario proporcionado "${targetUserId}" no tiene un formato UUID válido (longitud recibida: ${targetUserId.length}, esperado: 36 caracteres con formato 8-4-4-4-12).`,
+          ayuda: 'Verifica que no se hayan omitido caracteres al copiar el ID de usuario (ejemplo correcto: 5f8bb0ac-66fe-41e1-a43e-3d35ec370958)',
+          recibido: targetUserId,
+        }, { status: 400 })
+      }
+
       const { data, error } = await db
         .from('push_subscriptions')
         .select('*')
@@ -104,43 +139,56 @@ export async function POST(request) {
 
       if (error) {
         console.error('❌ [Push] Error consultando suscripción del usuario:', error)
-        throw error
+        return NextResponse.json({
+          success: false,
+          error: `Error consultando la base de datos para el usuario ${targetUserId}: ${error.message}`,
+        }, { status: 500 })
       }
+
       subscriptions = data || []
     } 
-    // 2. Caso: Enviar a todos los administradores
+    // ── 2. Caso: Enviar a todos los administradores o difusión general ──
     else if (sendToAdmins || !targetUserId) {
-      // Buscar IDs de administradores en la tabla usuarios
-      const { data: adminUsers, error: adminErr } = await db
-        .from('usuarios')
-        .select('id, auth_user_id')
-        .eq('rol', 'admin')
+      let adminAuthIds = []
 
-      if (!adminErr && adminUsers && adminUsers.length > 0) {
-        const adminAuthIds = adminUsers
-          .map(u => u.auth_user_id || u.id)
-          .filter(Boolean)
+      try {
+        const { data: adminUsers, error: adminErr } = await db
+          .from('usuarios')
+          .select('id, auth_user_id')
+          .eq('rol', 'admin')
 
-        if (adminAuthIds.length > 0) {
-          const { data: adminSubs, error: subsErr } = await db
-            .from('push_subscriptions')
-            .select('*')
-            .in('user_id', adminAuthIds)
+        if (!adminErr && adminUsers && adminUsers.length > 0) {
+          // Filtrar estrictamente solo UUIDs válidos para evitar errores SQL en la cláusula in()
+          adminAuthIds = adminUsers
+            .map(u => u.auth_user_id || u.id)
+            .filter(id => isValidUUID(id))
+        }
+      } catch (adminQueryErr) {
+        console.warn('⚠️ [Push] Error consultando tabla usuarios para administradores:', adminQueryErr.message)
+      }
 
-          if (!subsErr && adminSubs) {
-            subscriptions = adminSubs
-          }
+      // Si se encontraron administradores con UUIDs válidos, buscar sus suscripciones
+      if (adminAuthIds.length > 0) {
+        const { data: adminSubs, error: subsErr } = await db
+          .from('push_subscriptions')
+          .select('*')
+          .in('user_id', adminAuthIds)
+
+        if (!subsErr && adminSubs && adminSubs.length > 0) {
+          subscriptions = adminSubs
         }
       }
 
-      // Si no encontró por usuarios, consultar todas las push_subscriptions disponibles
+      // Fallback: Si no se encontraron por IDs específicos de admin, consultar todas las suscripciones activas registradas
       if (subscriptions.length === 0) {
-        const { data: allSubs } = await db
+        const { data: allSubs, error: allSubsErr } = await db
           .from('push_subscriptions')
           .select('*')
           .limit(50)
 
-        subscriptions = allSubs || []
+        if (!allSubsErr && allSubs) {
+          subscriptions = allSubs
+        }
       }
     }
 
@@ -154,7 +202,7 @@ export async function POST(request) {
       })
     }
 
-    // 3. Deduplicar suscripciones por endpoint (1 dispositivo real = 1 notificación)
+    // ── 3. Deduplicar suscripciones por endpoint (1 dispositivo real = 1 notificación) ──
     const subsUnicas = Array.from(
       new Map(subscriptions.map(s => [s.endpoint, s])).values()
     )
@@ -175,6 +223,7 @@ export async function POST(request) {
 
     let enviadas = 0
     let fallos = 0
+    const detallesEnvio = []
     const endpointsAEliminar = []
 
     await Promise.all(
@@ -188,7 +237,6 @@ export async function POST(request) {
             },
           }
 
-          // Asegurar estructura válida para webpush
           const pushSubscription = {
             endpoint: subData.endpoint || sub.endpoint,
             keys: {
@@ -198,15 +246,27 @@ export async function POST(request) {
           }
 
           if (!pushSubscription.endpoint || !pushSubscription.keys?.p256dh || !pushSubscription.keys?.auth) {
-            console.warn('⚠️ [Push] Suscripción inválida (faltan keys/endpoint):', sub.id)
+            console.warn('⚠️ [Push] Suscripción con estructura incompleta:', sub.id)
+            fallos++
             return
           }
 
-          await wp.sendNotification(pushSubscription, payload)
+          const result = await wp.sendNotification(pushSubscription, payload)
           enviadas++
+          detallesEnvio.push({
+            endpoint: sub.endpoint.substring(0, 35) + '...',
+            statusCode: result.statusCode,
+            status: 'ok',
+          })
         } catch (err) {
           console.error(`⚠️ [Push] Error enviando a endpoint (${err.statusCode || err.message}):`, sub.endpoint)
           fallos++
+          detallesEnvio.push({
+            endpoint: sub.endpoint.substring(0, 35) + '...',
+            statusCode: err.statusCode || 500,
+            status: 'error',
+            mensaje: err.message,
+          })
 
           // Si el endpoint expiró o fue desinstalado (404 Not Found o 410 Gone), marcar para limpieza
           if (err.statusCode === 410 || err.statusCode === 404) {
@@ -216,14 +276,14 @@ export async function POST(request) {
       })
     )
 
-    // 4. Limpieza automática de endpoints caducados
+    // ── 4. Limpieza automática de endpoints caducados ──
     if (endpointsAEliminar.length > 0) {
       console.log(`🧹 [Push] Eliminando ${endpointsAEliminar.length} suscripciones caducadas...`)
       await db
         .from('push_subscriptions')
         .delete()
         .in('endpoint', endpointsAEliminar)
-        .catch(err => console.warn('Error en limpieza:', err.message))
+        .catch(err => console.warn('Error en limpieza de suscripciones:', err.message))
     }
 
     return NextResponse.json({
@@ -232,10 +292,12 @@ export async function POST(request) {
       fallos,
       total: subsUnicas.length,
       mensaje: `Notificaciones push enviadas a ${enviadas} de ${subsUnicas.length} dispositivos`,
+      detalles: detallesEnvio,
     })
   } catch (error) {
     console.error('💥 [Push] Error general en /api/push-notificar:', error)
     return NextResponse.json({
+      success: false,
       error: error.message || 'Error interno al enviar notificaciones push',
     }, { status: 500 })
   }
