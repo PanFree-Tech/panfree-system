@@ -24,7 +24,6 @@
 
 import './globals.css'
 import LayoutClient from './layout-client'
-import Header from '../components/layout/Header'
 
 // ============================================
 // METADATOS (SEO) - CON VERIFICACIÓN DE FACEBOOK
@@ -102,9 +101,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body>
-        <Header />
-        <main>{children}</main>
-        <LayoutClient />
+        <LayoutClient>{children}</LayoutClient>
       </body>
     </html>
   )
