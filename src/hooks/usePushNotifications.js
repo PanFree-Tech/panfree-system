@@ -1,17 +1,16 @@
 /**
  * 📁 UBICACIÓN: src/hooks/usePushNotifications.js
- * 📅 CREADO: 2026-08-28
+ * 📅 ACTUALIZADO: 2026-08-28
  * 📌 DESCRIPCIÓN: Hook de React para gestionar Push Notifications Web (VAPID) y Service Worker en PanFree:
  *    - Detección de compatibilidad en el navegador
- *    - Solicitud de permisos (default, granted, denied)
- *    - Suscripción y desuscripción atómica
- *    - Sincronización con backend (/api/push-suscribir)
- *    - Envío de notificación de prueba (sendTestNotification)
+ *    - Solicitud de permisos con feedback claro (default, granted, denied)
+ *    - Suscripción y registro automático/manual sincronizado con Supabase (/api/push-suscribir)
+ *    - Envío de notificaciones de prueba (sendTestNotification)
  */
 
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 /**
  * Convierte una clave VAPID pública en Base64 URL a Uint8Array requerido por PushManager
@@ -35,8 +34,9 @@ export function usePushNotifications() {
   const [subscription, setSubscription] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const isSubscribingRef = useRef(false)
 
-  // ── 1. Verificar soporte y estado inicial ──
+  // ── 1. Verificar soporte y estado inicial de suscripción ──
   const checkSubscriptionStatus = useCallback(async () => {
     try {
       if (
@@ -55,10 +55,23 @@ export function usePushNotifications() {
       const currentPermission = Notification.permission
       setPermission(currentPermission)
 
-      // Registrar o esperar el Service Worker
-      const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
-      await navigator.serviceWorker.ready
+      // Registrar o sincronizar Service Worker
+      let registration
+      try {
+        registration = await navigator.serviceWorker.getRegistration()
+        if (!registration) {
+          registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        }
+      } catch (swErr) {
+        console.warn('[Push Hook] Error obteniendo Service Worker registration:', swErr.message)
+      }
 
+      if (!registration) {
+        setLoading(false)
+        return
+      }
+
+      // Verificar si ya existe suscripción activa en PushManager
       const existingSub = await registration.pushManager.getSubscription()
       if (existingSub) {
         setSubscription(existingSub)
@@ -79,7 +92,7 @@ export function usePushNotifications() {
     checkSubscriptionStatus()
   }, [checkSubscriptionStatus])
 
-  // ── 2. Solicitar permiso al usuario ──
+  // ── 2. Solicitar permiso al usuario de forma explícita ──
   const requestPermission = async () => {
     if (!isSupported) {
       setError('Las notificaciones push no están soportadas en este navegador')
@@ -97,18 +110,24 @@ export function usePushNotifications() {
     }
   }
 
-  // ── 3. Suscribir dispositivo ──
+  // ── 3. Suscribir dispositivo y guardar en Supabase ──
   const subscribe = async (userId = null) => {
     if (!isSupported) {
       setError('Notificaciones no soportadas en este navegador')
       return { success: false, error: 'No soportado' }
     }
 
+    if (isSubscribingRef.current) {
+      console.log('⏳ [Push Hook] Suscripción en curso, esperando...')
+      return { success: false, inProgress: true }
+    }
+
+    isSubscribingRef.current = true
     setLoading(true)
     setError(null)
 
     try {
-      // Si el permiso está en 'default', pedirlo
+      // 1. Validar y solicitar permiso si es necesario
       let currentPermission = Notification.permission
       if (currentPermission === 'default') {
         currentPermission = await Notification.requestPermission()
@@ -116,46 +135,62 @@ export function usePushNotifications() {
       }
 
       if (currentPermission !== 'granted') {
-        throw new Error('Permiso de notificaciones no concedido')
+        throw new Error('Permiso de notificaciones no concedido por el usuario')
       }
 
-      // Registrar Service Worker
-      const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
-      await navigator.serviceWorker.ready
+      // 2. Asegurar que el Service Worker esté registrado y listo
+      let registration = await navigator.serviceWorker.getRegistration()
+      if (!registration) {
+        registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      }
 
-      // Obtener clave pública VAPID
+      // Esperar a que el SW esté activo
+      if (registration.installing) {
+        await new Promise((resolve) => {
+          registration.installing.addEventListener('statechange', (e) => {
+            if (e.target.state === 'activated') resolve()
+          })
+          setTimeout(resolve, 1500) // Fallback timeout
+        })
+      }
+
+      // 3. Obtener clave pública VAPID
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
       if (!vapidPublicKey) {
-        throw new Error('Falta la variable de entorno NEXT_PUBLIC_VAPID_PUBLIC_KEY')
+        throw new Error('Variable NEXT_PUBLIC_VAPID_PUBLIC_KEY no encontrada en el entorno')
       }
 
       const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey)
 
-      // Suscribir al PushManager del navegador
-      const pushSub = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: convertedVapidKey,
-      })
+      // 4. Obtener o crear suscripción en PushManager
+      let pushSub = await registration.pushManager.getSubscription()
+      if (!pushSub) {
+        pushSub = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertedVapidKey,
+        })
+      }
 
-      // Guardar suscripción en backend Supabase
+      // 5. Guardar suscripción en Supabase vía API
+      const subPayload = pushSub.toJSON ? pushSub.toJSON() : pushSub
       const response = await fetch('/api/push-suscribir', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          subscription: pushSub.toJSON ? pushSub.toJSON() : pushSub,
+          subscription: subPayload,
           userId: userId,
         }),
       })
 
       const data = await response.json()
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Error al guardar suscripción en el servidor')
+        throw new Error(data.error || 'Error al registrar suscripción en la base de datos')
       }
 
       setSubscription(pushSub)
       setIsSubscribed(true)
       setPermission('granted')
-      console.log('🎉 [Push Hook] Suscripción exitosa a notificaciones push')
+      console.log('🎉 [Push Hook] Dispositivo suscrito con éxito a Push Notifications')
 
       return { success: true, subscription: pushSub }
     } catch (err) {
@@ -164,6 +199,7 @@ export function usePushNotifications() {
       return { success: false, error: err.message }
     } finally {
       setLoading(false)
+      isSubscribingRef.current = false
     }
   }
 
@@ -175,17 +211,18 @@ export function usePushNotifications() {
     setError(null)
 
     try {
-      const registration = await navigator.serviceWorker.ready
-      const currentSub = await registration.pushManager.getSubscription()
+      const registration = await navigator.serviceWorker.getRegistration()
+      if (registration) {
+        const currentSub = await registration.pushManager.getSubscription()
+        if (currentSub) {
+          const endpoint = currentSub.endpoint
+          await currentSub.unsubscribe()
 
-      if (currentSub) {
-        const endpoint = currentSub.endpoint
-        await currentSub.unsubscribe()
-
-        // Eliminar en el servidor
-        await fetch(`/api/push-suscribir?endpoint=${encodeURIComponent(endpoint)}`, {
-          method: 'DELETE',
-        }).catch((e) => console.warn('Error eliminando en servidor:', e))
+          // Eliminar de Supabase
+          await fetch(`/api/push-suscribir?endpoint=${encodeURIComponent(endpoint)}`, {
+            method: 'DELETE',
+          }).catch((e) => console.warn('Error al eliminar en backend:', e))
+        }
       }
 
       setSubscription(null)
