@@ -412,7 +412,7 @@ export function templateConfirmacionCompra({ pedido, cliente, items = [] }) {
   <table width="100%" cellpadding="0" cellspacing="0" style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 1px solid #e8e2d5;">
     <tr>
       <td style="text-align: center; padding-bottom: 24px; border-bottom: 2px solid #eee6d9;">
-        <img src="https://res.cloudinary.com/d7simx38/image/upload/v1/logos/panfree-logo-email" alt="PanFree Sin Gluten" style="max-height: 60px; margin-bottom: 8px;">
+        <img src="https://res.cloudinary.com/d7simx38/image/upload/v1788037279/logo-panfree.png" alt="PanFree Sin Gluten" style="max-height: 60px; margin-bottom: 8px;">
         <h1 style="color: #334c2b; margin: 12px 0 0 0; font-size: 24px;">🍞 ¡Gracias por tu pedido!</h1>
         <p style="margin: 6px 0 0 0; color: #b7996b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Panadería & Repostería 100% Sin Gluten</p>
       </td>
