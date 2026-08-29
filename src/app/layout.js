@@ -1,4 +1,4 @@
-/**
+/*
  * UBICACION: src/app/layout.js
  * CORRECCIONES:
  *   - viewport y themeColor movidos al export `viewport` separado (Next.js 14 lo requiere)
@@ -8,7 +8,7 @@
  *   - keywords, authors, creator, publisher para mejor SEO
  *   - title como objeto con template para páginas internas
  *   - og:image con alt descriptivo
- *   - link rel="shortcut icon" en <head>
+ *   - link rel="shortcut icon" en  
  * CAMBIOS 2026-03-07:
  *   - ✅ NUEVO: FloatingCartButton (botón flotante en móvil)
  *   - ✅ NUEVO: SlideCart (carrito deslizable)
@@ -18,10 +18,13 @@
  * CAMBIOS 2026-08-16:
  *   - ✅ NUEVO: Metaetiqueta de verificación de dominio de Facebook
  *     facebook-domain-verification: b1zdu5wmi3jvuvzewn9incwwy4uavo
+ * CAMBIOS 2026-08-29:
+ *   - ✅ NUEVO: Agregado componente Header en el layout principal
  */
 
 import './globals.css'
 import LayoutClient from './layout-client'
+import Header from '../components/layout/Header'
 
 // ============================================
 // METADATOS (SEO) - CON VERIFICACIÓN DE FACEBOOK
@@ -41,7 +44,7 @@ export const metadata = {
   manifest:  '/manifest.json',
 
   // ✅ VERIFICACIÓN DE DOMINIO PARA FACEBOOK
-  verification: {
+   verification: {
     facebook: 'e74odtvc4c40a654s1hw4jl1rkdcep',
   },
 
@@ -49,7 +52,7 @@ export const metadata = {
     capable:         true,
     statusBarStyle:  'default',
     title:           'PanFree',
-  },
+   },
   formatDetection: { telephone: false },
 
   openGraph: {
@@ -59,7 +62,7 @@ export const metadata = {
     siteName:    'PanFree',
     title:       'PanFree — Panificados Sin Gluten',
     description: 'El placer de volver a comer libremente.',
-    images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'PanFree — Panificados Sin Gluten' }],
+    images: [{ url: '/og-image.jpg', width: 1200, height: 630,  alt: 'PanFree — Panificados Sin Gluten' }],
   },
 
   twitter: {
@@ -75,7 +78,7 @@ export const metadata = {
       { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
       { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple:    [{ url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' }],
+    apple:    [{ url: '/icons/icon-192x192.png', sizes: '192x192' , type: 'image/png' }],
     shortcut: '/favicon.ico',
   },
 }
@@ -98,24 +101,10 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
-      <head>
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="PanFree" />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-TileColor" content="#334c2b" />
-        <meta name="msapplication-tap-highlight" content="no" />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
       <body>
-        <LayoutClient>
-          {children}
-        </LayoutClient>
+        <Header />
+        <main>{children}</main>
+        <LayoutClient />
       </body>
     </html>
   )

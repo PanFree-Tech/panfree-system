@@ -127,7 +127,7 @@ export default function LayoutClient({ children }) {
         <GAScript />
         <AnalyticsPageTracker />
         <ClarityScript />
-        <Header />
+        {/* ⬇️ ELIMINADO EL HEADER DUPLICADO ⬇️ */}
         <BannerEnvioGratis />
         <ErrorBoundary>
           <main>{children}</main>
