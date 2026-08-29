@@ -93,8 +93,8 @@
 .badgeSinGlutenText {
   color: #eee6d9;
   font-size: 0.65rem;
-  fontWeight: 700;
-  letterSpacing: 0.3px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
   text-transform: uppercase;
 }
 
@@ -148,6 +148,25 @@
   backdrop-filter: blur(2px);
   letter-spacing: 0.2px;
   z-index: 5;
+}
+
+/* ❤️ BOTÓN DE FAVORITO SOBRE LA IMAGEN */
+.favoritoOverlay {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 50%;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.favoritoOverlay:hover {
+  transform: scale(1.1);
 }
 
 /* CUERPO */
@@ -453,5 +472,21 @@
 
   .badgeSinGlutenText {
     font-size: 0.58rem;
+  }
+
+  .favoritoOverlay {
+    bottom: 4px;
+    right: 4px;
+    padding: 2px;
+  }
+
+  .favoritoOverlay button {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .favoritoOverlay button svg {
+    width: 16px !important;
+    height: 16px !important;
   }
 }
