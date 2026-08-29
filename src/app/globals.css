@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /**
  * UBICACION: src/app/globals.css
  * OPTIMIZACIONES VISUALES Y MOBILE:
