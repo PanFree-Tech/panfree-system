@@ -1,10 +1,10 @@
 /**
  * 📁 UBICACIÓN: src/app/api/push-suscribir/route.js
- * 📅 ACTUALIZADO: 2026-08-28
+ * 📅 ACTUALIZADO: 2026-08-29
  * 📌 DESCRIPCIÓN: Endpoint para gestionar suscripciones Push Web (VAPID) en Supabase:
  *    - POST: Guarda o actualiza (upsert) la suscripción del usuario en la tabla push_subscriptions
  *    - GET: Obtiene las suscripciones activas de un usuario
- *    - DELETE: Elimina una suscripción específica por endpoint o usuario
+ *    - DELETE: Elimina una suscripción específica (desde body o query params)
  */
 
 import { NextResponse } from 'next/server'
@@ -173,13 +173,32 @@ export async function GET(request) {
 }
 
 /**
- * DELETE: Elimina una suscripción push
+ * DELETE: Elimina una suscripción push (desde body o query params)
+ * ✅ FIX: Ahora acepta el endpoint tanto en body como en query string
  */
 export async function DELETE(request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const endpoint = searchParams.get('endpoint')
-    const userId = searchParams.get('userId') || searchParams.get('user_id')
+    // 1. Intentar leer desde el body primero (para compatibilidad con el frontend)
+    let endpoint = null
+    let userId = null
+    
+    try {
+      const body = await request.json()
+      endpoint = body.endpoint
+      userId = body.userId || body.user_id
+    } catch {
+      // 2. Si no hay body, buscar en query params
+      const { searchParams } = new URL(request.url)
+      endpoint = searchParams.get('endpoint')
+      userId = searchParams.get('userId') || searchParams.get('user_id')
+    }
+
+    if (!endpoint && !userId) {
+      return NextResponse.json(
+        { error: 'Se requiere endpoint (en body o query) o userId para eliminar' },
+        { status: 400 }
+      )
+    }
 
     const db = getDbClient()
     let query = db.from('push_subscriptions').delete()
@@ -188,15 +207,12 @@ export async function DELETE(request) {
       query = query.eq('endpoint', endpoint)
     } else if (userId) {
       query = query.eq('user_id', userId)
-    } else {
-      return NextResponse.json(
-        { error: 'Se requiere endpoint o userId para eliminar' },
-        { status: 400 }
-      )
     }
 
     const { error } = await query
     if (error) throw error
+
+    console.log(`✅ [Push] Suscripción eliminada: ${endpoint || userId}`)
 
     return NextResponse.json({
       success: true,
