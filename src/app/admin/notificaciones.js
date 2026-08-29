@@ -65,7 +65,7 @@ export default function NotificacionesAdmin() {
       const { data, error } = await supabase
         .from('notificaciones_admin')
         .select('*')
-        .or('leido.eq.false,leida.eq.false')
+        .eq('leido', false)
         .order('created_at', { ascending: false })
         .limit(50)
 
