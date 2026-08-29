@@ -3,6 +3,7 @@
  * 📌 DESCRIPCIÓN: Layout general del cliente para PanFree con soporte de
  *    - Logo Principal y Variantes Temáticas Activas en Header y Footer.
  *    - Carrito unificado, Google Analytics 4, Clarity, Auth modal y BottomNav móvil.
+ *    - Drawer lateral con menú hamburguesa integrado.
  */
 
 'use client'
@@ -18,10 +19,12 @@ import ErrorBoundary from '../components/ErrorBoundary'
 import { UserGreeting } from '@/components/UserGreeting'
 import BottomNav from '@/components/BottomNav'
 import ToastNotification from '@/components/ToastNotification'
-import { Shield } from 'lucide-react'
+import { Shield, Menu } from 'lucide-react'
 import GAScript from '../components/GAScript'
 import { useAnalytics } from '../hooks/useAnalytics'
 import ClarityScript from '../components/ClarityScript'
+import { useDrawer } from '../hooks/useDrawer'
+import Drawer from '../components/layout/Drawer'
 
 // ─── SVG logos oficiales inline ───────────────────────────────────────────────
 function IconWhatsApp({ size = 24, color = '#25D366' }) {
@@ -66,7 +69,6 @@ const ENVIO_GRATIS_DESDE = 50000  // ₲ 50.000
 function resolverLogoTienda(data) {
   if (!data) return '/images/logo-panfree.svg'
 
-  // 1. Variante activa seleccionada
   if (data.logo_variante_activa) {
     let variantes = []
     if (Array.isArray(data.logo_variantes)) {
@@ -92,17 +94,14 @@ function resolverLogoTienda(data) {
     }
   }
 
-  // 2. Retrocompatibilidad Octubre Rosa si estaba activo
   if (data.usar_logo_rosa && data.logo_rosa_url) {
     return data.logo_rosa_url
   }
 
-  // 3. Logo principal base
   if (data.logo_url) {
     return data.logo_url
   }
 
-  // 4. Fallback estándar SVG local
   return '/images/logo-panfree.svg'
 }
 
@@ -123,26 +122,269 @@ export default function LayoutClient({ children }) {
   return (
     <AuthProvider>
       <CartProvider>
-        {/* Google Analytics 4 — carga condicionada a consentimiento */}
-        <GAScript />
-        <AnalyticsPageTracker />
-        <ClarityScript />
-        {/* ⬇️ ELIMINADO EL HEADER DUPLICADO ⬇️ */}
-        <BannerEnvioGratis />
-        <ErrorBoundary>
-          <main>{children}</main>
-        </ErrorBoundary>
-        {/* Carrito Unificado */}
-        <CartSidebar />
-        {/* Modal de autenticación */}
-        <AuthModal />
-        <Footer />
-        {/* Navegación inferior fija en móvil */}
-        <BottomNav />
-        {/* Notificaciones */}
-        <ToastNotification />
+        <LayoutContent>{children}</LayoutContent>
       </CartProvider>
     </AuthProvider>
+  )
+}
+
+// ─── Contenido del Layout ──────────────────────────────────────────────────────
+function LayoutContent({ children }) {
+  const pathname = usePathname()
+  const { cantidadItems, setVisible } = useCart()
+  const { usuario } = useAuth()
+  const { isOpen, openDrawer, closeDrawer } = useDrawer()
+  const [logoActual, setLogoActual] = useState('/images/logo-panfree.svg')
+
+  const role = usuario?.raw_user_meta_data?.role || usuario?.user_metadata?.role || usuario?.app_metadata?.role
+  const isAdmin = role === 'admin'
+
+  // Ocultar header en admin y auth
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/login') || pathname?.startsWith('/register')) {
+    return (
+      <>
+        <GAScript />
+        <ClarityScript />
+        <main>{children}</main>
+      </>
+    )
+  }
+
+  // Cargar logo dinámico
+  useEffect(() => {
+    supabase
+      .from('configuracion_sitio')
+      .select('logo_url, logo_variantes, logo_variante_activa, logo_rosa_url, usar_logo_rosa')
+      .eq('id', 1)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          const logoResuelto = resolverLogoTienda(data)
+          setLogoActual(logoResuelto)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  // Soporte para long-press en móvil
+  const timerRef = useRef(null)
+  const handleTouchStart = () => {
+    timerRef.current = setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/admin'
+      }
+    }, 1200)
+  }
+  const handleTouchEnd = () => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+  }
+
+  const handleDoubleClick = (e) => {
+    e.preventDefault()
+    if (typeof window !== 'undefined') {
+      window.location.href = '/admin'
+    }
+  }
+
+  return (
+    <>
+      <GAScript />
+      <AnalyticsPageTracker />
+      <ClarityScript />
+
+      {/* ============================================================ */}
+      {/* HEADER con Logo + Hamburguesa + Redes + Carrito */}
+      {/* ============================================================ */}
+      <header style={{
+        backgroundColor: '#eee6d9',
+        color: '#334c2b',
+        boxShadow: '0 2px 8px rgba(51,76,43,0.12)',
+        borderBottom: '2px solid #b7996b',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+      }}>
+        <div className="header-inner" style={{
+          padding: '0.75rem 2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '1rem',
+          maxWidth: '1200px',
+          margin: '0 auto',
+        }}>
+          {/* Izquierda: Hamburguesa + Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {/* Botón Hamburguesa (solo móvil) */}
+            <button
+              onClick={openDrawer}
+              className="lg:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
+              aria-label="Abrir menú"
+            >
+              <Menu size={24} className="text-[#334c2b]" />
+            </button>
+
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <a
+                href={isAdmin ? '/admin' : '/'}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                onDoubleClick={handleDoubleClick}
+                title={isAdmin ? 'Panel de Administración PanFree' : 'PanFree — Inicio (Doble clic o mantener presionado para Admin)'}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  textDecoration: 'none',
+                  flexShrink: 0,
+                  position: 'relative',
+                }}
+              >
+                <div style={{ position: 'relative' }}>
+                  <img
+                    className="header-logo-img"
+                    src={logoActual}
+                    alt="PanFree"
+                    width={54} height={54}
+                    style={{ objectFit: 'contain', display: 'block' }}
+                    onError={e => {
+                      if (e.target.src !== '/images/logo-panfree.svg') {
+                        e.target.src = '/images/logo-panfree.svg'
+                      }
+                    }}
+                  />
+                  {isAdmin && (
+                    <span
+                      title="Sesión de Administrador activa"
+                      style={{
+                        position: 'absolute',
+                        top: '-2px',
+                        right: '-2px',
+                        width: '12px',
+                        height: '12px',
+                        backgroundColor: '#2e7d32',
+                        border: '2px solid #ffffff',
+                        borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                        display: 'block',
+                      }}
+                    />
+                  )}
+                </div>
+                <div className="header-logo-text">
+                  <div style={{ fontWeight: '800', fontSize: '1.05rem', color: '#334c2b', lineHeight: '1.2', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    PanFree
+                    {isAdmin && (
+                      <span style={{
+                        fontSize: '0.68rem',
+                        fontWeight: '700',
+                        backgroundColor: '#334c2b',
+                        color: '#eee6d9',
+                        padding: '0.1rem 0.4rem',
+                        borderRadius: '4px',
+                        letterSpacing: '0.5px',
+                        textTransform: 'uppercase',
+                      }}>
+                        Admin
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#8f9a44', fontWeight: 600 }}>
+                    100% Sin Gluten · Encarnación
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          {/* Centro: Navegación (solo desktop) */}
+          <nav className="hidden lg:flex items-center gap-8">
+            <a href="/catalogo" className="text-sm font-medium text-gray-600 hover:text-[#334c2b] transition">Catálogo</a>
+            <a href="/sobre-nosotros" className="text-sm font-medium text-gray-600 hover:text-[#334c2b] transition">Nosotros</a>
+            <a href="/contacto" className="text-sm font-medium text-gray-600 hover:text-[#334c2b] transition">Contacto</a>
+          </nav>
+
+          {/* Derecha: Acciones */}
+          <div className="flex items-center gap-1">
+            {/* WhatsApp Desktop */}
+            <a href={WA_URL} target="_blank" rel="noopener noreferrer" className="header-social-desktop p-2 hover:bg-gray-100 rounded-full transition">
+              <IconWhatsApp size={22} color="#25D366" />
+            </a>
+            {/* Instagram Desktop */}
+            <a href={IG_URL} target="_blank" rel="noopener noreferrer" className="header-social-desktop p-2 hover:bg-gray-100 rounded-full transition">
+              <IconInstagram size={22} />
+            </a>
+
+            <div className="header-social-desktop" style={{ width: '1px', height: '24px', backgroundColor: '#b7996b', margin: '0 0.25rem' }} />
+
+            <UserGreeting />
+
+            {/* Carrito */}
+            <button
+              onClick={() => setVisible(true)}
+              aria-label={`Carrito, ${cantidadItems} productos`}
+              style={{
+                backgroundColor: '#334c2b',
+                color: '#eee6d9',
+                border: '1.5px solid #b7996b',
+                borderRadius: '6px',
+                padding: '0.5rem 0.9rem',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontWeight: '700',
+                fontSize: '0.95rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                position: 'relative',
+                minHeight: '44px',
+                minWidth: '44px',
+                transition: 'background-color 0.2s ease',
+              }}
+            >
+              <span>🛒</span>
+              <span className="header-cart-text" style={{ display: 'inline' }}>Carrito</span>
+              {cantidadItems > 0 && (
+                <span style={{
+                  backgroundColor: '#c62828',
+                  color: '#ffffff',
+                  borderRadius: '10px',
+                  minWidth: '20px',
+                  height: '20px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.72rem',
+                  fontWeight: '700',
+                  padding: '0 5px',
+                  marginLeft: '2px',
+                }}>
+                  {cantidadItems}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Drawer lateral */}
+      <Drawer isOpen={isOpen} onClose={closeDrawer} />
+
+      {/* Banner de envío gratis */}
+      <BannerEnvioGratis />
+
+      {/* Contenido principal */}
+      <ErrorBoundary>
+        <main>{children}</main>
+      </ErrorBoundary>
+
+      {/* Carrito, Auth, Footer, BottomNav, Toast */}
+      <CartSidebar />
+      <AuthModal />
+      <Footer />
+      <BottomNav />
+      <ToastNotification />
+    </>
   )
 }
 
@@ -168,227 +410,6 @@ function BannerEnvioGratis() {
   )
 }
 
-// ─── Header ────────────────────────────────────────────────────────────────────
-function Header() {
-  const { cantidadItems, setVisible } = useCart()
-  const { usuario } = useAuth()
-  const [logoActual, setLogoActual] = useState('/images/logo-panfree.svg')
-
-  const role = usuario?.raw_user_meta_data?.role || usuario?.user_metadata?.role || usuario?.app_metadata?.role
-  const isAdmin = role === 'admin'
-
-  // Cargar logo dinámico (Variante activa o Principal) desde configuracion_sitio
-  useEffect(() => {
-    supabase
-      .from('configuracion_sitio')
-      .select('logo_url, logo_variantes, logo_variante_activa, logo_rosa_url, usar_logo_rosa')
-      .eq('id', 1)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          const logoResuelto = resolverLogoTienda(data)
-          setLogoActual(logoResuelto)
-        }
-      })
-      .catch(() => {})
-  }, [])
-
-  // Soporte para long-press en móvil (si se mantiene presionado el logo 1.2s va a /admin)
-  const timerRef = useRef(null)
-  const handleTouchStart = () => {
-    timerRef.current = setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        window.location.href = '/admin'
-      }
-    }, 1200)
-  }
-  const handleTouchEnd = () => {
-    if (timerRef.current) clearTimeout(timerRef.current)
-  }
-
-  // Doble click para redirigir a /admin en desktop
-  const handleDoubleClick = (e) => {
-    e.preventDefault()
-    if (typeof window !== 'undefined') {
-      window.location.href = '/admin'
-    }
-  }
-
-  return (
-    <header style={{
-      backgroundColor: '#eee6d9',
-      color: '#334c2b',
-      boxShadow: '0 2px 8px rgba(51,76,43,0.12)',
-      borderBottom: '2px solid #b7996b',
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-    }}>
-      <div className="header-inner" style={{
-        padding: '0.75rem 2rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: '1rem',
-        maxWidth: '1200px',
-        margin: '0 auto',
-      }}>
-        {/* Logo con función Admin */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <a
-            href={isAdmin ? '/admin' : '/'}
-            id="header-logo-link"
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            onDoubleClick={handleDoubleClick}
-            title={isAdmin ? 'Panel de Administración PanFree' : 'PanFree — Inicio (Doble clic o mantener presionado para Admin)'}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              textDecoration: 'none',
-              flexShrink: 0,
-              position: 'relative',
-            }}
-          >
-            <div style={{ position: 'relative' }}>
-              <img
-                className="header-logo-img"
-                src={logoActual}
-                alt="PanFree"
-                width={54} height={54}
-                style={{ objectFit: 'contain', display: 'block' }}
-                onError={e => {
-                  if (e.target.src !== '/images/logo-panfree.svg') {
-                    e.target.src = '/images/logo-panfree.svg'
-                  }
-                }}
-              />
-              {isAdmin && (
-                <span
-                  title="Sesión de Administrador activa"
-                  style={{
-                    position: 'absolute',
-                    top: '-2px',
-                    right: '-2px',
-                    width: '12px',
-                    height: '12px',
-                    backgroundColor: '#2e7d32',
-                    border: '2px solid #ffffff',
-                    borderRadius: '50%',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                    display: 'block',
-                  }}
-                />
-              )}
-            </div>
-            <div className="header-logo-text">
-              <div style={{ fontWeight: '800', fontSize: '1.05rem', color: '#334c2b', lineHeight: '1.2', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                PanFree
-                {isAdmin && (
-                  <span style={{
-                    fontSize: '0.68rem',
-                    fontWeight: '700',
-                    backgroundColor: '#334c2b',
-                    color: '#eee6d9',
-                    padding: '0.1rem 0.4rem',
-                    borderRadius: '4px',
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase',
-                  }}>
-                    Admin
-                  </span>
-                )}
-              </div>
-              <div style={{ fontSize: '0.78rem', color: '#8f9a44', fontWeight: 600 }}>
-                100% Sin Gluten · Encarnación
-              </div>
-            </div>
-          </a>
-        </div>
-
-        {/* Nav */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          {/* WhatsApp */}
-          <a href={WA_URL} target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp" title="WhatsApp"
-            className="header-social-desktop"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px', borderRadius: '6px', padding: '0.3rem', transition: 'opacity 0.2s' }}
-            onMouseOver={e => e.currentTarget.style.opacity = '0.75'}
-            onMouseOut={e => e.currentTarget.style.opacity = '1'}
-          >
-            <IconWhatsApp size={26} />
-          </a>
-          {/* Instagram */}
-          <a href={IG_URL} target="_blank" rel="noopener noreferrer" aria-label="Seguinos en Instagram" title="Instagram @panfree.py"
-            className="header-social-desktop"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px', borderRadius: '6px', padding: '0.3rem', transition: 'opacity 0.2s' }}
-            onMouseOver={e => e.currentTarget.style.opacity = '0.75'}
-            onMouseOut={e => e.currentTarget.style.opacity = '1'}
-          >
-            <IconInstagram size={26} />
-          </a>
-          {/* Separador */}
-          <div className="header-social-desktop" style={{ width: '1px', height: '24px', backgroundColor: '#b7996b', margin: '0 0.25rem' }} />
-          {/* Inicio */}
-          <a href="/" className="header-social-desktop" style={{ color: '#334c2b', fontWeight: '700', fontSize: '0.92rem', padding: '0.4rem 0.6rem', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', minHeight: '44px' }}>
-            Catálogo
-          </a>
-          {/* Club PanFree y Dípticos */}
-          <a href="/canjear" className="header-social-desktop" style={{ color: '#f46e15', fontWeight: '700', fontSize: '0.92rem', padding: '0.4rem 0.6rem', borderRadius: '4px', textDecoration: 'none', display: 'flex', alignItems: 'center', minHeight: '44px' }}>
-            🎁 Club & Dípticos
-          </a>
-          {/* UserGreeting */}
-          <UserGreeting />
-          {/* Botón Carrito Header */}
-          <button
-            onClick={() => setVisible(true)}
-            aria-label={`Carrito, ${cantidadItems} productos`}
-            style={{
-              backgroundColor: '#334c2b',
-              color: '#eee6d9',
-              border: '1.5px solid #b7996b',
-              borderRadius: '6px',
-              padding: '0.5rem 0.9rem',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontWeight: '700',
-              fontSize: '0.95rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              position: 'relative',
-              minHeight: '44px',
-              minWidth: '44px',
-              transition: 'background-color 0.2s ease',
-            }}
-          >
-            <span>🛒</span>
-            <span className="header-cart-text" style={{ display: 'inline' }}>Carrito</span>
-            {cantidadItems > 0 && (
-              <span style={{
-                backgroundColor: '#c62828',
-                color: '#ffffff',
-                borderRadius: '10px',
-                minWidth: '20px',
-                height: '20px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.72rem',
-                fontWeight: '700',
-                padding: '0 5px',
-                marginLeft: '2px',
-              }}>
-                {cantidadItems}
-              </span>
-            )}
-          </button>
-        </nav>
-      </div>
-    </header>
-  )
-}
-
 // ─── Footer ────────────────────────────────────────────────────────────────────
 function Footer() {
   const [logoFooter, setLogoFooter] = useState('/images/logo-panfree.svg')
@@ -411,12 +432,10 @@ function Footer() {
   return (
     <footer style={{ backgroundColor: '#334c2b', color: '#eee6d9', marginTop: '3.5rem', borderTop: '2px solid #b7996b' }}>
       <div className="footer-inner" style={{ padding: '2.5rem 2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Fila principal */}
         <div style={{
           display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between',
           alignItems: 'flex-start', gap: '2rem', marginBottom: '2rem'
         }}>
-          {/* Marca con Logo Activo */}
           <div style={{ maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div
@@ -452,7 +471,6 @@ function Footer() {
             </p>
           </div>
 
-          {/* Contacto */}
           <div>
             <p style={{ fontWeight: '700', fontSize: '0.85rem', color: '#b7996b', marginBottom: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
               Ubicación & Pedidos
@@ -468,13 +486,11 @@ function Footer() {
             </a>
           </div>
 
-          {/* Redes sociales */}
           <div>
             <p style={{ fontWeight: '700', fontSize: '0.85rem', color: '#b7996b', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
               Atención Directa
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              {/* WhatsApp */}
               <a
                 href={WA_URL}
                 target="_blank"
@@ -490,7 +506,6 @@ function Footer() {
                 <IconWhatsApp size={20} color="#25D366" />
                 WhatsApp Encargos
               </a>
-              {/* Instagram */}
               <a
                 href={IG_URL}
                 target="_blank"
@@ -510,9 +525,7 @@ function Footer() {
           </div>
         </div>
 
-        {/* Línea separadora */}
         <div style={{ borderTop: '1px solid rgba(183,153,107,0.3)', paddingTop: '1.25rem' }}>
-          {/* Enlaces legales */}
           <div style={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -521,70 +534,26 @@ function Footer() {
             marginBottom: '1rem',
             fontSize: '0.85rem',
           }}>
-            <a
-              href="/politica-de-privacidad"
-              style={{ color: '#b7996b', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseOver={e => e.currentTarget.style.color = '#eee6d9'}
-              onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
-            >
-              Política de Privacidad
-            </a>
-            <a
-              href="/eliminar-datos"
-              style={{ color: '#b7996b', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseOver={e => e.currentTarget.style.color = '#eee6d9'}
-              onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
-            >
-              Eliminar Datos
-            </a>
-            <a
-              href="/terminos-y-condiciones"
-              style={{ color: '#b7996b', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseOver={e => e.currentTarget.style.color = '#eee6d9'}
-              onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
-            >
-              Términos y Condiciones
-            </a>
-            {/* Sobre Nosotros */}
-            <a
-              href="/sobre-nosotros"
-              style={{ color: '#b7996b', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseOver={e => e.currentTarget.style.color = '#eee6d9'}
-              onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
-            >
-              Sobre Nosotros
-            </a>
-            {/* Club PanFree y Canje */}
-            <a
-              href="/canjear"
-              style={{ color: '#b7996b', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseOver={e => e.currentTarget.style.color = '#eee6d9'}
-              onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
-            >
-              🎁 Canjear Díptico
-            </a>
-            {/* Certificado Oficial */}
+            <a href="/politica-de-privacidad" style={{ color: '#b7996b', textDecoration: 'none' }}>Política de Privacidad</a>
+            <a href="/eliminar-datos" style={{ color: '#b7996b', textDecoration: 'none' }}>Eliminar Datos</a>
+            <a href="/terminos-y-condiciones" style={{ color: '#b7996b', textDecoration: 'none' }}>Términos y Condiciones</a>
+            <a href="/sobre-nosotros" style={{ color: '#b7996b', textDecoration: 'none' }}>Sobre Nosotros</a>
+            <a href="/canjear" style={{ color: '#b7996b', textDecoration: 'none' }}>🎁 Canjear Díptico</a>
             <a
               href="https://www.dinapi.gov.py/portal/v3/noticias/detalle-noticia?idNoticia=261"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: '#b7996b', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseOver={e => e.currentTarget.style.color = '#eee6d9'}
-              onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
+              style={{ color: '#b7996b', textDecoration: 'none' }}
             >
               🏅 Certificado Oficial SIN GLUTEN
             </a>
-            {/* Panel Admin */}
             <a
               href="/admin"
-              style={{ color: '#b7996b', textDecoration: 'none', transition: 'color 0.2s', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
-              onMouseOver={e => e.currentTarget.style.color = '#eee6d9'}
-              onMouseOut={e => e.currentTarget.style.color = '#b7996b'}
+              style={{ color: '#b7996b', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
             >
               <Shield size={14} /> Panel Admin
             </a>
           </div>
-          {/* Copyright */}
           <p style={{ color: '#b7996b', fontSize: '0.8rem', textAlign: 'center', margin: 0 }}>
             © 2026 PanFree. Panadería Artesanal Libre de Gluten. Todos los derechos reservados.
           </p>
