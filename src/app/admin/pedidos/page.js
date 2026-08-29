@@ -198,6 +198,20 @@ export default function PaginaPedidosAdmin() {
         nuevo_estado: nuevoEstado,
       })
 
+      // Notificar al cliente y registrar alertas de forma no bloqueante
+      fetch('/api/pedidos/notificar-estado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pedidoId,
+          nuevoEstado,
+          pedido: pedidoModificado ? { ...pedidoModificado, estado: nuevoEstado } : undefined,
+          cliente: pedidoModificado?.clientes || undefined,
+        }),
+      }).catch((errNotif) => {
+        console.warn('⚠️ [Notificación de Estado] Error no bloqueante:', errNotif)
+      })
+
       setPedidos((prev) =>
         prev.map((p) => (p.id === pedidoId ? { ...p, estado: nuevoEstado } : p))
       )
