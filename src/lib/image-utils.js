@@ -3,6 +3,7 @@
  * 📌 DESCRIPCIÓN: Utilidades centrales para validación, resolución y sanitización
  *    de URLs de imágenes de productos y recursos estáticos.
  *    Usa directamente las URLs de Cloudinary / base de datos sin mapeos fijos ni bloqueos erróneos.
+ *    ✅ AGREGADO: placeholder automático para productos sin imagen.
  */
 
 /**
@@ -20,14 +21,21 @@ export function isInvalidImageUrl(url) {
 /**
  * Resuelve la URL de imagen válida para un producto o string de URL
  * Usa directamente la columna imagen_url (o imagenes_urls) de la base de datos
+ * Si no hay imagen, devuelve el placeholder por defecto
  */
 export function resolveProductImageUrl(productoOrUrl) {
-  if (!productoOrUrl) return null
+  // Placeholder por defecto
+  const PLACEHOLDER = '/images/placeholder-product.png'
+
+  if (!productoOrUrl) return PLACEHOLDER
 
   // Si se pasa directamente una URL en string
   if (typeof productoOrUrl === 'string') {
     const clean = productoOrUrl.trim()
-    return isInvalidImageUrl(clean) ? null : clean
+    if (!isInvalidImageUrl(clean)) {
+      return clean
+    }
+    return PLACEHOLDER
   }
 
   const producto = productoOrUrl
@@ -52,7 +60,8 @@ export function resolveProductImageUrl(productoOrUrl) {
     }
   }
 
-  return null
+  // 3. Si no hay imagen válida, devolver placeholder
+  return PLACEHOLDER
 }
 
 /**
