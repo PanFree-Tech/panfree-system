@@ -13,11 +13,34 @@ function UserGreetingComponent() {
   const { usuario } = useAuth()
 
   // Si no hay usuario, mostrar botón "Ingresar" → redirige a /login
+  // ⚠️ ESTILO ORIGINAL RESTAURADO
   if (!usuario) {
     return (
       <Link
         href="/login"
-        className="text-sm font-medium text-[#334c2b] hover:text-[#f46e15] transition px-3 py-2 rounded-lg hover:bg-gray-50"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          padding: '0.5rem 1rem',
+          backgroundColor: '#f46e15',
+          color: 'white',
+          borderRadius: '9999px',
+          fontSize: '0.875rem',
+          fontWeight: '500',
+          transition: 'background-color 0.2s ease',
+          textDecoration: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          lineHeight: '1.25rem',
+          fontFamily: 'inherit'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = '#e05d0a'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = '#f46e15'
+        }}
       >
         Ingresar
       </Link>
@@ -38,25 +61,54 @@ function UserGreetingComponent() {
     usuario.user_metadata?.picture ||
     null
 
+  // Usuario logueado - mantener estilo consistente con el header
   return (
     <Link
       href="/perfil"
       aria-label={`Mi cuenta - ${displayName}`}
-      className="flex items-center gap-2 text-sm font-medium text-[#334c2b] hover:text-[#f46e15] transition px-3 py-2 rounded-lg hover:bg-gray-50"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.5rem 1rem',
+        backgroundColor: '#334c2b',
+        color: 'white',
+        borderRadius: '9999px',
+        fontSize: '0.875rem',
+        fontWeight: '500',
+        transition: 'background-color 0.2s ease',
+        textDecoration: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        lineHeight: '1.25rem',
+        fontFamily: 'inherit'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = '#2a3d24'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = '#334c2b'
+      }}
     >
       {avatarUrl ? (
         <img
           src={avatarUrl}
           alt=""
-          width={24}
-          height={24}
-          className="w-6 h-6 rounded-full object-cover bg-[#eee6d9]"
+          width={20}
+          height={20}
+          style={{
+            width: '20px',
+            height: '20px',
+            borderRadius: '50%',
+            objectFit: 'cover',
+            backgroundColor: '#eee6d9'
+          }}
           onError={(e) => {
             e.currentTarget.style.display = 'none'
           }}
         />
       ) : (
-        <User size={18} className="text-[#334c2b]" />
+        <User size={16} style={{ color: 'white' }} />
       )}
       <span>Hola, {displayName}</span>
     </Link>
