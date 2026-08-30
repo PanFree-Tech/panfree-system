@@ -12,7 +12,7 @@ import { usePathname } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import { AuthProvider, useAuth } from '../context/AuthContext'
 import { CartProvider, useCart } from '../context/CartContext'
-import { FavoritosProvider } from '@/context/FavoritosContext' // <-- Nuevo import
+import { FavoritosProvider } from '@/context/FavoritosContext'
 import CartSidebar from '../components/CartSidebar'
 import AuthModal from '../components/AuthModal'
 import ErrorBoundary from '../components/ErrorBoundary'
