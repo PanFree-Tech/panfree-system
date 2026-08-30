@@ -16,7 +16,7 @@ import { FavoritosProvider } from '@/context/FavoritosContext' // <-- Nuevo impo
 import CartSidebar from '../components/CartSidebar'
 import AuthModal from '../components/AuthModal'
 import ErrorBoundary from '../components/ErrorBoundary'
-import { UserGreeting } from '@/components/UserGreeting'
+import UserGreeting from '@/components/UserGreeting'
 import BottomNav from '@/components/BottomNav'
 import ToastNotification from '@/components/ToastNotification'
 import { Shield, Menu } from 'lucide-react'

@@ -6,14 +6,9 @@ import Link from 'next/link'
 import { memo } from 'react'
 import { User } from 'lucide-react'
 
-/**
- * Componente que muestra un saludo personalizado cuando el usuario está autenticado
- */
 function UserGreetingComponent() {
   const { usuario } = useAuth()
 
-  // Si no hay usuario, mostrar botón "Ingresar" → redirige a /login
-  // ⚠️ ESTILO ORIGINAL RESTAURADO
   if (!usuario) {
     return (
       <Link
@@ -47,7 +42,6 @@ function UserGreetingComponent() {
     )
   }
 
-  // Obtener nombre del usuario con fallbacks seguros
   const displayName = 
     usuario.user_metadata?.full_name ||
     usuario.user_metadata?.name ||
@@ -55,13 +49,11 @@ function UserGreetingComponent() {
     usuario.email?.split('@')[0] ||
     'Usuario'
 
-  // Obtener avatar con fallback
   const avatarUrl = 
     usuario.user_metadata?.avatar_url ||
     usuario.user_metadata?.picture ||
     null
 
-  // Usuario logueado - mantener estilo consistente con el header
   return (
     <Link
       href="/perfil"
@@ -115,5 +107,5 @@ function UserGreetingComponent() {
   )
 }
 
-// Memoizar para evitar re-renders innecesarios
-export const UserGreeting = memo(UserGreetingComponent)
+// ✅ CAMBIO: Default export en lugar de named export
+export default memo(UserGreetingComponent)
