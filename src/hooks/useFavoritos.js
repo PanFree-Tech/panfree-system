@@ -1,12 +1,16 @@
-'use client'
-
-import { useContext } from 'react'
-import { FavoritosContext } from '@/context/FavoritosContext'
-
-export function useFavoritos() {
-  const context = useContext(FavoritosContext)
-  if (!context) {
-    throw new Error('useFavoritos debe usarse dentro de un <FavoritosProvider>')
+// En useFavoritos.js
+const agregarFavorito = useCallback(async (productoId, clienteId) => {
+  if (!clienteId) {
+    console.error('clienteId es requerido')
+    return
   }
-  return context
-}
+
+  // ✅ Usar clienteId en lugar de usuario.id
+  const { error } = await supabase
+    .from('favoritos')
+    .insert({ cliente_id: clienteId, producto_id: productoId })
+
+  if (error) throw error
+
+  setFavoritos(prev => [...prev, productoId])
+}, [])
