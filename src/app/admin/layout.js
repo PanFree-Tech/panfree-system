@@ -199,6 +199,7 @@ export default function AdminLayout({ children }) {
     { href: '/admin/correos', icon: Mail, label: 'Correos' },
     { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
     { href: '/admin/reportes', icon: TrendingUp, label: 'Reportes' },
+    { href: '/admin/analytics', icon: TrendingUp, label: 'Analytics' },
     { href: '/admin/ayuda', icon: HelpCircle, label: 'Ayuda' },
   ]
 
