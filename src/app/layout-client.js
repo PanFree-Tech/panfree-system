@@ -111,20 +111,18 @@ export default function LayoutClient({ children }) {
 
 // ─── Contenido del Layout ──────────────────────────────────────────────────────
 function LayoutContent({ children }) {
+  // ✅ TODOS LOS HOOKS AL INICIO (NUNCA CAMBIAN DE ORDEN)
   const pathname = usePathname()
   const { cantidadItems, setVisible } = useCart()
   const { usuario } = useAuth()
   const { isOpen, openDrawer, closeDrawer } = useDrawer()
   const [logoActual, setLogoActual] = useState('/images/logo-panfree.svg')
+  const timerRef = useRef(null)
+
   const role = usuario?.raw_user_meta_data?.role || usuario?.user_metadata?.role || usuario?.app_metadata?.role
   const isAdmin = role === 'admin'
 
-  // Ocultar header en admin y auth
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/login') || pathname?.startsWith('/register')) {
-    return <>{children}</>
-  }
-
-  // Cargar logo dinámico
+  // ✅ useEffect ANTES del retorno condicional
   useEffect(() => {
     supabase
       .from('configuracion_sitio')
@@ -140,8 +138,12 @@ function LayoutContent({ children }) {
       .catch(() => {})
   }, [])
 
-  // Soporte para long-press en móvil
-  const timerRef = useRef(null)
+  // ✅ Retorno condicional DESPUÉS de TODOS los hooks
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/login') || pathname?.startsWith('/register')) {
+    return <>{children}</>
+  }
+
+  // ✅ Funciones definidas DESPUÉS del retorno condicional (no son hooks)
   const handleTouchStart = () => {
     timerRef.current = setTimeout(() => {
       if (typeof window !== 'undefined') {
