@@ -2,13 +2,9 @@
  * UBICACION: src/app/auth/callback/route.js
  * DESCRIPCION:
  *  - Endpoint que sirve una página HTML con un script cliente que completa
- *    el flujo OAuth de Supabase (getSessionFromUrl), crea el perfil en tabla
- *    `clientes` si no existe, y redirige al usuario al home.
- *  - Se usa una página intermedia porque Supabase necesita ejecutar código
- *    en el navegador para intercambiar el código por la sesión.
- *  - FIX: Agregar punto y coma después de los returns para evitar error de sintaxis
+ *    el flujo OAuth de Supabase usando exchangeCodeForSession (método moderno),
+ *    crea el perfil en tabla `clientes` si no existe, y redirige al home.
  */
-
 import { sanitizeSupabaseUrl, DEFAULT_SUPABASE_ANON_KEY } from '@/lib/supabase'
 
 export async function GET(request) {
@@ -37,6 +33,7 @@ export async function GET(request) {
     </div>
 
     <script type="module">
+      // Usamos la versión moderna de Supabase
       import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
       const SUPABASE_URL = ${JSON.stringify(supabaseUrl)};
@@ -50,11 +47,21 @@ export async function GET(request) {
 
         (async function handleOAuthCallback() {
           try {
-            // Intercambia el código por la sesión y almacena localmente
-            const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
+            // ✅ MÉTODO MODERNO: Obtener el código de la URL y intercambiarlo
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            
+            if (!code) {
+              console.warn('No se encontró código en la URL');
+              window.location.replace('/');
+              return;
+            }
+
+            // ✅ INTERCAMBIO DE CÓDIGO POR SESIÓN (método moderno)
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
             
             if (error) {
-              console.error('Error al obtener sesión desde URL:', error);
+              console.error('Error al intercambiar código:', error);
               window.location.replace('/');
               return;
             }
@@ -63,9 +70,12 @@ export async function GET(request) {
             const user = session?.user;
             
             if (!user) {
+              console.warn('No se obtuvo usuario de la sesión');
               window.location.replace('/');
               return;
             }
+
+            console.log('✅ Sesión obtenida para:', user.email);
 
             // Crear perfil en tabla clientes si no existe
             try {
@@ -78,10 +88,13 @@ export async function GET(request) {
               if (!existing || existing.length === 0) {
                 const nombre = user.user_metadata?.full_name || 
                               user.user_metadata?.name || 
+                              user.user_metadata?.nombre_completo ||
                               (user.email ? user.email.split('@')[0] : null);
                 const avatar = user.user_metadata?.avatar_url || 
                               user.user_metadata?.picture || 
                               null;
+
+                console.log('📝 Creando perfil para:', nombre);
 
                 // Intento principal: con role + avatar
                 try {
@@ -97,6 +110,7 @@ export async function GET(request) {
                     });
 
                   if (insertError) throw insertError;
+                  console.log('✅ Perfil creado correctamente');
                 } catch (insertErr) {
                   console.warn('Inserción con role/avatar falló, reintentando sin esos campos:', insertErr);
                   
@@ -111,16 +125,19 @@ export async function GET(request) {
                       });
 
                     if (fallbackErr) throw fallbackErr;
+                    console.log('✅ Perfil creado (fallback)');
                   } catch (finalErr) {
                     console.error('No se pudo crear el perfil de cliente ni con fallback:', finalErr);
                   }
                 }
+              } else {
+                console.log('✅ Perfil ya existe');
               }
-            } catch (insertErr) {
-              console.error('No se pudo crear/validar perfil en clientes:', insertErr);
+            } catch (err) {
+              console.error('Error al crear/validar perfil:', err);
             }
 
-            // Redirigir al home
+            // ✅ Redirigir al home
             window.location.replace('/');
 
           } catch (err) {
