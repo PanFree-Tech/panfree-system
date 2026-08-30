@@ -11,6 +11,7 @@
  */
 'use client'
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Lock,
   UserPlus,
@@ -40,6 +41,7 @@ function traducirError(msg) {
 }
 
 export default function AuthModal() {
+  const router = useRouter()
   const { modalVisible, cerrarModal, onLoginExitoso } = useAuth()
   const [modo, setModo]               = useState('login')
   const [email, setEmail]             = useState('')
@@ -54,6 +56,11 @@ export default function AuthModal() {
   const [loadingFacebook, setLoadingFacebook] = useState(false)
 
   if (!modalVisible) return null
+
+  function handleCerrar() {
+    cerrarModal()
+    router.push('/login')
+  }
 
   function limpiar() { setError(null); setErrorTipo(null); setMensaje(null) }
   function cambiarModo(m) { setModo(m); limpiar() }
@@ -201,7 +208,7 @@ export default function AuthModal() {
   return (
     <>
       {/* Overlay */}
-      <div onClick={cerrarModal} style={{
+      <div onClick={handleCerrar} style={{
         position: 'fixed', inset: 0,
         backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 500,
       }} />
@@ -237,7 +244,7 @@ export default function AuthModal() {
               {modo === 'login' ? 'Para continuar con tu compra' : 'Registrate para comprar en PanFree'}
             </p>
           </div>
-          <button onClick={cerrarModal} style={{
+          <button onClick={handleCerrar} style={{
             background: 'none', border: 'none',
             cursor: 'pointer', color: '#999', lineHeight: 1,
             minWidth: '44px', minHeight: '44px',
