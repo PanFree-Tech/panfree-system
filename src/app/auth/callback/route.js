@@ -2,8 +2,8 @@
  * UBICACION: src/app/auth/callback/route.js
  * DESCRIPCION:
  *  - Endpoint que sirve una página HTML con un script cliente que completa
- *    el flujo OAuth de Supabase usando exchangeCodeForSession (método moderno),
- *    crea el perfil en tabla `clientes` si no existe, y redirige al home.
+ *    el flujo OAuth de Supabase usando getSessionFromUrl (MANEJA PKCE AUTOMÁTICAMENTE)
+ *  - Crea el perfil en tabla `clientes` si no existe, y redirige al home.
  */
 import { sanitizeSupabaseUrl, DEFAULT_SUPABASE_ANON_KEY } from '@/lib/supabase'
 
@@ -47,22 +47,15 @@ export async function GET(request) {
 
         (async function handleOAuthCallback() {
           try {
-            // ✅ MÉTODO MODERNO: Obtener el código de la URL y intercambiarlo
-            const params = new URLSearchParams(window.location.search);
-            const code = params.get('code');
-            
-            if (!code) {
-              console.warn('No se encontró código en la URL');
-              window.location.replace('/');
-              return;
-            }
-
-            // ✅ INTERCAMBIO DE CÓDIGO POR SESIÓN (método moderno)
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+            // ✅ MÉTODO CORRECTO PARA PKCE: getSessionFromUrl maneja code_verifier automáticamente
+            // Guarda la sesión en el almacenamiento local automáticamente
+            const { data, error } = await supabase.auth.getSessionFromUrl({
+              storeSession: true
+            });
             
             if (error) {
-              console.error('Error al intercambiar código:', error);
-              window.location.replace('/');
+              console.error('Error al obtener sesión desde URL:', error);
+              window.location.replace('/login?error=oauth_failed');
               return;
             }
 
@@ -89,14 +82,13 @@ export async function GET(request) {
                 const nombre = user.user_metadata?.full_name || 
                               user.user_metadata?.name || 
                               user.user_metadata?.nombre_completo ||
-                              (user.email ? user.email.split('@')[0] : null);
+                              (user.email ? user.email.split('@')[0] : 'Usuario');
                 const avatar = user.user_metadata?.avatar_url || 
                               user.user_metadata?.picture || 
                               null;
 
                 console.log('📝 Creando perfil para:', nombre);
 
-                // Intento principal: con role + avatar
                 try {
                   const { error: insertError } = await supabase
                     .from('clientes')
@@ -127,7 +119,7 @@ export async function GET(request) {
                     if (fallbackErr) throw fallbackErr;
                     console.log('✅ Perfil creado (fallback)');
                   } catch (finalErr) {
-                    console.error('No se pudo crear el perfil de cliente ni con fallback:', finalErr);
+                    console.error('No se pudo crear el perfil de cliente:', finalErr);
                   }
                 }
               } else {
@@ -142,7 +134,7 @@ export async function GET(request) {
 
           } catch (err) {
             console.error('Error inesperado en callback OAuth:', err);
-            window.location.replace('/');
+            window.location.replace('/login?error=callback_error');
           }
         })();
       }
