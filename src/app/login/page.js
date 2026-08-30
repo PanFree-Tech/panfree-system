@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Lock, Mail, AlertCircle } from 'lucide-react'
+import { Lock, Mail, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -76,7 +77,13 @@ export default function LoginPage() {
       <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-gray-100 p-8">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="text-4xl mb-2">🍞</div>
+          <div className="flex justify-center mb-4">
+            <img
+              src="https://res.cloudinary.com/d7simx38/image/upload/v1788037279/logo-panfree.png"
+              alt="PanFree"
+              className="h-16 w-auto"
+            />
+          </div>
           <h1 className="text-2xl font-bold text-[#334c2b]">PanFree</h1>
           <p className="text-gray-500 text-sm">Iniciá sesión en tu cuenta</p>
         </div>
@@ -119,13 +126,21 @@ export default function LoginPage() {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#334c2b] focus:border-transparent outline-none"
+                className="w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#334c2b] focus:border-transparent outline-none"
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
