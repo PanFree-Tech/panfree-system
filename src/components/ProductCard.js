@@ -15,7 +15,7 @@ import styles from './ProductCard.module.css'
 import { useCart } from '../context/CartContext'
 import { useAnalytics } from '../hooks/useAnalytics'
 import { resolveProductImageUrl } from '@/lib/image-utils'
-import FavoritoButton from './FavoritoButton' // <-- Nuevo import
+import FavoritoButton from './FavoritoButton'
 
 export const formatGs = (n) => `Gs. ${Number(n || 0).toLocaleString('es-PY')}`
 
@@ -207,10 +207,6 @@ export default function ProductCard({
       role="article"
       aria-labelledby={`product-title-${productId}`}
     >
-      {/* Botón de favorito en la esquina superior derecha */}
-      <div className="absolute top-2 right-2 z-10">
-        <FavoritoButton productoId={producto.id} size={20} />
-      </div>
 
       {/* Badges superiores izquierdos: Destacado y Oferta */}
       {(esDestacado || promoActiva) && (
@@ -242,33 +238,39 @@ export default function ProductCard({
         <span className={styles.badgeSinGlutenText}>Sin Gluten</span>
       </div>
 
-      {/* 1. IMAGEN DEL PRODUCTO */}
-      <a href={slugUrl} className={styles.imageLink} aria-label={`Ver detalle de ${producto.nombre}`}>
-        <div className={styles.imageWrapper}>
-          {tieneImagen ? (
-            <Image
-              src={imagenValida}
-              alt={producto.nombre}
-              fill
-              sizes="(max-width: 480px) 50vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 280px"
-              className={styles.productImage}
-              priority={esDestacado}
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            <div className={styles.imageFallback}>
-              <Package size={32} color="#334c2b" />
-            </div>
-          )}
-          {/* Banner de cuenta regresiva sobre la imagen */}
-          {promoActiva && tiempoRestante && (
-            <div className={styles.promoTimerOverlay}>
-              <Timer size={13} className="animate-pulse" />
-              <span>Termina en: {tiempoRestante}</span>
-            </div>
-          )}
-        </div>
-      </a>
+{/* 1. IMAGEN DEL PRODUCTO */}
+<a href={slugUrl} className={styles.imageLink} aria-label={`Ver detalle de ${producto.nombre}`}>
+  <div className={styles.imageWrapper}>
+    {tieneImagen ? (
+      <Image
+        src={imagenValida}
+        alt={producto.nombre}
+        fill
+        sizes="(max-width: 480px) 50vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 280px"
+        className={styles.productImage}
+        priority={esDestacado}
+        onError={() => setImgError(true)}
+      />
+    ) : (
+      <div className={styles.imageFallback}>
+        <Package size={32} color="#334c2b" />
+      </div>
+    )}
+
+    {/* Banner de cuenta regresiva sobre la imagen */}
+    {promoActiva && tiempoRestante && (
+      <div className={styles.promoTimerOverlay}>
+        <Timer size={13} className="animate-pulse" />
+        <span>Termina en: {tiempoRestante}</span>
+      </div>
+    )}
+
+    {/* ❤️ BOTÓN DE FAVORITO (esquina inferior derecha) */}
+    <div className="absolute bottom-2 right-2 z-20">
+      <FavoritoButton productoId={producto.id} size={22} />
+    </div>
+  </div>
+</a>
 
       {/* 2. CUERPO DE LA TARJETA */}
       <div className={styles.body}>
