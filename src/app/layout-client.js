@@ -14,7 +14,6 @@ import { AuthProvider, useAuth } from '../context/AuthContext'
 import { CartProvider, useCart } from '../context/CartContext'
 import { FavoritosProvider } from '@/context/FavoritosContext'
 import CartSidebar from '../components/CartSidebar'
-//import AuthModal from '../components/AuthModal'  // ❌ DESHABILITADO
 import ErrorBoundary from '../components/ErrorBoundary'
 import UserGreeting from '@/components/UserGreeting'
 import BottomNav from '@/components/BottomNav'
@@ -348,7 +347,6 @@ function LayoutContent({ children }) {
       
       {/* Carrito, Auth, Footer, BottomNav, Toast */}
       <CartSidebar />
-      {/* <AuthModal /> */}   // ← DESHABILITADO
       <Footer />
       <BottomNav />
       <ToastNotification />
