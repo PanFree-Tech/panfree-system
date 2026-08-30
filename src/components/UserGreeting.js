@@ -2,55 +2,25 @@
 'use client'
 
 import { useAuth } from '@/context/AuthContext'
-import Image from 'next/image'
 import Link from 'next/link'
 import { memo } from 'react'
 import { User } from 'lucide-react'
 
 /**
  * Componente que muestra un saludo personalizado cuando el usuario está autenticado
- * Sigue mejores prácticas:
- * - Memoización para evitar re-renders innecesarios
- * - Manejo de fallbacks seguros
- * - Accesibilidad con atributos ARIA
- * - Responsive design
  */
 function UserGreetingComponent() {
-  const { usuario, abrirModal } = useAuth()
+  const { usuario } = useAuth()
 
-  // Si no hay usuario, mostrar botón "Ingresar"
+  // Si no hay usuario, mostrar botón "Ingresar" → redirige a /login
   if (!usuario) {
     return (
-      <button
-        onClick={abrirModal}
-        aria-label="Iniciar sesión"
-        className="header-button header-button--login"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          backgroundColor: 'transparent',
-          color: '#334c2b',
-          fontWeight: '600',
-          fontSize: '0.9rem',
-          padding: '0.5rem 1rem',
-          borderRadius: '8px',
-          border: '1px solid #b7996b',
-          cursor: 'pointer',
-          fontFamily: 'inherit',
-          minHeight: '44px',
-          transition: 'all 0.2s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(183,153,107,0.15)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent'
-        }}
+      <Link
+        href="/login"
+        className="text-sm font-medium text-[#334c2b] hover:text-[#f46e15] transition px-3 py-2 rounded-lg hover:bg-gray-50"
       >
-        <User size={18} color="#334c2b" aria-hidden="true" />
-        <span className="header-cuenta-texto">Ingresar</span>
-      </button>
+        Ingresar
+      </Link>
     )
   }
 
@@ -58,6 +28,7 @@ function UserGreetingComponent() {
   const displayName = 
     usuario.user_metadata?.full_name ||
     usuario.user_metadata?.name ||
+    usuario.user_metadata?.nombre_completo ||
     usuario.email?.split('@')[0] ||
     'Usuario'
 
@@ -71,58 +42,23 @@ function UserGreetingComponent() {
     <Link
       href="/perfil"
       aria-label={`Mi cuenta - ${displayName}`}
-      className="header-button header-button--user"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        color: '#334c2b',
-        fontWeight: '600',
-        fontSize: '0.9rem',
-        padding: '0.3rem 1rem 0.3rem 0.3rem',
-        borderRadius: '8px',
-        textDecoration: 'none',
-        minHeight: '44px',
-        border: '1px solid #b7996b',
-        backgroundColor: 'rgba(183,153,107,0.12)',
-        transition: 'all 0.2s ease',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = 'rgba(183,153,107,0.25)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = 'rgba(183,153,107,0.12)'
-      }}
+      className="flex items-center gap-2 text-sm font-medium text-[#334c2b] hover:text-[#f46e15] transition px-3 py-2 rounded-lg hover:bg-gray-50"
     >
-      {/* Avatar */}
       {avatarUrl ? (
         <img
           src={avatarUrl}
           alt=""
-          width={32}
-          height={32}
-          style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            objectFit: 'cover',
-            backgroundColor: '#eee6d9',
-            flexShrink: 0,
-          }}
+          width={24}
+          height={24}
+          className="w-6 h-6 rounded-full object-cover bg-[#eee6d9]"
           onError={(e) => {
             e.currentTarget.style.display = 'none'
           }}
         />
       ) : (
-        <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0 2px' }} aria-hidden="true">
-          <User size={18} color="#334c2b" />
-        </span>
+        <User size={18} className="text-[#334c2b]" />
       )}
-      
-      {/* Saludo */}
-      <span className="header-cuenta-texto" style={{ whiteSpace: 'nowrap' }}>
-        Hola, {displayName}
-      </span>
+      <span>Hola, {displayName}</span>
     </Link>
   )
 }
