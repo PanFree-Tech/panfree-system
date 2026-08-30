@@ -1,42 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Heart } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useFavoritos } from '@/hooks/useFavoritos'
-import { supabase } from '@/lib/supabase'
 
 export default function FavoritoButton({ productoId, size = 22, className = '' }) {
   const { usuario } = useAuth()
-  const { favoritos, agregarFavorito, eliminarFavorito, isFavorito } = useFavoritos()
+  const { favoritos, agregarFavorito, eliminarFavorito, isFavorito, clienteId } = useFavoritos()
   const [loading, setLoading] = useState(false)
-  const [clienteId, setClienteId] = useState(null)
-
-  // ✅ Obtener el cliente_id correcto desde la tabla clientes
-  useEffect(() => {
-    if (!usuario) {
-      setClienteId(null)
-      return
-    }
-
-    const obtenerClienteId = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('clientes')
-          .select('id')
-          .eq('user_id', usuario.id)
-          .single()
-
-        if (error) throw error
-        setClienteId(data?.id || null)
-      } catch (error) {
-        console.error('Error obteniendo cliente_id:', error)
-        setClienteId(null)
-      }
-    }
-
-    obtenerClienteId()
-  }, [usuario])
 
   const esFavorito = isFavorito(productoId)
 
