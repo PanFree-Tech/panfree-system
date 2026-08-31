@@ -291,7 +291,7 @@ export default function DipticoCliente({
                     <p>✅ Promoción válida hasta el <strong>31/12/2026</strong>.</p>
                     <p>❌ No acumulable con otras promociones vigentes.</p>
                     <a 
-                      href="/bases-y-condiciones" 
+                      href="/promocion-dipticos-bases" 
                       className="block mt-2 text-[#f46e15] hover:underline font-medium"
                       target="_blank"
                     >
