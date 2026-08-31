@@ -26,7 +26,7 @@ export async function GET(request) {
     const fechaInicioStr = fechaInicio.toISOString()
     const hoyStr = new Date().toISOString()
 
-    // 1. Obtener pedidos del período
+    // ── 1. PEDIDOS DEL PERÍODO ──
     const { data: pedidos, error: pedidosError } = await supabase
       .from('pedidos')
       .select('total_final, estado, created_at, cliente_id')
@@ -35,38 +35,101 @@ export async function GET(request) {
       .neq('estado', 'cancelado')
 
     if (pedidosError) {
-      console.error('Error cargando pedidos:', pedidosError)
-      return NextResponse.json({ 
-        success: false, 
-        error: pedidosError.message 
-      }, { status: 500 })
+      return NextResponse.json({ success: false, error: pedidosError.message }, { status: 500 })
     }
 
-    // 2. Calcular métricas
-    const ingresosTotales = pedidos?.reduce((sum, p) => sum + (p.total_final || 0), 0) || 0
+    // ── 2. PEDIDOS HISTÓRICOS (para ingresos totales) ──
+    const { data: pedidosHistoricos, error: historicError } = await supabase
+      .from('pedidos')
+      .select('total_final, cliente_id, created_at')
+      .neq('estado', 'cancelado')
+      .order('created_at', { ascending: true })
+
+    if (historicError) {
+      console.warn('Error cargando pedidos históricos:', historicError.message)
+    }
+
+    // ── 3. CLICKS EN ANUNCIOS (UTM) ──
+    // Buscar en la tabla de analytics o en pedidos si tienen campos UTM
+    // Si no hay tabla de UTMs, usar datos de ejemplo o de GA4
+    const { data: utmData, error: utmError } = await supabase
+      .from('pedidos')
+      .select('utm_source, utm_medium, utm_campaign, created_at')
+      .not('utm_source', 'is', null)
+      .gte('created_at', fechaInicioStr)
+      .lte('created_at', hoyStr)
+
+    if (utmError) {
+      console.warn('Error cargando datos UTM:', utmError.message)
+    }
+
+    // ── 4. CALCULAR MÉTRICAS ──
+
+    // 4.1 Métricas del período
+    const ingresosPeriodo = pedidos?.reduce((sum, p) => sum + (p.total_final || 0), 0) || 0
     const pedidosTotales = pedidos?.length || 0
     const pedidosCompletados = pedidos?.filter(p => p.estado === 'entregado' || p.estado === 'confirmado').length || 0
-
-    // 3. Usuarios únicos
     const clientesUnicos = new Set(pedidos?.map(p => p.cliente_id).filter(Boolean))
     const usuariosUnicos = clientesUnicos.size
+    const ticketPromedio = pedidosTotales > 0 ? Math.round(ingresosPeriodo / pedidosTotales) : 0
+    const conversionRate = pedidosTotales > 0 ? Math.round((pedidosCompletados / pedidosTotales) * 100) : 0
 
-    // 4. Ticket promedio
-    const ticketPromedio = pedidosTotales > 0 ? Math.round(ingresosTotales / pedidosTotales) : 0
+    // 4.2 Métricas históricas (INGRESOS TOTALES)
+    const ingresosHistoricos = pedidosHistoricos?.reduce((sum, p) => sum + (p.total_final || 0), 0) || 0
+    const clientesHistoricos = new Set(pedidosHistoricos?.map(p => p.cliente_id).filter(Boolean))
+    const totalClientes = clientesHistoricos.size || 1
+    const ltv = Math.round(ingresosHistoricos / totalClientes)
 
-    // 5. Tasa de conversión
-    const conversionRate = pedidosTotales > 0 
-      ? Math.round((pedidosCompletados / pedidosTotales) * 100) 
-      : 0
+    // 4.3 CLICKS EN ANUNCIOS (UTM)
+    const clicksPorFuente = {}
+    const clicksPorCampania = {}
+    
+    // Agrupar clicks por fuente (utm_source)
+    utmData?.forEach(item => {
+      const source = item.utm_source || 'directo'
+      if (!clicksPorFuente[source]) {
+        clicksPorFuente[source] = 0
+      }
+      clicksPorFuente[source]++
+      
+      // Agrupar por campaña (utm_campaign)
+      const campania = item.utm_campaign || 'sin_campania'
+      if (!clicksPorCampania[campania]) {
+        clicksPorCampania[campania] = 0
+      }
+      clicksPorCampania[campania]++
+    })
+
+    // Ordenar fuentes por cantidad de clicks
+    const fuentesOrdenadas = Object.entries(clicksPorFuente)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, value]) => ({ name, value }))
+
+    const campaniasOrdenadas = Object.entries(clicksPorCampania)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, value]) => ({ name, value }))
+
+    const totalClicks = utmData?.length || 0
 
     return NextResponse.json({
       success: true,
       resumen: {
-        revenue: ingresosTotales,
+        // Período
+        revenue: ingresosPeriodo,
         pedidos: pedidosTotales,
-        usuarios: usuariosUnicos || 176, // fallback visual
+        usuarios: usuariosUnicos,
         ticketPromedio: ticketPromedio,
         conversion_rate: conversionRate,
+        // Histórico
+        ingresos_totales: ingresosHistoricos,
+        ltv: ltv,
+        clientes_unicos: totalClientes,
+        // UTMs / Clicks en anuncios
+        clicks_anuncios: totalClicks,
+        clicks_por_fuente: fuentesOrdenadas,
+        clicks_por_campania: campaniasOrdenadas,
       },
       detalles: {
         periodo,
@@ -74,7 +137,9 @@ export async function GET(request) {
         hasta: hoyStr,
         pedidos_completados: pedidosCompletados,
         pedidos_cancelados: pedidos?.filter(p => p.estado === 'cancelado').length || 0,
-      },
+        primer_pedido: pedidosHistoricos?.[0]?.created_at || null,
+        ultimo_pedido: pedidosHistoricos?.[pedidosHistoricos.length - 1]?.created_at || null,
+      }
     })
 
   } catch (error) {
