@@ -253,44 +253,30 @@ export default function DipticoCliente({
             <div className="flex-1">
               <p className="text-gray-600 mb-4">{producto.descripcion}</p>
 
+              {/* Ingredientes */}
               <div className="bg-[#f5f1eb] rounded-lg p-4 mb-4">
                 <h3 className="font-semibold text-[#334c2b] mb-2">📋 Ingredientes</h3>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 text-sm leading-relaxed">
                   {producto.ingredientes || 'Información de ingredientes próximamente.'}
                 </p>
               </div>
 
               {/* Tabla Nutricional */}
               {producto.calorias && (
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
                   <table className="w-full text-sm">
                     <thead className="bg-[#334c2b] text-white">
                       <tr>
                         <th className="px-4 py-2 text-left">Información Nutricional</th>
-                        <th className="px-4 py-2 text-right">Por porción</th>
+                        <th className="px-4 py-2 text-right">Por porción ({producto.peso_porcion || 100}g)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      <tr>
-                        <td className="px-4 py-2">Calorías</td>
-                        <td className="px-4 py-2 text-right font-medium">{producto.calorias || '—'} kcal</td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-2">Proteínas</td>
-                        <td className="px-4 py-2 text-right font-medium">{producto.proteinas || '—'} g</td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-2">Carbohidratos</td>
-                        <td className="px-4 py-2 text-right font-medium">{producto.carbohidratos || '—'} g</td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-2">Grasas</td>
-                        <td className="px-4 py-2 text-right font-medium">{producto.grasas || '—'} g</td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-2">Fibra</td>
-                        <td className="px-4 py-2 text-right font-medium">{producto.fibra || '—'} g</td>
-                      </tr>
+                      <tr><td className="px-4 py-2">Calorías</td><td className="px-4 py-2 text-right font-medium">{producto.calorias || '—'} kcal</td></tr>
+                      <tr><td className="px-4 py-2">Proteínas</td><td className="px-4 py-2 text-right font-medium">{producto.proteinas || '—'} g</td></tr>
+                      <tr><td className="px-4 py-2">Carbohidratos</td><td className="px-4 py-2 text-right font-medium">{producto.carbohidratos || '—'} g</td></tr>
+                      <tr><td className="px-4 py-2">Grasas</td><td className="px-4 py-2 text-right font-medium">{producto.grasas || '—'} g</td></tr>
+                      <tr><td className="px-4 py-2">Fibra</td><td className="px-4 py-2 text-right font-medium">{producto.fibra || '—'} g</td></tr>
                     </tbody>
                   </table>
                 </div>
