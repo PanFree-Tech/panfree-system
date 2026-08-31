@@ -2,23 +2,10 @@
 import { supabase } from '@/lib/supabase'
 import DipticoCliente from './DipticoCliente'
 
-// ✅ Usar generateStaticParams para evitar errores de build
-export async function generateStaticParams() {
-  const { data: codigos } = await supabase
-    .from('codigos_dipticos')
-    .select('codigo')
-    .eq('canjeado', false)
-    .limit(10)
-
-  return codigos?.map((c) => ({
-    codigo: c.codigo,
-  })) || []
-}
-
 export default async function PaginaDiptico({ params }) {
   // ✅ Obtener el código de los parámetros
   const codigo = params?.codigo?.toUpperCase() || ''
-  
+
   // ✅ Buscar el código en la base de datos
   const { data: codigoData, error } = await supabase
     .from('codigos_dipticos')
