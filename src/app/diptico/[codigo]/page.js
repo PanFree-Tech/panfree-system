@@ -2,17 +2,31 @@
 import { supabase } from '@/lib/supabase'
 import DipticoCliente from './DipticoCliente'
 
-export default async function PaginaDiptico({ params }) {
-  const { codigo } = await params
+// ✅ Usar generateStaticParams para evitar errores de build
+export async function generateStaticParams() {
+  const { data: codigos } = await supabase
+    .from('codigos_dipticos')
+    .select('codigo')
+    .eq('canjeado', false)
+    .limit(10)
 
-  // Buscar el código en la base de datos
+  return codigos?.map((c) => ({
+    codigo: c.codigo,
+  })) || []
+}
+
+export default async function PaginaDiptico({ params }) {
+  // ✅ Obtener el código de los parámetros
+  const codigo = params?.codigo?.toUpperCase() || ''
+  
+  // ✅ Buscar el código en la base de datos
   const { data: codigoData, error } = await supabase
     .from('codigos_dipticos')
-    .select('producto_id, tipo_regalo, canjeado')
-    .eq('codigo', codigo.toUpperCase())
+    .select('*')
+    .eq('codigo', codigo)
     .single()
 
-  // Si el código no existe o ya fue canjeado
+  // ✅ Si el código no existe
   if (error || !codigoData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fcfaf7] p-4">
@@ -35,6 +49,7 @@ export default async function PaginaDiptico({ params }) {
     )
   }
 
+  // ✅ Si el código ya fue canjeado
   if (codigoData.canjeado) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fcfaf7] p-4">
@@ -57,13 +72,14 @@ export default async function PaginaDiptico({ params }) {
     )
   }
 
-  // Obtener datos del producto
+  // ✅ Obtener datos del producto
   const { data: producto, error: prodError } = await supabase
     .from('productos')
     .select('*')
     .eq('id', codigoData.producto_id)
     .single()
 
+  // Si no hay producto, mostrar mensaje
   if (prodError || !producto) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fcfaf7] p-4">
@@ -86,7 +102,7 @@ export default async function PaginaDiptico({ params }) {
     )
   }
 
-  // Obtener productos relacionados (misma categoría)
+  // ✅ Obtener productos relacionados
   const { data: relacionados } = await supabase
     .from('productos')
     .select('id, nombre, precio_venta, imagen_url, slug')
@@ -96,7 +112,7 @@ export default async function PaginaDiptico({ params }) {
 
   return (
     <DipticoCliente
-      codigo={codigo.toUpperCase()}
+      codigo={codigo}
       producto={producto}
       tipoRegalo={codigoData.tipo_regalo}
       relacionados={relacionados || []}
