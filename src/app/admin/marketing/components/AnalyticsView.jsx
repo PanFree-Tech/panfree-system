@@ -57,7 +57,7 @@ export default function AnalyticsView({ refreshTrigger }) {
 
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           <a
-            href="/admin/marketing/analytics"
+            href="/admin/analytics"
             className={styles.tabButton}
             style={{
               backgroundColor: '#f46e15',
