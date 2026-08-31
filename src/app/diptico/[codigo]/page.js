@@ -97,6 +97,7 @@ export default async function PaginaDiptico({ params }) {
   const { data: relacionados } = await supabase
     .from('productos')
     .select('id, nombre, precio_venta, imagen_url, slug')
+    .eq('activo', true)
     .limit(4)
 
   return (
