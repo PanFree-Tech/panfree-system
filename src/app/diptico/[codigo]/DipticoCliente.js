@@ -60,7 +60,7 @@ export default function DipticoCliente({
 
   const handleCanjear = async () => {
     if (!usuario) {
-      router.push('/login')
+      window.location.href = `/login?redirect=/diptico/${codigo}`
       return
     }
 
@@ -79,6 +79,11 @@ export default function DipticoCliente({
         body: JSON.stringify({ codigo, userId: usuario.id }),
       })
 
+      if (res.status === 401) {
+        window.location.href = `/login?redirect=/diptico/${codigo}`
+        return
+      }
+
       const data = await res.json()
 
       if (data.success) {
@@ -92,6 +97,7 @@ export default function DipticoCliente({
         setMensaje({ tipo: 'error', texto: data.mensaje || 'Error al canjear el código.' })
       }
     } catch (err) {
+      console.error('Error:', err)
       setMensaje({ tipo: 'error', texto: 'Error al conectar con el servidor.' })
     } finally {
       setLoading(false)
@@ -273,7 +279,7 @@ export default function DipticoCliente({
           ) : (
             <div className="pt-2">
               <button
-                onClick={() => router.push('/login')}
+                onClick={() => router.push(`/login?redirect=/diptico/${codigo}`)}
                 className="w-full py-3.5 px-6 bg-[#334c2b] hover:bg-[#253920] text-white rounded-xl font-bold text-base shadow-md shadow-[#334c2b]/20 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
               >
                 <span>Iniciar sesión para canjear</span>
