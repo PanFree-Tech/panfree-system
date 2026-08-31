@@ -110,7 +110,7 @@ export default function DipticoCliente({
             className="h-16 w-auto"
           />
         </div>
-        <h1 className="text-2xl font-bold">🍞 ¡Gracias por elegir PanFree!</h1>
+        <h1 className="text-2xl font-bold">¡Gracias por elegir PanFree!</h1>
         <p className="text-[#b7996b] text-sm mt-1">El placer de volver a comer libremente</p>
       </div>
 
