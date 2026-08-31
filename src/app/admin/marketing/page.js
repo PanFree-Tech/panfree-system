@@ -1,12 +1,13 @@
 /**
  * 📁 UBICACIÓN: src/app/admin/marketing/page.js
- * 📅 ACTUALIZADO: 2026-08-22
+ * 📅 ACTUALIZADO: 2026-08-31
  * 📌 DESCRIPCIÓN: Panel de Marketing y Automatización IA para PanFree.
  *    - Estructura unificada: Decisiones IA → Generar Contenido con Gemini → Generar Imagen Cloudinary AI → Aprobar y Publicar.
  *    - Spinners de carga interactivos para Gemini, Cloudinary y Publicación en Instagram.
  *    - Botones deshabilitados reactivamente durante cualquier proceso en curso.
  *    - Notificaciones claras de éxito (✅) y error (❌).
  *    - Integración con reglas de negocio, calendario de eventos y programación para Instagram.
+ *    - GA4 ELIMINADO: ahora está en /admin/analytics (sección independiente)
  */
 
 'use client'
@@ -22,7 +23,7 @@ import { useSupabaseProducts } from './hooks/useSupabaseProducts'
 import ScheduledPosts from './components/ScheduledPosts'
 import RulesManager from './components/RulesManager'
 import EventCalendar from './components/EventCalendar'
-import AnalyticsView from './components/AnalyticsView'
+// ❌ AnalyticsView ELIMINADO - ahora está en /admin/analytics
 import styles from './styles/marketing.module.css'
 
 // Paleta PanFree
@@ -136,7 +137,8 @@ const MOTORES_INFO = {
 
 export default function MarketingPage() {
   const router = useRouter()
-  const [tabActiva, setTabActiva] = useState('ia_marketing') // 'ia_marketing' | 'reglas' | 'eventos' | 'analisis'
+  const [tabActiva, setTabActiva] = useState('ia_marketing') // 'ia_marketing' | 'reglas' | 'eventos'
+  // ❌ 'analisis' ELIMINADO - GA4 ahora está en /admin/analytics
   const [refreshHistory, setRefreshHistory] = useState(0)
 
   // 1. Cargar productos desde Supabase
@@ -485,27 +487,8 @@ export default function MarketingPage() {
           </div>
         </div>
 
+        {/* ❌ BOTÓN "📊 Panel GA4 Live" ELIMINADO - ahora está en /admin/analytics */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Link
-            href="/admin/marketing/analytics"
-            style={{
-              background: 'rgba(255,255,255,0.12)',
-              border: `1px solid ${P.dorado}`,
-              color: '#fff',
-              padding: '0.5rem 0.9rem',
-              borderRadius: 8,
-              fontFamily: 'inherit',
-              fontSize: '0.85rem',
-              fontWeight: 700,
-              textDecoration: 'none',
-              minHeight: 44,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-            }}
-          >
-            📊 Panel GA4 Live
-          </Link>
           <button
             onClick={() => router.push('/admin/ayuda/marketing')}
             style={{
@@ -528,7 +511,7 @@ export default function MarketingPage() {
         </div>
       </div>
 
-      {/* BARRA DE NAVEGACIÓN POR PESTAÑAS */}
+      {/* BARRA DE NAVEGACIÓN POR PESTAÑAS - ❌ Pestaña "📊 Historial & Métricas" ELIMINADA */}
       <div className={styles.tabNav} id="marketing-tab-bar">
         <button
           onClick={() => setTabActiva('ia_marketing')}
@@ -550,13 +533,7 @@ export default function MarketingPage() {
         >
           📅 Calendario de Eventos
         </button>
-
-        <button
-          onClick={() => setTabActiva('analisis')}
-          className={`${styles.tabButton} ${tabActiva === 'analisis' ? styles.tabButtonActive : ''}`}
-        >
-          📊 Historial & Métricas
-        </button>
+        {/* ❌ Pestaña "📊 Historial & Métricas" ELIMINADA - GA4 ahora está en /admin/analytics */}
       </div>
 
       {/* NOTIFICACIÓN GENERAL DE ÉXITO O ERROR */}
@@ -600,7 +577,7 @@ export default function MarketingPage() {
       {/* CONTENIDO CONDICIONAL POR PESTAÑAS */}
       {tabActiva === 'reglas' && <RulesManager />}
       {tabActiva === 'eventos' && <EventCalendar />}
-      {tabActiva === 'analisis' && <AnalyticsView refreshTrigger={refreshHistory} />}
+      {/* ❌ AnalyticsView ELIMINADO - GA4 ahora está en /admin/analytics */}
 
       {/* ─── PESTAÑA PRINCIPAL: FLUJO INTEGRADO MARKETING IA ────────────────── */}
       {tabActiva === 'ia_marketing' && (
