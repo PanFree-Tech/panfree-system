@@ -229,52 +229,47 @@ export default function DipticoCliente({
 
           {/* Action section depending on auth state */}
           {usuario ? (
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center justify-between bg-[#f5f1eb] px-4 py-3 rounded-xl border border-[#e8dfd3]">
-                <div className="flex items-center gap-2">
-                  <Award size={18} className="text-[#f46e15]" />
-                  <span className="text-sm text-[#2d1f14]">
-                    Tus puntos acumulados:
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-base font-extrabold text-[#f46e15]">
-                    {puntos} pts
-                  </span>
-                  <Link
-                    href="/perfil/puntos"
-                    className="text-xs font-semibold text-[#334c2b] hover:text-[#f46e15] hover:underline inline-flex items-center gap-1 transition"
-                  >
-                    Ver catálogo de premios <ArrowRight size={12} />
-                  </Link>
-                </div>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center mt-4">
+              {/* Puntos disponibles */}
+              <div className="mb-4">
+                <span className="text-sm text-gray-500">Tus puntos</span>
+                <p className="text-3xl font-bold text-[#334c2b]">{puntos || 0}</p>
               </div>
 
-              <button
+              {/* Botón de canje llamativo */}
+              <button 
                 onClick={handleCanjear}
                 disabled={loading || canjeado}
-                className={`w-full py-3.5 px-6 rounded-xl font-bold text-white text-base shadow-md transition-all duration-200 active:scale-[0.99] flex items-center justify-center gap-2 ${
+                className={`w-full font-semibold py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 ${
                   canjeado
-                    ? 'bg-gray-400 cursor-not-allowed opacity-90'
+                    ? 'bg-gray-400 cursor-not-allowed text-white'
                     : loading
-                    ? 'bg-[#b7996b] cursor-wait'
-                    : 'bg-gradient-to-r from-[#f46e15] to-[#e05b0a] hover:from-[#e05b0a] hover:to-[#cb4e05] shadow-[#f46e15]/20 hover:shadow-lg hover:shadow-[#f46e15]/30'
+                    ? 'bg-[#b7996b] cursor-wait text-white'
+                    : 'bg-[#f46e15] hover:bg-[#e05d0a] text-white'
                 }`}
               >
                 {loading ? (
-                  <span>Canjeando código...</span>
+                  <span>Canjeando...</span>
                 ) : canjeado ? (
                   <>
-                    <CheckCircle size={20} />
-                    <span>¡Código canjeado con éxito!</span>
+                    <CheckCircle className="w-5 h-5" />
+                    <span>¡Código canjeado!</span>
                   </>
                 ) : (
                   <>
-                    <Gift size={20} />
-                    <span>Canjear puntos (+100 pts)</span>
+                    <Gift className="w-5 h-5" />
+                    <span>¡Canjear mi premio!</span>
                   </>
                 )}
               </button>
+              
+              {/* Enlace al catálogo (secundario) */}
+              <Link 
+                href="/premios" 
+                className="block mt-3 text-sm text-[#f46e15] hover:text-[#e05d0a] transition"
+              >
+                Ver catálogo de premios →
+              </Link>
             </div>
           ) : (
             <div className="pt-2">
