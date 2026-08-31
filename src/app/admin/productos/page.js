@@ -63,6 +63,13 @@ const FORM_VACIO = {
   is_active: true,
   is_featured: false,
   disponible_delivery: true,
+  ingredientes: '',
+  calorias: '',
+  proteinas: '',
+  carbohidratos: '',
+  grasas: '',
+  fibra: '',
+  peso_porcion: 100,
 }
 
 function generarSlug(nombre) {
@@ -543,6 +550,13 @@ export default function PaginaProductos() {
         is_active: form.is_active,
         is_featured: form.is_featured,
         disponible_delivery: form.disponible_delivery,
+        ingredientes: form.ingredientes || null,
+        calorias: form.calorias ? Number(form.calorias) : null,
+        proteinas: form.proteinas ? Number(form.proteinas) : null,
+        carbohidratos: form.carbohidratos ? Number(form.carbohidratos) : null,
+        grasas: form.grasas ? Number(form.grasas) : null,
+        fibra: form.fibra ? Number(form.fibra) : null,
+        peso_porcion: form.peso_porcion ? Number(form.peso_porcion) : 100,
         updated_at: new Date().toISOString(),
       }
 
@@ -1123,6 +1137,20 @@ export default function PaginaProductos() {
                     {etiqueta}
                   </label>
                 ))}
+              </div>
+
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={S.label}>Ingredientes</label>
+                <textarea style={{...S.input, minHeight:'60px'}} value={form.ingredientes || ''} onChange={e => cambiarCampo('ingredientes', e.target.value)} placeholder="Ej: Harina de arroz, almidón..." />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', gridColumn: '1 / -1' }}>
+                <div><label style={S.label}>Calorías (kcal)</label><input style={S.input} type="number" value={form.calorias || ''} onChange={e => cambiarCampo('calorias', e.target.value)} /></div>
+                <div><label style={S.label}>Proteínas (g)</label><input style={S.input} type="number" step="0.1" value={form.proteinas || ''} onChange={e => cambiarCampo('proteinas', e.target.value)} /></div>
+                <div><label style={S.label}>Carbohidratos (g)</label><input style={S.input} type="number" step="0.1" value={form.carbohidratos || ''} onChange={e => cambiarCampo('carbohidratos', e.target.value)} /></div>
+                <div><label style={S.label}>Grasas (g)</label><input style={S.input} type="number" step="0.1" value={form.grasas || ''} onChange={e => cambiarCampo('grasas', e.target.value)} /></div>
+                <div><label style={S.label}>Fibra (g)</label><input style={S.input} type="number" step="0.1" value={form.fibra || ''} onChange={e => cambiarCampo('fibra', e.target.value)} /></div>
+                <div><label style={S.label}>Peso por porción (g)</label><input style={S.input} type="number" value={form.peso_porcion || ''} onChange={e => cambiarCampo('peso_porcion', e.target.value)} /></div>
               </div>
             </div>
 
