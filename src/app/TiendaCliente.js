@@ -74,7 +74,7 @@ export default function TiendaCliente({ productos = [], disponibilidad = {}, con
   }, [productosFiltrados, categoriaActiva])
 
   const bannerImg = configuracion?.banner_url
-  const bannerTitulo = configuracion?.banner_titulo || 'Panificados y Repostería Sin Gluten'
+  const bannerTitulo = configuracion?.banner_titulo || 'Panificados y Repostería 100% Sin Gluten'
   const bannerSubtitulo = configuracion?.banner_subtitulo || 'Elaboración artesanal en Encarnación con ingredientes seleccionados y la máxima seguridad para celíacos.'
 
   return (
