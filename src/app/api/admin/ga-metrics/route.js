@@ -5,6 +5,12 @@ import { supabase } from '@/lib/supabase'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request) {
+  // ── DEBUG: Verificar variables de entorno ──
+  console.log('🔍 GA_PROPERTY_ID:', process.env.GA_PROPERTY_ID ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
+  console.log('🔍 GA4_CLIENT_EMAIL:', process.env.GA4_CLIENT_EMAIL ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
+  console.log('🔍 GA4_PRIVATE_KEY:', process.env.GA4_PRIVATE_KEY ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
+  console.log('🔍 GA4_PROJECT_ID:', process.env.GA4_PROJECT_ID ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
+  // ──────────────────────────────────────────────
   try {
     const { searchParams } = new URL(request.url)
     const periodo = searchParams.get('periodo') || '7d'
