@@ -29,7 +29,7 @@ export default function PromocionDipticosBases() {
             <div className="bg-[#fcfaf7] p-4 rounded-xl border border-gray-100 text-sm">
               <p><strong>Nombre:</strong> PanFree (Panificados Sin Gluten)</p>
               <p><strong>RUC:</strong> [Completar con el RUC de la empresa]</p>
-              <p><strong>Dirección:</strong> [Completar con la dirección física]</p>
+              <p><strong>Dirección:</strong> Bº San Pedro Etapa IV - Ciudad de Encarnación</p>
               <p><strong>Teléfono/WhatsApp:</strong> +595 984 589845</p>
               <p><strong>Correo electrónico:</strong> contacto@panfree.fit</p>
             </div>
@@ -103,6 +103,7 @@ export default function PromocionDipticosBases() {
               <p>Para consultas, reclamos o mayor información, los participantes podrán comunicarse a través de:</p>
               <p><strong>WhatsApp:</strong> +595 984 589845</p>
               <p><strong>Correo electrónico:</strong> contacto@panfree.fit</p>
+              <p><strong>Dirección:</strong> Bº San Pedro Etapa IV - Ciudad de Encarnación</p>
             </div>
           </section>
         </div>
