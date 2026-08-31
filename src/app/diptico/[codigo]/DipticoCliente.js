@@ -39,6 +39,7 @@ export default function DipticoCliente({
   const [mensaje, setMensaje] = useState(null)
   const [copiado, setCopiado] = useState(false)
   const [canjeado, setCanjeado] = useState(false)
+  const [mostrarByC, setMostrarByC] = useState(false)
 
   // Verificar si el usuario está logueado
   useEffect(() => {
@@ -270,6 +271,35 @@ export default function DipticoCliente({
               >
                 Ver catálogo de premios →
               </Link>
+
+              {/* Sección de Bases y Condiciones - Mejor Práctica */}
+              <div className="mt-4 text-center">
+                {/* Enlace que despliega el resumen */}
+                <button
+                  onClick={() => setMostrarByC(!mostrarByC)}
+                  className="text-xs text-gray-400 hover:text-[#f46e15] transition flex items-center justify-center gap-1 mx-auto"
+                >
+                  <span>{mostrarByC ? '−' : '+'}</span>
+                  Ver bases y condiciones
+                </button>
+
+                {/* Resumen desplegable (Acordeón) */}
+                {mostrarByC && (
+                  <div className="mt-3 p-4 bg-[#f5f1eb] rounded-xl text-left text-xs text-gray-600 space-y-1">
+                    <p>✅ Código válido por <strong>1 solo uso</strong>.</p>
+                    <p>✅ Los puntos se acreditan en un plazo de <strong>24 horas</strong>.</p>
+                    <p>✅ Promoción válida hasta el <strong>31/12/2026</strong>.</p>
+                    <p>❌ No acumulable con otras promociones vigentes.</p>
+                    <a 
+                      href="/bases-y-condiciones" 
+                      className="block mt-2 text-[#f46e15] hover:underline font-medium"
+                      target="_blank"
+                    >
+                      Leer bases completas →
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="pt-2">
