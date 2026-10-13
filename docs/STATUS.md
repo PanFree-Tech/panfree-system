@@ -1,8 +1,8 @@
 ﻿# Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-13 (fin Sesion 6)
+**Ultima actualizacion:** 2026-10-13 (fin Sesion 7)
 **Fase actual:** Fase 1 (EN CURSO)
-**Progreso global:** 34% (16 de 47 tareas)
+**Progreso global:** 36% (17 de 47 tareas)
 
 ---
 
@@ -11,11 +11,11 @@
 | Fase | Tareas | OK | En curso | Pendiente | % |
 |---|---|---|---|---|---|
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
-| F1 - Seguridad DB | 9 | 7 | 0 | 2 | 78% |
+| F1 - Seguridad DB | 9 | 8 | 0 | 1 | 89% |
 | F2 - Rotacion claves | 14 | 0 | 0 | 14 | 0% |
 | F3 - Codigo | 9 | 0 | 0 | 9 | 0% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **14** | **0** | **33** | **30%** |
+| **Total** | **47** | **15** | **0** | **32** | **32%** |
 
 ---
 
@@ -27,9 +27,9 @@
 
 ## 3. Proximos 3 pasos
 
-1. **F1-09** - Eliminar indices duplicados (P3, esfuerzo S)
+1. **SEC-011** - email_logs SELECT true para authenticated (P1, Alta)
 2. **F3-02** - SEC-002: quitar claves hardcodeadas (P1)
-3. **chore(docs)** - Limpiar entradas duplicadas en BITACORA.md
+3. **chore(docs)** - Limpiar BITACORA.md y STATUS.md (duplicados)
 
 ---
 
@@ -41,7 +41,7 @@
 | Advisors Supabase severidad 3 | 250+ | menos de 50 |
 | Claves productivas rotadas | 0 / 12 | 12 / 12 |
 | Claves en Bitwarden | 0 / 12 | 12 / 12 |
-| Hallazgos cerrados | 14 / 31 | 31 / 31 |
+| Hallazgos cerrados | 18 / 31 | 31 / 31 |
 | Documentos .md en docs/ | 30+ | 30+ (OK) |
 | Commits de remediacion | 8 | ~40 |
 
@@ -123,5 +123,6 @@ e5bed103
 - [Workflow Diario](./operations/WORKFLOW-DIARIO.md)
 - [Guia Rapida](./operations/GUIA-RAPIDA.md)
 - [Tracking de hallazgos](./audits/2026-10-13-inicial/06-hallazgos-tracking.md)
+
 
 

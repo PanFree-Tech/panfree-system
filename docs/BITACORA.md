@@ -565,3 +565,56 @@ e5bed103
 - chore(docs): limpiar entradas duplicadas en BITACORA.md y STATUS.md
 - SEC-011: analizar email_logs SELECT true para authenticated
 
+
+---
+---
+
+## 2026-10-13 (Sesion 7 - CIERRE)
+
+**Duracion:** ~1.5 horas
+**Objetivo:** Ejecutar F1-09 (eliminar indices duplicados)
+
+**Completado:**
+- F1-09: 9 indices duplicados eliminados en 2 grupos
+- Grupo A: 7 indices idx_* redundantes respecto a UNIQUE hermano
+  (clientes, codigos_dipticos, compras, cupones_descuento, pedidos,
+  produccion, productos)
+- Grupo B: 2 indices no-UNIQUE duplicados en notificaciones_admin
+  (idx_notificaciones_created, idx_notificaciones_leida)
+- Verificacion 1: 0 constraints respaldadas por los indices a dropear
+- Verificacion 2: 7 UNIQUE hermanos confirmados
+- Verificacion 2b: 2 pares no-UNIQUE confirmados
+- Casi-duplicados documentados para futuras sesiones (recetas,
+  push_subscriptions)
+- Doc de auditoria: docs/audits/2026-10-13-inicial/16-f1-09-indices-duplicados.md
+- Migracion SQL: supabase/migrations/2026-10-13-f1-09-indices-duplicados.sql
+
+**Commits de la sesion:**
+- (pendiente) chore(db): eliminar indices duplicados (F1-09)
+
+**Hallazgos cerrados:**
+- DB-001i: Indices duplicados
+
+**Hallazgos nuevos:**
+- Ninguno
+
+**Bloqueantes:**
+- Ninguno
+
+**Aprendizajes:**
+- Al dropear un indice idx_* que tiene un UNIQUE hermano con la misma
+  firma, siempre dropear el no-UNIQUE. El UNIQUE cubre igualdad y
+  ademas aporta la constraint.
+- Cuando hay dos no-UNIQUE con la misma firma, conservar el que sigue
+  la convencion idx_<tabla_completa>_<columna>.
+- DROP INDEX CONCURRENTLY no puede correr en el SQL Editor de Supabase
+  (transaccion implicita). Para tablas chicas, DROP INDEX simple es
+  seguro y no requiere fragmentar.
+- Verificar con pg_constraint ANTES del DROP evita el error
+  "cannot drop index because constraint requires it".
+
+**Proxima sesion:**
+- SEC-011: analizar email_logs SELECT true para authenticated (P1)
+- F3-02: SEC-002 quitar claves hardcodeadas (P1)
+- chore(docs): limpiar BITACORA.md y STATUS.md
+
