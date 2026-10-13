@@ -70,7 +70,7 @@
 | DB-001e | ~60 politicas RLS sin optimizar | F1 | P2 | Cerrado | 02311b72 |
 | DB-001f | ~150 politicas duplicadas | F1 | P2 | **Cerrado** | (pendiente commit) |
 | SEC-010 | select_publico_productos exponia inactivos (leak) | F1 | P2 | **Cerrado** | (pendiente commit) |
-| SEC-012 | canjes_premios usa clientes.role en vez de is_admin() | F3 | P2 | Abierto | - |
+| SEC-012 | canjes_premios usa clientes.role en vez de is_admin() | F3 | P2 | Cerrado | (Sesion 9) |
 
 ### Hallazgos bajos
 
