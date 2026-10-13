@@ -19,4 +19,5 @@
 - [03-codigo-fuente.md](./03-codigo-fuente.md)
 - [04-roadmap.md](./04-roadmap.md)
 - [05-criterios-aceptacion.md](./05-criterios-aceptacion.md)
+- [06-hallazgos-tracking.md](./06-hallazgos-tracking.md)
 - [99-plan-remediacion.md](./99-plan-remediacion.md)
