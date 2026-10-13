@@ -1,4 +1,4 @@
-﻿# Auditoria Inicial - 2026-10-13
+# Auditoria Inicial - 2026-10-13
 
 **Estado:** En curso
 **Alcance:** Repositorio completo, Supabase, integraciones
@@ -12,9 +12,11 @@
 | SEC-003 | Auth de admin por user_metadata | Critica | Abierto |
 | DB-001 | 250+ advisors de Supabase | Critica | Abierto |
 
-## Documentos
+## Documentos de esta auditoria
 
 - [01-secretos-git.md](./01-secretos-git.md)
 - [02-supabase-advisors.md](./02-supabase-advisors.md)
 - [03-codigo-fuente.md](./03-codigo-fuente.md)
+- [04-roadmap.md](./04-roadmap.md)
+- [05-criterios-aceptacion.md](./05-criterios-aceptacion.md)
 - [99-plan-remediacion.md](./99-plan-remediacion.md)
