@@ -31,3 +31,12 @@ Dockerfile
 
 # PROTECCIÓN DE SCRIPTS CON CLAVES (¡CRÍTICO!)
 scripts/*.js
+
+# Backups - nunca commitear
+backups/
+*.backup
+*.backup.*
+backup-*.sql
+backup-*.json
+backup-*.csv
+PanFree-Backup-*.md
