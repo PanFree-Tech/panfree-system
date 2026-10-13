@@ -9,9 +9,9 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 20 |
+| Abierto | 19 |
 | En curso | 0 |
-| Cerrado | 2 |
+| Cerrado | 3 |
 | Aceptado | 0 |
 
 ---
@@ -20,7 +20,7 @@
 
 | Severidad | Cantidad | Cerrados |
 |---|---|---|
-| Critica | 6 | 2 |
+| Critica | 6 | 3 |
 | Alta | 8 | 0 |
 | Media | 5 | 0 |
 | Baja | 3 | 0 |
@@ -38,7 +38,7 @@
 | DB-001 | 250+ advisors Supabase | F1 | P0 | Abierto | - |
 | DB-001a | Vistas SECURITY DEFINER | F1 | P0 | Cerrado | (pendiente) |
 | DB-001b | Politicas RLS Always True | F1 | P0 | Cerrado | e2bdd7cf |
-| DB-001c | Funciones SECURITY DEFINER publicas | F1 | P0 | Abierto | - |
+| DB-001c | Funciones SECURITY DEFINER publicas | F1 | P0 | Cerrado | (pendiente) |
 
 ### Hallazgos altos
 
