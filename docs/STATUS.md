@@ -124,3 +124,4 @@ e5bed103
 - [Guia Rapida](./operations/GUIA-RAPIDA.md)
 - [Tracking de hallazgos](./audits/2026-10-13-inicial/06-hallazgos-tracking.md)
 
+
