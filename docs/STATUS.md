@@ -1,7 +1,7 @@
 ﻿# Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-14 (fin Sesion 8)
-**Fase actual:** Fase 1 (EN CURSO)
+**Ultima actualizacion:** 2026-10-14 (fin Sesion 9)
+**Fase actual:** Fase 3 (EN CURSO)
 **Progreso global:** 38% (18 de 47 tareas)
 
 ---
@@ -16,6 +16,10 @@
 | F3 - Codigo | 9 | 0 | 0 | 9 | 0% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
 | **Total** | **47** | **16** | **0** | **31** | **34%** |
+
+> **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
+> por limitacion del plan Free de Supabase. No es un pendiente tecnico.
+> Ver [tracking](./audits/2026-10-13-inicial/06-hallazgos-tracking.md).
 
 ---
 

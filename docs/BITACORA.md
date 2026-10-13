@@ -662,4 +662,44 @@ e5bed103
 - F3-02: SEC-002 quitar claves hardcodeadas (P1)
 - chore(docs): limpiar entradas duplicadas en BITACORA.md y STATUS.md
 
+---
 
+## 2026-10-14 (Sesion 9 - COMPLETA)
+
+**Duracion:** ~1 hora
+**Objetivo:** Cerrar SEC-012 (canjes_premios usa clientes.role en vez de is_admin())
+
+**Completado:**
+- SEC-012 cerrado: DROP policy "Admin puede ver todos los canjes" + CREATE con
+  is_admin() y rol {authenticated}. Alinea canjes_premios con ADR-002.
+- Auditoria de codigo: 0 referencias a is_admin() en src/, 3 referencias a
+  canjes_premios (todas path B2C, sin impacto).
+- Doc de auditoria: docs/audits/2026-10-13-inicial/18-f1-11-sec-012-canjes-premios.md
+- Migracion SQL: supabase/migrations/2026-10-14-f1-11-sec-012-canjes-premios.sql
+- Script: scripts/docs/18-documentar-sec-012.ps1
+- Fase 1 queda al 100% (9/9, con F1-06 aceptada por plan Free).
+
+**Commits de la sesion:**
+- ca21e7cc security(db): alinear canjes_premios con ADR-002 (SEC-012, F1-11)
+
+**Hallazgos cerrados:**
+- SEC-012: canjes_premios usa clientes.role en vez de is_admin()
+
+**Hallazgos nuevos:**
+- Ninguno
+
+**Bloqueantes:**
+- Ninguno
+
+**Aprendizajes:**
+- La normalizacion de Postgres es util para verificar el estado real de
+  una politica: (SELECT is_admin()) -> ( SELECT is_admin() AS is_admin).
+- Comparar el output textual ANTES y DESPUES es mas confiable que asumir
+  que el CREATE POLICY quedo bien porque el SQL Editor devolvio "Success".
+- Un fix de consistencia (no vulnerabilidad) se documenta igual que uno de
+  seguridad: PRE, POST, DoD, referencias. La trazabilidad no negocia.
+
+**Proxima sesion:**
+- F3-02: SEC-002 quitar claves hardcodeadas (P1)
+- chore(docs): limpiar entradas duplicadas en BITACORA.md y STATUS.md
+- F3-04: AUTH-001 contrasenas debiles (P1)
