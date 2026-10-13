@@ -188,3 +188,113 @@ Cada sesion agrega una entrada al final.
 - Commit pendiente del .gitignore (backups bloqueados)
 
 ---
+---
+
+## 2026-10-13 (Sesion 2 - CIERRE)
+
+**Duracion:** ~6 horas
+**Objetivo:** Cerrar los 3 hallazgos P0 criticos de seguridad de la DB
+
+**Completado:**
+- F1-01: Fix 3 vistas SECURITY DEFINER -> SECURITY INVOKER
+- F1-02: Fix 4 politicas RLS Always True (canjes_premios, pedidos, detalle_pedido)
+- F1-03: Restringir 4 funciones SECURITY DEFINER (REVOKE EXECUTE)
+- F1-04: Fijar search_path en 3 funciones
+- F1-05: Restringir listado del bucket storage.productos
+- Reorganizacion de docs/ (sin numeros, sin anidamiento excesivo)
+- Creacion de 3 ADRs (arquitectura) en docs/architecture/decisiones/
+- Creacion de estructura supabase/schemas/ declarativa
+- Guardado de schema + politicas en Bitwarden (backup estructural)
+- Instalacion de Docker Desktop + Supabase CLI (para futuro)
+- Verificador de links (00-verificar-links.ps1)
+
+**Commits de la sesion:**
+- 885486d3 chore(scripts): agregar verificador de links y corregir STATUS
+- 7d46e572 docs(structure): renombrar carpetas a estructura sin numeros
+- 8c5b311a security(db): fix SECURITY DEFINER en 3 vistas de costos
+- e2bdd7cf docs(db): agregar schema declarativo de tablas criticas (F1-02)
+- fea87bb2 security(db): fix 4 politicas RLS Always True
+- 542e3a2e security(db): restringir 4 funciones SECURITY DEFINER
+- 3e500e77 security(db): fijar search_path en 3 funciones
+- 326d4edd security(storage): restringir listado del bucket productos
+
+**Hallazgos cerrados:**
+- DB-001a: Vistas SECURITY DEFINER
+- DB-001b: Politicas RLS Always True
+- DB-001c: Funciones SECURITY DEFINER publicas
+- DB-001d: Bucket Storage listable
+- DB-001g: Funciones con search_path mutable
+
+**Hallazgos nuevos:**
+- Ninguno
+
+**Bloqueantes:**
+- Ninguno
+
+**Aprendizajes:**
+- Docker Desktop + Supabase CLI no cooperan con conexiones IPv6. Usar Session Pooler.
+- Los here-strings de PowerShell se cortan con bloques Markdown grandes. Usar arrays.
+- El verificador de links es fundamental cuando se reestructura docs/.
+
+**Proxima sesion:**
+- F1-06: Habilitar Leaked Password Protection en Supabase Auth (P1, 15 min)
+- F1-07: Optimizar ~60 politicas RLS con InitPlan (P2, esfuerzo L)
+- F1-08: Consolidar ~150 politicas duplicadas (P2, esfuerzo L)
+- Commit pendiente del .gitignore (backups bloqueados)
+
+---
+---
+
+## 2026-10-13 (Sesion 2 - CIERRE)
+
+**Duracion:** ~6 horas
+**Objetivo:** Cerrar los 3 hallazgos P0 criticos de seguridad de la DB
+
+**Completado:**
+- F1-01: Fix 3 vistas SECURITY DEFINER -> SECURITY INVOKER
+- F1-02: Fix 4 politicas RLS Always True (canjes_premios, pedidos, detalle_pedido)
+- F1-03: Restringir 4 funciones SECURITY DEFINER (REVOKE EXECUTE)
+- F1-04: Fijar search_path en 3 funciones
+- F1-05: Restringir listado del bucket storage.productos
+- Reorganizacion de docs/ (sin numeros, sin anidamiento excesivo)
+- Creacion de 3 ADRs (arquitectura) en docs/architecture/decisiones/
+- Creacion de estructura supabase/schemas/ declarativa
+- Guardado de schema + politicas en Bitwarden (backup estructural)
+- Instalacion de Docker Desktop + Supabase CLI (para futuro)
+- Verificador de links (00-verificar-links.ps1)
+
+**Commits de la sesion:**
+- 885486d3 chore(scripts): agregar verificador de links y corregir STATUS
+- 7d46e572 docs(structure): renombrar carpetas a estructura sin numeros
+- 8c5b311a security(db): fix SECURITY DEFINER en 3 vistas de costos
+- e2bdd7cf docs(db): agregar schema declarativo de tablas criticas (F1-02)
+- fea87bb2 security(db): fix 4 politicas RLS Always True
+- 542e3a2e security(db): restringir 4 funciones SECURITY DEFINER
+- 3e500e77 security(db): fijar search_path en 3 funciones
+- 326d4edd security(storage): restringir listado del bucket productos
+
+**Hallazgos cerrados:**
+- DB-001a: Vistas SECURITY DEFINER
+- DB-001b: Politicas RLS Always True
+- DB-001c: Funciones SECURITY DEFINER publicas
+- DB-001d: Bucket Storage listable
+- DB-001g: Funciones con search_path mutable
+
+**Hallazgos nuevos:**
+- Ninguno
+
+**Bloqueantes:**
+- Ninguno
+
+**Aprendizajes:**
+- Docker Desktop + Supabase CLI no cooperan con conexiones IPv6. Usar Session Pooler.
+- Los here-strings de PowerShell se cortan con bloques Markdown grandes. Usar arrays.
+- El verificador de links es fundamental cuando se reestructura docs/.
+
+**Proxima sesion:**
+- F1-06: Habilitar Leaked Password Protection en Supabase Auth (P1, 15 min)
+- F1-07: Optimizar ~60 politicas RLS con InitPlan (P2, esfuerzo L)
+- F1-08: Consolidar ~150 politicas duplicadas (P2, esfuerzo L)
+- Commit pendiente del .gitignore (backups bloqueados)
+
+---
