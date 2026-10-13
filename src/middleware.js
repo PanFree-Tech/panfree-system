@@ -1,10 +1,14 @@
 /**
  * 📁 UBICACIÓN: src/middleware.js
- * 📅 ACTUALIZADO: 2026-08-22 - FASE 1 DE SEGURIDAD
+ * 📅 ACTUALIZADO: 2026-10-13 - F3-01 (SEC-003 cerrado)
  * 📌 DESCRIPCIÓN: Middleware de Next.js para protección perimetral de rutas /admin y /api/admin.
  *    - Protege todas las rutas /admin/* y /api/admin/*
  *    - CAPA 1: Verifica sesión activa de Supabase
- *    - CAPA 2: Verifica rol 'admin'
+ *    - CAPA 2: Verifica rol 'admin' leyendo SOLO de app_metadata (ADR-002)
+ *
+ *    ADR-002: app_metadata.role es la ÚNICA fuente de verdad del rol.
+ *    user_metadata NUNCA se usa para autorización (es editable por el usuario).
+ *
  *    - API sin auth → 401 JSON
  *    - API sin rol admin → 403 JSON
  *    - Web sin auth → Redirige a /admin/login con redirect param
@@ -12,8 +16,8 @@
  */
 
 import { NextResponse } from 'next/server'
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { createServerClient } from '@supabase/ssr'
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { sanitizeSupabaseUrl, DEFAULT_SUPABASE_ANON_KEY } from '@/lib/supabase'
 
 // Variables de entorno de Supabase sanitizadas
@@ -115,11 +119,10 @@ export async function middleware(request) {
   // ============================================
   // 4. CAPA 2: VERIFICAR ROL 'admin'
   // ============================================
-  const userRole =
-    user.app_metadata?.role ||
-    user.user_metadata?.role ||
-    user.raw_user_meta_data?.role ||
-    user.role
+  // ADR-002: SOLO app_metadata.role es fuente de verdad.
+  // user_metadata es editable por el usuario y NUNCA se consulta acá.
+  // Ver: docs/architecture/decisiones/ADR-002-seguridad-en-capas-app-metadata.md
+  const userRole = user.app_metadata?.role
 
   const isAdmin = userRole === 'admin'
 
