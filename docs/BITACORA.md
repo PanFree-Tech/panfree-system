@@ -298,3 +298,95 @@ Cada sesion agrega una entrada al final.
 - Commit pendiente del .gitignore (backups bloqueados)
 
 ---
+
+---
+
+## 2026-10-13 (Sesion 3 - CIERRE)
+
+**Duracion:** ~4 horas
+**Objetivo:** Ejecutar F1-07 (Optimizar 79 politicas RLS con InitPlan)
+
+**Completado:**
+- F1-07: 79 politicas RLS optimizadas con InitPlan
+- Aplicado en 4 bloques por patron + 1 fix puntual
+- Verificacion: 0 DIRECTAS en pg_policies (antes: 79)
+- 81 OPTIMIZADAS + 13 SIN_auth = 94 totales
+- EXPLAIN ANALYZE antes/despues documentado (con limitaciones)
+- SQL versionado en supabase/migrations/2026-10-13-f1-07-initplan.sql
+- Doc de auditoria: docs/audits/2026-10-13-inicial/13-f1-07-rls-initplan.md
+- Script de documentacion: scripts/docs/10-documentar-f1-07.ps1
+- Lista de candidatas a F1-08 (consolidacion) documentada
+- Hallazgo colateral P7 marcado para F3-01 (auth.jwt ->> role)
+
+**Commits de la sesion:**
+- 02311b72 security(db): optimizar 79 politicas RLS con InitPlan
+- fd942db0 docs(tracking): actualizar hash de F1-07
+
+**Hallazgos cerrados:**
+- DB-001e: ~60 politicas RLS sin optimizar
+
+**Hallazgos nuevos:**
+- Ninguno
+
+**Bloqueantes:**
+- Ninguno
+
+**Aprendizajes:**
+- Postgres normaliza (SELECT is_admin()) como ( SELECT is_admin() AS is_admin).
+- El verificador de links (00-verificar-links.ps1) da falsos positivos en bloques de codigo Markdown dentro de HANDOFF-*.md.
+- El SQL Editor de Supabase envuelve el RUN en transaccion implicita: si un DROP/CREATE falla, todo se revierte.
+- Aplicar el fix en 4 bloques chicos + verificacion por bloque es mas seguro que un solo SQL grande.
+
+**Proxima sesion:**
+- F1-08: Consolidar ~150 politicas duplicadas (P2, esfuerzo L)
+- F1-09: Eliminar indices duplicados (P3, esfuerzo S)
+- F3-01: SEC-003: admin por app_metadata (P0, esfuerzo S) - corregir tambien P7
+- chore(tooling): mejorar verificador de links para ignorar bloques de codigo
+
+---
+
+---
+
+## 2026-10-13 (Sesion 3 - CIERRE)
+
+**Duracion:** ~4 horas
+**Objetivo:** Ejecutar F1-07 (Optimizar 79 politicas RLS con InitPlan)
+
+**Completado:**
+- F1-07: 79 politicas RLS optimizadas con InitPlan
+- Aplicado en 4 bloques por patron + 1 fix puntual
+- Verificacion: 0 DIRECTAS en pg_policies (antes: 79)
+- 81 OPTIMIZADAS + 13 SIN_auth = 94 totales
+- EXPLAIN ANALYZE antes/despues documentado (con limitaciones)
+- SQL versionado en supabase/migrations/2026-10-13-f1-07-initplan.sql
+- Doc de auditoria: docs/audits/2026-10-13-inicial/13-f1-07-rls-initplan.md
+- Script de documentacion: scripts/docs/10-documentar-f1-07.ps1
+- Lista de candidatas a F1-08 (consolidacion) documentada
+- Hallazgo colateral P7 marcado para F3-01 (auth.jwt ->> role)
+
+**Commits de la sesion:**
+- 02311b72 security(db): optimizar 79 politicas RLS con InitPlan
+- fd942db0 docs(tracking): actualizar hash de F1-07
+
+**Hallazgos cerrados:**
+- DB-001e: ~60 politicas RLS sin optimizar
+
+**Hallazgos nuevos:**
+- Ninguno
+
+**Bloqueantes:**
+- Ninguno
+
+**Aprendizajes:**
+- Postgres normaliza (SELECT is_admin()) como ( SELECT is_admin() AS is_admin).
+- El verificador de links (00-verificar-links.ps1) da falsos positivos en bloques de codigo Markdown dentro de HANDOFF-*.md.
+- El SQL Editor de Supabase envuelve el RUN en transaccion implicita: si un DROP/CREATE falla, todo se revierte.
+- Aplicar el fix en 4 bloques chicos + verificacion por bloque es mas seguro que un solo SQL grande.
+
+**Proxima sesion:**
+- F1-08: Consolidar ~150 politicas duplicadas (P2, esfuerzo L)
+- F1-09: Eliminar indices duplicados (P3, esfuerzo S)
+- F3-01: SEC-003: admin por app_metadata (P0, esfuerzo S) - corregir tambien P7
+- chore(tooling): mejorar verificador de links para ignorar bloques de codigo
+
+---
