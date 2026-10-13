@@ -49,7 +49,8 @@
 | SEC-002 | DEFAULT_SUPABASE_ANON_KEY hardcodeada | F3 | P1 | Abierto | - |
 | SEC-006 | redirectTo hardcodeado | F3 | P1 | Cerrado | 4d5bd9c2 |
 | SEC-007 | INSERT clientes.role desde frontend | F3 | P1 | Cerrado | 4d5bd9c2 |
-| SEC-011 | email_logs SELECT true para authenticated | F1/F3 | P1 | Abierto | - |
+| SEC-011 | email_logs SELECT true para authenticated | F1/F3 | P1 | Cerrado | (Sesion 8) |
+| SEC-013 | email_logs INSERT permisiva para authenticated | F1/F3 | P2 | Cerrado | (Sesion 8) |
 | AUTH-001 | Contrasenas debiles | F3 | P1 | Abierto | - |
 | AUTH-002 | Registro sin validar duplicados | F3 | P1 | Abierto | - |
 | DBG-001 | console.log con datos sensibles | F3 | P1 | Abierto | - |
@@ -76,6 +77,7 @@
 | ID | Titulo | Fase | Prioridad | Estado | Commit |
 |---|---|---|---|---|---|
 | BUG-003 | diptico/[codigo] usa .eq('activo') en vez de is_active | F3 | P3 | Abierto | - |
+| BUG-004 | test-email y resend-webhook usaban cliente sin privilegios | F3 | P2 | Cerrado | (Sesion 8) |
 | DB-001i | Indices duplicados | F1 | P3 | **Cerrado** | d6957a61 |
 | TST-001 | Cobertura de tests baja | F4 | P3 | Abierto | - |
 | DOC-001 | Falta PropTypes/JSDoc | F4 | P3 | Abierto | - |
@@ -111,6 +113,8 @@
 - [Advisors de Supabase](./02-supabase-advisors.md)
 - [F1-07 InitPlan](./13-f1-07-rls-initplan.md)
 - [F1-08 Consolidacion](./15-f1-08-consolidacion-rls.md)
+
+
 
 
 

@@ -1,0 +1,74 @@
+﻿-- =============================================================================
+-- F1-10 / SEC-011 + SEC-013: Restringir acceso a email_logs
+-- Fecha: 2026-10-14
+-- Sesion: 8
+-- Hallazgos cerrados:
+--   SEC-011 (Alta) - "Authenticated users can read email_logs" qual=true
+--   SEC-013 (Media) - "Authenticated users can insert email_logs" permisiva
+-- Hallazgo colateral corregido en codigo:
+--   BUG-004 (Media) - test-email y resend-webhook usaban cliente sin privilegios
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- CONTEXTO
+-- -----------------------------------------------------------------------------
+-- La tabla public.email_logs tenia 4 politicas RLS:
+--   1. "Admin email_logs"                         (ALL,    public,        is_admin OR service_role)
+--   2. "Service role full access on email_logs"   (ALL,    service_role,  true)
+--   3. "Authenticated users can insert email_logs"(INSERT, public,        auth.uid() IS NOT NULL)
+--   4. "Authenticated users can read email_logs"  (SELECT, authenticated, true)   <-- SEC-011
+--
+-- Postgres combina politicas PERMISSIVE con OR. La politica 4 (qual=true)
+-- anulaba cualquier restriccion vecina, permitiendo a CUALQUIER usuario
+-- autenticado (incluidos clientes B2C) leer TODA la tabla.
+--
+-- La politica 3 permitia a cualquier usuario autenticado insertar filas.
+-- Ningun path legitimo del frontend necesita insertar en email_logs;
+-- los INSERT reales los hacen send-email/test-email via SERVICE_ROLE_KEY.
+--
+-- Resultado: cualquier cliente B2C podia leer:
+--   - to_email, from_email, subject, body_html, body_text, metadata (PII)
+--
+-- -----------------------------------------------------------------------------
+-- VERIFICACION PRE (output real antes del DROP)
+-- -----------------------------------------------------------------------------
+-- Query ejecutada:
+--   SELECT policyname, cmd, roles, qual, with_check
+--   FROM pg_policies WHERE tablename = 'email_logs' ORDER BY cmd, policyname;
+--
+-- Resultado: 4 filas (las listadas arriba en CONTEXTO).
+--
+-- -----------------------------------------------------------------------------
+-- FIX
+-- -----------------------------------------------------------------------------
+
+-- 1. Eliminar politica SELECT permisiva (SEC-011)
+DROP POLICY IF EXISTS "Authenticated users can read email_logs" ON public.email_logs;
+
+-- 2. Eliminar politica INSERT permisiva (SEC-013)
+DROP POLICY IF EXISTS "Authenticated users can insert email_logs" ON public.email_logs;
+
+-- -----------------------------------------------------------------------------
+-- VERIFICACION POST (output real despues del DROP)
+-- -----------------------------------------------------------------------------
+-- Query ejecutada:
+--   SELECT policyname, cmd, roles, qual, with_check
+--   FROM pg_policies WHERE tablename = 'email_logs' ORDER BY cmd, policyname;
+--
+-- Resultado: 2 filas
+--   1. "Admin email_logs"                        (ALL, public,       is_admin OR service_role)
+--   2. "Service role full access on email_logs"  (ALL, service_role, true)
+--
+-- -----------------------------------------------------------------------------
+-- ROLLBACK (descomentar y ejecutar si hay que revertir)
+-- -----------------------------------------------------------------------------
+-- CREATE POLICY "Authenticated users can read email_logs"
+--   ON public.email_logs FOR SELECT TO authenticated USING (true);
+--
+-- CREATE POLICY "Authenticated users can insert email_logs"
+--   ON public.email_logs FOR INSERT TO public
+--   WITH CHECK ((SELECT auth.uid()) IS NOT NULL);
+
+-- =============================================================================
+-- FIN MIGRACION
+-- =============================================================================

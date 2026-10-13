@@ -8,7 +8,12 @@
 import { NextResponse } from 'next/server'
 import { sendEmail, DEFAULT_ADMIN_EMAIL, DEFAULT_FROM_EMAIL } from '@/lib/resend'
 import { templatePruebaSistema } from '@/lib/email-templates'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+)
 
 export const dynamic = 'force-dynamic'
 
@@ -31,7 +36,7 @@ async function handleTestEmail(req) {
 
     // Registrar en tabla `email_logs`
     try {
-      await supabase.from('email_logs').insert([
+      await supabaseAdmin.from('email_logs').insert([
         {
           to_email: destinatario,
           from_email: DEFAULT_FROM_EMAIL,

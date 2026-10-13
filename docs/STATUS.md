@@ -1,6 +1,6 @@
 ﻿# Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-13 (fin Sesion 7)
+**Ultima actualizacion:** 2026-10-14 (fin Sesion 8)
 **Fase actual:** Fase 1 (EN CURSO)
 **Progreso global:** 36% (17 de 47 tareas)
 
@@ -27,8 +27,8 @@
 
 ## 3. Proximos 3 pasos
 
-1. **SEC-011** - email_logs SELECT true para authenticated (P1, Alta)
-2. **F3-02** - SEC-002: quitar claves hardcodeadas (P1)
+1. **F3-02** - SEC-002: quitar claves hardcodeadas (P1)
+2. **SEC-012** - canjes_premios usa clientes.role en vez de is_admin() (P2)
 3. **chore(docs)** - Limpiar BITACORA.md y STATUS.md (duplicados)
 
 ---
@@ -41,7 +41,7 @@
 | Advisors Supabase severidad 3 | 250+ | menos de 50 |
 | Claves productivas rotadas | 0 / 12 | 12 / 12 |
 | Claves en Bitwarden | 0 / 12 | 12 / 12 |
-| Hallazgos cerrados | 18 / 31 | 31 / 31 |
+| Hallazgos cerrados | 21 / 34 | 34 / 34 |
 | Documentos .md en docs/ | 30+ | 30+ (OK) |
 | Commits de remediacion | 8 | ~40 |
 
@@ -123,6 +123,8 @@ e5bed103
 - [Workflow Diario](./operations/WORKFLOW-DIARIO.md)
 - [Guia Rapida](./operations/GUIA-RAPIDA.md)
 - [Tracking de hallazgos](./audits/2026-10-13-inicial/06-hallazgos-tracking.md)
+
+
 
 
 
