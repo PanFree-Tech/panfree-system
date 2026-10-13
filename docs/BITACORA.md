@@ -390,3 +390,128 @@ Cada sesion agrega una entrada al final.
 - chore(tooling): mejorar verificador de links para ignorar bloques de codigo
 
 ---
+---
+
+## 2026-10-13 (Sesion 5 - CIERRE)
+
+**Duracion:** ~4 horas
+**Objetivo:** Cerrar SEC-003 (admin por user_metadata) + P7 + hallazgos colaterales
+
+**Completado:**
+- F3-01: SEC-003 cerrado (middleware lee solo app_metadata)
+- F3-01: is_admin() reescrita para leer de app_metadata
+- F3-01: 3 politicas P7 migradas a app_metadata
+- SEC-004: REVOKE UPDATE (role) sobre clientes
+- SEC-005: anon sin privilegios sobre clientes
+- SEC-006: columnas sensibles bloqueadas en UPDATE
+- SEC-007: INSERT sin role desde frontend
+- BUG-002: avatar -> avatar_url en route.js
+- Doc: docs/audits/
+2026-10-13
+-inicial/14-f3-01-admin-app-metadata.md
+- Migracion: supabase/migrations/
+2026-10-13
+-f3-01-admin-app-metadata.sql
+
+**Commits de la sesion:**
+- 
+e5bed103
+ fix(auth): leer rol solo desde app_metadata en middleware (SEC-003)
+- (pendiente) security(auth): cerrar F3-01 (SEC-003+004+005+006+007, P7, BUG-002)
+
+**Hallazgos cerrados:**
+- SEC-003: Admin por user_metadata
+- P7: 3 politicas con auth.jwt() raiz
+- SEC-004: UPDATE clientes.role desde cliente
+- SEC-005: anon con DDL sobre clientes
+- SEC-006: columnas sensibles editables
+- SEC-007: INSERT clientes.role desde frontend
+- BUG-002: avatar -> avatar_url en route.js
+
+**Hallazgos nuevos:**
+- SEC-004: UPDATE clientes.role desde cliente (descubierto en chequeo de C)
+- SEC-005: anon con DDL sobre clientes (descubierto en chequeo de C)
+- SEC-006: columnas sensibles editables (descubierto en chequeo de C)
+- SEC-007: INSERT clientes.role desde frontend (descubierto en chequeo de C)
+- BUG-002: avatar -> avatar_url en route.js (descubierto en analisis de route.js)
+
+**Bloqueantes:**
+- Ninguno
+
+**Aprendizajes:**
+- REVOKE UPDATE (role) NO funciona si hay GRANT UPDATE a nivel tabla completa.
+  Hay que REVOKE ALL + GRANT por columna explicita.
+- El callback OAuth inserta con cliente authenticated (no service_role).
+  Eso obliga a restringir GRANT INSERT por columna.
+- Los triggers (set_updated_at, actualizar_nivel_cliente) cubren columnas
+  que el cliente NO debe poder editar directamente.
+
+**Proxima sesion:**
+- F1-08: Consolidar ~150 politicas duplicadas (P2, esfuerzo L)
+- F1-09: Eliminar indices duplicados (P3, esfuerzo S)
+- chore(tooling): mejorar verificador de links
+- chore(docs): limpiar entradas duplicadas en BITACORA.md y STATUS.md
+
+
+---
+
+## 2026-10-13 (Sesion 5 - CIERRE)
+
+**Duracion:** ~4 horas
+**Objetivo:** Cerrar SEC-003 (admin por user_metadata) + P7 + hallazgos colaterales
+
+**Completado:**
+- F3-01: SEC-003 cerrado (middleware lee solo app_metadata)
+- F3-01: is_admin() reescrita para leer de app_metadata
+- F3-01: 3 politicas P7 migradas a app_metadata
+- SEC-004: REVOKE UPDATE (role) sobre clientes
+- SEC-005: anon sin privilegios sobre clientes
+- SEC-006: columnas sensibles bloqueadas en UPDATE
+- SEC-007: INSERT sin role desde frontend
+- BUG-002: avatar -> avatar_url en route.js
+- Doc: docs/audits/
+2026-10-13
+-inicial/14-f3-01-admin-app-metadata.md
+- Migracion: supabase/migrations/
+2026-10-13
+-f3-01-admin-app-metadata.sql
+
+**Commits de la sesion:**
+- 
+e5bed103
+ fix(auth): leer rol solo desde app_metadata en middleware (SEC-003)
+- (pendiente) security(auth): cerrar F3-01 (SEC-003+004+005+006+007, P7, BUG-002)
+
+**Hallazgos cerrados:**
+- SEC-003: Admin por user_metadata
+- P7: 3 politicas con auth.jwt() raiz
+- SEC-004: UPDATE clientes.role desde cliente
+- SEC-005: anon con DDL sobre clientes
+- SEC-006: columnas sensibles editables
+- SEC-007: INSERT clientes.role desde frontend
+- BUG-002: avatar -> avatar_url en route.js
+
+**Hallazgos nuevos:**
+- SEC-004: UPDATE clientes.role desde cliente (descubierto en chequeo de C)
+- SEC-005: anon con DDL sobre clientes (descubierto en chequeo de C)
+- SEC-006: columnas sensibles editables (descubierto en chequeo de C)
+- SEC-007: INSERT clientes.role desde frontend (descubierto en chequeo de C)
+- BUG-002: avatar -> avatar_url en route.js (descubierto en analisis de route.js)
+
+**Bloqueantes:**
+- Ninguno
+
+**Aprendizajes:**
+- REVOKE UPDATE (role) NO funciona si hay GRANT UPDATE a nivel tabla completa.
+  Hay que REVOKE ALL + GRANT por columna explicita.
+- El callback OAuth inserta con cliente authenticated (no service_role).
+  Eso obliga a restringir GRANT INSERT por columna.
+- Los triggers (set_updated_at, actualizar_nivel_cliente) cubren columnas
+  que el cliente NO debe poder editar directamente.
+
+**Proxima sesion:**
+- F1-08: Consolidar ~150 politicas duplicadas (P2, esfuerzo L)
+- F1-09: Eliminar indices duplicados (P3, esfuerzo S)
+- chore(tooling): mejorar verificador de links
+- chore(docs): limpiar entradas duplicadas en BITACORA.md y STATUS.md
+

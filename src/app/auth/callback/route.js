@@ -53,18 +53,20 @@ export async function GET(request) {
             user.user_metadata?.full_name ||
             user.user_metadata?.name ||
             (user.email ? user.email.split('@')[0] : 'Cliente')
-          const avatar =
+          const avatarUrl =
             user.user_metadata?.avatar_url ||
             user.user_metadata?.picture ||
             null
 
+          // F3-01 fix: solo columnas permitidas por GRANT INSERT en public.clientes.
+          // role, is_active, puntos_fidelidad, nivel_cliente → DEFAULT (ver migración
+          // supabase/migrations/2026-10-13-f3-01-admin-app-metadata.sql).
+          // BUG-002 fix: la columna real es avatar_url (no avatar).
           await supabase.from('clientes').insert({
             nombre_completo: nombre,
             email: user.email,
             user_id: user.id,
-            is_active: true,
-            role: 'cliente',
-            avatar: avatar,
+            avatar_url: avatarUrl,
           })
         }
       } catch (profileErr) {
