@@ -79,9 +79,9 @@
 
 ## 7. Documentos relacionados
 
-- [Plan de Trabajo](../02-operaciones/PLAN-DE-TRABAJO.md)
+- [Plan de Trabajo](02-operaciones/PLAN-DE-TRABAJO.md)
 - [Bitacora](./BITACORA.md)
-- [Sistema de Trabajo](../02-operaciones/SISTEMA-DE-TRABAJO.md)
-- [Workflow Diario](../02-operaciones/WORKFLOW-DIARIO.md)
-- [Guia Rapida](../02-operaciones/GUIA-RAPIDA.md)
-- [Tracking de hallazgos](../04-auditorias/2026-10-13-inicial/06-hallazgos-tracking.md)
+- [Sistema de Trabajo](02-operaciones/SISTEMA-DE-TRABAJO.md)
+- [Workflow Diario](02-operaciones/WORKFLOW-DIARIO.md)
+- [Guia Rapida](02-operaciones/GUIA-RAPIDA.md)
+- [Tracking de hallazgos](04-auditorias/2026-10-13-inicial/06-hallazgos-tracking.md)
