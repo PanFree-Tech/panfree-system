@@ -1,7 +1,7 @@
-﻿# Tracking de Hallazgos - Auditoria 2026-10-13
+# Tracking de Hallazgos - Auditoria 2026-10-13
 
 **Ultima actualizacion:** 2026-10-13 (fin Sesion 7)
-**Total de hallazgos:** 31
+**Total de hallazgos:** 34
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 12 |
+| Abierto | 14 |
 | En curso | 0 |
-| Cerrado | 18 |
+| Cerrado | 19 |
 | Aceptado | 1 |
 
 ---
@@ -46,7 +46,7 @@
 
 | ID | Titulo | Fase | Prioridad | Estado | Commit |
 |---|---|---|---|---|---|
-| SEC-002 | DEFAULT_SUPABASE_ANON_KEY hardcodeada | F3 | P1 | Abierto | - |
+| SEC-002 | DEFAULT_SUPABASE_ANON_KEY hardcodeada | F3 | P1 | Cerrado | (Sesion 10) |
 | SEC-006 | redirectTo hardcodeado | F3 | P1 | Cerrado | 4d5bd9c2 |
 | SEC-007 | INSERT clientes.role desde frontend | F3 | P1 | Cerrado | 4d5bd9c2 |
 | SEC-011 | email_logs SELECT true para authenticated | F1/F3 | P1 | Cerrado | (Sesion 8) |
@@ -77,6 +77,10 @@
 | ID | Titulo | Fase | Prioridad | Estado | Commit |
 |---|---|---|---|---|---|
 | BUG-003 | diptico/[codigo] usa .eq('activo') en vez de is_active | F3 | P3 | Abierto | - |
+| SEC-014 | VAPID key hardcodeada en src/app/admin/page.js | F3 | P3 | Abierto | - |
+| SEC-015 | URL Supabase hardcodeada en notificar-estado/route.js y notificaciones.js | F3 | P3 | Abierto | - |
+| SEC-016 | Cloudinary cloud name hardcodeado en 4 lugares | F3 | P3 | Abierto | - |
+| SEC-017 | GA4 Measurement ID hardcodeado en ga4/measurement/route.js | F3 | P3 | Abierto | - |
 | BUG-004 | test-email y resend-webhook usaban cliente sin privilegios | F3 | P2 | Cerrado | (Sesion 8) |
 | DB-001i | Indices duplicados | F1 | P3 | **Cerrado** | d6957a61 |
 | TST-001 | Cobertura de tests baja | F4 | P3 | Abierto | - |

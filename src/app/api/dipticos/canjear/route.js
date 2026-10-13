@@ -6,7 +6,7 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { supabase as supabaseAdmin, sanitizeSupabaseUrl, DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY } from '@/lib/supabase'
+import { supabase as supabaseAdmin, sanitizeSupabaseUrl } from '@/lib/supabase'
 import { canjearCodigo, validarCodigo } from '@/lib/dipticos'
 
 export async function POST(req) {
@@ -32,7 +32,7 @@ export async function POST(req) {
             const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
             const rawKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
             const supabaseUrl = sanitizeSupabaseUrl(rawUrl)
-            const supabaseAnonKey = (rawKey && typeof rawKey === 'string' && rawKey.trim()) ? rawKey.trim() : DEFAULT_SUPABASE_ANON_KEY
+            const supabaseAnonKey = (rawKey && typeof rawKey === 'string' && rawKey.trim()) ? rawKey.trim() : (() => { throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY no configurada') })()
 
             const supabaseSsr = createServerClient(
                 supabaseUrl,

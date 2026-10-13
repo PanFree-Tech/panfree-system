@@ -10,7 +10,7 @@ import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
-import { supabase as supabaseAdmin, sanitizeSupabaseUrl, DEFAULT_SUPABASE_ANON_KEY } from '@/lib/supabase'
+import { supabase as supabaseAdmin, sanitizeSupabaseUrl } from '@/lib/supabase'
 import { enviarPlantillaWhatsApp } from '@/lib/whatsapp'
 import { WHATSAPP_TEMPLATES } from '@/lib/whatsapp-templates'
 
@@ -30,7 +30,7 @@ export async function POST(req) {
     // 1. Verificar autenticación y rol admin o token
     const cookieStore = cookies()
     const supabaseUrl = sanitizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL)
-    const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim()) || DEFAULT_SUPABASE_ANON_KEY
+    const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim()) || (() => { throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY no configurada') })()
 
     const supabaseClient = createServerClient(
       supabaseUrl,

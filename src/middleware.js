@@ -18,11 +18,11 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { sanitizeSupabaseUrl, DEFAULT_SUPABASE_ANON_KEY } from '@/lib/supabase'
+import { sanitizeSupabaseUrl } from '@/lib/supabase'
 
 // Variables de entorno de Supabase sanitizadas
 const supabaseUrl = sanitizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL)
-const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim()) || DEFAULT_SUPABASE_ANON_KEY
+const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim()) || (() => { throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY no configurada') })()
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl

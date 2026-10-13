@@ -1,44 +1,57 @@
 /**
-📁 UBICACIÓN: src/lib/supabase.js
-📅 ACTUALIZADO: 2026-08-19
-📌 DESCRIPCIÓN: Cliente de Supabase - VERSIÓN COMPATIBLE SSR Y NAVEGADOR
+src/lib/supabase.js
+ACTUALIZADO: 2026-10-14
+DESCRIPCION: Cliente de Supabase - VERSION COMPATIBLE SSR Y NAVEGADOR
+SEGURIDAD (SEC-002): sin claves ni URLs hardcodeadas.
+  Las env vars son obligatorias. Si faltan, fail-fast en runtime.
 */
 import { createBrowserClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-export const DEFAULT_SUPABASE_URL = 'https://gbdrcaumghykiipqgbty.supabase.co'
-export const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiZHJjYXVtZ2h5a2lpcHFnYnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjczNjIsImV4cCI6MjA4NzgwMzM2Mn0.OydRQxa51Ql42zvscWnQkEKJuU_3yeCS4qPQQoP6TuM'
-
 /**
- * Sanitiza y asegura que supabaseUrl sea una URL HTTP/HTTPS válida
+ * Sanitiza y asegura que supabaseUrl sea una URL HTTP/HTTPS valida.
+ * Fail-fast: si no hay URL, tira error explicito (SEC-002).
  */
 export function sanitizeSupabaseUrl(url) {
-  if (!url || typeof url !== 'string') return DEFAULT_SUPABASE_URL
+  if (!url || typeof url !== 'string' || !url.trim()) {
+    throw new Error(
+      'NEXT_PUBLIC_SUPABASE_URL no esta configurada. ' +
+      'Agregala en .env.local (dev) o en las env vars del hosting (prod).'
+    )
+  }
   let clean = url.trim()
-  if (!clean) return DEFAULT_SUPABASE_URL
   if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
-    clean = `https://${clean}`
+    clean = "https://" + clean
   }
   try {
     new URL(clean)
     return clean
   } catch {
-    return DEFAULT_SUPABASE_URL
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL no es una URL valida: " + url)
   }
 }
 
+/**
+ * Sanitiza la anon key de Supabase.
+ * Fail-fast: si no hay key valida, tira error explicito (SEC-002).
+ */
 export function sanitizeSupabaseKey(key) {
-  if (!key || typeof key !== 'string') return DEFAULT_SUPABASE_ANON_KEY
+  if (!key || typeof key !== 'string' || !key.trim()) {
+    throw new Error(
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY no esta configurada. ' +
+      'Agregala en .env.local (dev) o en las env vars del hosting (prod).'
+    )
+  }
   const clean = key.trim()
   const parts = clean.split('.')
   // A valid Supabase JWT token MUST have 3 parts (header.payload.signature)
   if (parts.length !== 3 || clean.length < 50) {
-    return DEFAULT_SUPABASE_ANON_KEY
+    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY no tiene formato JWT valido.')
   }
   return clean
 }
 
-// ✅ Usar valores sanitizados
+// Usar valores sanitizados (fail-fast si faltan env vars)
 const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
 const rawKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
 
@@ -52,26 +65,19 @@ export const createClient = () => {
   return createSupabaseClient(supabaseUrl, supabaseAnonKey)
 }
 
-// ✅ Crear cliente SIEMPRE - NUNCA retornar null
+// Crear cliente SIEMPRE - NUNCA retornar null
 export const supabase = typeof window !== 'undefined'
   ? createBrowserClient(supabaseUrl, supabaseAnonKey)
   : createSupabaseClient(supabaseUrl, supabaseAnonKey)
 
-// Validar en runtime (cliente) si son los valores de producción
-if (typeof window !== 'undefined') {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    console.warn('⚠️ Supabase usando valores por defecto. Verificar flyctl secrets.')
-  }
-}
-
-// Función helper para verificar conexión real
+// Funcion helper para verificar conexion real
 export async function checkSupabaseConnection() {
   try {
     const { data, error } = await supabase.from('productos').select('id').limit(1)
     if (error) throw error
     return { connected: true, data }
   } catch (err) {
-    console.error('❌ Error de conexión Supabase:', err.message)
+    console.error('Error de conexion Supabase:', err.message)
     return { connected: false, error: err.message }
   }
 }

@@ -1,8 +1,8 @@
-﻿# Estado del Proyecto - PanFree System
+# Estado del Proyecto - PanFree System
 
 **Ultima actualizacion:** 2026-10-14 (fin Sesion 9)
 **Fase actual:** Fase 3 (EN CURSO)
-**Progreso global:** 38% (18 de 47 tareas)
+**Progreso global:** 40% (19 de 47 tareas)
 
 ---
 
@@ -13,7 +13,7 @@
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
 | F2 - Rotacion claves | 14 | 0 | 0 | 14 | 0% |
-| F3 - Codigo | 9 | 0 | 0 | 9 | 0% |
+| F3 - Codigo | 9 | 2 | 0 | 7 | 22% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
 | **Total** | **47** | **16** | **0** | **31** | **34%** |
 
@@ -31,9 +31,9 @@
 
 ## 3. Proximos 3 pasos
 
-1. **F3-02** - SEC-002: quitar claves hardcodeadas (P1)
+1. **F3-04** - AUTH-001: contrasenas debiles (P1)
 2. **chore(docs)** - Limpiar BITACORA.md y STATUS.md (duplicados)
-3. **F3-04** - AUTH-001: contrasenas debiles (P1)
+3. **F3-05** - AUTH-002: registro sin validar duplicados (P1)
 
 ---
 
@@ -45,7 +45,7 @@
 | Advisors Supabase severidad 3 | 250+ | menos de 50 |
 | Claves productivas rotadas | 0 / 12 | 12 / 12 |
 | Claves en Bitwarden | 0 / 12 | 12 / 12 |
-| Hallazgos cerrados | 22 / 34 | 34 / 34 |
+| Hallazgos cerrados | 23 / 34 | 34 / 34 |
 | Documentos .md en docs/ | 30+ | 30+ (OK) |
 | Commits de remediacion | 8 | ~40 |
 

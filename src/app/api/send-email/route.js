@@ -14,7 +14,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
 import { sendEmail, DEFAULT_FROM_EMAIL, DEFAULT_ADMIN_EMAIL } from '@/lib/resend'
-import { sanitizeSupabaseUrl, DEFAULT_SUPABASE_ANON_KEY } from '@/lib/supabase'
+import { sanitizeSupabaseUrl } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,8 +22,7 @@ export const dynamic = 'force-dynamic'
 const supabaseUrl = sanitizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL)
 const supabaseServiceKey =
   (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY.trim()) ||
-  (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim()) ||
-  DEFAULT_SUPABASE_ANON_KEY
+  (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim()) || (() => { throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY no configurada') })()
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {

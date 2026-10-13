@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { supabase, sanitizeSupabaseUrl, DEFAULT_SUPABASE_ANON_KEY } from '@/lib/supabase'
+import { supabase, sanitizeSupabaseUrl } from '@/lib/supabase'
 import { getCloudinaryClient } from '@/lib/cloudinary'
 
 export const dynamic = 'force-dynamic'
@@ -8,8 +8,7 @@ export const dynamic = 'force-dynamic'
 const supabaseUrl = sanitizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL)
 const supabaseKey =
   (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY.trim()) ||
-  (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim()) ||
-  DEFAULT_SUPABASE_ANON_KEY
+  (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim()) || (() => { throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY no configurada') })()
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
   auth: {
