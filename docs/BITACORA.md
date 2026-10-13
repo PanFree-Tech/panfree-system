@@ -73,18 +73,7 @@ Cada sesion agrega una entrada al final.
 - F1-02: Fix politicas RLS Always True
 - F1-03: Restringir funciones SECURITY DEFINER
 
----
 
-## 2026-10-14 (Sesion 2) - PENDIENTE
-
-**Duracion:**
-**Objetivo:**
-**Completado:**
-**Hallazgos nuevos:**
-**Bloqueantes:**
-**Proxima sesion:**
-
----
 
 ## Notas
 
@@ -617,5 +606,60 @@ e5bed103
 - SEC-011: analizar email_logs SELECT true para authenticated (P1)
 - F3-02: SEC-002 quitar claves hardcodeadas (P1)
 - chore(docs): limpiar BITACORA.md y STATUS.md
+
+---
+
+---
+
+## 2026-10-14 (Sesion 8 - COMPLETA)
+
+**Duracion:** ~2 horas
+**Objetivo:** Cerrar SEC-011 (email_logs SELECT qual=true) + SEC-013 + BUG-004
+
+**Completado:**
+- SEC-011 cerrado: DROP policy "Authenticated users can read email_logs"
+  (qual=true) sobre email_logs. Cualquier cliente B2C podia leer PII
+  (to_email, body_html, metadata).
+- SEC-013 cerrado: DROP policy "Authenticated users can insert email_logs".
+  Cualquier authenticated podia insertar filas en email_logs.
+- BUG-004 cerrado: test-email/route.js y resend-webhook/route.js usaban
+  el cliente generico de @/lib/supabase (sin privilegios). Refactorizados
+  para usar createClient con SERVICE_ROLE_KEY (supabaseAdmin).
+- send-email/route.js ya usaba SERVICE_ROLE_KEY (no requirio cambio).
+- Doc de auditoria: docs/audits/2026-10-13-inicial/17-f1-10-sec-011-email-logs.md
+- Migracion SQL: supabase/migrations/2026-10-14-f1-10-sec-011-email-logs.sql
+- Script: scripts/docs/17-documentar-sec-011.ps1
+
+**Commits de la sesion:**
+- 5ded4ff6 security(db): restringir acceso a email_logs (SEC-011, SEC-013, BUG-004)
+
+**Hallazgos cerrados:**
+- SEC-011: email_logs SELECT true para authenticated
+- SEC-013: email_logs INSERT permisiva para authenticated (nuevo en S8)
+- BUG-004: test-email y resend-webhook usaban cliente sin privilegios (nuevo en S8)
+
+**Hallazgos nuevos:**
+- SEC-013: email_logs INSERT permisiva para authenticated (descubierto en S8)
+- BUG-004: test-email y resend-webhook usaban cliente sin privilegios (descubierto en S8)
+
+**Bloqueantes:**
+- Ninguno
+
+**Aprendizajes:**
+- Postgres combina politicas PERMISSIVE con OR: la mas amplia gana.
+  Una politica SELECT con qual=true anula restricciones vecinas.
+- service_role bypasea RLS. Los endpoints del servidor que escriben en
+  tablas con RLS restrictiva deben usar createClient(url, SERVICE_ROLE_KEY),
+  no el cliente generico (que lleva ANON_KEY o JWT de usuario).
+- Los imports genericos de un cliente Supabase pueden ocultar dependencias
+  de politicas permisivas. Auditar grep de 'from @/lib/supabase' antes de
+  restringir RLS.
+- Politicas con roles={public} aplican a anon Y authenticated. Especificar
+  el rol explicito (TO authenticated) evita sorpresas.
+
+**Proxima sesion:**
+- SEC-012: canjes_premios usa clientes.role en vez de is_admin() (P2)
+- F3-02: SEC-002 quitar claves hardcodeadas (P1)
+- chore(docs): limpiar entradas duplicadas en BITACORA.md y STATUS.md
 
 
