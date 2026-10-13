@@ -146,10 +146,10 @@ ext.config.js tiene eslint.ignoreDuringBuilds: false y el build
 
 ## Referencias
 
-- [ARCHITECTURE.md](../../01-arquitectura/ARCHITECTURE.md) â€” seccion 3 (topologia)
-- [CONF-001](../../04-auditorias/2026-10-13-inicial/03-codigo-fuente.md)
-- [SEC-002](../../04-auditorias/2026-10-13-inicial/03-codigo-fuente.md)
+- [ARCHITECTURE.md](../../architecture/ARCHITECTURE.md) â€” seccion 3 (topologia)
+- [CONF-001](../../audits/2026-10-13-inicial/03-codigo-fuente.md)
+- [SEC-002](../../audits/2026-10-13-inicial/03-codigo-fuente.md)
 - [ADR-001](./ADR-001-supabase-backend-unico.md)
 - [ADR-002](./ADR-002-seguridad-en-capas-app-metadata.md)
-- [CONTRIBUTING.md](../../02-operaciones/CONTRIBUTING.md) â€” estandares tecnicos
+- [CONTRIBUTING.md](../../operations/CONTRIBUTING.md) â€” estandares tecnicos
 - [Next.js App Router â€” docs oficiales](https://nextjs.org/docs/app)

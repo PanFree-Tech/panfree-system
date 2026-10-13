@@ -1,4 +1,4 @@
-﻿# Documentacion - PanFree System
+# Documentacion - PanFree System
 
 Indice maestro de la documentacion del proyecto.
 
@@ -15,9 +15,9 @@ Indice maestro de la documentacion del proyecto.
 
 ## Indice rapido
 
-- [Arquitectura](./01-arquitectura/ARCHITECTURE.md)
-- [Base de datos](./01-arquitectura/DATABASE.md)
-- [API](./01-arquitectura/API.md)
-- [Deployment](./02-operaciones/DEPLOYMENT.md)
-- [Contributing](./02-operaciones/CONTRIBUTING.md)
-- [Auditorias](./04-auditorias/README.md)
+- [Arquitectura](./architecture/ARCHITECTURE.md)
+- [Base de datos](./architecture/DATABASE.md)
+- [API](./architecture/API.md)
+- [Deployment](./operations/DEPLOYMENT.md)
+- [Contributing](./operations/CONTRIBUTING.md)
+- [Auditorias](./audits/README.md)

@@ -105,7 +105,7 @@ desde Next.js, con dos clientes:
 
 ## Referencias
 
-- [ARCHITECTURE.md](../../01-arquitectura/ARCHITECTURE.md) â€” seccion 5 (Seguridad y Roles)
-- [DATABASE.md](../../01-arquitectura/DATABASE.md) â€” esquema completo
-- [Auditoria DB-001](../../04-auditorias/2026-10-13-inicial/02-supabase-advisors.md)
-- [Plan de Trabajo](../../02-operaciones/PLAN-DE-TRABAJO.md) â€” Fase 1
+- [ARCHITECTURE.md](../../architecture/ARCHITECTURE.md) â€” seccion 5 (Seguridad y Roles)
+- [DATABASE.md](../../architecture/DATABASE.md) â€” esquema completo
+- [Auditoria DB-001](../../audits/2026-10-13-inicial/02-supabase-advisors.md)
+- [Plan de Trabajo](../../operations/PLAN-DE-TRABAJO.md) â€” Fase 1

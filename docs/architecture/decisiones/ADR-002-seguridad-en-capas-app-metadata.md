@@ -141,9 +141,9 @@ practicas de Supabase:
 
 ## Referencias
 
-- [SEC-003](../../04-auditorias/2026-10-13-inicial/03-codigo-fuente.md)
-- [DB-001b](../../04-auditorias/2026-10-13-inicial/02-supabase-advisors.md)
+- [SEC-003](../../audits/2026-10-13-inicial/03-codigo-fuente.md)
+- [DB-001b](../../audits/2026-10-13-inicial/02-supabase-advisors.md)
 - [ADR-001](./ADR-001-supabase-backend-unico.md)
-- [ARCHITECTURE.md](../../01-arquitectura/ARCHITECTURE.md) â€” seccion 5
+- [ARCHITECTURE.md](../../architecture/ARCHITECTURE.md) â€” seccion 5
 - [middleware.js](../../../src/middleware.js) â€” implementacion a corregir en F3-01
 - [OWASP ASVS v4.0](https://owasp.org/www-project-application-security-verification-standard/) â€” V4 Access Control

@@ -141,9 +141,9 @@ pm run build local debe pasar.
 
 ## 6. Referencias
 
-- [Auditoria inicial](../04-auditorias/2026-10-13-inicial/00-resumen-ejecutivo.md)
-- [Plan de remediacion](../04-auditorias/2026-10-13-inicial/99-plan-remediacion.md)
-- [Roadmap detallado](../04-auditorias/2026-10-13-inicial/04-roadmap.md)
-- [Criterios de aceptacion](../04-auditorias/2026-10-13-inicial/05-criterios-aceptacion.md)
+- [Auditoria inicial](../audits/2026-10-13-inicial/00-resumen-ejecutivo.md)
+- [Plan de remediacion](../audits/2026-10-13-inicial/99-plan-remediacion.md)
+- [Roadmap detallado](../audits/2026-10-13-inicial/04-roadmap.md)
+- [Criterios de aceptacion](../audits/2026-10-13-inicial/05-criterios-aceptacion.md)
 - [Politica CI/CD](./POLITICA-CI-CD.md)
 - [Gestion de riesgos](./GESTION-DE-RIESGOS.md)

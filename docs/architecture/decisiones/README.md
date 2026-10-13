@@ -46,6 +46,6 @@ Plantilla base: [TEMPLATE.md](./TEMPLATE.md)
 
 ## Referencias
 
-- [ARCHITECTURE.md](../../01-arquitectura/ARCHITECTURE.md)
-- [Plan de Trabajo](../../02-operaciones/PLAN-DE-TRABAJO.md)
+- [ARCHITECTURE.md](../../architecture/ARCHITECTURE.md)
+- [Plan de Trabajo](../../operations/PLAN-DE-TRABAJO.md)
 - [MADR â€” Markdown ADR](https://adr.github.io/madr/)
