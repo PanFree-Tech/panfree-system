@@ -515,3 +515,53 @@ e5bed103
 - chore(tooling): mejorar verificador de links
 - chore(docs): limpiar entradas duplicadas en BITACORA.md y STATUS.md
 
+
+---
+---
+
+## 2026-10-13 (Sesion 6 - CIERRE)
+
+**Duracion:** ~3 horas
+**Objetivo:** Ejecutar F1-08 (consolidar ~150 politicas RLS duplicadas)
+
+**Completado:**
+- F1-08: 20 politicas RLS consolidadas/eliminadas en 4 bloques
+- Bloque 1: 5 duplicados exactos admin ALL (pedidos, detalle_pedido, productos, insumos)
+- Bloque 2: 9 duplicados semanticos is_admin() vs auth.jwt()
+- Bloque 3a: 3 subsets redundantes SELECT (pedidos, detalle_pedido)
+- Bloque 3b: 1 leak de informacion (productos.select_publico_productos)
+- Bloque 4: 2 redundantes en notificaciones_admin
+- Inventario completo de pg_policies antes/despues (83 -> 63)
+- Auditoria de codigo para validar impacto (todos los paths publicos filtran is_active)
+- Doc de auditoria: docs/audits/2026-10-13-inicial/15-f1-08-consolidacion-rls.md
+- Migracion SQL: supabase/migrations/2026-10-13-f1-08-consolidar-rls.sql
+
+**Commits de la sesion:**
+- (pendiente) security(db): consolidar politicas RLS duplicadas (F1-08)
+
+**Hallazgos cerrados:**
+- DB-001f: ~150 politicas RLS duplicadas
+- SEC-010: select_publico_productos exponia productos inactivos
+
+**Hallazgos nuevos:**
+- SEC-011: email_logs.Authenticated users can read email_logs con qual=true (Alta)
+- SEC-012: canjes_premios.Admin puede ver todos los canjes usa clientes.role (Media)
+- BUG-003: diptico/[codigo] usa .eq('activo') en vez de is_active (Baja)
+
+**Bloqueantes:**
+- Ninguno
+
+**Aprendizajes:**
+- Postgres combina politicas permisivas con OR: la mas amplia gana.
+  Una politica con qual=true puede anular politicas restrictivas vecinas.
+- El advisor de Supabase sobreestima duplicados: cuenta permisivas sobre
+  roles={public}, no duplicados reales.
+- is_admin() y auth.jwt()->app_metadata->>'role' son equivalentes post-F3-01.
+- Auditar el codigo antes de eliminar politicas permisivas es obligatorio.
+
+**Proxima sesion:**
+- F1-09: Eliminar indices duplicados (P3, esfuerzo S)
+- F3-02: SEC-002 quitar claves hardcodeadas (P1)
+- chore(docs): limpiar entradas duplicadas en BITACORA.md y STATUS.md
+- SEC-011: analizar email_logs SELECT true para authenticated
+
