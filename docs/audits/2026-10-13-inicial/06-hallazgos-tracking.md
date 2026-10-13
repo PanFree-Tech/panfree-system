@@ -9,9 +9,9 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 19 |
+| Abierto | 18 |
 | En curso | 0 |
-| Cerrado | 3 |
+| Cerrado | 4 |
 | Aceptado | 0 |
 
 ---
@@ -21,7 +21,7 @@
 | Severidad | Cantidad | Cerrados |
 |---|---|---|
 | Critica | 6 | 3 |
-| Alta | 8 | 0 |
+| Alta | 8 | 1 |
 | Media | 5 | 0 |
 | Baja | 3 | 0 |
 
@@ -50,7 +50,7 @@
 | AUTH-002 | Registro sin validar duplicados | F3 | P1 | Abierto | - |
 | DBG-001 | console.log con datos sensibles | F3 | P1 | Abierto | - |
 | DB-001d | Bucket Storage listable | F1 | P1 | Abierto | - |
-| DB-001g | Funciones con search_path mutable | F1 | P1 | Abierto | - |
+| DB-001g | Funciones con search_path mutable | F1 | P1 | Cerrado | (pendiente) |
 | DB-001h | Leaked Password Protection | F1 | P1 | Abierto | - |
 
 ### Hallazgos medios
