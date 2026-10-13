@@ -76,7 +76,7 @@
 | ID | Titulo | Fase | Prioridad | Estado | Commit |
 |---|---|---|---|---|---|
 | BUG-003 | diptico/[codigo] usa .eq('activo') en vez de is_active | F3 | P3 | Abierto | - |
-| DB-001i | Indices duplicados | F1 | P3 | **Cerrado** | (pendiente commit) |
+| DB-001i | Indices duplicados | F1 | P3 | **Cerrado** | d6957a61 |
 | TST-001 | Cobertura de tests baja | F4 | P3 | Abierto | - |
 | DOC-001 | Falta PropTypes/JSDoc | F4 | P3 | Abierto | - |
 
@@ -111,5 +111,6 @@
 - [Advisors de Supabase](./02-supabase-advisors.md)
 - [F1-07 InitPlan](./13-f1-07-rls-initplan.md)
 - [F1-08 Consolidacion](./15-f1-08-consolidacion-rls.md)
+
 
 
