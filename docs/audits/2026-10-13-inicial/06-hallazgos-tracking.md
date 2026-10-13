@@ -9,10 +9,10 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 17 |
+| Abierto | 16 |
 | En curso | 0 |
 | Cerrado | 5 |
-| Aceptado | 0 |
+| Aceptado | 1 |
 
 ---
 
@@ -51,7 +51,7 @@
 | DBG-001 | console.log con datos sensibles | F3 | P1 | Abierto | - |
 | DB-001d | Bucket Storage listable | F1 | P1 | Cerrado | (pendiente) |
 | DB-001g | Funciones con search_path mutable | F1 | P1 | Cerrado | (pendiente) |
-| DB-001h | Leaked Password Protection | F1 | P1 | Abierto | - |
+| DB-001h | Leaked Password Protection | F1 | P1 | Aceptado | (aceptado: plan Free) |
 
 ### Hallazgos medios
 
