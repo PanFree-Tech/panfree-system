@@ -9,9 +9,9 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 22 |
+| Abierto | 21 |
 | En curso | 0 |
-| Cerrado | 0 |
+| Cerrado | 1 |
 | Aceptado | 0 |
 
 ---
@@ -20,7 +20,7 @@
 
 | Severidad | Cantidad | Cerrados |
 |---|---|---|
-| Critica | 6 | 0 |
+| Critica | 6 | 1 |
 | Alta | 8 | 0 |
 | Media | 5 | 0 |
 | Baja | 3 | 0 |
@@ -36,7 +36,7 @@
 | SEC-001 | .env en historial Git | F4 | P0 | Abierto | - |
 | SEC-003 | Admin por user_metadata | F3 | P0 | Abierto | - |
 | DB-001 | 250+ advisors Supabase | F1 | P0 | Abierto | - |
-| DB-001a | Vistas SECURITY DEFINER | F1 | P0 | Abierto | - |
+| DB-001a | Vistas SECURITY DEFINER | F1 | P0 | Cerrado | (pendiente) |
 | DB-001b | Politicas RLS Always True | F1 | P0 | Abierto | - |
 | DB-001c | Funciones SECURITY DEFINER publicas | F1 | P0 | Abierto | - |
 
