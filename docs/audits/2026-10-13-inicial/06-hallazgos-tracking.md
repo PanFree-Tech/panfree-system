@@ -46,7 +46,7 @@
 
 | ID | Titulo | Fase | Prioridad | Estado | Commit |
 |---|---|---|---|---|---|
-| SEC-002 | DEFAULT_SUPABASE_ANON_KEY hardcodeada | F3 | P1 | Cerrado | (Sesion 10) |
+| SEC-002 | DEFAULT_SUPABASE_ANON_KEY hardcodeada | F3 | P1 | Cerrado | 4a17c7d5 |
 | SEC-006 | redirectTo hardcodeado | F3 | P1 | Cerrado | 4d5bd9c2 |
 | SEC-007 | INSERT clientes.role desde frontend | F3 | P1 | Cerrado | 4d5bd9c2 |
 | SEC-011 | email_logs SELECT true para authenticated | F1/F3 | P1 | Cerrado | (Sesion 8) |
