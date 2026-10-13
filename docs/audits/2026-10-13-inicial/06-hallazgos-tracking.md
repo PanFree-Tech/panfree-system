@@ -60,7 +60,7 @@
 | BUG-001 | NEXT_PUBLIC_VAPID_KEY inconsistente | F3 | P2 | Abierto | - |
 | CONF-001 | ESLint ignorado en build | F3 | P2 | Abierto | - |
 | CONF-002 | Sin headers de seguridad | F3 | P2 | Abierto | - |
-| DB-001e | ~60 politicas RLS sin optimizar | F1 | P2 | Cerrado | (pendiente) |
+| DB-001e | ~60 politicas RLS sin optimizar | F1 | P2 | Cerrado | 02311b72 |
 | DB-001f | ~150 politicas duplicadas | F1 | P2 | Abierto | - |
 
 ### Hallazgos bajos
