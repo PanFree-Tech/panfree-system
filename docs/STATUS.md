@@ -151,6 +151,21 @@
 
 ---
 
+**2026-10-14 - Sesion 14 (ENV) - PARCIAL**
+- Bloque 0: sync docs S13 (commit fdcb6c70).
+- Chore gitignore: dejar de versionar .vercel/ + exceptuar .env.example
+  (commits 14ba0076 + a0cc5c8f).
+- F2-01: Supabase Owner a system.panfree (hecho).
+- F2-03: Cloudinary a system.panfree (hecho).
+- F2-14 Bitwarden: 3 de 13 items cargados (Supabase, Cloudinary, Gemini).
+- INCIDENTE: BUG-010 (regresion logger S13). App caida en produccion.
+  Fix en commit 757938c2. Deploy Ready. Verificado en incognito: OK.
+- Nuevos hallazgos pendientes de documentar en tracking:
+  BUG-010, BUG-011, SEC-018, SEC-019, BUG-006..009, DOC-002, DOC-003.
+- Continua en Sesion 15.
+
+---
+
 ## 6. Comandos utiles
 
     REM Ver estado actual

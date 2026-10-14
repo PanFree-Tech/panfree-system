@@ -716,3 +716,61 @@ e5bed103
 - O bien: chores P3 (SEC-014..017) para desbloquear Fase 2.
 - O bien: arrancar Fase 2 (F2-01 + F2-14).
 
+## 2026-10-14 (Sesion 14 - PARCIAL, continua en S15)
+
+**Duracion:** ~5 horas
+**Objetivo:** Fase 2 (ENV) - Bitwarden + migraciones + incidente logger
+
+**Completado:**
+- Bloque 0: sinc docs S13 (commit fdcb6c70).
+- Chore gitignore: .vercel/ fuera del repo + !.env.example (14ba0076 + a0cc5c8f).
+- F2-01: Supabase Owner a system.panfree.
+- F2-03: Cloudinary a system.panfree.
+- F2-14 Bitwarden: 3 de 13 items (Supabase, Cloudinary, Gemini).
+- INCIDENTE CRITICO: app caida en produccion (BUG-010).
+  Regresion del logger en 88 archivos (import erroneo del S13).
+  Fix: 757938c2. Deploy Ready. Verificado en incognito.
+
+**Commits:**
+- fdcb6c70 docs(sync): alinear STATUS, tracking y README de audits con S13
+- 14ba0076 chore(git): dejar de versionar .vercel/ y exceptuar .env.example
+- a0cc5c8f chore(git): limpiar comentario duplicado en .gitignore
+- 757938c2 fix(logger): corregir import del logger en 88 archivos (regresion S13)
+
+**Hallazgos cerrados:**
+- BUG-010: regresion del logger (import erroneo, 88 archivos)
+
+**Hallazgos nuevos:**
+- BUG-010: regresion del logger (cerrado en esta sesion)
+- BUG-011: bug en script 29-fix-logger-import.ps1 (linea final)
+- SEC-018: 3 API keys activas en Cloudinary sin trazabilidad
+- SEC-019: 4 API keys activas en Gemini sin trazabilidad
+- BUG-006: .env.example dice gemini-2.5-flash pero codigo usa gemini-3.1-flash-image
+- BUG-007: IDs de modelo Gemini hardcodeados en marketing/page.js
+- BUG-008: geminiService llama a /generate-caption pero endpoint real es /generar-contenido
+- BUG-009: endpoint usa gemini-3.7-flash que no existe en AI Studio
+- DOC-002: MARKETING_INTELLIGENT_SYSTEM.md menciona modelos inexistentes
+- DOC-003: discrepancia endpoint frontend vs backend
+
+**Bloqueantes:**
+- Ninguno. App en produccion OK.
+
+**Aprendizajes:**
+- Reemplazos masivos (381 calls en 88 archivos) requieren verificacion
+  post-fix en produccion. Build OK no garantiza runtime OK.
+- Vercel env pull NO baja valores marcados como Secret.
+  Escribe [SENSITIVE] como placeholder.
+- NEXT_PUBLIC_* en Vercel suelen ser visibles con ojito.
+- Glob ** en Select-String -Path no funciona en PS 5.1.
+  Usar Get-ChildItem -Recurse | Select-String.
+- $var + ' string' falla si $var es int (PS interpreta suma).
+  Usar "$var string".
+
+**Proxima sesion:**
+- Completar Bitwarden Tier 1 (10 items).
+- Documentar hallazgos nuevos en tracking.
+- Cerrar S14 oficialmente.
+- (S15+) Iniciar rotaciones (F2-02, F2-04..F2-13).
+- (S15+) Bloque B: SEC-014..017 (chores de hardcodes).
+
+---
