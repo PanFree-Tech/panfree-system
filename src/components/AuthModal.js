@@ -118,13 +118,11 @@ export default function AuthModal() {
 
       // Guardar en tabla clientes
       if (data.user) {
-        await supabase.from('clientes').insert({
+        await supabase.from('clientes').upsert({
           nombre_completo: nombre,
           email,
           user_id: data.user.id,
-          is_active: true,
-          role: 'cliente'
-        })
+        }, { onConflict: 'email' })
       }
 
       // Si ya tiene sesión activa (Confirm email desactivado en Supabase) → entrar directo

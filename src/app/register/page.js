@@ -66,11 +66,11 @@ export default function RegisterPage() {
 
       // Crear registro en la tabla clientes
       if (data.user) {
-        const { error: insertError } = await supabase.from('clientes').insert({
+        const { error: insertError } = await supabase.from('clientes').upsert({
           user_id: data.user.id,
           email: email,
           nombre_completo: nombre,
-        })
+        }, { onConflict: 'email' })
 
         if (insertError) {
           console.error('Error creando cliente:', insertError)
