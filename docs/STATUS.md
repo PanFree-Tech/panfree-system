@@ -1,8 +1,8 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-14 (fin Sesion 10)
+**Ultima actualizacion:** 2026-10-14 (fin Sesion 11, parcial)
 **Fase actual:** Fase 3 (EN CURSO)
-**Progreso global:** 40% (19 de 47 tareas)
+**Progreso global:** 45% (21 de 47 tareas)
 
 ---
 
@@ -13,9 +13,9 @@
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
 | F2 - Rotacion claves | 14 | 0 | 0 | 14 | 0% |
-| F3 - Codigo | 9 | 2 | 0 | 7 | 22% |
+| F3 - Codigo | 9 | 4 | 0 | 5 | 44% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **19** | **0** | **28** | **40%** |
+| **Total** | **47** | **21** | **0** | **26** | **45%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -31,11 +31,9 @@
 
 ## 3. Proximos 3 pasos
 
-1. **F3-04** - AUTH-001: contrasenas debiles (P1)
-2. **chore(docs)** - Limpiar BITACORA.md y STATUS.md (duplicados)
-3. **F3-05** - AUTH-002: registro sin validar duplicados (P1)
-
----
+1. **F3-05** - AUTH-002: registro sin validar duplicados (P1)
+2. **Configurar Supabase Auth** - Password strength en dashboard (parte de F3-04)
+3. **Cerrar Sesion 11** - Bitacora + STATUS final
 
 ## 4. Metricas clave
 
@@ -45,7 +43,7 @@
 | Advisors Supabase severidad 3 | 250+ | menos de 50 |
 | Claves productivas rotadas | 0 / 12 | 12 / 12 |
 | Claves en Bitwarden | 0 / 12 | 12 / 12 |
-| Hallazgos cerrados | 23 / 34 | 34 / 34 |
+| Hallazgos cerrados | 24 / 34 | 34 / 34 |
 | Documentos .md en docs/ | 30+ | 30+ (OK) |
 | Commits de remediacion | 8 | ~40 |
 

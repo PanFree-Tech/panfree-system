@@ -9,9 +9,9 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 14 |
+| Abierto | 13 |
 | En curso | 0 |
-| Cerrado | 19 |
+| Cerrado | 20 |
 | Aceptado | 1 |
 
 ---
@@ -51,7 +51,7 @@
 | SEC-007 | INSERT clientes.role desde frontend | F3 | P1 | Cerrado | 4d5bd9c2 |
 | SEC-011 | email_logs SELECT true para authenticated | F1/F3 | P1 | Cerrado | (Sesion 8) |
 | SEC-013 | email_logs INSERT permisiva para authenticated | F1/F3 | P2 | Cerrado | (Sesion 8) |
-| AUTH-001 | Contrasenas debiles | F3 | P1 | Abierto | - |
+| AUTH-001 | Contrasenas debiles | F3 | P1 | Cerrado | ccee0c88 |
 | AUTH-002 | Registro sin validar duplicados | F3 | P1 | Abierto | - |
 | DBG-001 | console.log con datos sensibles | F3 | P1 | Abierto | - |
 | DB-001d | Bucket Storage listable | F1 | P1 | Cerrado | 326d4edd |
