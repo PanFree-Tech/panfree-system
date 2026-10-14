@@ -2,7 +2,7 @@
 
 **Ultima actualizacion:** 2026-10-14 (fin Sesion 12)
 **Fase actual:** Fase 3 (EN CURSO)
-**Progreso global:** 47% (22 de 47 tareas)
+**Progreso global:** 49% (23 de 47 tareas)
 
 ---
 
@@ -13,9 +13,9 @@
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
 | F2 - Rotacion claves | 14 | 0 | 0 | 14 | 0% |
-| F3 - Codigo | 9 | 5 | 0 | 4 | 56% |
+| F3 - Codigo | 9 | 6 | 0 | 3 | 67% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **22** | **0** | **25** | **47%** |
+| **Total** | **47** | **23** | **0** | **24** | **49%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -31,9 +31,9 @@
 
 ## 3. Proximos 3 pasos
 
-1. **F3-06** - DBG-001: quitar console.log con datos sensibles (P1)
-2. **Chores P3** - SEC-014..017 (hardcoded keys) para desbloquear Fase 2
-3. **Cerrar Sesion 12** - Bitacora + STATUS final
+1. **F3-07** - BUG-001: NEXT_PUBLIC_VAPID_KEY inconsistente (P2)
+2. **F3-08** - CONF-001: ESLint en build (P2)
+3. **Chores P3** - SEC-014..017 (hardcoded keys) para desbloquear Fase 2
 
 ## 4. Metricas clave
 
@@ -43,7 +43,7 @@
 | Advisors Supabase severidad 3 | 250+ | menos de 50 |
 | Claves productivas rotadas | 0 / 12 | 12 / 12 |
 | Claves en Bitwarden | 0 / 12 | 12 / 12 |
-| Hallazgos cerrados | 26 / 34 | 34 / 34 |
+| Hallazgos cerrados | 27 / 34 | 34 / 34 |
 | Documentos .md en docs/ | 30+ | 30+ (OK) |
 | Commits de remediacion | 8 | ~40 |
 

@@ -1,6 +1,6 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
-**Ultima actualizacion:** 2026-10-14 (fin Sesion 12)
+**Ultima actualizacion:** 2026-10-14 (fin Sesion 13)
 **Total de hallazgos:** 34
 
 ---
@@ -53,7 +53,7 @@
 | SEC-013 | email_logs INSERT permisiva para authenticated | F1/F3 | P2 | Cerrado | (Sesion 8) |
 | AUTH-001 | Contrasenas debiles | F3 | P1 | Cerrado | ccee0c88 |
 | AUTH-002 | Registro sin validar duplicados | F3 | P1 | Cerrado | 7b014cc4 + f47b9417 |
-| DBG-001 | console.log con datos sensibles | F3 | P1 | Abierto | - |
+| DBG-001 | console.log con datos sensibles | F3 | P1 | Cerrado | a031ba2e |
 | DB-001d | Bucket Storage listable | F1 | P1 | Cerrado | 326d4edd |
 | DB-001g | Funciones con search_path mutable | F1 | P1 | Cerrado | 3e500e77 |
 | DB-001h | Leaked Password Protection | F1 | P1 | Aceptado | (plan Free) |
