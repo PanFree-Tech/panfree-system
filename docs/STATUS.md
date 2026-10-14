@@ -43,7 +43,7 @@
 | Advisors Supabase severidad 3 | 250+ | menos de 50 |
 | Claves productivas rotadas | 0 / 12 | 12 / 12 |
 | Claves en Bitwarden | 3 / 12 | 12 / 12 |
-| Hallazgos cerrados | 30 / 46 | 46 / 46 |
+| Hallazgos cerrados | 31 / 46 | 46 / 46 |
 | Documentos .md en docs/ | 30+ | 30+ (OK) |
 | Commits de remediacion | 8 | ~40 |
 

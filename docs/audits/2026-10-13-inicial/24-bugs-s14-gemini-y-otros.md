@@ -224,6 +224,51 @@ servir como plantilla de futuros fixes masivos de imports.
 - [23-bug-010-logger-regresion.md](./23-bug-010-logger-regresion.md) - seccion "Hallazgo colateral"
 - [29-fix-logger-import.ps1](../../../scripts/docs/29-fix-logger-import.ps1)
 
+
+---
+
+## 10. Resolucion SEC-018 (2026-10-14, Sesion 15)
+
+**Estado:** Cerrado
+**Commit fix:** (pendiente)
+
+### Resumen
+
+Las 3 API keys de Cloudinary fueron analizadas y 2 fueron eliminadas
+por ser huerfanas. Solo queda la key de produccion.
+
+### Resultado
+
+| Key | Antes | Despues |
+|---|---|---|
+| panfree-production-2026 | Active | Active (mantenida) |
+| mediaflows_acf69227-... | Active | **Eliminada** |
+| panfree-system-2026 | Active | **Eliminada** |
+
+### Verificacion
+
+Test empirico post-revocacion (upload a /api/admin/marketing/upload-image):
+
+```
+Status HTTP: 200
+URL: https://res.cloudinary.com/d7simx38/image/upload/v1792008535/marketing/sec018-verify-1792008535796.png
+```
+
+Produccion operativa. Keys huerfanas eliminadas sin impacto.
+
+### Documentacion completa
+
+- [26-sec-018-cierre-cloudinary.md](./26-sec-018-cierre-cloudinary.md)
+
+### Deuda derivada
+
+- F2-04 (rotacion de Cloudinary API secret) sigue pendiente.
+
+### Referencias
+
+- [SEC-018 en tracking](./06-hallazgos-tracking.md)
+- [26-sec-018-cierre-cloudinary.md](./26-sec-018-cierre-cloudinary.md)
+
 ## 8. Referencias
 
 - [Tracking de hallazgos](./06-hallazgos-tracking.md)
