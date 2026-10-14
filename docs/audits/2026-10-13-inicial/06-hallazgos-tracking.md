@@ -1,7 +1,7 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
-**Ultima actualizacion:** 2026-10-14 (fin Sesion 14)
-**Total de hallazgos:** 45
+**Ultima actualizacion:** 2026-10-14 (fin Sesion 15)
+**Total de hallazgos:** 46
 
 ---
 
@@ -11,7 +11,7 @@
 |---|---|
 | Abierto | 16 |
 | En curso | 0 |
-| Cerrado | 28 |
+| Cerrado | 29 |
 | Aceptado | 1 |
 
 ---
@@ -22,7 +22,7 @@
 |---|---|---|
 | Critica | 9 | 7 |
 | Alta | 11 | 7 |
-| Media | 15 | 4 |
+| Media | 16 | 5 |
 | Baja | 7 | 1 |
 
 ---
@@ -79,6 +79,7 @@
 | SEC-018 | 3 API keys activas en Cloudinary sin trazabilidad | F2 | P2 | Abierto | - |
 | SEC-019 | 4 API keys activas en Gemini sin trazabilidad | F2 | P2 | Abierto | - |
 | SEC-020 | 9 items Bitwarden pendientes (se completan durante rotacion S15) | F2 | P2 | Abierto | - |
+| SEC-008 | crear_usuario_admin sin chequeo de caller (eliminada) | F3 | P2 | Cerrado | (S15) |
 
 ### Hallazgos bajos
 

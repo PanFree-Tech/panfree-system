@@ -1,8 +1,8 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-14 (fin Sesion 14)
+**Ultima actualizacion:** 2026-10-14 (fin Sesion 15)
 **Fase actual:** Fase 2 (EN CURSO)
-**Progreso global:** 49% (23 de 47 tareas)
+**Progreso global:** 51% (24 de 47 tareas)
 
 ---
 
@@ -15,7 +15,7 @@
 | F2 - Rotacion claves | 14 | 2 | 0 | 12 | 14% |
 | F3 - Codigo | 9 | 6 | 0 | 3 | 67% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **25** | **0** | **22** | **53%** |
+| **Total** | **47** | **24** | **0** | **23** | **51%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -43,7 +43,7 @@
 | Advisors Supabase severidad 3 | 250+ | menos de 50 |
 | Claves productivas rotadas | 0 / 12 | 12 / 12 |
 | Claves en Bitwarden | 3 / 12 | 12 / 12 |
-| Hallazgos cerrados | 28 / 45 | 45 / 45 |
+| Hallazgos cerrados | 29 / 46 | 46 / 46 |
 | Documentos .md en docs/ | 30+ | 30+ (OK) |
 | Commits de remediacion | 8 | ~40 |
 
