@@ -9,9 +9,9 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 8 |
+| Abierto | 6 |
 | En curso | 0 |
-| Cerrado | 26 |
+| Cerrado | 27 |
 | Aceptado | 1 |
 
 ---
@@ -68,8 +68,8 @@
 | CONF-001 | ESLint ignorado en build | F3 | P2 | Abierto | - |
 | CONF-002 | Sin headers de seguridad | F3 | P2 | Abierto | - |
 | DB-001e | ~60 politicas RLS sin optimizar | F1 | P2 | Cerrado | 02311b72 |
-| DB-001f | ~150 politicas duplicadas | F1 | P2 | **Cerrado** | (pendiente commit) |
-| SEC-010 | select_publico_productos exponia inactivos (leak) | F1 | P2 | **Cerrado** | (pendiente commit) |
+| DB-001f | ~150 politicas duplicadas | F1 | P2 | Cerrado | e40d9244 |
+| SEC-010 | select_publico_productos exponia inactivos (leak) | F1 | P2 | Cerrado | e40d9244 |
 | SEC-012 | canjes_premios usa clientes.role en vez de is_admin() | F3 | P2 | Cerrado | (Sesion 9) |
 
 ### Hallazgos bajos
