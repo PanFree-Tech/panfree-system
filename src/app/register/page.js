@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { validarPassword, PASSWORD_MIN_LENGTH } from '@/lib/validar-password'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, Lock, User, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
@@ -37,8 +38,9 @@ export default function RegisterPage() {
       return
     }
 
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres')
+    const validacion = validarPassword(password)
+    if (!validacion.ok) {
+      setError('La contraseÃ±a no es suficientemente fuerte. Faltan: ' + validacion.errores.join(', ') + '.')
       return
     }
 
@@ -167,9 +169,9 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={PASSWORD_MIN_LENGTH}
                 className="w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#334c2b] focus:border-transparent outline-none"
-                placeholder="•••••••• (mínimo 6 caracteres)"
+                placeholder="•••••••• (minimo 10 chars, mayuscula, numero, simbolo)"
               />
               <button
                 type="button"

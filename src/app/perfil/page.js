@@ -24,6 +24,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
+import { validarPassword } from '../../lib/validar-password'
 import { useAuth } from '../../context/AuthContext'
 import {
   User,
@@ -271,7 +272,8 @@ export default function PaginaPerfil() {
   // ── Cambiar contraseña ───────────────────────────────────────────────────
   async function cambiarPassword(e) {
     e.preventDefault(); setMensajePass(null)
-    if (passNueva.length < 6) return setMensajePass({ tipo: 'err', texto: 'Mínimo 6 caracteres.' })
+    const validacion = validarPassword(passNueva)
+    if (!validacion.ok) return setMensajePass({ tipo: 'err', texto: 'La contraseÃ±a no es suficientemente fuerte. Faltan: ' + validacion.errores.join(', ') + '.' })
     if (passNueva !== passRepeat) return setMensajePass({ tipo: 'err', texto: 'Las contraseñas no coinciden.' })
     setCambiandoPass(true)
     try {

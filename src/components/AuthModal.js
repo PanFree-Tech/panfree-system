@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase-client'
+import { validarPassword } from '../lib/validar-password'
 
 // Traduce errores de Supabase al español
 function traducirError(msg) {
@@ -32,7 +33,7 @@ function traducirError(msg) {
   if (msg.includes('Email not confirmed'))          return 'EMAIL_NO_CONFIRMADO'
   if (msg.includes('already registered'))           return 'Este email ya tiene una cuenta. Iniciá sesión.'
   if (msg.includes('User already registered'))      return 'Este email ya está registrado. Iniciá sesión.'
-  if (msg.includes('Password should be at least'))  return 'La contraseña debe tener al menos 6 caracteres.'
+  if (msg.includes('Password should be at least'))  return 'La contraseÃ±a no cumple los requisitos minimos de seguridad.'
   if (msg.includes('Unable to validate email'))     return 'El formato del email no es válido.'
   if (msg.includes('signup is disabled'))           return 'El registro está temporalmente deshabilitado.'
   if (msg.includes('rate limit') || msg.includes('too many')) return 'Demasiados intentos. Esperá unos minutos e intentá de nuevo.'
@@ -105,7 +106,11 @@ export default function AuthModal() {
 
   async function manejarRegistro(e) {
     e.preventDefault()
-    setLoading(true); limpiar()
+    const validacion = validarPassword(password)
+    if (!validacion.ok) {
+      setError('La contraseÃ±a no es suficientemente fuerte. Faltan: ' + validacion.errores.join(', ') + '.')
+      return
+    }    setLoading(true); limpiar()
     try {
       const { data, error: errAuth } = await supabase.auth.signUp({ email, password })
       if (errAuth) throw errAuth
