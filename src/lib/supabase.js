@@ -44,10 +44,18 @@ export function sanitizeSupabaseKey(key) {
     )
   }
   const clean = key.trim()
-  const parts = clean.split('.')
-  // A valid Supabase JWT token MUST have 3 parts (header.payload.signature)
-  if (parts.length !== 3 || clean.length < 50) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY no tiene formato JWT valido.')
+
+  // Aceptar ambos formatos de Supabase:
+  //   - JWT legacy (eyJ...): header.payload.signature (3 partes)
+  //   - Publishable nuevo (sb_publishable_...): string corto
+  const esJWT = clean.split('.').length === 3 && clean.length >= 50
+  const esPublishable = clean.startsWith('sb_publishable_')
+
+  if (!esJWT && !esPublishable) {
+    throw new Error(
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY no tiene formato valido. ' +
+      'Se espera JWT legacy (eyJ...) o Publishable key (sb_publishable_...).'
+    )
   }
   return clean
 }
