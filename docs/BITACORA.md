@@ -543,3 +543,100 @@ e5bed103
 - F3-04: AUTH-001 contrasenas debiles (P1)
 - chore(docs): limpiar entradas duplicadas en BITACORA.md y STATUS.md
 - F3-05: AUTH-002 registro sin validar duplicados (P1)
+
+---
+
+## 2026-10-14 (Sesion 11 - COMPLETA)
+
+**Duracion:** ~5 horas (Plan B + Plan A)
+**Objetivo:** Chores de docs (Plan B) + F3-04 (AUTH-001, Plan A)
+
+**Completado:**
+
+### Plan B - Chores de docs (commit dc88917b)
+- BITACORA.md: eliminados duplicados de Sesion 2 (3->1), Sesion 3 (2->1), Sesion 5 (2->1).
+- BITACORA.md: hash de F1-08 corregido (e40d9244).
+- STATUS.md: tabla Total corregida (19 OK / 40%).
+- STATUS.md: seccion 5 reescrita con Sesiones 2-10.
+- README.md: reescrito con estructura real (sin numeros).
+- GUIA-RAPIDA.md + WORKFLOW-DIARIO.md: rutas viejas actualizadas, findstr -> Select-String.
+- PLAN-DE-TRABAJO.md: F3-01, F3-02, F3-03 marcadas OK.
+- DoD del doc 19 (F3-02): commit pusheado tildado.
+- 21 archivos basura del working tree eliminados con git clean.
+
+### Plan A - F3-04 / AUTH-001 (commits ccee0c88 + f1675f19 + e0168410)
+- Modulo src/lib/validar-password.js creado.
+  Reglas: minimo 10 chars + mayuscula + minuscula + numero + simbolo.
+- src/app/register/page.js: import + validacion + minLength + placeholder.
+- src/components/AuthModal.js: import + validacion en manejarRegistro + traducirError.
+- src/app/perfil/page.js: import + validacion en cambiarPassword.
+- 9 cambios funcionales + 1 modulo nuevo.
+- 7 tests unitarios del modulo pasaron.
+- Fix colateral: linea pegada en AuthModal.js separada.
+- Doc de auditoria: docs/audits/2026-10-13-inicial/20-f3-04-auth-001-password.md.
+- Fase 3: 2/9 -> 4/9 (44%).
+- Hallazgos cerrados: 23/34 -> 24/34.
+
+**Commits de la sesion:**
+- dc88917b docs(chores): limpiar duplicados y actualizar rutas (B-01)
+- ccee0c88 security(auth): validar fortaleza de password en registro y cambio (AUTH-001, F3-04)
+- f1675f19 style(auth): separar linea pegada en AuthModal (F3-04)
+- e0168410 docs(audit): documentar cierre F3-04 (AUTH-001)
+
+**Hallazgos cerrados:**
+- AUTH-001: Contrasenas debiles
+
+**Hallazgos nuevos:**
+- Ninguno
+
+**Bloqueantes:**
+- Ninguno
+
+**Aprendizajes:**
+
+### PowerShell y encoding
+- Get-Content y [regex]::Matches en PowerShell 5.1 decodifican como
+  CP-1252 por defecto. Los caracteres no-ASCII (n con virgulilla) se ven
+  mal en la consola aunque los bytes del archivo esten correctos.
+  Verificar con [System.IO.File]::ReadAllBytes, no con Get-Content.
+- $txt.Contains() con strings no-ASCII en PS 5.1 puede dar falso
+  negativo. No confiar en comparaciones de strings no-ASCII en PS 5.1.
+- En PowerShell, el operador -replace NO acepta concatenacion con +.
+  El segundo argumento debe ser un solo string. Construirlo antes con
+  @() -join "`r`n".
+- [regex]::Replace con lookahead NO preserva el salto de linea original.
+  Incluir \r\n explicito en el replacement.
+- Test-Path -LiteralPath falla con nombres que tienen ", {, } (caracteres
+  no permitidos por Win32). Para borrar estos archivos, usar git clean.
+
+### Dedupe de archivos
+- Dedupe con indices de [regex]::Matches es fragil: al eliminar bloques,
+  los indices se invalidan. Mejor: [regex]::Split con lookahead + -join.
+
+### Scripts largos y copy/paste
+- Los here-strings de mas de ~4000 caracteres se cortan al copiar/pegar.
+  Usar arrays de strings con -join. Cada linea del array es independiente
+  y el paste no se corta silenciosamente.
+- Los scripts deben usar $PSScriptRoot o paths hardcodeados. NO pegar
+  scripts en la consola directamente: $PSScriptRoot queda vacio.
+
+### Estructura de modulos JS
+- Un mismo proyecto puede usar alias (@/lib) en un archivo y path relativo
+  (../../lib) en otro. Verificar antes de disenar el regex de import.
+- Los modulos con exports ESM en proyectos Next.js pueden no tener
+  "type": "module" en package.json. Node los parsea como ESM con un
+  warning, pero funciona. No es bloqueante.
+
+### Proceso
+- Dry run salva vidas: el bug del path relativo en perfil/page.js se
+  detecto ANTES de aplicar cambios en produccion.
+- Idempotencia real: un script que inserta contenido en un archivo debe
+  verificar que el contenido no exista ya. El 24a no lo hacia y duplico.
+- Cuando se corren scripts que modifican archivos, verificar el output
+  de git diff --stat antes de seguir. Es la senal mas clara de duplicacion.
+
+**Proxima sesion:**
+- Configurar Supabase Auth (Password strength, dashboard) - parte de F3-04.
+- F3-05: AUTH-002 registro sin validar duplicados (P1).
+- Chores opcionales: .gitattributes, versionar scripts de cierre.
+
