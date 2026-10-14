@@ -11,6 +11,7 @@
  *    - Eventos Marketing: newsletter_subscribe, contact_whatsapp_click, view_promotion, select_promotion.
  * ⚠️  EN CASO DE MODIFICACIÓN SIGNIFICATIVA, actualizar este comentario.
  */
+import { log, warn, error } from '@/lib/logger'
 import { useCallback } from 'react'
 import { getCampaignForAnalytics } from './useCampaigns'
 
@@ -52,7 +53,7 @@ function enviarEvento(nombre, params = {}) {
     if (typeof window.gtag !== 'function') return
     window.gtag('event', nombre, params)
   } catch (err) {
-    console.warn('[GA4] Error enviando evento', nombre, err)
+    logger.warn('[GA4] Error enviando evento', nombre, err)
   }
 }
 
@@ -82,7 +83,7 @@ export function useAnalytics() {
         ...utmParams,
       })
     } catch (err) {
-      console.warn('[GA4] Error enviando page_view', err)
+      logger.warn('[GA4] Error enviando page_view', err)
     }
   }, [])
 

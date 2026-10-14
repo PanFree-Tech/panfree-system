@@ -6,6 +6,7 @@
  *    Permite filtrar por estado (DISPONIBLE, CAPACIDAD LIMITADA, CERRADO) y categoría.
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
@@ -32,7 +33,7 @@ export async function GET(req) {
     const { data: productosDb, error: dbError } = await query
 
     if (dbError) {
-      console.warn('Advertencia al consultar disponibilidad en Supabase:', dbError.message)
+      logger.warn('Advertencia al consultar disponibilidad en Supabase:', dbError.message)
     }
 
     let rawList = productosDb || []
@@ -149,7 +150,7 @@ export async function GET(req) {
       },
     })
   } catch (error) {
-    console.error('Error en consultar-disponibilidad route:', error)
+    logger.error('Error en consultar-disponibilidad route:', error)
     return NextResponse.json(
       { success: false, error: error?.message || 'Error al consultar disponibilidad de producción' },
       { status: 500 }

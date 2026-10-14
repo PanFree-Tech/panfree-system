@@ -8,6 +8,7 @@
  *    - Subida y almacenamiento persistente en Cloudinary Media Library
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { v2 as cloudinary } from 'cloudinary'
 
 // Configuración perezosa / bajo demanda de Cloudinary
@@ -45,7 +46,7 @@ export function extractPublicId(urlOrId) {
       return pathClean.replace(/\.[^/.]+$/, '')
     }
   } catch (e) {
-    console.warn('Error extrayendo public_id de Cloudinary:', e.message)
+    logger.warn('Error extrayendo public_id de Cloudinary:', e.message)
   }
   return urlOrId
 }

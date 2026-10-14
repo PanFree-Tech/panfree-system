@@ -1,3 +1,4 @@
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
 
@@ -77,7 +78,7 @@ Debes responder ÚNICAMENTE con un objeto JSON válido con la siguiente estructu
       })
     }
   } catch (error) {
-    console.error('Error en generate-caption route:', error)
+    logger.error('Error en generate-caption route:', error)
     return NextResponse.json(
       { success: false, error: error?.message || 'Error al generar contenido' },
       { status: 500 }

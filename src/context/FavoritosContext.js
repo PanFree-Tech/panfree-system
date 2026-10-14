@@ -1,5 +1,6 @@
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { createContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 
@@ -36,7 +37,7 @@ export function FavoritosProvider({ children }) {
         if (error) throw error
         setFavoritos(data?.map((f) => f.producto_id) || [])
       } catch (error) {
-        console.error('Error cargando favoritos:', error)
+        logger.error('Error cargando favoritos:', error)
         setFavoritos([])
       } finally {
         setLoading(false)
@@ -65,7 +66,7 @@ export function FavoritosProvider({ children }) {
 
       setFavoritos((prev) => [...prev, productoId])
     } catch (error) {
-      console.error('Error agregando favorito:', error)
+      logger.error('Error agregando favorito:', error)
       alert('Error al guardar favorito')
     }
   }, [usuario])
@@ -85,7 +86,7 @@ export function FavoritosProvider({ children }) {
 
       setFavoritos((prev) => prev.filter((id) => id !== productoId))
     } catch (error) {
-      console.error('Error eliminando favorito:', error)
+      logger.error('Error eliminando favorito:', error)
     }
   }, [usuario])
 

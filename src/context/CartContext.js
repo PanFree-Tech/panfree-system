@@ -11,6 +11,7 @@
  */
 
 'use client'
+import { log, warn, error } from '@/lib/logger'
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
 const CartContext = createContext()
@@ -31,14 +32,14 @@ export function CartProvider({ children }) {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
         const parsed = JSON.parse(saved)
-        console.log('🔄 Carrito cargado desde localStorage:', parsed)
+        logger.log('🔄 Carrito cargado desde localStorage:', parsed)
         setCarrito(Array.isArray(parsed) ? parsed : [])
       } else {
-        console.log('🔄 No hay carrito guardado, iniciando vacío')
+        logger.log('🔄 No hay carrito guardado, iniciando vacío')
         setCarrito([])
       }
     } catch (err) {
-      console.error('Error al cargar carrito:', err)
+      logger.error('Error al cargar carrito:', err)
       setCarrito([])
     } finally {
       setCargado(true)
@@ -50,16 +51,16 @@ export function CartProvider({ children }) {
   // ============================================
   useEffect(() => {
     if (!cargado) {
-      console.log('⏳ Persistencia en espera (cargando...)')
+      logger.log('⏳ Persistencia en espera (cargando...)')
       return
     }
     try {
       if (typeof window !== 'undefined') {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(carrito))
-        console.log('💾 Carrito guardado en localStorage:', carrito)
+        logger.log('💾 Carrito guardado en localStorage:', carrito)
       }
     } catch (err) {
-      console.error('Error al guardar carrito:', err)
+      logger.error('Error al guardar carrito:', err)
     }
   }, [carrito, cargado])
 
@@ -68,15 +69,15 @@ export function CartProvider({ children }) {
   // ============================================
 
   const _agregarProducto = useCallback((producto) => {
-    console.log('🛒 _agregarProducto recibió:', producto)
+    logger.log('🛒 _agregarProducto recibió:', producto)
     
     setCarrito(prev => {
-      console.log('📦 Carrito actual (prev):', prev)
+      logger.log('📦 Carrito actual (prev):', prev)
       
       const existente = prev.find(p => p.id === producto.id)
       if (existente) {
         // ✅ SIMPLEMENTE ACTUALIZAR (NO SUMAR)
-        console.log('✅ Producto ya existe, actualizando cantidad a:', producto.cantidad || 1)
+        logger.log('✅ Producto ya existe, actualizando cantidad a:', producto.cantidad || 1)
         const nuevoCarrito = prev.map(p =>
           p.id === producto.id
             ? {
@@ -86,12 +87,12 @@ export function CartProvider({ children }) {
               }
             : p
         )
-        console.log('📦 Carrito actualizado (existente):', nuevoCarrito)
+        logger.log('📦 Carrito actualizado (existente):', nuevoCarrito)
         return nuevoCarrito
       }
       
       // Nuevo producto
-      console.log('✅ Producto nuevo, agregando al carrito')
+      logger.log('✅ Producto nuevo, agregando al carrito')
       const nuevoProducto = {
         ...producto,
         cantidad: producto.cantidad || 1,
@@ -100,7 +101,7 @@ export function CartProvider({ children }) {
       }
       
       const nuevoCarrito = [...prev, nuevoProducto]
-      console.log('📦 Carrito actualizado (nuevo):', nuevoCarrito)
+      logger.log('📦 Carrito actualizado (nuevo):', nuevoCarrito)
       return nuevoCarrito
     })
     setVisible(true)
@@ -108,21 +109,21 @@ export function CartProvider({ children }) {
 
   // ✅ AHORA NO BLOQUEA POR AUTENTICACIÓN
   const agregarAlCarrito = useCallback((producto) => {
-    console.log('🛒 agregarAlCarrito llamado con:', producto)
+    logger.log('🛒 agregarAlCarrito llamado con:', producto)
     if (!producto || !producto.id) {
-      console.error('❌ Producto inválido:', producto)
+      logger.error('❌ Producto inválido:', producto)
       return
     }
     _agregarProducto(producto)
   }, [_agregarProducto])
 
   const eliminarDelCarrito = useCallback((productoId) => {
-    console.log('🗑️ Eliminando producto:', productoId)
+    logger.log('🗑️ Eliminando producto:', productoId)
     setCarrito(prev => prev.filter(p => p.id !== productoId))
   }, [])
 
   const actualizarCantidad = useCallback((productoId, nuevaCantidad) => {
-    console.log('🔄 Actualizando cantidad:', productoId, nuevaCantidad)
+    logger.log('🔄 Actualizando cantidad:', productoId, nuevaCantidad)
     if (nuevaCantidad < 1) {
       eliminarDelCarrito(productoId)
       return
@@ -141,7 +142,7 @@ export function CartProvider({ children }) {
   }, [eliminarDelCarrito])
 
   const vaciarCarrito = useCallback(() => {
-    console.log('🗑️ Vaciando carrito')
+    logger.log('🗑️ Vaciando carrito')
     setCarrito([])
   }, [])
 
@@ -150,7 +151,7 @@ export function CartProvider({ children }) {
   // ============================================
 
   const addItemToCart = useCallback((product) => {
-    console.log('🔄 addItemToCart (legacy) llamado con:', product)
+    logger.log('🔄 addItemToCart (legacy) llamado con:', product)
     _agregarProducto({
       id: product.id || product.slug || Date.now().toString(),
       nombre: product.name || product.nombre,

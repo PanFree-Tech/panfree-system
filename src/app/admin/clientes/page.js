@@ -7,6 +7,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useEffect, useState } from 'react'
 import {
   Users,
@@ -53,7 +54,7 @@ export default function AdminClientes() {
       if (error) throw error
       setClientes(data || [])
     } catch (err) {
-      console.error('[PanFree] Error cargando clientes:', err)
+      logger.error('[PanFree] Error cargando clientes:', err)
     } finally {
       setLoading(false)
     }
@@ -74,7 +75,7 @@ export default function AdminClientes() {
         .order('created_at', { ascending: false })
       setPedidos(data || [])
     } catch (err) {
-      console.error('[PanFree] Error cargando pedidos:', err)
+      logger.error('[PanFree] Error cargando pedidos:', err)
     } finally {
       setLoadingPedidos(false)
     }

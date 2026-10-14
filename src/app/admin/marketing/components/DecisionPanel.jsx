@@ -7,6 +7,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import styles from '../styles/marketing.module.css'
 
@@ -52,7 +53,7 @@ export default function DecisionPanel({
         throw new Error(json.error || 'No se pudo obtener la decisión')
       }
     } catch (err) {
-      console.error('Error al cargar decisión:', err)
+      logger.error('Error al cargar decisión:', err)
       setNotificacion({
         tipo: 'error',
         texto: err.message || 'Error al conectar con el motor de decisiones',

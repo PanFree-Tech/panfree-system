@@ -1,6 +1,7 @@
 /**
  * UBICACION: src/app/auth/callback/route.js
  */
+import { log, warn, error } from '@/lib/logger'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -70,14 +71,14 @@ export async function GET(request) {
           }, { onConflict: 'email' })
         }
       } catch (profileErr) {
-        console.error('Error al registrar perfil de cliente:', profileErr)
+        logger.error('Error al registrar perfil de cliente:', profileErr)
       }
 
       // Redirigir a la página de destino
       return NextResponse.redirect(`${origin}${next}`)
     }
 
-    console.error('Error al intercambiar código por sesión:', error)
+    logger.error('Error al intercambiar código por sesión:', error)
   }
 
   // Si hubo un error o no vino el código, redirigir al inicio o página de error

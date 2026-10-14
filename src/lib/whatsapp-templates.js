@@ -1,3 +1,4 @@
+import { log, warn, error } from '@/lib/logger'
 /**
  * 📁 src/lib/whatsapp-templates.js
  * 📅 PanFree WhatsApp Business API - Registro de Plantillas Aprobadas
@@ -127,10 +128,10 @@ export function obtenerPlantilla(tipo, ...args) {
       return templateFn
     }
 
-    console.warn(`⚠️ Plantilla '${tipo}' no encontrada. Usando plantilla de fallback: hello_world`)
+    logger.warn(`⚠️ Plantilla '${tipo}' no encontrada. Usando plantilla de fallback: hello_world`)
     return WHATSAPP_TEMPLATES.HELLO_WORLD
   } catch (error) {
-    console.warn(`⚠️ Error generando plantilla '${tipo}': ${error.message}. Usando plantilla de fallback: hello_world`)
+    logger.warn(`⚠️ Error generando plantilla '${tipo}': ${error.message}. Usando plantilla de fallback: hello_world`)
     return WHATSAPP_TEMPLATES.HELLO_WORLD
   }
 }

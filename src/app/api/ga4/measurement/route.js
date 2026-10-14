@@ -9,6 +9,7 @@
  * ⚠️  EN CASO DE MODIFICACIÓN SIGNIFICATIVA, actualizar este comentario.
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -72,7 +73,7 @@ export async function POST(req) {
     }
 
     if (!apiSecret) {
-      console.warn('[GA4 Measurement Protocol] Advertencia: GA4_API_SECRET no está configurado en las variables de entorno.')
+      logger.warn('[GA4 Measurement Protocol] Advertencia: GA4_API_SECRET no está configurado en las variables de entorno.')
       return NextResponse.json({
         success: false,
         warning: 'GA4_API_SECRET no está configurado en las variables de entorno del servidor. Agregalo a .env o secretos de hosting.',
@@ -129,7 +130,7 @@ export async function POST(req) {
 
     if (!gaResponse.ok) {
       const errorText = await gaResponse.text()
-      console.error('[GA4 Measurement Protocol] Error de respuesta de Google:', gaResponse.status, errorText)
+      logger.error('[GA4 Measurement Protocol] Error de respuesta de Google:', gaResponse.status, errorText)
       return NextResponse.json(
         { error: `Error enviando a GA4: ${gaResponse.statusText}`, details: errorText },
         { status: gaResponse.status }
@@ -145,7 +146,7 @@ export async function POST(req) {
     })
 
   } catch (error) {
-    console.error('[GA4 Measurement Protocol] Error en ejecución:', error)
+    logger.error('[GA4 Measurement Protocol] Error en ejecución:', error)
     return NextResponse.json(
       { error: error.message || 'Error procesando solicitud de Measurement Protocol' },
       { status: 400 }

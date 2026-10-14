@@ -1,6 +1,7 @@
 // src/hooks/useFavoritos.js
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
@@ -29,7 +30,7 @@ export function useFavoritos() {
         if (error) throw error
         setClienteId(data?.id || null)
       } catch (error) {
-        console.error('Error obteniendo cliente_id:', error)
+        logger.error('Error obteniendo cliente_id:', error)
         setClienteId(null)
       }
     }
@@ -56,7 +57,7 @@ export function useFavoritos() {
         if (error) throw error
         setFavoritos(data?.map(f => f.producto_id) || [])
       } catch (error) {
-        console.error('Error cargando favoritos:', error)
+        logger.error('Error cargando favoritos:', error)
         setFavoritos([])
       } finally {
         setLoading(false)
@@ -71,7 +72,7 @@ export function useFavoritos() {
     const id = clienteIdParam || clienteId
     
     if (!id) {
-      console.error('clienteId es requerido')
+      logger.error('clienteId es requerido')
       return
     }
 
@@ -86,7 +87,7 @@ export function useFavoritos() {
 
   const eliminarFavorito = useCallback(async (productoId) => {
     if (!clienteId) {
-      console.error('clienteId es requerido para eliminar')
+      logger.error('clienteId es requerido para eliminar')
       return
     }
 

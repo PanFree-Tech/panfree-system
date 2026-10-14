@@ -10,6 +10,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useEffect, useState, useCallback } from 'react'
 import {
   LayoutDashboard,
@@ -158,7 +159,7 @@ function BotonNotificaciones() {
       setEstado('activo')
       alert('Notificaciones activadas. Recibirás alertas cuando lleguen pedidos nuevos.')
     } catch (err) {
-      console.error('Error activando notificaciones:', err)
+      logger.error('Error activando notificaciones:', err)
       setEstado('inactivo')
       alert('Error activando notificaciones: ' + err.message)
     }
@@ -178,7 +179,7 @@ function BotonNotificaciones() {
       }
       setEstado('inactivo')
     } catch (err) {
-      console.error('Error desactivando:', err)
+      logger.error('Error desactivando:', err)
     }
   }
 
@@ -323,7 +324,7 @@ export default function AdminDashboard() {
           ultimosPedidos = pedidosData
         }
       } catch (errPed) {
-        console.warn('[Dashboard] Error cargando últimos pedidos:', errPed)
+        logger.warn('[Dashboard] Error cargando últimos pedidos:', errPed)
       }
 
       setMetricas({
@@ -336,7 +337,7 @@ export default function AdminDashboard() {
         loading: false,
       })
     } catch (err) {
-      console.error('[PanFree] Error cargando métricas:', err)
+      logger.error('[PanFree] Error cargando métricas:', err)
       setMetricas((m) => ({ ...m, loading: false }))
     }
   }, [])

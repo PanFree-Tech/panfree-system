@@ -7,6 +7,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import styles from '../styles/marketing.module.css'
@@ -90,7 +91,7 @@ export default function RulesManager() {
         setReglas(REGLAS_DEFAULT)
       }
     } catch (err) {
-      console.warn('Error al cargar reglas_promocion de Supabase:', err.message)
+      logger.warn('Error al cargar reglas_promocion de Supabase:', err.message)
       setReglas(REGLAS_DEFAULT)
     } finally {
       setCargando(false)
@@ -165,7 +166,7 @@ export default function RulesManager() {
       setModalAbierto(false)
       cargarReglas()
     } catch (err) {
-      console.warn('Fallo guardado en Supabase, aplicando local:', err.message)
+      logger.warn('Fallo guardado en Supabase, aplicando local:', err.message)
       // Fallback local
       if (reglaEditando) {
         setReglas((prev) =>
@@ -193,7 +194,7 @@ export default function RulesManager() {
           .eq('id', regla.id)
       }
     } catch (e) {
-      console.warn('Error al alternar estado en Supabase:', e.message)
+      logger.warn('Error al alternar estado en Supabase:', e.message)
     }
     setReglas((prev) =>
       prev.map((r) => (r.id === regla.id ? { ...r, activo: nuevoEstado } : r))

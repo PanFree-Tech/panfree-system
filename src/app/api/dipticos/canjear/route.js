@@ -3,6 +3,7 @@
  * API segura para validar y canjear códigos de dípticos físicos con QR
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -51,7 +52,7 @@ export async function POST(req) {
                 userId = user.id
             }
         } catch (cookieErr) {
-            console.warn('Advertencia leyendo cookies de sesión SSR:', cookieErr.message)
+            logger.warn('Advertencia leyendo cookies de sesión SSR:', cookieErr.message)
         }
 
         // Si se envió un token Bearer en headers
@@ -133,7 +134,7 @@ export async function POST(req) {
         })
 
     } catch (error) {
-        console.error('Error no controlado en /api/dipticos/canjear:', error)
+        logger.error('Error no controlado en /api/dipticos/canjear:', error)
         return NextResponse.json(
             { success: false, error: 'Error interno del servidor al procesar el canje' },
             { status: 500 }

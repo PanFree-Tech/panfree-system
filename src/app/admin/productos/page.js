@@ -11,6 +11,7 @@
  */
 
 'use client'
+import { log, warn, error } from '@/lib/logger'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -171,7 +172,7 @@ function GestorImagenesProducto({ imagenUrl, imagenesUrls = [], onChange }) {
       const listaCombinada = [...listaImagenes, ...nuevasUrls]
       actualizarLista(listaCombinada)
     } catch (err) {
-      console.error('Error Cloudinary upload:', err)
+      logger.error('Error Cloudinary upload:', err)
       setErrorMsg(err.message || 'Error al subir imagen. Intentá de nuevo.')
     } finally {
       setSubiendo(false)

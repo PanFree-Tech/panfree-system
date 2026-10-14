@@ -1,5 +1,6 @@
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import React, { useState, useEffect, useMemo } from 'react'
 import { Tag, Sparkles, Calendar, DollarSign, Percent, Clock, CheckCircle2, AlertCircle, RefreshCw, X } from 'lucide-react'
 import { supabase } from '../../../../lib/supabase'
@@ -287,7 +288,7 @@ export default function PromocionForm({
       setMensajeExito(`¡Promoción ${enPromocion ? 'activada' : 'desactivada'} para "${currentProd.nombre}" con éxito!`)
       if (onGuardado) onGuardado(data?.[0] || { ...currentProd, ...payload })
     } catch (err) {
-      console.error('Error al guardar promoción en Supabase:', err)
+      logger.error('Error al guardar promoción en Supabase:', err)
       setErrorMsg(err.message || 'Error al guardar la promoción.')
     } finally {
       setGuardando(false)

@@ -1,5 +1,6 @@
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState } from 'react'
 import { Heart } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
@@ -22,7 +23,7 @@ export default function FavoritoButton({ productoId, size = 22, className = '' }
     }
 
     if (!clienteId) {
-      console.error('No se encontró el cliente_id para el usuario')
+      logger.error('No se encontró el cliente_id para el usuario')
       alert('Error al identificar tu cuenta. Por favor, cerra sesión y volvé a iniciar.')
       return
     }
@@ -36,7 +37,7 @@ export default function FavoritoButton({ productoId, size = 22, className = '' }
         await agregarFavorito(productoId, clienteId)
       }
     } catch (error) {
-      console.error('Error al cambiar favorito:', error)
+      logger.error('Error al cambiar favorito:', error)
     } finally {
       setLoading(false)
     }

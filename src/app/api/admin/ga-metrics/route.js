@@ -1,4 +1,5 @@
 // src/app/api/admin/ga-metrics/route.js
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
@@ -6,10 +7,10 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request) {
   // ── DEBUG: Verificar variables de entorno ──
-  console.log('🔍 GA_PROPERTY_ID:', process.env.GA_PROPERTY_ID ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
-  console.log('🔍 GA4_CLIENT_EMAIL:', process.env.GA4_CLIENT_EMAIL ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
-  console.log('🔍 GA4_PRIVATE_KEY:', process.env.GA4_PRIVATE_KEY ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
-  console.log('🔍 GA4_PROJECT_ID:', process.env.GA4_PROJECT_ID ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
+  logger.log('🔍 GA_PROPERTY_ID:', process.env.GA_PROPERTY_ID ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
+  logger.log('🔍 GA4_CLIENT_EMAIL:', process.env.GA4_CLIENT_EMAIL ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
+  logger.log('🔍 GA4_PRIVATE_KEY:', process.env.GA4_PRIVATE_KEY ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
+  logger.log('🔍 GA4_PROJECT_ID:', process.env.GA4_PROJECT_ID ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
   // ──────────────────────────────────────────────
   try {
     const { searchParams } = new URL(request.url)
@@ -52,7 +53,7 @@ export async function GET(request) {
       .order('created_at', { ascending: true })
 
     if (historicError) {
-      console.warn('Error cargando pedidos históricos:', historicError.message)
+      logger.warn('Error cargando pedidos históricos:', historicError.message)
     }
 
     // ── 3. CLICKS EN ANUNCIOS (UTM) ──
@@ -66,7 +67,7 @@ export async function GET(request) {
       .lte('created_at', hoyStr)
 
     if (utmError) {
-      console.warn('Error cargando datos UTM:', utmError.message)
+      logger.warn('Error cargando datos UTM:', utmError.message)
     }
 
     // ── 4. CALCULAR MÉTRICAS ──
@@ -149,7 +150,7 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Error en ga-metrics:', error)
+    logger.error('Error en ga-metrics:', error)
     return NextResponse.json({
       success: false,
       error: error.message || 'Error interno del servidor'

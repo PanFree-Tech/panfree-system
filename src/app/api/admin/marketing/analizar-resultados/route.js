@@ -6,6 +6,7 @@
  *    y estadísticas de promociones publicadas.
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
@@ -53,7 +54,7 @@ export async function GET(req) {
         promociones = data
       }
     } catch (e) {
-      console.warn('Advertencia al consultar promociones_historico:', e.message)
+      logger.warn('Advertencia al consultar promociones_historico:', e.message)
     }
 
     // Datos simulados de respaldo si la tabla está recién creada
@@ -148,7 +149,7 @@ export async function GET(req) {
       }
     })
   } catch (error) {
-    console.error('Error en analizar-resultados route:', error)
+    logger.error('Error en analizar-resultados route:', error)
     return NextResponse.json(
       { success: false, error: error?.message || 'Error al calcular analíticas' },
       { status: 500 }

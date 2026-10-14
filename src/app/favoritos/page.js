@@ -1,6 +1,7 @@
 // src/app/favoritos/page.js
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Heart, ShoppingBag } from 'lucide-react'
@@ -44,7 +45,7 @@ export default function FavoritosPage() {
         if (error) throw error
         setProductos(data || [])
       } catch (error) {
-        console.error('Error cargando productos favoritos:', error)
+        logger.error('Error cargando productos favoritos:', error)
         setProductos([])
       } finally {
         setLoading(false)

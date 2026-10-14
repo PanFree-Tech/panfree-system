@@ -1,3 +1,4 @@
+import { log, warn, error } from '@/lib/logger'
 /**
  * src/services/pushService.js
  * Servicio centralizado para notificaciones push
@@ -17,13 +18,13 @@ export async function sendPushNotification(data) {
   // 1. Verificar throttling
   const now = Date.now()
   if (notificationInProgress || (now - lastNotificationTime < THROTTLE_MS)) {
-    console.warn('🔕 Notificación push bloqueada por throttle')
+    logger.warn('🔕 Notificación push bloqueada por throttle')
     return { success: false, message: 'Throttled' }
   }
 
   // 2. Validar datos
   if (!data?.title || !data?.body) {
-    console.warn('⚠️ Datos de notificación incompletos')
+    logger.warn('⚠️ Datos de notificación incompletos')
     return { success: false, message: 'Datos incompletos' }
   }
 
@@ -44,10 +45,10 @@ export async function sendPushNotification(data) {
     })
 
     const result = await response.json()
-    console.log(`📨 Notificación enviada: ${result.enviadas || 0} enviadas`)
+    logger.log(`📨 Notificación enviada: ${result.enviadas || 0} enviadas`)
     return result
   } catch (error) {
-    console.error('❌ Error enviando notificación push:', error)
+    logger.error('❌ Error enviando notificación push:', error)
     return { success: false, error: error.message }
   } finally {
     notificationInProgress = false

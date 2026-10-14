@@ -11,6 +11,7 @@
  * - Tolerante a fallos para no interrumpir la experiencia de compra
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import {
@@ -104,7 +105,7 @@ export async function POST(req) {
 
     const items = rawPedido.items || []
 
-    console.log(`🚀 [API /api/notificar-pedido] Procesando #${numeroPedido} para ${clienteNormalizado.nombre_completo}`)
+    logger.log(`🚀 [API /api/notificar-pedido] Procesando #${numeroPedido} para ${clienteNormalizado.nombre_completo}`)
 
     // 3. Ejecutar notificaciones transaccionales e internas en paralelo
     const tasks = []
@@ -113,14 +114,14 @@ export async function POST(req) {
     if (clienteNormalizado.email) {
       tasks.push(
         enviarEmailConfirmacionCliente(pedidoNormalizado, clienteNormalizado, items)
-          .catch(err => console.error('❌ Error enviando email de confirmación:', err))
+          .catch(err => logger.error('❌ Error enviando email de confirmación:', err))
       )
     }
 
     // 3.2 Alerta y registro interno para administradores
     tasks.push(
       notificarNuevoPedido(pedidoNormalizado, clienteNormalizado, items)
-        .catch(err => console.error('❌ Error en notificaciones internas admin:', err))
+        .catch(err => logger.error('❌ Error en notificaciones internas admin:', err))
     )
 
     // 3.3 Reenvío opcional a n8n si está configurado
@@ -134,7 +135,7 @@ export async function POST(req) {
             pedido: pedidoNormalizado,
             cliente: clienteNormalizado,
           }),
-        }).catch(err => console.warn('[n8n Webhook Error]:', err.message))
+        }).catch(err => logger.warn('[n8n Webhook Error]:', err.message))
       )
     }
 
@@ -146,7 +147,7 @@ export async function POST(req) {
     })
 
   } catch (error) {
-    console.error('💥 Error en /api/notificar-pedido:', error)
+    logger.error('💥 Error en /api/notificar-pedido:', error)
     return NextResponse.json(
       { error: error.message || 'Error interno al procesar notificaciones' },
       { status: 500 }

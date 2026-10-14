@@ -3,6 +3,7 @@
  * API para validar cupones desde checkout
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { validarCupon, calcularDescuento } from '@/lib/cupones'
 
@@ -38,7 +39,7 @@ export async function POST(req) {
     })
 
   } catch (error) {
-    console.error('Error en /api/cupones/validar:', error)
+    logger.error('Error en /api/cupones/validar:', error)
     return NextResponse.json(
       { valido: false, mensaje: 'Error interno al procesar el cupón' },
       { status: 500 }

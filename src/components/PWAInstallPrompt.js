@@ -1,4 +1,5 @@
 'use client'
+import { log, warn, error } from '@/lib/logger'
 import { useEffect, useRef } from 'react'
 
 export default function PWAInstallPrompt() {
@@ -48,7 +49,7 @@ export default function PWAInstallPrompt() {
         })
       })
     }).catch(err => {
-      console.warn('PW install prompt init error', err)
+      logger.warn('PW install prompt init error', err)
     })
 
     // helper

@@ -7,6 +7,7 @@
  *   - cancelCartReminder(userId) → cancela recordatorio programado
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { notifyCartAbandoned } from './pushService'
 
 const REMINDER_DELAY = 30 * 60 * 1000 // 30 minutos
@@ -26,19 +27,19 @@ export function scheduleCartReminder(cartData, userId) {
 
   // Si el carrito está vacío, no programar
   if (!cartData?.items?.length) {
-    console.log('🛒 Carrito vacío, no se programa recordatorio')
+    logger.log('🛒 Carrito vacío, no se programa recordatorio')
     return
   }
 
   // Programar nuevo recordatorio
   const timer = setTimeout(() => {
-    console.log('⏰ Enviando recordatorio de carrito abandonado')
+    logger.log('⏰ Enviando recordatorio de carrito abandonado')
     notifyCartAbandoned(cartData)
     reminders.delete(userId)
   }, REMINDER_DELAY)
 
   reminders.set(userId, timer)
-  console.log(`📅 Recordatorio programado para ${new Date(Date.now() + REMINDER_DELAY).toLocaleTimeString()}`)
+  logger.log(`📅 Recordatorio programado para ${new Date(Date.now() + REMINDER_DELAY).toLocaleTimeString()}`)
 }
 
 /**
@@ -49,7 +50,7 @@ export function cancelCartReminder(userId) {
   if (reminders.has(userId)) {
     clearTimeout(reminders.get(userId))
     reminders.delete(userId)
-    console.log(`❌ Recordatorio cancelado para usuario ${userId}`)
+    logger.log(`❌ Recordatorio cancelado para usuario ${userId}`)
     return true
   }
   return false
@@ -63,5 +64,5 @@ export function cancelAllReminders() {
     clearTimeout(timer)
     reminders.delete(userId)
   }
-  console.log('🗑️ Todos los recordatorios cancelados')
+  logger.log('🗑️ Todos los recordatorios cancelados')
 }

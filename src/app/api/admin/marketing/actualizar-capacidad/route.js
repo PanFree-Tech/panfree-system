@@ -9,6 +9,7 @@
  *    - CERRADO (current_orders >= 100% de production_capacity)
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
@@ -128,7 +129,7 @@ export async function POST(req) {
       .single()
 
     if (updateErr) {
-      console.error('Error al actualizar capacidad en Supabase:', updateErr)
+      logger.error('Error al actualizar capacidad en Supabase:', updateErr)
       return NextResponse.json(
         {
           success: false,
@@ -155,7 +156,7 @@ export async function POST(req) {
       },
     })
   } catch (error) {
-    console.error('Error en actualizar-capacidad route:', error)
+    logger.error('Error en actualizar-capacidad route:', error)
     return NextResponse.json(
       { success: false, error: error?.message || 'Error inesperado al actualizar capacidad' },
       { status: 500 }

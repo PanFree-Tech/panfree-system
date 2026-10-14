@@ -3,6 +3,7 @@
  * 📅 PanFree - Servicio de Envío de Mensajes y Plantillas con WhatsApp Cloud API
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { WHATSAPP_TEMPLATES, obtenerPlantilla } from './whatsapp-templates'
 
 /**
@@ -43,7 +44,7 @@ export async function enviarPlantillaWhatsApp({
   const numeroLimpio = normalizarTelefono(telefono)
   if (!numeroLimpio || numeroLimpio.length < 8) {
     const errorMsg = `Número de teléfono inválido: '${telefono}'`
-    console.error(`❌ Error enviando plantilla [${tipo}]: ${errorMsg}`)
+    logger.error(`❌ Error enviando plantilla [${tipo}]: ${errorMsg}`)
     throw new Error(errorMsg)
   }
 
@@ -52,7 +53,7 @@ export async function enviarPlantillaWhatsApp({
   const apiVersion = process.env.WHATSAPP_API_VERSION || 'v18.0'
 
   if (!waAccessToken || !waPhoneId) {
-    console.warn(`⚠️ [WhatsApp API no configurado] WHATSAPP_ACCESS_TOKEN o WHATSAPP_PHONE_NUMBER_ID faltantes.`)
+    logger.warn(`⚠️ [WhatsApp API no configurado] WHATSAPP_ACCESS_TOKEN o WHATSAPP_PHONE_NUMBER_ID faltantes.`)
     return {
       success: false,
       simulado: true,
@@ -103,21 +104,21 @@ export async function enviarPlantillaWhatsApp({
 
   try {
     const result = await ejecutarLlamadaAPI(templatePayload)
-    console.log(`✅ Plantilla enviada correctamente: [${nombrePlantilla}] a [${numeroLimpio}]`)
+    logger.log(`✅ Plantilla enviada correctamente: [${nombrePlantilla}] a [${numeroLimpio}]`)
     return {
       success: true,
       templateUsada: nombrePlantilla,
       result
     }
   } catch (error) {
-    console.error(`❌ Error enviando plantilla [${nombrePlantilla}]:`, error.message || error)
+    logger.error(`❌ Error enviando plantilla [${nombrePlantilla}]:`, error.message || error)
 
     // Si falló por plantilla no aprobada/no encontrada (Error 100 o similar) y está permitido el fallback
     if (permitirFallback && nombrePlantilla !== 'hello_world') {
-      console.warn(`⚠️ Usando plantilla de fallback: hello_world (Motivo: Error en plantilla principal ${nombrePlantilla})`)
+      logger.warn(`⚠️ Usando plantilla de fallback: hello_world (Motivo: Error en plantilla principal ${nombrePlantilla})`)
       try {
         const fallbackResult = await ejecutarLlamadaAPI(WHATSAPP_TEMPLATES.HELLO_WORLD)
-        console.log(`✅ Plantilla enviada correctamente: [hello_world] a [${numeroLimpio}] (como fallback)`)
+        logger.log(`✅ Plantilla enviada correctamente: [hello_world] a [${numeroLimpio}] (como fallback)`)
         return {
           success: true,
           templateUsada: 'hello_world',
@@ -125,7 +126,7 @@ export async function enviarPlantillaWhatsApp({
           result: fallbackResult
         }
       } catch (fallbackError) {
-        console.error(`❌ Error enviando plantilla [hello_world] de fallback:`, fallbackError.message || fallbackError)
+        logger.error(`❌ Error enviando plantilla [hello_world] de fallback:`, fallbackError.message || fallbackError)
         throw new Error(`Falló plantilla principal (${error.message}) y fallback (${fallbackError.message})`)
       }
     }

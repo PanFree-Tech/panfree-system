@@ -5,6 +5,7 @@
  * Panel de Administración de Cupones de Descuento y Fidelización PanFree
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -73,7 +74,7 @@ export default function PaginaCuponesAdmin() {
       if (error) throw error
       setCupones(data || [])
     } catch (err) {
-      console.error('Error cargando cupones:', err)
+      logger.error('Error cargando cupones:', err)
       mostrarToast('Error al cargar la lista de cupones', 'error')
     } finally {
       setLoading(false)
@@ -173,7 +174,7 @@ export default function PaginaCuponesAdmin() {
       await cargarCupones()
       cerrarModal()
     } catch (err) {
-      console.error('Error guardando cupón:', err)
+      logger.error('Error guardando cupón:', err)
       setErrorModal(err.message || 'Error al guardar el cupón')
     } finally {
       setGuardando(false)
@@ -192,7 +193,7 @@ export default function PaginaCuponesAdmin() {
       setCupones(prev => prev.map(c => (c.id === cupon.id ? { ...c, activo: nuevoEstado } : c)))
       mostrarToast(`Cupón ${cupon.codigo} ${nuevoEstado ? 'activado' : 'desactivado'}`)
     } catch (err) {
-      console.error('Error cambiando estado:', err)
+      logger.error('Error cambiando estado:', err)
       mostrarToast('No se pudo cambiar el estado', 'error')
     }
   }
@@ -210,7 +211,7 @@ export default function PaginaCuponesAdmin() {
       setCupones(prev => prev.filter(c => c.id !== id))
       mostrarToast(`Cupón ${codigo} eliminado`, 'success')
     } catch (err) {
-      console.error('Error eliminando cupón:', err)
+      logger.error('Error eliminando cupón:', err)
       mostrarToast('Error al eliminar cupón', 'error')
     }
   }
@@ -234,7 +235,7 @@ export default function PaginaCuponesAdmin() {
       if (error) throw error
       setCanjesData(data || [])
     } catch (err) {
-      console.error('Error cargando canjes:', err)
+      logger.error('Error cargando canjes:', err)
       setCanjesData([])
     } finally {
       setCargandoCanjes(false)

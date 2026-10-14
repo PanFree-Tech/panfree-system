@@ -5,6 +5,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect, useCallback } from 'react'
 import { getScheduledPosts } from '../services/instagramService'
 import styles from '../styles/marketing.module.css'
@@ -19,7 +20,7 @@ export default function ScheduledPosts({ refreshTrigger }) {
       const data = await getScheduledPosts()
       setPosts(data || [])
     } catch (err) {
-      console.warn('Error al cargar historial:', err)
+      logger.warn('Error al cargar historial:', err)
     } finally {
       setCargando(false)
     }

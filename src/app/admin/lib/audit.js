@@ -4,6 +4,7 @@
  * 📌 DESCRIPCIÓN: Sistema de logs de auditoría para acciones del panel administrativo
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { supabase } from '../../../lib/supabase'
 
 export const AUDIT_ACTIONS = {
@@ -56,7 +57,7 @@ export async function registrarAuditoria(accion, detalle, usuarioId = null) {
       created_at: new Date().toISOString(),
     })
   } catch (error) {
-    console.warn('[Audit Log] Registro opcional de auditoría omitido:', error.message)
+    logger.warn('[Audit Log] Registro opcional de auditoría omitido:', error.message)
   }
 }
 

@@ -1,3 +1,4 @@
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { supabase, sanitizeSupabaseUrl } from '@/lib/supabase'
@@ -54,7 +55,7 @@ export async function POST(req) {
           })
           finalImageUrl = uploadRes.secure_url
         } catch (e) {
-          console.warn('Error subiendo imagen a Cloudinary en publish-instagram:', e.message)
+          logger.warn('Error subiendo imagen a Cloudinary en publish-instagram:', e.message)
         }
       }
     }
@@ -93,7 +94,7 @@ export async function POST(req) {
           }
         }
       } catch (igErr) {
-        console.warn('Instagram Graph API request fallback:', igErr?.message)
+        logger.warn('Instagram Graph API request fallback:', igErr?.message)
       }
     }
 
@@ -112,7 +113,7 @@ export async function POST(req) {
     try {
       await supabase.from('instagram_posts').insert([postRecord])
     } catch (dbErr) {
-      console.warn('Registro en tabla instagram_posts no disponible:', dbErr?.message)
+      logger.warn('Registro en tabla instagram_posts no disponible:', dbErr?.message)
     }
 
     return NextResponse.json({
@@ -128,7 +129,7 @@ export async function POST(req) {
       record: postRecord,
     })
   } catch (error) {
-    console.error('Error en publish-instagram API:', error)
+    logger.error('Error en publish-instagram API:', error)
     return NextResponse.json(
       { success: false, error: error?.message || 'Error al procesar publicación' },
       { status: 500 }

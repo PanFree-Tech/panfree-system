@@ -3,6 +3,7 @@
  * Sistema de validación y aplicación de cupones
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { supabase } from './supabase'
 
 /**
@@ -63,7 +64,7 @@ export async function validarCupon(codigo, clienteId = null, montoCompra = 0) {
 
     return { valido: true, cupon }
   } catch (error) {
-    console.error('Error validando cupón:', error)
+    logger.error('Error validando cupón:', error)
     return { valido: false, mensaje: 'Error al validar el cupón' }
   }
 }
@@ -107,7 +108,7 @@ export async function registrarUsoCupon(cuponId, clienteId, pedidoId, descuento)
       .single()
 
     if (error) {
-      console.error('Error registrando canje de cupón:', error)
+      logger.error('Error registrando canje de cupón:', error)
       throw error
     }
 
@@ -126,7 +127,7 @@ export async function registrarUsoCupon(cuponId, clienteId, pedidoId, descuento)
 
     return data
   } catch (err) {
-    console.error('Error en registrarUsoCupon:', err)
+    logger.error('Error en registrarUsoCupon:', err)
     throw err
   }
 }

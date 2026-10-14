@@ -1,3 +1,4 @@
+import { log, warn, error } from '@/lib/logger'
 // src/lib/prompt-compressor.js
 
 let compressorInstance = null
@@ -36,7 +37,7 @@ export async function comprimirPrompt(prompt, options = {}) {
         }
       } catch (loadErr) {
         compressorLoadFailed = true
-        console.warn('ℹ️ LLMLingua-2 operando en modo fallback semántico:', loadErr.message)
+        logger.warn('ℹ️ LLMLingua-2 operando en modo fallback semántico:', loadErr.message)
       }
     }
 
@@ -54,7 +55,7 @@ export async function comprimirPrompt(prompt, options = {}) {
     // Fallback semántico inteligente: filtra conectores redundantes y extrae el núcleo descriptivo
     return comprimirPromptFallback(promptTrimmed, maxTokens)
   } catch (error) {
-    console.warn('⚠️ Falló la compresión, usando fallback seguro:', error.message)
+    logger.warn('⚠️ Falló la compresión, usando fallback seguro:', error.message)
     return promptTrimmed
   }
 }

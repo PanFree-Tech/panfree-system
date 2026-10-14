@@ -16,6 +16,7 @@
  *    - Si un motor falla (503 / 429 / High Demand) o no tiene API Key, pasa automáticamente al siguiente.
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
 import { supabase } from '@/lib/supabase'
@@ -120,7 +121,7 @@ async function generarConGemini(prompt) {
 
   for (const modelName of candidateModels) {
     try {
-      console.log(`🤖 [Cascada 1/8: Gemini] Intentando con modelo: ${modelName}...`)
+      logger.log(`🤖 [Cascada 1/8: Gemini] Intentando con modelo: ${modelName}...`)
       const response = await ai.models.generateContent({
         model: modelName,
         contents: prompt,
@@ -136,7 +137,7 @@ async function generarConGemini(prompt) {
         engineName: 'Google Gemini',
       }
     } catch (err) {
-      console.warn(`⚠️ [Cascada 1/8: Gemini] Modelo ${modelName} falló:`, err.message)
+      logger.warn(`⚠️ [Cascada 1/8: Gemini] Modelo ${modelName} falló:`, err.message)
       lastError = err
     }
   }
@@ -165,7 +166,7 @@ async function generarConCloudflare(prompt) {
 
   for (const model of candidateModels) {
     try {
-      console.log(`☁️ [Cascada 2/8: Cloudflare] Intentando con modelo: ${model}...`)
+      logger.log(`☁️ [Cascada 2/8: Cloudflare] Intentando con modelo: ${model}...`)
       const endpoint = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`
 
       const controller = new AbortController()
@@ -206,7 +207,7 @@ async function generarConCloudflare(prompt) {
         engineName: 'Cloudflare Workers AI',
       }
     } catch (err) {
-      console.warn(`⚠️ [Cascada 2/8: Cloudflare] Modelo ${model} falló:`, err.message)
+      logger.warn(`⚠️ [Cascada 2/8: Cloudflare] Modelo ${model} falló:`, err.message)
       lastError = err
     }
   }
@@ -233,7 +234,7 @@ async function generarConMistral(prompt) {
 
   for (const model of candidateModels) {
     try {
-      console.log(`🌊 [Cascada 3/8: Mistral AI] Intentando con modelo: ${model}...`)
+      logger.log(`🌊 [Cascada 3/8: Mistral AI] Intentando con modelo: ${model}...`)
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 25000)
 
@@ -274,7 +275,7 @@ async function generarConMistral(prompt) {
         engineName: 'Mistral AI',
       }
     } catch (err) {
-      console.warn(`⚠️ [Cascada 3/8: Mistral AI] Modelo ${model} falló:`, err.message)
+      logger.warn(`⚠️ [Cascada 3/8: Mistral AI] Modelo ${model} falló:`, err.message)
       lastError = err
     }
   }
@@ -300,7 +301,7 @@ async function generarConDeepSeek(prompt) {
 
   for (const model of candidateModels) {
     try {
-      console.log(`🐋 [Cascada 4/8: DeepSeek] Intentando con modelo: ${model}...`)
+      logger.log(`🐋 [Cascada 4/8: DeepSeek] Intentando con modelo: ${model}...`)
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 25000)
 
@@ -341,7 +342,7 @@ async function generarConDeepSeek(prompt) {
         engineName: 'DeepSeek',
       }
     } catch (err) {
-      console.warn(`⚠️ [Cascada 4/8: DeepSeek] Modelo ${model} falló:`, err.message)
+      logger.warn(`⚠️ [Cascada 4/8: DeepSeek] Modelo ${model} falló:`, err.message)
       lastError = err
     }
   }
@@ -368,7 +369,7 @@ async function generarConCohere(prompt) {
 
   for (const model of candidateModels) {
     try {
-      console.log(`🔮 [Cascada 5/8: Cohere] Intentando con modelo: ${model}...`)
+      logger.log(`🔮 [Cascada 5/8: Cohere] Intentando con modelo: ${model}...`)
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 25000)
 
@@ -409,7 +410,7 @@ async function generarConCohere(prompt) {
         engineName: 'Cohere',
       }
     } catch (err) {
-      console.warn(`⚠️ [Cascada 5/8: Cohere] Modelo ${model} falló:`, err.message)
+      logger.warn(`⚠️ [Cascada 5/8: Cohere] Modelo ${model} falló:`, err.message)
       lastError = err
     }
   }
@@ -437,7 +438,7 @@ async function generarConGroq(prompt) {
 
   for (const model of candidateModels) {
     try {
-      console.log(`⚡ [Cascada 6/8: Groq] Intentando con modelo: ${model}...`)
+      logger.log(`⚡ [Cascada 6/8: Groq] Intentando con modelo: ${model}...`)
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 20000)
 
@@ -478,7 +479,7 @@ async function generarConGroq(prompt) {
         engineName: 'Groq',
       }
     } catch (err) {
-      console.warn(`⚠️ [Cascada 6/8: Groq] Modelo ${model} falló:`, err.message)
+      logger.warn(`⚠️ [Cascada 6/8: Groq] Modelo ${model} falló:`, err.message)
       lastError = err
     }
   }
@@ -505,7 +506,7 @@ async function generarConAnthropic(prompt) {
 
   for (const model of candidateModels) {
     try {
-      console.log(`🏛️ [Cascada 7/8: Anthropic] Intentando con modelo: ${model}...`)
+      logger.log(`🏛️ [Cascada 7/8: Anthropic] Intentando con modelo: ${model}...`)
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 30000)
 
@@ -546,7 +547,7 @@ async function generarConAnthropic(prompt) {
         engineName: 'Anthropic Claude',
       }
     } catch (err) {
-      console.warn(`⚠️ [Cascada 7/8: Anthropic] Modelo ${model} falló:`, err.message)
+      logger.warn(`⚠️ [Cascada 7/8: Anthropic] Modelo ${model} falló:`, err.message)
       lastError = err
     }
   }
@@ -573,7 +574,7 @@ async function generarConHuggingFace(prompt) {
 
   for (const model of candidateModels) {
     try {
-      console.log(`🤗 [Cascada 8/8: Hugging Face] Intentando con modelo: ${model}...`)
+      logger.log(`🤗 [Cascada 8/8: Hugging Face] Intentando con modelo: ${model}...`)
       const endpoint = `https://api-inference.huggingface.co/models/${model}`
 
       const controller = new AbortController()
@@ -625,7 +626,7 @@ async function generarConHuggingFace(prompt) {
         engineName: 'Hugging Face Inference',
       }
     } catch (err) {
-      console.warn(`⚠️ [Cascada 8/8: Hugging Face] Modelo ${model} falló:`, err.message)
+      logger.warn(`⚠️ [Cascada 8/8: Hugging Face] Modelo ${model} falló:`, err.message)
       lastError = err
     }
   }
@@ -658,7 +659,7 @@ export async function POST(req) {
           producto = data
         }
       } catch (e) {
-        console.warn('No se pudo cargar producto desde DB en generar-contenido:', e.message)
+        logger.warn('No se pudo cargar producto desde DB en generar-contenido:', e.message)
       }
     }
 
@@ -687,17 +688,17 @@ export async function POST(req) {
     // ── PRIORIDAD 1: Google Gemini (con fallback interno) ─────────
     if (process.env.GEMINI_API_KEY) {
       try {
-        console.log('🚀 [Cascada IA 1/8] Ejecutando Google Gemini...')
+        logger.log('🚀 [Cascada IA 1/8] Ejecutando Google Gemini...')
         resultadoGeneracion = await generarConGemini(prompt)
         if (resultadoGeneracion) {
           intentAttempts.push({ motor: 'Google Gemini', modelo: resultadoGeneracion.modelUsed, status: 'success' })
         }
       } catch (err) {
-        console.warn('⚠️ [Cascada IA 1/8] Google Gemini falló, pasando al siguiente motor:', err.message)
+        logger.warn('⚠️ [Cascada IA 1/8] Google Gemini falló, pasando al siguiente motor:', err.message)
         intentAttempts.push({ motor: 'Google Gemini', status: 'failed', error: err.message })
       }
     } else {
-      console.warn('⚠️ [Cascada IA 1/8] GEMINI_API_KEY no configurada, saltando...')
+      logger.warn('⚠️ [Cascada IA 1/8] GEMINI_API_KEY no configurada, saltando...')
       intentAttempts.push({ motor: 'Google Gemini', status: 'skipped', reason: 'No configurado' })
     }
 
@@ -705,17 +706,17 @@ export async function POST(req) {
     if (!resultadoGeneracion) {
       if (process.env.CLOUDFLARE_API_KEY && process.env.CLOUDFLARE_ACCOUNT_ID) {
         try {
-          console.log('🚀 [Cascada IA 2/8] Ejecutando Cloudflare Workers AI...')
+          logger.log('🚀 [Cascada IA 2/8] Ejecutando Cloudflare Workers AI...')
           resultadoGeneracion = await generarConCloudflare(prompt)
           if (resultadoGeneracion) {
             intentAttempts.push({ motor: 'Cloudflare Workers AI', modelo: resultadoGeneracion.modelUsed, status: 'success' })
           }
         } catch (err) {
-          console.warn('⚠️ [Cascada IA 2/8] Cloudflare Workers AI falló, pasando al siguiente motor:', err.message)
+          logger.warn('⚠️ [Cascada IA 2/8] Cloudflare Workers AI falló, pasando al siguiente motor:', err.message)
           intentAttempts.push({ motor: 'Cloudflare Workers AI', status: 'failed', error: err.message })
         }
       } else {
-        console.warn('⚠️ [Cascada IA 2/8] Cloudflare no configurado, saltando...')
+        logger.warn('⚠️ [Cascada IA 2/8] Cloudflare no configurado, saltando...')
         intentAttempts.push({ motor: 'Cloudflare Workers AI', status: 'skipped', reason: 'No configurado' })
       }
     }
@@ -724,17 +725,17 @@ export async function POST(req) {
     if (!resultadoGeneracion) {
       if (process.env.MISTRAL_API_KEY) {
         try {
-          console.log('🚀 [Cascada IA 3/8] Ejecutando Mistral AI...')
+          logger.log('🚀 [Cascada IA 3/8] Ejecutando Mistral AI...')
           resultadoGeneracion = await generarConMistral(prompt)
           if (resultadoGeneracion) {
             intentAttempts.push({ motor: 'Mistral AI', modelo: resultadoGeneracion.modelUsed, status: 'success' })
           }
         } catch (err) {
-          console.warn('⚠️ [Cascada IA 3/8] Mistral AI falló, pasando al siguiente motor:', err.message)
+          logger.warn('⚠️ [Cascada IA 3/8] Mistral AI falló, pasando al siguiente motor:', err.message)
           intentAttempts.push({ motor: 'Mistral AI', status: 'failed', error: err.message })
         }
       } else {
-        console.warn('⚠️ [Cascada IA 3/8] Mistral AI no configurado, saltando...')
+        logger.warn('⚠️ [Cascada IA 3/8] Mistral AI no configurado, saltando...')
         intentAttempts.push({ motor: 'Mistral AI', status: 'skipped', reason: 'No configurado' })
       }
     }
@@ -743,17 +744,17 @@ export async function POST(req) {
     if (!resultadoGeneracion) {
       if (process.env.DEEPSEEK_API_KEY) {
         try {
-          console.log('🚀 [Cascada IA 4/8] Ejecutando DeepSeek...')
+          logger.log('🚀 [Cascada IA 4/8] Ejecutando DeepSeek...')
           resultadoGeneracion = await generarConDeepSeek(prompt)
           if (resultadoGeneracion) {
             intentAttempts.push({ motor: 'DeepSeek', modelo: resultadoGeneracion.modelUsed, status: 'success' })
           }
         } catch (err) {
-          console.warn('⚠️ [Cascada IA 4/8] DeepSeek falló, pasando al siguiente motor:', err.message)
+          logger.warn('⚠️ [Cascada IA 4/8] DeepSeek falló, pasando al siguiente motor:', err.message)
           intentAttempts.push({ motor: 'DeepSeek', status: 'failed', error: err.message })
         }
       } else {
-        console.warn('⚠️ [Cascada IA 4/8] DeepSeek no configurado, saltando...')
+        logger.warn('⚠️ [Cascada IA 4/8] DeepSeek no configurado, saltando...')
         intentAttempts.push({ motor: 'DeepSeek', status: 'skipped', reason: 'No configurado' })
       }
     }
@@ -762,17 +763,17 @@ export async function POST(req) {
     if (!resultadoGeneracion) {
       if (process.env.COHERE_API_KEY) {
         try {
-          console.log('🚀 [Cascada IA 5/8] Ejecutando Cohere...')
+          logger.log('🚀 [Cascada IA 5/8] Ejecutando Cohere...')
           resultadoGeneracion = await generarConCohere(prompt)
           if (resultadoGeneracion) {
             intentAttempts.push({ motor: 'Cohere', modelo: resultadoGeneracion.modelUsed, status: 'success' })
           }
         } catch (err) {
-          console.warn('⚠️ [Cascada IA 5/8] Cohere falló, pasando al siguiente motor:', err.message)
+          logger.warn('⚠️ [Cascada IA 5/8] Cohere falló, pasando al siguiente motor:', err.message)
           intentAttempts.push({ motor: 'Cohere', status: 'failed', error: err.message })
         }
       } else {
-        console.warn('⚠️ [Cascada IA 5/8] Cohere no configurado, saltando...')
+        logger.warn('⚠️ [Cascada IA 5/8] Cohere no configurado, saltando...')
         intentAttempts.push({ motor: 'Cohere', status: 'skipped', reason: 'No configurado' })
       }
     }
@@ -781,17 +782,17 @@ export async function POST(req) {
     if (!resultadoGeneracion) {
       if (process.env.GROQ_API_KEY) {
         try {
-          console.log('🚀 [Cascada IA 6/8] Ejecutando Groq...')
+          logger.log('🚀 [Cascada IA 6/8] Ejecutando Groq...')
           resultadoGeneracion = await generarConGroq(prompt)
           if (resultadoGeneracion) {
             intentAttempts.push({ motor: 'Groq', modelo: resultadoGeneracion.modelUsed, status: 'success' })
           }
         } catch (err) {
-          console.warn('⚠️ [Cascada IA 6/8] Groq falló, pasando al siguiente motor:', err.message)
+          logger.warn('⚠️ [Cascada IA 6/8] Groq falló, pasando al siguiente motor:', err.message)
           intentAttempts.push({ motor: 'Groq', status: 'failed', error: err.message })
         }
       } else {
-        console.warn('⚠️ [Cascada IA 6/8] Groq no configurado, saltando...')
+        logger.warn('⚠️ [Cascada IA 6/8] Groq no configurado, saltando...')
         intentAttempts.push({ motor: 'Groq', status: 'skipped', reason: 'No configurado' })
       }
     }
@@ -800,17 +801,17 @@ export async function POST(req) {
     if (!resultadoGeneracion) {
       if (process.env.ANTHROPIC_API_KEY) {
         try {
-          console.log('🚀 [Cascada IA 7/8] Ejecutando Anthropic Claude...')
+          logger.log('🚀 [Cascada IA 7/8] Ejecutando Anthropic Claude...')
           resultadoGeneracion = await generarConAnthropic(prompt)
           if (resultadoGeneracion) {
             intentAttempts.push({ motor: 'Anthropic Claude', modelo: resultadoGeneracion.modelUsed, status: 'success' })
           }
         } catch (err) {
-          console.warn('⚠️ [Cascada IA 7/8] Anthropic Claude falló, pasando al siguiente motor:', err.message)
+          logger.warn('⚠️ [Cascada IA 7/8] Anthropic Claude falló, pasando al siguiente motor:', err.message)
           intentAttempts.push({ motor: 'Anthropic Claude', status: 'failed', error: err.message })
         }
       } else {
-        console.warn('⚠️ [Cascada IA 7/8] Anthropic Claude no configurado, saltando...')
+        logger.warn('⚠️ [Cascada IA 7/8] Anthropic Claude no configurado, saltando...')
         intentAttempts.push({ motor: 'Anthropic Claude', status: 'skipped', reason: 'No configurado' })
       }
     }
@@ -819,24 +820,24 @@ export async function POST(req) {
     if (!resultadoGeneracion) {
       if (process.env.HF_API_KEY) {
         try {
-          console.log('🚀 [Cascada IA 8/8] Ejecutando Hugging Face Inference API...')
+          logger.log('🚀 [Cascada IA 8/8] Ejecutando Hugging Face Inference API...')
           resultadoGeneracion = await generarConHuggingFace(prompt)
           if (resultadoGeneracion) {
             intentAttempts.push({ motor: 'Hugging Face Inference', modelo: resultadoGeneracion.modelUsed, status: 'success' })
           }
         } catch (err) {
-          console.warn('⚠️ [Cascada IA 8/8] Hugging Face Inference API falló:', err.message)
+          logger.warn('⚠️ [Cascada IA 8/8] Hugging Face Inference API falló:', err.message)
           intentAttempts.push({ motor: 'Hugging Face Inference', status: 'failed', error: err.message })
         }
       } else {
-        console.warn('⚠️ [Cascada IA 8/8] Hugging Face no configurado, saltando...')
+        logger.warn('⚠️ [Cascada IA 8/8] Hugging Face no configurado, saltando...')
         intentAttempts.push({ motor: 'Hugging Face Inference', status: 'skipped', reason: 'No configurado' })
       }
     }
 
     // 4. Si todos los 8 motores fallaron o no están disponibles
     if (!resultadoGeneracion || !resultadoGeneracion.parsed) {
-      console.error('❌ [Cascada IA] Todos los motores de IA en cascada están saturados o no disponibles.')
+      logger.error('❌ [Cascada IA] Todos los motores de IA en cascada están saturados o no disponibles.')
       return NextResponse.json(
         {
           success: false,
@@ -868,7 +869,7 @@ export async function POST(req) {
 
     const fullPost = `${hook}\n\n${caption}\n\n${callToAction}\n\n${hashtags}`
 
-    console.log(`✅ [Cascada IA] Éxito con ${resultadoGeneracion.engineName} (${resultadoGeneracion.modelUsed})`)
+    logger.log(`✅ [Cascada IA] Éxito con ${resultadoGeneracion.engineName} (${resultadoGeneracion.modelUsed})`)
 
     return NextResponse.json({
       success: true,
@@ -893,7 +894,7 @@ export async function POST(req) {
       },
     })
   } catch (error) {
-    console.error('Error general en generar-contenido route:', error)
+    logger.error('Error general en generar-contenido route:', error)
     return NextResponse.json(
       {
         success: false,

@@ -8,6 +8,7 @@
  *    - Registra la trazabilidad completa en la tabla `promociones_historico` de Supabase.
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { supabase, sanitizeSupabaseUrl } from '@/lib/supabase'
@@ -53,7 +54,7 @@ async function uploadImageToCloudinary(imageData, productId = 'promo') {
     })
     return result.secure_url || null
   } catch (err) {
-    console.error('Error procesando imagen para Cloudinary:', err.message)
+    logger.error('Error procesando imagen para Cloudinary:', err.message)
     return null
   }
 }
@@ -100,7 +101,7 @@ export async function POST(req) {
           }
         }
       } catch (e) {
-        console.warn('No se pudo verificar producto en programar-publicacion:', e.message)
+        logger.warn('No se pudo verificar producto en programar-publicacion:', e.message)
       }
     }
 
@@ -161,13 +162,13 @@ export async function POST(req) {
               postUrl = `https://www.instagram.com/p/${pubData.id}/`
               apiStatus = 'published_live'
             } else {
-              console.warn('Instagram publish error:', pubData?.error?.message)
+              logger.warn('Instagram publish error:', pubData?.error?.message)
             }
           } else {
-            console.warn('Instagram Graph API rechazó contenedor:', mediaData?.error?.message)
+            logger.warn('Instagram Graph API rechazó contenedor:', mediaData?.error?.message)
           }
         } catch (apiErr) {
-          console.warn('Fallo llamada a Instagram Graph API:', apiErr.message)
+          logger.warn('Fallo llamada a Instagram Graph API:', apiErr.message)
         }
       }
 
@@ -207,7 +208,7 @@ export async function POST(req) {
         insertedId = inserted.id
       }
     } catch (dbErr) {
-      console.warn('Advertencia al insertar en promociones_historico:', dbErr.message)
+      logger.warn('Advertencia al insertar en promociones_historico:', dbErr.message)
     }
 
     // 5. Registrar en `instagram_posts` para historial de publicaciones
@@ -222,7 +223,7 @@ export async function POST(req) {
         status: isPublished ? (apiStatus === 'published_live' ? 'publicado' : 'simulado') : 'programado',
       }])
     } catch (igPostErr) {
-      console.warn('Advertencia al registrar en instagram_posts:', igPostErr.message)
+      logger.warn('Advertencia al registrar en instagram_posts:', igPostErr.message)
     }
 
     // 6. Enviar notificación por correo con Resend a system.panfree@gmail.com
@@ -242,9 +243,9 @@ export async function POST(req) {
           to: DEFAULT_ADMIN_EMAIL,
           subject: `📸 Post Publicado en Instagram: ${productName}`,
           html: emailHtml,
-        }).catch(err => console.warn('Advertencia al enviar correo async:', err.message))
+        }).catch(err => logger.warn('Advertencia al enviar correo async:', err.message))
       } catch (emailErr) {
-        console.warn('Advertencia al construir correo de publicación (no bloqueante):', emailErr.message)
+        logger.warn('Advertencia al construir correo de publicación (no bloqueante):', emailErr.message)
       }
     }
 
@@ -265,7 +266,7 @@ export async function POST(req) {
       },
     })
   } catch (error) {
-    console.error('Error en programar-publicacion route:', error)
+    logger.error('Error en programar-publicacion route:', error)
     return NextResponse.json(
       { success: false, error: error?.message || 'Error al procesar la programación de la publicación' },
       { status: 500 }

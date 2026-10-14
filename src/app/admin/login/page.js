@@ -8,6 +8,7 @@
  */
 
 'use client'
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { AlertTriangle, Lock, Loader2, Croissant, ArrowLeft } from 'lucide-react'
@@ -55,7 +56,7 @@ function LoginForm() {
       router.replace(redirect)
 
     } catch (err) {
-      console.error('Error de autenticación:', err)
+      logger.error('Error de autenticación:', err)
       if (err.message === 'Invalid login credentials') {
         setError('Email o contraseña incorrectos.')
       } else if (err.message?.includes('Email not confirmed')) {

@@ -1,5 +1,6 @@
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { validarPassword, PASSWORD_MIN_LENGTH } from '@/lib/validar-password'
@@ -73,7 +74,7 @@ export default function RegisterPage() {
         }, { onConflict: 'email' })
 
         if (insertError) {
-          console.error('Error creando cliente:', insertError)
+          logger.error('Error creando cliente:', insertError)
         }
       }
 

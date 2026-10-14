@@ -6,6 +6,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase-client'
 import { generarLoteCantidad, getEstadisticas } from '@/lib/dipticos'
@@ -73,7 +74,7 @@ export default function DipticosAdminPage() {
             const stats = await getEstadisticas()
             setEstadisticas(stats)
         } catch (err) {
-            console.error('Error cargando códigos de dípticos:', err)
+            logger.error('Error cargando códigos de dípticos:', err)
         } finally {
             setCargando(false)
         }
@@ -95,7 +96,7 @@ export default function DipticosAdminPage() {
                 .select()
 
             if (error) {
-                console.error('Error insertando lote en BD:', error)
+                logger.error('Error insertando lote en BD:', error)
                 alert(`Error al generar lote: ${error.message}`)
             } else {
                 setNotificacion({
@@ -106,7 +107,7 @@ export default function DipticosAdminPage() {
                 cargarDatos()
             }
         } catch (err) {
-            console.error('Error en generación de lote:', err)
+            logger.error('Error en generación de lote:', err)
             alert('Ocurrió un error al generar los códigos.')
         } finally {
             setGenerando(false)

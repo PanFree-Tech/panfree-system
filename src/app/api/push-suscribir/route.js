@@ -7,6 +7,7 @@
  *    - DELETE: Elimina una suscripción específica (desde body o query params)
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
@@ -56,7 +57,7 @@ export async function POST(request) {
           targetUserId = session.user.id
         }
       } catch (authErr) {
-        console.warn('⚠️ No se pudo obtener sesión por cookies:', authErr.message)
+        logger.warn('⚠️ No se pudo obtener sesión por cookies:', authErr.message)
       }
     }
 
@@ -93,7 +94,7 @@ export async function POST(request) {
       .select()
 
     if (upsertError) {
-      console.error('❌ [Push] Error guardando suscripción en Supabase:', upsertError)
+      logger.error('❌ [Push] Error guardando suscripción en Supabase:', upsertError)
       // Fallback si la constraint onConflict tiene otro nombre o es solo por endpoint
       const { error: fallbackError } = await db
         .from('push_subscriptions')
@@ -104,7 +105,7 @@ export async function POST(request) {
       }
     }
 
-    console.log(`✅ [Push] Suscripción registrada exitosamente para usuario ${targetUserId}`)
+    logger.log(`✅ [Push] Suscripción registrada exitosamente para usuario ${targetUserId}`)
 
     return NextResponse.json({
       success: true,
@@ -112,7 +113,7 @@ export async function POST(request) {
       data,
     })
   } catch (error) {
-    console.error('💥 [Push] Error en POST /api/push-suscribir:', error)
+    logger.error('💥 [Push] Error en POST /api/push-suscribir:', error)
     return NextResponse.json(
       { error: error.message || 'Error al registrar suscripción push' },
       { status: 500 }
@@ -164,7 +165,7 @@ export async function GET(request) {
       isSubscribed: (data?.length || 0) > 0,
     })
   } catch (error) {
-    console.error('💥 [Push] Error en GET /api/push-suscribir:', error)
+    logger.error('💥 [Push] Error en GET /api/push-suscribir:', error)
     return NextResponse.json(
       { error: error.message || 'Error al obtener suscripciones' },
       { status: 500 }
@@ -212,14 +213,14 @@ export async function DELETE(request) {
     const { error } = await query
     if (error) throw error
 
-    console.log(`✅ [Push] Suscripción eliminada: ${endpoint || userId}`)
+    logger.log(`✅ [Push] Suscripción eliminada: ${endpoint || userId}`)
 
     return NextResponse.json({
       success: true,
       message: 'Suscripción eliminada correctamente',
     })
   } catch (error) {
-    console.error('💥 [Push] Error en DELETE /api/push-suscribir:', error)
+    logger.error('💥 [Push] Error en DELETE /api/push-suscribir:', error)
     return NextResponse.json(
       { error: error.message || 'Error al eliminar suscripción' },
       { status: 500 }

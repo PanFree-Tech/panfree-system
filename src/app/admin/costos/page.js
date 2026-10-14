@@ -13,6 +13,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
@@ -86,7 +87,7 @@ export default function PaginaCostos() {
       )
       setFijos(costosFRes.data || [])
     } catch (err) {
-      console.error('[PanFree] Error cargando costos:', err)
+      logger.error('[PanFree] Error cargando costos:', err)
     } finally {
       setLoading(false)
     }
@@ -116,7 +117,7 @@ export default function PaginaCostos() {
         usaReal: energiaMaquinarias > 0,
       })
     } catch (err) {
-      console.error('[PanFree] Error calculando sugerencia de energía:', err)
+      logger.error('[PanFree] Error calculando sugerencia de energía:', err)
     }
   }, [])
 
@@ -264,7 +265,7 @@ export default function PaginaCostos() {
       await supabase.from('costos_fijos_mensuales').delete().eq('id', id)
       cargar()
     } catch (err) {
-      console.error('[PanFree] Error eliminando costos fijos:', err)
+      logger.error('[PanFree] Error eliminando costos fijos:', err)
     }
   }
 

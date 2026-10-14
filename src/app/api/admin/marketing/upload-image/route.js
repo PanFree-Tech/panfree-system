@@ -5,6 +5,7 @@
  *    y devuelve la URL pública persistente y segura (res.cloudinary.com).
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { getCloudinaryClient } from '@/lib/cloudinary'
 
@@ -54,7 +55,7 @@ export async function POST(req) {
       bytes: result.bytes,
     })
   } catch (error) {
-    console.error('Error en upload-image route (Cloudinary):', error)
+    logger.error('Error en upload-image route (Cloudinary):', error)
     return NextResponse.json(
       { success: false, error: error?.message || 'Error inesperado al subir a Cloudinary' },
       { status: 500 }

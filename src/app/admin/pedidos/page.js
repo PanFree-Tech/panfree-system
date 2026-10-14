@@ -13,6 +13,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Package, MessageSquare, RefreshCw } from 'lucide-react'
@@ -69,7 +70,7 @@ export default function PaginaPedidosAdmin() {
         .limit(200)
 
       if (error) {
-        console.warn('[PanFree] Fallback al cargar pedidos sin join directo:', error.message)
+        logger.warn('[PanFree] Fallback al cargar pedidos sin join directo:', error.message)
         // Fallback: Si falla el join por RLS o schema cache, cargar pedidos directamente
         const { data: rawPedidos, error: errFallback } = await supabase
           .from('pedidos')
@@ -114,7 +115,7 @@ export default function PaginaPedidosAdmin() {
         pendientes: (pedidosData || []).filter((p) => p.estado === 'pendiente').length,
       })
     } catch (err) {
-      console.error('[PanFree] Error cargando pedidos:', err)
+      logger.error('[PanFree] Error cargando pedidos:', err)
       setPedidos([])
     } finally {
       setLoading(false)
@@ -140,7 +141,7 @@ export default function PaginaPedidosAdmin() {
       if (!error && data) {
         setDetalles((prev) => ({ ...prev, [pedidoId]: data }))
       } else if (error) {
-        console.warn('[PanFree] Fallback detalle_pedido sin join:', error.message)
+        logger.warn('[PanFree] Fallback detalle_pedido sin join:', error.message)
         const { data: rawDetalle } = await supabase
           .from('detalle_pedido')
           .select('*')
@@ -166,7 +167,7 @@ export default function PaginaPedidosAdmin() {
         }
       }
     } catch (err) {
-      console.error('[PanFree] Error cargando detalle del pedido:', err)
+      logger.error('[PanFree] Error cargando detalle del pedido:', err)
     }
   }
 
@@ -209,7 +210,7 @@ export default function PaginaPedidosAdmin() {
           cliente: pedidoModificado?.clientes || undefined,
         }),
       }).catch((errNotif) => {
-        console.warn('⚠️ [Notificación de Estado] Error no bloqueante:', errNotif)
+        logger.warn('⚠️ [Notificación de Estado] Error no bloqueante:', errNotif)
       })
 
       setPedidos((prev) =>
@@ -223,7 +224,7 @@ export default function PaginaPedidosAdmin() {
         }))
       }
     } catch (err) {
-      console.error('[PanFree] Error cambiando estado:', err)
+      logger.error('[PanFree] Error cambiando estado:', err)
       alert('Error al cambiar el estado. Intentá de nuevo.')
     } finally {
       setCambiando(null)
@@ -245,7 +246,7 @@ export default function PaginaPedidosAdmin() {
         prev.map((p) => (p.id === pedidoId ? { ...p, estado_pago: nuevoEstadoPago } : p))
       )
     } catch (err) {
-      console.error('[PanFree] Error cambiando estado de pago:', err)
+      logger.error('[PanFree] Error cambiando estado de pago:', err)
     } finally {
       setCambiando(null)
     }

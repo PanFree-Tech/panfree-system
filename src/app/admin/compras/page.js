@@ -16,6 +16,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
@@ -113,7 +114,7 @@ export default function PaginaCompras() {
       setProveedores(p.data || [])
       setInsumos(i.data || [])
     } catch (err) {
-      console.error('[PanFree] Error cargando datos de compras:', err)
+      logger.error('[PanFree] Error cargando datos de compras:', err)
       setError('Error al cargar datos')
     } finally {
       setLoading(false)
@@ -173,7 +174,7 @@ export default function PaginaCompras() {
         .single()
 
       if (errInsumo || !insumo) {
-        console.warn(`[PanFree] No se pudo encontrar insumo ${item.insumo_id}:`, errInsumo)
+        logger.warn(`[PanFree] No se pudo encontrar insumo ${item.insumo_id}:`, errInsumo)
         continue
       }
 
@@ -269,7 +270,7 @@ export default function PaginaCompras() {
       setModal(false)
       setTimeout(() => setMensajeExito(null), 5000)
     } catch (err) {
-      console.error('[PanFree] Error guardando compra:', err)
+      logger.error('[PanFree] Error guardando compra:', err)
       setError(err.message || 'Error al guardar la compra')
     } finally {
       setGuardando(false)
@@ -330,7 +331,7 @@ export default function PaginaCompras() {
           setCompraSeleccionada((prev) => ({ ...prev, estado: 'recepcionada' }))
         }
       } catch (err) {
-        console.error('[PanFree] Error al recepcionar compra:', err)
+        logger.error('[PanFree] Error al recepcionar compra:', err)
         alert('Error al recepcionar la compra: ' + err.message)
       } finally {
         setProcesandoRecepcion(false)
@@ -360,7 +361,7 @@ export default function PaginaCompras() {
         setCompraSeleccionada((prev) => ({ ...prev, estado: nuevoEstado }))
       }
     } catch (err) {
-      console.error('[PanFree] Error actualizando estado:', err)
+      logger.error('[PanFree] Error actualizando estado:', err)
     }
   }
 
@@ -376,7 +377,7 @@ export default function PaginaCompras() {
         setCompraSeleccionada((prev) => ({ ...prev, estado_pago: nuevoEstadoPago }))
       }
     } catch (err) {
-      console.error('[PanFree] Error actualizando estado de pago:', err)
+      logger.error('[PanFree] Error actualizando estado de pago:', err)
     }
   }
 
@@ -394,7 +395,7 @@ export default function PaginaCompras() {
       if (error) throw error
       setDetallesCompra(data || [])
     } catch (err) {
-      console.error('[PanFree] Error cargando detalle de compra:', err)
+      logger.error('[PanFree] Error cargando detalle de compra:', err)
       setDetallesCompra([])
     } finally {
       setCargandoDetalles(false)

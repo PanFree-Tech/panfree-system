@@ -1,3 +1,4 @@
+import { log, warn, error } from '@/lib/logger'
 /**
  * 📁 UBICACIÓN: src/app/admin/marketing/services/instagramService.js
  * 📌 Servicio para publicar o programar contenidos en Instagram y gestionar el historial.
@@ -57,7 +58,7 @@ export const publishToInstagram = async (imageData, caption, options = {}) => {
       message: json.message || 'Publicación enviada exitosamente',
     }
   } catch (error) {
-    console.warn('Error en API de Instagram, registrando fallback local:', error?.message)
+    logger.warn('Error en API de Instagram, registrando fallback local:', error?.message)
 
     const fallbackId = `local_${Date.now()}`
     const fallbackUrl = `https://www.instagram.com/panfree.fit/`
@@ -98,7 +99,7 @@ export const getScheduledPosts = async () => {
       }
     }
   } catch (err) {
-    console.warn('No se pudo obtener del servidor, consultando almacenamiento local:', err?.message)
+    logger.warn('No se pudo obtener del servidor, consultando almacenamiento local:', err?.message)
   }
 
   // Cargar desde LocalStorage
@@ -124,6 +125,6 @@ function saveLocalPost(post) {
     const updated = [post, ...current.filter((p) => p.id !== post.id)].slice(0, 30)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
   } catch (e) {
-    console.warn('No se pudo guardar en localStorage:', e)
+    logger.warn('No se pudo guardar en localStorage:', e)
   }
 }

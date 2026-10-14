@@ -10,6 +10,7 @@
 ✅ GA4: Integración de eventos begin_checkout y purchase.
 */
 'use client'
+import { log, warn, error } from '@/lib/logger'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
@@ -457,7 +458,7 @@ export default function PaginaCheckout() {
 
   // ── Confirmar pedido ──────────────────────────────────────────────────────
   const confirmarPedido = useCallback(async () => {
-    console.log('🚀 confirmarPedido se ejecutó')
+    logger.log('🚀 confirmarPedido se ejecutó')
     setError(null)
     
     // ✅ VALIDACIÓN SIMPLIFICADA - SIN DEPENDER DEL ESTADO telefonoValido
@@ -473,11 +474,11 @@ export default function PaginaCheckout() {
     
     // Validación de teléfono en tiempo real (sin depender del estado)
     const telefonoLimpio = datos.telefono.replace(/[\s\-\(\)\.]/g, '')
-    console.log('📞 Teléfono limpio:', telefonoLimpio)
+    logger.log('📞 Teléfono limpio:', telefonoLimpio)
     if (telefonoLimpio.length < 8) {
       return setError('El número de teléfono debe tener al menos 8 dígitos. Ej: 0981123456 o +595981123456')
     }
-    console.log('✅ Validación de teléfono pasada')
+    logger.log('✅ Validación de teléfono pasada')
     
     // Validación de delivery
     if (metodoEntrega === 'delivery') {
@@ -492,7 +493,7 @@ export default function PaginaCheckout() {
     
     setEnviando(true)
     try {
-      console.log('📌 1. Buscando cliente por email:', datos.email.trim())
+      logger.log('📌 1. Buscando cliente por email:', datos.email.trim())
       let clienteId = null
       const { data: clienteExistente, error: errClienteExistente } = await supabase
         .from('clientes')
@@ -501,12 +502,12 @@ export default function PaginaCheckout() {
         .maybeSingle()
       
       if (errClienteExistente) {
-        console.error('❌ Error buscando cliente:', errClienteExistente)
+        logger.error('❌ Error buscando cliente:', errClienteExistente)
         throw errClienteExistente
       }
       
       if (clienteExistente) {
-        console.log('📌 2. Cliente encontrado:', clienteExistente.id)
+        logger.log('📌 2. Cliente encontrado:', clienteExistente.id)
         clienteId = clienteExistente.id
         const { error: updateError } = await supabase
           .from('clientes')
@@ -519,12 +520,12 @@ export default function PaginaCheckout() {
           .eq('id', clienteId)
         
         if (updateError) {
-          console.error('❌ Error al actualizar cliente:', updateError)
+          logger.error('❌ Error al actualizar cliente:', updateError)
           throw updateError
         }
-        console.log('✅ Cliente actualizado:', clienteId)
+        logger.log('✅ Cliente actualizado:', clienteId)
       } else {
-        console.log('📌 2. Cliente no encontrado, creando nuevo...')
+        logger.log('📌 2. Cliente no encontrado, creando nuevo...')
         const { data: nuevoCliente, error: errCliente } = await supabase
           .from('clientes')
           .insert({
@@ -541,14 +542,14 @@ export default function PaginaCheckout() {
         
         if (errCliente) throw errCliente
         clienteId = nuevoCliente.id
-        console.log('✅ Cliente creado:', clienteId)
+        logger.log('✅ Cliente creado:', clienteId)
       }
       
       const direccionCompleta = metodoEntrega === 'delivery'
         ? [datos.direccion.trim(), datos.referencia.trim()].filter(Boolean).join(' — ')
         : null
       
-      console.log('📌 3. Creando pedido...')
+      logger.log('📌 3. Creando pedido...')
       const puntosGanados = Math.floor(totalFinal / 1000)
 
       const { data: pedidoDB, error: errPedido } = await supabase
@@ -576,12 +577,12 @@ export default function PaginaCheckout() {
         .single()
       
       if (errPedido) {
-        console.error('❌ Error al crear pedido:', errPedido)
+        logger.error('❌ Error al crear pedido:', errPedido)
         throw errPedido
       }
       
       const numeroPedido = pedidoDB.numero_pedido
-      console.log('✅ Pedido creado:', numeroPedido)
+      logger.log('✅ Pedido creado:', numeroPedido)
 
       // Registrar canje de cupón si aplica
       if (cuponAplicado && descuentoAplicado > 0) {
@@ -602,7 +603,7 @@ export default function PaginaCheckout() {
             .update({ usos_actuales: (cData?.usos_actuales || 0) + 1 })
             .eq('id', cuponAplicado.id)
         } catch (cErr) {
-          console.warn('⚠️ No se pudo registrar canje de cupón:', cErr)
+          logger.warn('⚠️ No se pudo registrar canje de cupón:', cErr)
         }
       }
 
@@ -624,10 +625,10 @@ export default function PaginaCheckout() {
           nivel_cliente: nivelCliente,
         }).eq('id', clienteId)
       } catch (fErr) {
-        console.warn('⚠️ No se pudo actualizar puntos de fidelidad:', fErr)
+        logger.warn('⚠️ No se pudo actualizar puntos de fidelidad:', fErr)
       }
 
-      console.log('📌 4. Creando detalle del pedido...')
+      logger.log('📌 4. Creando detalle del pedido...')
       
       const detalles = items.map(item => ({
         pedido_id:       pedidoDB.id,
@@ -641,7 +642,7 @@ export default function PaginaCheckout() {
         .insert(detalles)
       
       if (errDetalle) throw errDetalle
-      console.log('✅ Detalle creado')
+      logger.log('✅ Detalle creado')
       
       setPedidoExito({
         numeroPedido,
@@ -660,7 +661,7 @@ export default function PaginaCheckout() {
       // GA4: purchase — con los datos reales de la orden ya creada
       purchase({ numeroPedido, totalFinal, costoDelivery, items: [...items] })
 
-      console.log('📌 5. Enviando notificación de pedido...')
+      logger.log('📌 5. Enviando notificación de pedido...')
       try {
         const headers = { 'Content-Type': 'application/json' }
         if (process.env.NEXT_PUBLIC_API_TOKEN) {
@@ -690,12 +691,12 @@ export default function PaginaCheckout() {
             },
           }),
         })
-        console.log('✅ Pedido notificado a n8n vía API interna')
+        logger.log('✅ Pedido notificado a n8n vía API interna')
       } catch (err) {
-        console.error('❌ Error al enviar notificación de pedido:', err)
+        logger.error('❌ Error al enviar notificación de pedido:', err)
       }
     } catch (err) {
-      console.error('❌ Error al crear pedido:', err)
+      logger.error('❌ Error al crear pedido:', err)
       setError('Ocurrió un error al procesar el pedido. Intentá de nuevo o contactanos por WhatsApp.')
     } finally {
       setEnviando(false)
@@ -706,16 +707,16 @@ export default function PaginaCheckout() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.confirmarPedido = confirmarPedido
-      console.log('✅ window.confirmarPedido expuesto globalmente')
+      logger.log('✅ window.confirmarPedido expuesto globalmente')
     }
   }, [confirmarPedido])
 
   // ── Debug ──────────────────────────────────────────────────────────────────
   useEffect(() => {
-    console.log('🔄 Componente Checkout montado')
-    console.log('📦 Items:', items.length)
-    console.log('💰 Total:', total)
-    console.log('👤 Usuario:', usuario?.email || 'Invitado')
+    logger.log('🔄 Componente Checkout montado')
+    logger.log('📦 Items:', items.length)
+    logger.log('💰 Total:', total)
+    logger.log('👤 Usuario:', usuario?.email || 'Invitado')
   }, [])
 
   if (authLoading) {

@@ -1,6 +1,7 @@
 // src/app/diptico/[codigo]/DipticoCliente.js
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -98,7 +99,7 @@ export default function DipticoCliente({
         setMensaje({ tipo: 'error', texto: data.mensaje || 'Error al canjear el código.' })
       }
     } catch (err) {
-      console.error('Error:', err)
+      logger.error('Error:', err)
       setMensaje({ tipo: 'error', texto: 'Error al conectar con el servidor.' })
     } finally {
       setLoading(false)

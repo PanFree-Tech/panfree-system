@@ -6,6 +6,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect, useCallback } from 'react'
 import {
   Mail,
@@ -49,7 +50,7 @@ export default function AdminCorreosPage() {
         setLogs([])
       }
     } catch (err) {
-      console.warn('Error al cargar email_logs:', err.message)
+      logger.warn('Error al cargar email_logs:', err.message)
       setLogs([])
     } finally {
       setCargando(false)

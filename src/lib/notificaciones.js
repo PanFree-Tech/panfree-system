@@ -9,6 +9,7 @@
  *    - Integración tolerante a fallos y no bloqueante.
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { supabase } from './supabase'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { sendEmail, DEFAULT_ADMIN_EMAIL } from './resend'
@@ -64,7 +65,7 @@ function getWebPushInstance() {
     webpush.setVapidDetails(subject, publicKey, privateKey)
     return webpush
   } catch (err) {
-    console.warn('⚠️ [Push] No se pudo configurar webpush en notificaciones.js:', err.message)
+    logger.warn('⚠️ [Push] No se pudo configurar webpush en notificaciones.js:', err.message)
     return null
   }
 }
@@ -84,14 +85,14 @@ export async function enviarPushAdmin({ userId, titulo, mensaje, url = '/admin/p
 
   const cleanUserId = typeof userId === 'string' ? userId.trim() : String(userId).trim()
   if (!isValidUUID(cleanUserId)) {
-    console.warn(`⚠️ [Push] userId inválido recibido ("${cleanUserId}"). Se requiere formato UUID válido.`)
+    logger.warn(`⚠️ [Push] userId inválido recibido ("${cleanUserId}"). Se requiere formato UUID válido.`)
     return { success: false, enviadas: 0, error: `UUID inválido: ${cleanUserId}` }
   }
 
   try {
     const wp = getWebPushInstance()
     if (!wp) {
-      console.log('ℹ️ [Push] Claves VAPID no disponibles en el entorno. Omitiendo push.')
+      logger.log('ℹ️ [Push] Claves VAPID no disponibles en el entorno. Omitiendo push.')
       return { success: false, enviadas: 0, error: 'VAPID no configurado' }
     }
 
@@ -102,7 +103,7 @@ export async function enviarPushAdmin({ userId, titulo, mensaje, url = '/admin/p
       .eq('user_id', cleanUserId)
 
     if (error || !subs || subs.length === 0) {
-      console.log(`ℹ️ [Push] Usuario ${cleanUserId} no tiene suscripciones push activas.`)
+      logger.log(`ℹ️ [Push] Usuario ${cleanUserId} no tiene suscripciones push activas.`)
       return { success: true, enviadas: 0, message: 'Usuario no suscrito' }
     }
 
@@ -151,7 +152,7 @@ export async function enviarPushAdmin({ userId, titulo, mensaje, url = '/admin/p
 
     return { success: true, enviadas, total: subs.length }
   } catch (err) {
-    console.error(`❌ [Push] Error enviando push a admin ${userId}:`, err)
+    logger.error(`❌ [Push] Error enviando push a admin ${userId}:`, err)
     return { success: false, enviadas: 0, error: err.message }
   }
 }
@@ -170,7 +171,7 @@ export async function enviarPushATodosLosAdmins({ titulo, mensaje, url = '/admin
   try {
     const wp = getWebPushInstance()
     if (!wp) {
-      console.log('ℹ️ [Push] Claves VAPID no disponibles en el entorno. Omitiendo push a admins.')
+      logger.log('ℹ️ [Push] Claves VAPID no disponibles en el entorno. Omitiendo push a admins.')
       return { success: false, enviadas: 0, total: 0, error: 'VAPID no configurado' }
     }
 
@@ -191,7 +192,7 @@ export async function enviarPushATodosLosAdmins({ titulo, mensaje, url = '/admin
           .filter(isValidUUID)
       }
     } catch (e) {
-      console.warn('⚠️ [Push] Error consultando tabla usuarios para admins:', e.message)
+      logger.warn('⚠️ [Push] Error consultando tabla usuarios para admins:', e.message)
     }
 
     // 2. Buscar suscripciones push de estos administradores (o todas si no hay filtro estricto)
@@ -211,7 +212,7 @@ export async function enviarPushATodosLosAdmins({ titulo, mensaje, url = '/admin
     }
 
     if (subscriptionsToSend.length === 0) {
-      console.log('ℹ️ [Push] No hay administradores suscritos a Push Notifications Web.')
+      logger.log('ℹ️ [Push] No hay administradores suscritos a Push Notifications Web.')
       return { success: true, enviadas: 0, total: 0 }
     }
 
@@ -267,11 +268,11 @@ export async function enviarPushATodosLosAdmins({ titulo, mensaje, url = '/admin
       await db.from('push_subscriptions').delete().in('endpoint', caducados).catch(() => {})
     }
 
-    console.log(`🔔 [Push] Notificación push enviada a ${enviadas} de ${subsUnicas.length} dispositivos administradores.`)
+    logger.log(`🔔 [Push] Notificación push enviada a ${enviadas} de ${subsUnicas.length} dispositivos administradores.`)
 
     return { success: true, enviadas, fallos, total: subsUnicas.length }
   } catch (err) {
-    console.error('💥 [Push] Error general enviando push a todos los admins:', err)
+    logger.error('💥 [Push] Error general enviando push a todos los admins:', err)
     return { success: false, enviadas: 0, total: 0, error: err.message }
   }
 }
@@ -295,13 +296,13 @@ export async function crearNotificacion({ tipo, titulo, mensaje, link = null, me
     const { data, error } = await db.from('notificaciones_admin').insert([payload]).select().single()
 
     if (error) {
-      console.warn('⚠️ [Notificaciones] Error al insertar en notificaciones_admin:', error.message)
+      logger.warn('⚠️ [Notificaciones] Error al insertar en notificaciones_admin:', error.message)
       return { success: false, error: error.message }
     }
 
     return { success: true, data }
   } catch (err) {
-    console.error('💥 [Notificaciones] Excepción en crearNotificacion:', err)
+    logger.error('💥 [Notificaciones] Excepción en crearNotificacion:', err)
     return { success: false, error: err.message }
   }
 }
@@ -331,7 +332,7 @@ export async function obtenerNotificacionesNoLeidas(limit = 50) {
 
     return data || []
   } catch (err) {
-    console.error('💥 [Notificaciones] Error en obtenerNotificacionesNoLeidas:', err)
+    logger.error('💥 [Notificaciones] Error en obtenerNotificacionesNoLeidas:', err)
     return []
   }
 }
@@ -354,7 +355,7 @@ export async function marcarNotificacionComoLeida(id) {
 
     return true
   } catch (err) {
-    console.error('💥 [Notificaciones] Error en marcarNotificacionComoLeida:', err)
+    logger.error('💥 [Notificaciones] Error en marcarNotificacionComoLeida:', err)
     return false
   }
 }
@@ -376,7 +377,7 @@ export async function marcarTodasComoLeidas() {
 
     return true
   } catch (err) {
-    console.error('💥 [Notificaciones] Error en marcarTodasComoLeidas:', err)
+    logger.error('💥 [Notificaciones] Error en marcarTodasComoLeidas:', err)
     return false
   }
 }
@@ -389,7 +390,7 @@ export async function enviarEmailConfirmacionCliente(pedido, cliente, items = []
   const numeroPedido = pedido?.numero_pedido || pedido?.numero || 'N/A'
 
   if (!emailCliente) {
-    console.log(`ℹ️ [Email] Cliente sin correo para pedido #${numeroPedido}. Omitiendo envío.`)
+    logger.log(`ℹ️ [Email] Cliente sin correo para pedido #${numeroPedido}. Omitiendo envío.`)
     return { success: false, error: 'Cliente sin email registrado' }
   }
 
@@ -403,7 +404,7 @@ export async function enviarEmailConfirmacionCliente(pedido, cliente, items = []
 
     return res
   } catch (err) {
-    console.error(`❌ [Email] Error enviando confirmación a ${emailCliente}:`, err)
+    logger.error(`❌ [Email] Error enviando confirmación a ${emailCliente}:`, err)
     return { success: false, error: err.message }
   }
 }
@@ -421,7 +422,7 @@ export async function notificarNuevoPedido(pedido, cliente, items = []) {
   const nombreCliente = cliente?.nombre_completo || cliente?.nombre || 'Cliente'
   const metodoEntrega = pedido?.metodo_entrega === 'delivery' ? 'Delivery' : 'Retiro en local'
 
-  console.log(`📦 [Notificaciones] Procesando nuevo pedido #${numeroPedido} (${total} ₲)`)
+  logger.log(`📦 [Notificaciones] Procesando nuevo pedido #${numeroPedido} (${total} ₲)`)
 
   const promises = []
 
@@ -447,7 +448,7 @@ export async function notificarNuevoPedido(pedido, cliente, items = []) {
     mensaje: `${nombreCliente} realizó un pedido por ${total} ₲ (${metodoEntrega})`,
     url: `/admin/pedidos`,
   }).catch((err) => {
-    console.warn('⚠️ [Push Admin] Error no bloqueante al notificar push a admins:', err.message)
+    logger.warn('⚠️ [Push Admin] Error no bloqueante al notificar push a admins:', err.message)
     return { success: false, error: err.message }
   })
   promises.push(pushPromise)
@@ -476,7 +477,7 @@ export async function notificarNuevoPedido(pedido, cliente, items = []) {
       args: [pedido, cliente],
       permitirFallback: true,
     }).catch((err) => {
-      console.warn('⚠️ [WhatsApp Admin] Error no bloqueante al notificar a admin:', err.message)
+      logger.warn('⚠️ [WhatsApp Admin] Error no bloqueante al notificar a admin:', err.message)
       return { success: false, error: err.message }
     })
     promises.push(waPromise)
@@ -500,7 +501,7 @@ export async function notificarCambioEstadoPedido(pedido, cliente, nuevoEstado) 
   const emailCliente = cliente?.email
   const nombreCliente = cliente?.nombre_completo || cliente?.nombre || 'Cliente'
 
-  console.log(`🔄 [Notificaciones] Cambio de estado de pedido #${numeroPedido} → ${nuevoEstado}`)
+  logger.log(`🔄 [Notificaciones] Cambio de estado de pedido #${numeroPedido} → ${nuevoEstado}`)
 
   let emailResult = null
   let dbResult = null
@@ -520,7 +521,7 @@ export async function notificarCambioEstadoPedido(pedido, cliente, nuevoEstado) 
         html,
       })
     } catch (err) {
-      console.error(`❌ [Notificaciones] Error enviando email de estado ${nuevoEstado} a ${emailCliente}:`, err)
+      logger.error(`❌ [Notificaciones] Error enviando email de estado ${nuevoEstado} a ${emailCliente}:`, err)
       emailResult = { success: false, error: err.message }
     }
   }
@@ -558,7 +559,7 @@ export async function notificarStockBajo(insumo) {
   const stockMinimo = insumo?.stock_minimo ?? 0
   const unidad = insumo?.unidad_medida || 'un.'
 
-  console.log(`⚠️ [Notificaciones] Alerta de stock bajo para ${nombre}: ${stockActual}/${stockMinimo} ${unidad}`)
+  logger.log(`⚠️ [Notificaciones] Alerta de stock bajo para ${nombre}: ${stockActual}/${stockMinimo} ${unidad}`)
 
   const dbPromise = crearNotificacion({
     tipo: 'stock_bajo',

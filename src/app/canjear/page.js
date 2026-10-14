@@ -5,6 +5,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -63,7 +64,7 @@ function CanjearContent() {
                     setCliente(data)
                 }
             } catch (err) {
-                console.error('Error cargando datos de cliente:', err)
+                logger.error('Error cargando datos de cliente:', err)
             }
         }
 
@@ -150,7 +151,7 @@ function CanjearContent() {
                 })
             }
         } catch (error) {
-            console.error('Error en handleCanjear:', error)
+            logger.error('Error en handleCanjear:', error)
             setMensaje({
                 tipo: 'error',
                 texto: 'Ocurrió un error de red al procesar tu solicitud. Verificá tu conexión.'

@@ -15,6 +15,7 @@
  *    - Web sin rol admin → Redirige a /unauthorized
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
@@ -90,7 +91,7 @@ export async function middleware(request) {
       const { data: { session } } = await supabaseHelper.auth.getSession()
       user = session?.user || null
     } catch (e) {
-      console.error('Error inicializando auth helper en middleware:', e.message)
+      logger.error('Error inicializando auth helper en middleware:', e.message)
     }
   }
 

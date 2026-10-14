@@ -1,5 +1,6 @@
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
@@ -38,7 +39,7 @@ export default function PedidosPage() {
         if (error) throw error
         setPedidos(data || [])
       } catch (err) {
-        console.error('Error cargando pedidos:', err)
+        logger.error('Error cargando pedidos:', err)
       } finally {
         setLoading(false)
       }

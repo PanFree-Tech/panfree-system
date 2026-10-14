@@ -6,6 +6,7 @@
  *    - Si es 'cancelado', genera alerta interna en notificaciones_admin
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
@@ -56,7 +57,7 @@ export async function POST(req) {
         .single()
 
       if (pErr || !dbPedido) {
-        console.error('❌ Error buscando pedido en BD para notificar estado:', pErr?.message)
+        logger.error('❌ Error buscando pedido en BD para notificar estado:', pErr?.message)
         return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 })
       }
 
@@ -72,7 +73,7 @@ export async function POST(req) {
       resultado,
     })
   } catch (error) {
-    console.error('💥 Error en /api/pedidos/notificar-estado:', error)
+    logger.error('💥 Error en /api/pedidos/notificar-estado:', error)
     return NextResponse.json(
       { error: error.message || 'Error interno al notificar cambio de estado' },
       { status: 500 }

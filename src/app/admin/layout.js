@@ -11,6 +11,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
@@ -103,7 +104,7 @@ export default function AdminLayout({ children }) {
         const rol = session.user?.raw_user_meta_data?.role || session.user?.user_metadata?.role || session.user?.app_metadata?.role
 
         if (rol !== 'admin') {
-          console.warn('[PanFree] Acceso no autorizado al panel admin:', session.user.email)
+          logger.warn('[PanFree] Acceso no autorizado al panel admin:', session.user.email)
           await supabase.auth.signOut()
           if (mounted) router.replace('/')
           return
@@ -116,7 +117,7 @@ export default function AdminLayout({ children }) {
         }
 
       } catch (err) {
-        console.error('[PanFree] Error verificando sesión admin:', err)
+        logger.error('[PanFree] Error verificando sesión admin:', err)
         if (mounted) router.replace('/admin/login')
       }
     }
@@ -146,7 +147,7 @@ export default function AdminLayout({ children }) {
   useEffect(() => {
     if (adminConfirmado && adminUser?.id && pushSupported && pushPermission === 'granted' && !pushSubscribed && !pushLoading) {
       pushSubscribe(adminUser.id).catch((err) => {
-        console.warn('⚠️ Auto-suscripción push admin:', err.message)
+        logger.warn('⚠️ Auto-suscripción push admin:', err.message)
       })
     }
   }, [adminConfirmado, adminUser, pushSupported, pushPermission, pushSubscribed, pushLoading, pushSubscribe])
@@ -159,7 +160,7 @@ export default function AdminLayout({ children }) {
         setMostrarPromptPush(false)
       }
     } catch (err) {
-      console.error('Error activando push:', err)
+      logger.error('Error activando push:', err)
     } finally {
       setActivandoPush(false)
     }
@@ -489,7 +490,7 @@ function BtnLogout({ sidebarAbierto }) {
       await supabase.auth.signOut()
       router.replace('/admin/login')
     } catch (err) {
-      console.error('[PanFree] Error al cerrar sesión:', err)
+      logger.error('[PanFree] Error al cerrar sesión:', err)
       router.replace('/admin/login')
     }
   }

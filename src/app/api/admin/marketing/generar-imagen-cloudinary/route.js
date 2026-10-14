@@ -1,4 +1,5 @@
 // src/app/api/admin/marketing/generar-imagen-cloudinary/route.js
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
 import { supabase } from '@/lib/supabase'
@@ -165,7 +166,7 @@ async function verificarYDescargarImagenPublica(url) {
   }
 
   try {
-    console.log(`📥 Descargando imagen de referencia del producto desde: ${url}`)
+    logger.log(`📥 Descargando imagen de referencia del producto desde: ${url}`)
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 20000)
 
@@ -178,7 +179,7 @@ async function verificarYDescargarImagenPublica(url) {
     clearTimeout(timeoutId)
 
     if (!res.ok) {
-      console.warn(`⚠️ No se pudo descargar la imagen de referencia: HTTP ${res.status}`)
+      logger.warn(`⚠️ No se pudo descargar la imagen de referencia: HTTP ${res.status}`)
       return { valida: false, base64: null, mimeType: null }
     }
 
@@ -189,11 +190,11 @@ async function verificarYDescargarImagenPublica(url) {
 
     // Validar que no esté corrupta (> 10 KB = > 10240 bytes)
     if (buffer.length < 500) {
-      console.warn(`⚠️ La imagen de referencia es demasiado pequeña (${buffer.length} bytes), posible error de descarga`)
+      logger.warn(`⚠️ La imagen de referencia es demasiado pequeña (${buffer.length} bytes), posible error de descarga`)
       return { valida: false, base64: null, mimeType: null }
     }
 
-    console.log(`✅ Imagen de referencia descargada y validada (${(buffer.length / 1024).toFixed(1)} KB, ${mimeType})`)
+    logger.log(`✅ Imagen de referencia descargada y validada (${(buffer.length / 1024).toFixed(1)} KB, ${mimeType})`)
     return {
       valida: true,
       base64,
@@ -201,7 +202,7 @@ async function verificarYDescargarImagenPublica(url) {
       sizeBytes: buffer.length,
     }
   } catch (err) {
-    console.warn(`⚠️ Error al verificar/descargar imagen de referencia:`, err.message)
+    logger.warn(`⚠️ Error al verificar/descargar imagen de referencia:`, err.message)
     return { valida: false, base64: null, mimeType: null }
   }
 }
@@ -245,7 +246,7 @@ async function generarConGemini({ prompt, model = 'gemini-3.1-flash-image', aspe
 
     parts.push({ text: promptFinal })
 
-    console.log(`🖼️ Enviando imagen de referencia a Google Gemini: ${checkPublico?.base64 ? '✅' : '❌'}`)
+    logger.log(`🖼️ Enviando imagen de referencia a Google Gemini: ${checkPublico?.base64 ? '✅' : '❌'}`)
 
     const response = await ai.models.generateContent({
       model: model || 'gemini-3.1-flash-image',
@@ -274,7 +275,7 @@ async function generarConGemini({ prompt, model = 'gemini-3.1-flash-image', aspe
   } catch (err) {
     // Si falló con imagen de referencia, intentar fallback a solo texto
     if (checkPublico?.base64) {
-      console.warn(`⚠️ Error en Gemini con imagen de referencia (${err.message}). Reintentando solo con texto...`)
+      logger.warn(`⚠️ Error en Gemini con imagen de referencia (${err.message}). Reintentando solo con texto...`)
       try {
         const fallbackRes = await ai.models.generateContent({
           model: model || 'gemini-3.1-flash-image',
@@ -315,7 +316,7 @@ async function generarConPollinations({ prompt, model = 'flux', checkPublico = n
     const seed = Math.floor(Math.random() * 1000000)
     const selectedModel = model === 'turbo' ? 'turbo' : 'flux'
 
-    console.log(`🖼️ Enviando imagen de referencia a Pollinations.ai: ${checkPublico?.base64 ? '✅' : '❌'}`)
+    logger.log(`🖼️ Enviando imagen de referencia a Pollinations.ai: ${checkPublico?.base64 ? '✅' : '❌'}`)
 
     let url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=768&height=1024&nologo=true&enhance=true&model=${selectedModel}&seed=${seed}`
 
@@ -353,7 +354,7 @@ async function generarConPollinations({ prompt, model = 'flux', checkPublico = n
   } catch (err) {
     // Si falló y enviamos imagen, reintentar solo con prompt de texto
     if (checkPublico?.base64) {
-      console.warn(`⚠️ Error en Pollinations con imagen (${err.message}). Reintentando solo con texto...`)
+      logger.warn(`⚠️ Error en Pollinations con imagen (${err.message}). Reintentando solo con texto...`)
       return generarConPollinations({ prompt, model, checkPublico: null })
     }
     return { success: false, error: `Error en Pollinations.ai: ${err.message}` }
@@ -370,7 +371,7 @@ async function generarConLeonardo({ prompt, model = 'aa77f04e-3eec-4034-9c07-d0f
     return { success: false, error: 'LEONARDO_API_KEY no configurada en variables de entorno' }
   }
 
-  console.log(`🖼️ Enviando imagen de referencia a Leonardo AI: ${checkPublico?.base64 ? '✅' : '❌'}`)
+  logger.log(`🖼️ Enviando imagen de referencia a Leonardo AI: ${checkPublico?.base64 ? '✅' : '❌'}`)
 
   try {
     const controller = new AbortController()
@@ -460,7 +461,7 @@ async function generarConLeonardo({ prompt, model = 'aa77f04e-3eec-4034-9c07-d0f
     }
   } catch (err) {
     if (checkPublico?.base64) {
-      console.warn(`⚠️ Error en Leonardo AI con imagen (${err.message}). Reintentando solo con texto...`)
+      logger.warn(`⚠️ Error en Leonardo AI con imagen (${err.message}). Reintentando solo con texto...`)
       return generarConLeonardo({ prompt, model, checkPublico: null })
     }
     return { success: false, error: `Error en Leonardo AI: ${err.message}` }
@@ -477,7 +478,7 @@ async function generarConAgnes({ prompt, model = 'agnes-image-2.1-flash', checkP
     return { success: false, error: 'AGNES_API_KEY no configurada en variables de entorno' }
   }
 
-  console.log(`🖼️ Enviando imagen de referencia a Agnes AI: ${checkPublico?.base64 ? '✅' : '❌'}`)
+  logger.log(`🖼️ Enviando imagen de referencia a Agnes AI: ${checkPublico?.base64 ? '✅' : '❌'}`)
 
   try {
     const controller = new AbortController()
@@ -538,7 +539,7 @@ async function generarConAgnes({ prompt, model = 'agnes-image-2.1-flash', checkP
     throw new Error('Agnes AI no devolvió una imagen en base64 ni URL válida')
   } catch (err) {
     if (checkPublico?.base64) {
-      console.warn(`⚠️ Error en Agnes AI con imagen (${err.message}). Reintentando solo con texto...`)
+      logger.warn(`⚠️ Error en Agnes AI con imagen (${err.message}). Reintentando solo con texto...`)
       return generarConAgnes({ prompt, model, checkPublico: null })
     }
     return { success: false, error: `Error en Agnes AI: ${err.message}` }
@@ -555,7 +556,7 @@ async function generarConAIHubMix({ prompt, model = 'gpt-image-2-free', checkPub
     return { success: false, error: 'AIHUBMIX_API_KEY no configurada en variables de entorno' }
   }
 
-  console.log(`🖼️ Enviando imagen de referencia a AIHubMix: ${checkPublico?.base64 ? '✅' : '❌'}`)
+  logger.log(`🖼️ Enviando imagen de referencia a AIHubMix: ${checkPublico?.base64 ? '✅' : '❌'}`)
 
   try {
     const controller = new AbortController()
@@ -616,7 +617,7 @@ async function generarConAIHubMix({ prompt, model = 'gpt-image-2-free', checkPub
     throw new Error('AIHubMix no retornó imagen válida')
   } catch (err) {
     if (checkPublico?.base64) {
-      console.warn(`⚠️ Error en AIHubMix con imagen (${err.message}). Reintentando solo con texto...`)
+      logger.warn(`⚠️ Error en AIHubMix con imagen (${err.message}). Reintentando solo con texto...`)
       return generarConAIHubMix({ prompt, model, checkPublico: null })
     }
     return { success: false, error: `Error en AIHubMix: ${err.message}` }
@@ -633,7 +634,7 @@ async function generarConNexa({ prompt, model = 'flux-kontext', checkPublico = n
     return { success: false, error: 'NEXA_API_KEY no configurada en variables de entorno' }
   }
 
-  console.log(`🖼️ Enviando imagen de referencia a NexaAPI: ${checkPublico?.base64 ? '✅' : '❌'}`)
+  logger.log(`🖼️ Enviando imagen de referencia a NexaAPI: ${checkPublico?.base64 ? '✅' : '❌'}`)
 
   try {
     const controller = new AbortController()
@@ -694,7 +695,7 @@ async function generarConNexa({ prompt, model = 'flux-kontext', checkPublico = n
     throw new Error('NexaAPI no retornó imagen válida')
   } catch (err) {
     if (checkPublico?.base64) {
-      console.warn(`⚠️ Error en NexaAPI con imagen (${err.message}). Reintentando solo con texto...`)
+      logger.warn(`⚠️ Error en NexaAPI con imagen (${err.message}). Reintentando solo con texto...`)
       return generarConNexa({ prompt, model, checkPublico: null })
     }
     return { success: false, error: `Error en NexaAPI: ${err.message}` }
@@ -713,7 +714,7 @@ async function generarConCloudflare({ prompt, model = '@cf/stabilityai/stable-di
     return { success: false, error: 'CLOUDFLARE_API_KEY o CLOUDFLARE_ACCOUNT_ID no configurados' }
   }
 
-  console.log(`🖼️ Enviando imagen de referencia a Cloudflare Workers AI: ${checkPublico?.base64 ? '✅' : '❌'}`)
+  logger.log(`🖼️ Enviando imagen de referencia a Cloudflare Workers AI: ${checkPublico?.base64 ? '✅' : '❌'}`)
 
   try {
     const selectedModel = model || '@cf/stabilityai/stable-diffusion-xl-base-1.0'
@@ -773,7 +774,7 @@ async function generarConCloudflare({ prompt, model = '@cf/stabilityai/stable-di
     }
   } catch (err) {
     if (checkPublico?.base64) {
-      console.warn(`⚠️ Error en Cloudflare AI con imagen (${err.message}). Reintentando solo con texto...`)
+      logger.warn(`⚠️ Error en Cloudflare AI con imagen (${err.message}). Reintentando solo con texto...`)
       return generarConCloudflare({ prompt, model, checkPublico: null })
     }
     return { success: false, error: `Error en Cloudflare Workers AI: ${err.message}` }
@@ -790,7 +791,7 @@ async function generarConHuggingFace({ prompt, model = 'stabilityai/stable-diffu
     return { success: false, error: 'HF_API_KEY no configurada en variables de entorno' }
   }
 
-  console.log(`🖼️ Enviando imagen de referencia a Hugging Face Inference: ${checkPublico?.base64 ? '✅' : '❌'}`)
+  logger.log(`🖼️ Enviando imagen de referencia a Hugging Face Inference: ${checkPublico?.base64 ? '✅' : '❌'}`)
 
   try {
     const selectedModel = model || 'stabilityai/stable-diffusion-xl-base-1.0'
@@ -840,7 +841,7 @@ async function generarConHuggingFace({ prompt, model = 'stabilityai/stable-diffu
     }
   } catch (err) {
     if (checkPublico?.base64) {
-      console.warn(`⚠️ Error en Hugging Face con imagen (${err.message}). Reintentando solo con texto...`)
+      logger.warn(`⚠️ Error en Hugging Face con imagen (${err.message}). Reintentando solo con texto...`)
       return generarConHuggingFace({ prompt, model, checkPublico: null })
     }
     return { success: false, error: `Error en Hugging Face: ${err.message}` }
@@ -854,10 +855,10 @@ async function generarImagenConMotor({ motor = 'gemini', modelo = '', prompt = '
   const motorNormalizado = (motor || 'gemini').toLowerCase().trim()
   const startTime = Date.now()
 
-  console.log(`🚀 [Multi-Engine AI] Iniciando generación con motor: ${motorNormalizado.toUpperCase()}`)
-  console.log(`   Modelo solicitado: ${modelo || 'default'}`)
-  console.log(`   Imagen de referencia disponible: ${checkPublico?.valida ? '✅ (' + checkPublico.mimeType + ')' : '❌ (Solo texto)'}`)
-  console.log(`   Longitud prompt: ${prompt.length} caracteres`)
+  logger.log(`🚀 [Multi-Engine AI] Iniciando generación con motor: ${motorNormalizado.toUpperCase()}`)
+  logger.log(`   Modelo solicitado: ${modelo || 'default'}`)
+  logger.log(`   Imagen de referencia disponible: ${checkPublico?.valida ? '✅ (' + checkPublico.mimeType + ')' : '❌ (Solo texto)'}`)
+  logger.log(`   Longitud prompt: ${prompt.length} caracteres`)
 
   let resultado
 
@@ -887,7 +888,7 @@ async function generarImagenConMotor({ motor = 'gemini', modelo = '', prompt = '
       resultado = await generarConHuggingFace({ prompt, model: modelo || 'stabilityai/stable-diffusion-xl-base-1.0', checkPublico })
       break
     default:
-      console.warn(`⚠️ Motor '${motor}' desconocido. Usando Gemini por defecto.`)
+      logger.warn(`⚠️ Motor '${motor}' desconocido. Usando Gemini por defecto.`)
       resultado = await generarConGemini({ prompt, model: 'gemini-3.1-flash-image', checkPublico })
       break
   }
@@ -895,9 +896,9 @@ async function generarImagenConMotor({ motor = 'gemini', modelo = '', prompt = '
   const durationMs = Date.now() - startTime
 
   if (resultado.success) {
-    console.log(`✅ [Multi-Engine AI] Éxito con ${resultado.engineName || motorNormalizado} (${resultado.modelUsed}) en ${durationMs}ms`)
+    logger.log(`✅ [Multi-Engine AI] Éxito con ${resultado.engineName || motorNormalizado} (${resultado.modelUsed}) en ${durationMs}ms`)
   } else {
-    console.error(`❌ [Multi-Engine AI] Error con ${motorNormalizado} (${durationMs}ms): ${resultado.error}`)
+    logger.error(`❌ [Multi-Engine AI] Error con ${motorNormalizado} (${durationMs}ms): ${resultado.error}`)
   }
 
   return {
@@ -1052,7 +1053,7 @@ export async function POST(req) {
         precio_promocional: precioPromo,
       }])
     } catch (dbErr) {
-      console.warn('⚠️ No se pudo guardar el registro en generaciones_imagen (no crítico):', dbErr?.message)
+      logger.warn('⚠️ No se pudo guardar el registro en generaciones_imagen (no crítico):', dbErr?.message)
     }
 
     const nombreMotorLegible = motorResultado.engineName || motor
@@ -1080,7 +1081,7 @@ export async function POST(req) {
     })
 
   } catch (error) {
-    console.error('❌ Error general en generar-imagen-cloudinary:', error)
+    logger.error('❌ Error general en generar-imagen-cloudinary:', error)
     return NextResponse.json(
       { success: false, error: error?.message || 'Error inesperado al generar y subir la imagen' },
       { status: 500 }

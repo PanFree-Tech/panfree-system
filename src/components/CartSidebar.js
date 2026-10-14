@@ -1,4 +1,5 @@
 'use client'
+import { log, warn, error } from '@/lib/logger'
 import React, { useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -52,7 +53,7 @@ export default function CartSidebar() {
   }, [visible, setVisible])
 
   const irAlCheckout = useCallback(() => {
-    console.log('🛒 Navegando a checkout con router.push()')
+    logger.log('🛒 Navegando a checkout con router.push()')
     if (!estaAutenticado) {
       abrirModal(() => {
         setVisible(false)

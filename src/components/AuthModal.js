@@ -10,6 +10,7 @@
  * 5. Logging para facilitar debugging
  */
 'use client'
+import { log, warn, error } from '@/lib/logger'
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -185,7 +186,7 @@ export default function AuthModal() {
       cerrarModal()
       
     } catch (err) {
-      console.error(`Error en login con ${provider}:`, err)
+      logger.error(`Error en login con ${provider}:`, err)
       
       // Mensajes específicos por proveedor
       const mensajes = {

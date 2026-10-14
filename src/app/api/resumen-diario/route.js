@@ -5,6 +5,7 @@
  *    Calcula pedidos del día, ingresos totales, estados y productos más vendidos.
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
@@ -99,7 +100,7 @@ export async function GET(request) {
       .order('created_at', { ascending: false })
 
     if (pedidosError) {
-      console.error('[API resumen-diario] Error consultando pedidos:', pedidosError)
+      logger.error('[API resumen-diario] Error consultando pedidos:', pedidosError)
       throw pedidosError
     }
 
@@ -139,7 +140,7 @@ export async function GET(request) {
           .slice(0, 5)
       }
     } catch (detErr) {
-      console.warn('[API resumen-diario] Error no bloqueante al consultar detalles:', detErr)
+      logger.warn('[API resumen-diario] Error no bloqueante al consultar detalles:', detErr)
     }
 
     return NextResponse.json({
@@ -154,7 +155,7 @@ export async function GET(request) {
       },
     })
   } catch (error) {
-    console.error('Error en /api/resumen-diario:', error)
+    logger.error('Error en /api/resumen-diario:', error)
     return NextResponse.json(
       { error: error.message || 'Error al generar resumen diario' },
       { status: 500 }

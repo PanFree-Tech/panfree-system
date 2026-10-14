@@ -6,6 +6,7 @@
  * 🔒 SEGURIDAD: Solo usuarios autenticados o con token de servicio
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { enviarPlantillaWhatsApp } from '@/lib/whatsapp'
@@ -49,7 +50,7 @@ export async function POST(req) {
       detalles: resultado
     })
   } catch (error) {
-    console.error('❌ Error en /api/send-whatsapp:', error.message)
+    logger.error('❌ Error en /api/send-whatsapp:', error.message)
     return NextResponse.json(
       { success: false, error: error.message || 'Error interno enviando WhatsApp' },
       { status: 500 }

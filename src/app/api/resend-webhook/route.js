@@ -6,6 +6,7 @@
  *    - Actualiza el estado en la tabla email_logs según el ID del correo.
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -27,7 +28,7 @@ export async function POST(req) {
     const { type, data } = event
     const emailId = data?.email_id
 
-    console.log(`🔔 [Resend Webhook] Evento recibido: "${type}" para email_id: ${emailId}`)
+    logger.log(`🔔 [Resend Webhook] Evento recibido: "${type}" para email_id: ${emailId}`)
 
     if (emailId) {
       let newStatus = 'sent'
@@ -48,13 +49,13 @@ export async function POST(req) {
           })
           .eq('resend_id', emailId)
       } catch (dbErr) {
-        console.warn('Advertencia al actualizar email_logs desde webhook:', dbErr.message)
+        logger.warn('Advertencia al actualizar email_logs desde webhook:', dbErr.message)
       }
     }
 
     return NextResponse.json({ success: true, received: true, type })
   } catch (error) {
-    console.error('Error en resend-webhook:', error)
+    logger.error('Error en resend-webhook:', error)
     return NextResponse.json({ error: 'Error procesando webhook' }, { status: 500 })
   }
 }

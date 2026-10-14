@@ -11,6 +11,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -85,7 +86,7 @@ export default function NotificacionesAdmin() {
         setContador(data?.length || 0)
       }
     } catch (err) {
-      console.error('[PanFree] Error cargando notificaciones admin:', err)
+      logger.error('[PanFree] Error cargando notificaciones admin:', err)
     } finally {
       setCargando(false)
     }
@@ -136,7 +137,7 @@ export default function NotificacionesAdmin() {
         )
         .subscribe()
     } catch (err) {
-      console.error('[PanFree] Error suscribiendo a notificaciones:', err)
+      logger.error('[PanFree] Error suscribiendo a notificaciones:', err)
     }
 
     return () => {
@@ -155,7 +156,7 @@ export default function NotificacionesAdmin() {
       setNotificaciones((prev) => prev.filter((n) => n.id !== id))
       setContador((prev) => Math.max(0, prev - 1))
     } catch (err) {
-      console.error('[PanFree] Error marcando notificación:', err)
+      logger.error('[PanFree] Error marcando notificación:', err)
     }
   }
 
@@ -172,7 +173,7 @@ export default function NotificacionesAdmin() {
       setNotificaciones([])
       setContador(0)
     } catch (err) {
-      console.error('[PanFree] Error marcando todas:', err)
+      logger.error('[PanFree] Error marcando todas:', err)
     }
   }
 

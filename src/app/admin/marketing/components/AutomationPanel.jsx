@@ -5,6 +5,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState } from 'react'
 import { generateInstagramContent } from '../services/geminiService'
 import { publishToInstagram } from '../services/instagramService'
@@ -54,9 +55,9 @@ export default function AutomationPanel({ selectedProduct, canvasRef, onPostPubl
           },
         }),
       })
-      console.log('📧 [PanFree] Correo de notificación enviado a system.panfree@gmail.com')
+      logger.log('📧 [PanFree] Correo de notificación enviado a system.panfree@gmail.com')
     } catch (emailErr) {
-      console.warn('⚠️ No se pudo enviar notificación de correo (no bloqueante):', emailErr.message)
+      logger.warn('⚠️ No se pudo enviar notificación de correo (no bloqueante):', emailErr.message)
     }
   }
 

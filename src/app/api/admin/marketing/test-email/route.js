@@ -5,6 +5,7 @@
  * 📖 DESCRIPCIÓN: Endpoint para probar el envío de correos con Resend a system.panfree@gmail.com
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { sendEmail, DEFAULT_ADMIN_EMAIL, DEFAULT_FROM_EMAIL } from '@/lib/resend'
 import { templatePruebaSistema } from '@/lib/email-templates'
@@ -49,7 +50,7 @@ async function handleTestEmail(req) {
         },
       ])
     } catch (e) {
-      console.warn('Advertencia al registrar en email_logs desde test-email:', e.message)
+      logger.warn('Advertencia al registrar en email_logs desde test-email:', e.message)
     }
 
     if (!resultado.success) {
@@ -71,7 +72,7 @@ async function handleTestEmail(req) {
       to: destinatario,
     })
   } catch (error) {
-    console.error('Error en test-email route:', error)
+    logger.error('Error en test-email route:', error)
     return NextResponse.json(
       {
         success: false,

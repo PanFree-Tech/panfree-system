@@ -5,6 +5,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../../../lib/supabase'
 
@@ -36,7 +37,7 @@ export function useSupabaseProducts() {
       if (sbError) throw sbError
       setProductos(data || [])
     } catch (err) {
-      console.error('Error al cargar productos para marketing:', err)
+      logger.error('Error al cargar productos para marketing:', err)
       setError(err?.message || 'Error al conectar con la base de datos')
     } finally {
       setLoadingProd(false)

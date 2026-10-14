@@ -8,6 +8,7 @@
  *    - Registro de auditoría y manejo resiliente de errores.
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { Resend } from 'resend'
 
 export const DEFAULT_FROM_EMAIL = 'PanFree <contacto@panfree.fit>'
@@ -22,7 +23,7 @@ export function getResendClient() {
   if (!resendClient) {
     const apiKey = process.env.RESEND_API_KEY
     if (!apiKey) {
-      console.warn('⚠️ [Resend] RESEND_API_KEY no está configurada en las variables de entorno del servidor.')
+      logger.warn('⚠️ [Resend] RESEND_API_KEY no está configurada en las variables de entorno del servidor.')
       return null
     }
     resendClient = new Resend(apiKey)
@@ -59,14 +60,14 @@ export async function sendEmail({
 
   if (!subject || (!html && !text)) {
     const msg = 'El asunto (subject) y el contenido (html o text) son obligatorios.'
-    console.error(`❌ [Resend Error]: ${msg}`)
+    logger.error(`❌ [Resend Error]: ${msg}`)
     return { success: false, error: msg }
   }
 
   // Si no hay API key configurada, simular envío seguro en entornos de desarrollo
   if (!client) {
     const mockId = `sim_resend_${Date.now()}`
-    console.log(`ℹ️ [Resend Simulación]: Envío simulado a ${recipient.join(', ')} | Asunto: "${subject}" (ID: ${mockId})`)
+    logger.log(`ℹ️ [Resend Simulación]: Envío simulado a ${recipient.join(', ')} | Asunto: "${subject}" (ID: ${mockId})`)
     return {
       success: true,
       id: mockId,
@@ -76,7 +77,7 @@ export async function sendEmail({
   }
 
   try {
-    console.log(`📨 [Resend] Enviando correo a: ${recipient.join(', ')} | Asunto: "${subject}" | Desde: ${from}`)
+    logger.log(`📨 [Resend] Enviando correo a: ${recipient.join(', ')} | Asunto: "${subject}" | Desde: ${from}`)
     
     const payload = {
       from,
@@ -92,7 +93,7 @@ export async function sendEmail({
     const { data, error } = await client.emails.send(payload)
 
     if (error) {
-      console.error(`❌ [Resend API Error]:`, error)
+      logger.error(`❌ [Resend API Error]:`, error)
       return {
         success: false,
         error: error.message || 'Error en Resend API',
@@ -100,14 +101,14 @@ export async function sendEmail({
       }
     }
 
-    console.log(`✅ [Resend Éxito]: Correo enviado con ID ${data?.id} a ${recipient.join(', ')}`)
+    logger.log(`✅ [Resend Éxito]: Correo enviado con ID ${data?.id} a ${recipient.join(', ')}`)
     return {
       success: true,
       id: data?.id,
       data,
     }
   } catch (err) {
-    console.error(`💥 [Resend Excepción]:`, err?.message || err)
+    logger.error(`💥 [Resend Excepción]:`, err?.message || err)
     return {
       success: false,
       error: err?.message || 'Error inesperado al enviar correo con Resend',

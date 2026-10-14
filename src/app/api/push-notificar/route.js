@@ -9,6 +9,7 @@
  *    - Respuestas detalladas y tolerantes a fallos
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
@@ -40,7 +41,7 @@ function getWebPush() {
   const emailContact = process.env.NEXT_PUBLIC_VAPID_EMAIL || process.env.VAPID_SUBJECT || 'mailto:contacto@panfree.py'
 
   if (!publicKey || !privateKey) {
-    console.warn('⚠️ [Push] Claves VAPID no encontradas en variables de entorno')
+    logger.warn('⚠️ [Push] Claves VAPID no encontradas en variables de entorno')
     return null
   }
 
@@ -52,7 +53,7 @@ function getWebPush() {
     webpush.setVapidDetails(subject, publicKey, privateKey)
     return webpush
   } catch (err) {
-    console.error('❌ [Push] Error configurando webpush VAPID:', err.message)
+    logger.error('❌ [Push] Error configurando webpush VAPID:', err.message)
     return null
   }
 }
@@ -158,7 +159,7 @@ export async function POST(request) {
             .filter(id => isValidUUID(id))
         }
       } catch (adminQueryErr) {
-        console.warn('⚠️ [Push] Error consultando tabla usuarios:', adminQueryErr.message)
+        logger.warn('⚠️ [Push] Error consultando tabla usuarios:', adminQueryErr.message)
       }
 
       if (adminAuthIds.length > 0) {
@@ -198,7 +199,7 @@ export async function POST(request) {
       new Map(subscriptions.map(s => [s.endpoint, s])).values()
     )
 
-    console.log(`📨 [Push] Enviando notificación a ${subsUnicas.length} endpoints únicos`)
+    logger.log(`📨 [Push] Enviando notificación a ${subsUnicas.length} endpoints únicos`)
 
     const payload = JSON.stringify({
       title: finalTitle,
@@ -243,7 +244,7 @@ export async function POST(request) {
           await wp.sendNotification(pushSubscription, payload)
           enviadas++
         } catch (err) {
-          console.error(`⚠️ [Push] Error enviando a endpoint (${err.statusCode || err.message})`)
+          logger.error(`⚠️ [Push] Error enviando a endpoint (${err.statusCode || err.message})`)
           fallos++
           if (err.statusCode === 410 || err.statusCode === 404) {
             endpointsAEliminar.push(sub.endpoint)
@@ -254,14 +255,14 @@ export async function POST(request) {
 
     // ── 4. Limpieza automática de endpoints caducados (CORREGIDO) ──
     if (endpointsAEliminar.length > 0) {
-      console.log(`🧹 [Push] Eliminando ${endpointsAEliminar.length} suscripciones caducadas...`)
+      logger.log(`🧹 [Push] Eliminando ${endpointsAEliminar.length} suscripciones caducadas...`)
       try {
         await db
           .from('push_subscriptions')
           .delete()
           .in('endpoint', endpointsAEliminar)
       } catch (err) {
-        console.warn('Error en limpieza de suscripciones:', err.message)
+        logger.warn('Error en limpieza de suscripciones:', err.message)
       }
     }
 
@@ -273,7 +274,7 @@ export async function POST(request) {
       mensaje: `Notificaciones push enviadas a ${enviadas} de ${subsUnicas.length} dispositivos`,
     })
   } catch (error) {
-    console.error('💥 [Push] Error general en /api/push-notificar:', error)
+    logger.error('💥 [Push] Error general en /api/push-notificar:', error)
     return NextResponse.json({
       success: false,
       error: error.message || 'Error interno al enviar notificaciones push',

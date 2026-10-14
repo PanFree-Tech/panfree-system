@@ -4,6 +4,7 @@
  * validación, canjes y gamificación de fidelidad en PanFree.
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { supabase } from './supabase'
 
 const CARACTERES_CODIGO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Sin caracteres ambiguos como O/0, I/1
@@ -124,7 +125,7 @@ export async function validarCodigo(codigo) {
 
         return { valido: true, codigo: data }
     } catch (err) {
-        console.error('Error al validar código díptico:', err)
+        logger.error('Error al validar código díptico:', err)
         return { valido: false, mensaje: 'Error al verificar el código en el sistema' }
     }
 }
@@ -163,7 +164,7 @@ export async function canjearCodigo(codigo, clienteId) {
             .single()
 
         if (canjeError) {
-            console.error('Error insertando canje:', canjeError)
+            logger.error('Error insertando canje:', canjeError)
             // Si ya existe registro de canje
             if (canjeError.code === '23505') {
                 return { success: false, mensaje: 'Este código ya fue registrado para canje' }
@@ -182,7 +183,7 @@ export async function canjearCodigo(codigo, clienteId) {
             .eq('id', codigoObj.id)
 
         if (updateCodigoError) {
-            console.warn('Advertencia actualizando código díptico:', updateCodigoError)
+            logger.warn('Advertencia actualizando código díptico:', updateCodigoError)
         }
 
         // 3. Asegurar actualización de puntos y nivel del cliente
@@ -208,7 +209,7 @@ export async function canjearCodigo(codigo, clienteId) {
                 })
                 .eq('id', clienteId)
         } catch (clienteErr) {
-            console.warn('Trigger o actualización cliente manejada:', clienteErr)
+            logger.warn('Trigger o actualización cliente manejada:', clienteErr)
         }
 
         return {
@@ -218,7 +219,7 @@ export async function canjearCodigo(codigo, clienteId) {
             canje
         }
     } catch (err) {
-        console.error('Error en canjearCodigo:', err)
+        logger.error('Error en canjearCodigo:', err)
         return { success: false, mensaje: 'Ocurrió un problema al procesar el canje del código' }
     }
 }
@@ -277,7 +278,7 @@ export async function canjearPremio(premioId, clienteId) {
             .single()
 
         if (regErr) {
-            console.warn('Error registrando canje en tabla canjes_premios:', regErr)
+            logger.warn('Error registrando canje en tabla canjes_premios:', regErr)
         }
 
         // 2. Si el premio es de descuento o delivery, crear cupón en cupones_descuento para usar en checkout
@@ -320,7 +321,7 @@ export async function canjearPremio(premioId, clienteId) {
             premio
         }
     } catch (err) {
-        console.error('Error al canjear premio:', err)
+        logger.error('Error al canjear premio:', err)
         return { success: false, mensaje: 'Error interno al procesar el canje de premio' }
     }
 }
@@ -352,7 +353,7 @@ export async function getEstadisticas() {
             tasaCanje: tasa
         }
     } catch (err) {
-        console.error('Error obteniendo estadísticas de dípticos:', err)
+        logger.error('Error obteniendo estadísticas de dípticos:', err)
         return { total: 0, activos: 0, canjeados: 0, lotes: 0, tasaCanje: '0%' }
     }
 }

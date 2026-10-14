@@ -10,6 +10,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect, useCallback, useRef } from 'react'
 
 /**
@@ -63,7 +64,7 @@ export function usePushNotifications() {
           registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
         }
       } catch (swErr) {
-        console.warn('[Push Hook] Error obteniendo Service Worker registration:', swErr.message)
+        logger.warn('[Push Hook] Error obteniendo Service Worker registration:', swErr.message)
       }
 
       if (!registration) {
@@ -81,7 +82,7 @@ export function usePushNotifications() {
         setIsSubscribed(false)
       }
     } catch (err) {
-      console.warn('⚠️ [Push Hook] Error verificando estado de push:', err)
+      logger.warn('⚠️ [Push Hook] Error verificando estado de push:', err)
       setError(err.message)
     } finally {
       setLoading(false)
@@ -104,7 +105,7 @@ export function usePushNotifications() {
       setPermission(result)
       return result
     } catch (err) {
-      console.error('❌ [Push Hook] Error solicitando permiso:', err)
+      logger.error('❌ [Push Hook] Error solicitando permiso:', err)
       setError(err.message)
       return 'denied'
     }
@@ -118,7 +119,7 @@ export function usePushNotifications() {
     }
 
     if (isSubscribingRef.current) {
-      console.log('⏳ [Push Hook] Suscripción en curso, esperando...')
+      logger.log('⏳ [Push Hook] Suscripción en curso, esperando...')
       return { success: false, inProgress: true }
     }
 
@@ -190,11 +191,11 @@ export function usePushNotifications() {
       setSubscription(pushSub)
       setIsSubscribed(true)
       setPermission('granted')
-      console.log('🎉 [Push Hook] Dispositivo suscrito con éxito a Push Notifications')
+      logger.log('🎉 [Push Hook] Dispositivo suscrito con éxito a Push Notifications')
 
       return { success: true, subscription: pushSub }
     } catch (err) {
-      console.error('❌ [Push Hook] Error al suscribir a push:', err)
+      logger.error('❌ [Push Hook] Error al suscribir a push:', err)
       setError(err.message)
       return { success: false, error: err.message }
     } finally {
@@ -221,7 +222,7 @@ export function usePushNotifications() {
           // Eliminar de Supabase
           await fetch(`/api/push-suscribir?endpoint=${encodeURIComponent(endpoint)}`, {
             method: 'DELETE',
-          }).catch((e) => console.warn('Error al eliminar en backend:', e))
+          }).catch((e) => logger.warn('Error al eliminar en backend:', e))
         }
       }
 
@@ -229,7 +230,7 @@ export function usePushNotifications() {
       setIsSubscribed(false)
       return { success: true }
     } catch (err) {
-      console.error('❌ [Push Hook] Error al desuscribir:', err)
+      logger.error('❌ [Push Hook] Error al desuscribir:', err)
       setError(err.message)
       return { success: false, error: err.message }
     } finally {
@@ -254,7 +255,7 @@ export function usePushNotifications() {
       const result = await response.json()
       return result
     } catch (err) {
-      console.error('❌ [Push Hook] Error enviando prueba:', err)
+      logger.error('❌ [Push Hook] Error enviando prueba:', err)
       return { success: false, error: err.message }
     }
   }

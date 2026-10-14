@@ -1,4 +1,5 @@
 // src/app/diptico/[codigo]/page.js
+import { log, warn, error } from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
 import DipticoCliente from './DipticoCliente'
 
@@ -34,7 +35,7 @@ export default async function PaginaDiptico({ params }) {
     .maybeSingle()
 
   if (error) {
-    console.error('❌ Error consultando código en Supabase:', error.message)
+    logger.error('❌ Error consultando código en Supabase:', error.message)
   }
 
   // Si no existe o fue bloqueado

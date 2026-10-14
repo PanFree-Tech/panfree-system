@@ -7,6 +7,7 @@
  *    - Cruza con el calendario de eventos y reglas de negocio para optimizar ventas sin sobrecargar la cocina.
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
@@ -32,7 +33,7 @@ export async function GET(req) {
         todosLosProductos = prods
       }
     } catch (e) {
-      console.warn('Advertencia al consultar productos en decidir-promocion:', e.message)
+      logger.warn('Advertencia al consultar productos en decidir-promocion:', e.message)
     }
 
     // Fallback de productos con datos de capacidad si la tabla está vacía
@@ -157,7 +158,7 @@ export async function GET(req) {
         eventos = evts
       }
     } catch (e) {
-      console.warn('Advertencia al consultar eventos_calendario:', e.message)
+      logger.warn('Advertencia al consultar eventos_calendario:', e.message)
     }
 
     if (eventos.length === 0) {
@@ -196,7 +197,7 @@ export async function GET(req) {
         reglas = rgls
       }
     } catch (e) {
-      console.warn('Advertencia al consultar reglas_promocion:', e.message)
+      logger.warn('Advertencia al consultar reglas_promocion:', e.message)
     }
 
     if (reglas.length === 0) {
@@ -371,7 +372,7 @@ export async function GET(req) {
       },
     })
   } catch (error) {
-    console.error('Error en decidir-promocion API:', error)
+    logger.error('Error en decidir-promocion API:', error)
     return NextResponse.json(
       { success: false, error: error?.message || 'Error al calcular decisión de promoción' },
       { status: 500 }

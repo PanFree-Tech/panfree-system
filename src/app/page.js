@@ -1,3 +1,4 @@
+import { log, warn, error } from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
 import { normalizeProduct } from '@/lib/image-utils'
 import TiendaCliente from './TiendaCliente'
@@ -29,10 +30,10 @@ async function cargarDatos() {
     ])
 
     if (errProd) {
-      console.error('Error cargando productos:', errProd)
+      logger.error('Error cargando productos:', errProd)
     }
     if (errDisp) {
-      console.warn('Nota: vista_disponibilidad_productos no disponible:', errDisp?.message)
+      logger.warn('Nota: vista_disponibilidad_productos no disponible:', errDisp?.message)
     }
 
     const productosNormalizados = (productos || []).map((p) => {
@@ -57,7 +58,7 @@ async function cargarDatos() {
       configuracion: configSitio || null,
     }
   } catch (err) {
-    console.error('Error cargando datos de Supabase:', err)
+    logger.error('Error cargando datos de Supabase:', err)
     return {
       productos: [],
       disponibilidad: {},

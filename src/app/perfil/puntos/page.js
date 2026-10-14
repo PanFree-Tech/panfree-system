@@ -5,6 +5,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -174,7 +175,7 @@ export default function PuntosPage() {
             }
 
         } catch (err) {
-            console.error('Error cargando datos del dashboard de puntos:', err)
+            logger.error('Error cargando datos del dashboard de puntos:', err)
         } finally {
             setCargando(false)
         }
@@ -229,7 +230,7 @@ export default function PuntosPage() {
                 })
             }
         } catch (err) {
-            console.error('Error canjeando premio:', err)
+            logger.error('Error canjeando premio:', err)
             setMensajePremio({
                 tipo: 'error',
                 texto: 'Error de conexión al procesar el canje.'

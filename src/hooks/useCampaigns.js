@@ -9,6 +9,7 @@
  * ⚠️  EN CASO DE MODIFICACIÓN SIGNIFICATIVA, actualizar este comentario.
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { useEffect, useState, useCallback } from 'react'
 
 export const UTM_STORAGE_KEY = 'panfree_utm_campaign'
@@ -52,7 +53,7 @@ export function extractUTMParams(searchString = '') {
       referrer: typeof document !== 'undefined' ? document.referrer || '' : '',
     }
   } catch (err) {
-    console.warn('[useCampaigns] Error extrayendo UTM:', err)
+    logger.warn('[useCampaigns] Error extrayendo UTM:', err)
     return null
   }
 }
@@ -74,7 +75,7 @@ export function saveCampaign(campaignData) {
     // Notificar cambio
     window.dispatchEvent(new CustomEvent('panfree-campaign-updated', { detail: campaignData }))
   } catch (err) {
-    console.warn('[useCampaigns] Error guardando campaña:', err)
+    logger.warn('[useCampaigns] Error guardando campaña:', err)
   }
 }
 
@@ -107,7 +108,7 @@ export function getStoredCampaign() {
       return cookieData
     }
   } catch (err) {
-    console.warn('[useCampaigns] Error leyendo campaña almacenada:', err)
+    logger.warn('[useCampaigns] Error leyendo campaña almacenada:', err)
   }
   return null
 }
@@ -122,7 +123,7 @@ export function clearCampaign() {
     document.cookie = `${UTM_COOKIE_KEY}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
     window.dispatchEvent(new CustomEvent('panfree-campaign-updated', { detail: null }))
   } catch (err) {
-    console.warn('[useCampaigns] Error limpiando campaña:', err)
+    logger.warn('[useCampaigns] Error limpiando campaña:', err)
   }
 }
 

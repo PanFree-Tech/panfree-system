@@ -12,6 +12,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -187,7 +188,7 @@ export default function MarketingPage() {
           }
         }
       } catch (err) {
-        console.warn('No se pudo obtener estado de los motores:', err?.message)
+        logger.warn('No se pudo obtener estado de los motores:', err?.message)
       }
     }
     cargarEstadoMotores()
@@ -230,7 +231,7 @@ export default function MarketingPage() {
         throw new Error(json.error || 'No se pudo obtener la recomendación')
       }
     } catch (err) {
-      console.error('Error al cargar decisión:', err)
+      logger.error('Error al cargar decisión:', err)
       setNotificacion({
         tipo: 'error',
         texto: `❌ Error al conectar con el motor de decisiones: ${err.message || 'Fallo desconocido'}`,

@@ -10,6 +10,7 @@
  *      la creación de logs incluso cuando la sesión actual no esté autenticada como el destinatario.
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
@@ -50,7 +51,7 @@ export async function POST(req) {
     // 1. Validar esquema con Zod
     const validationResult = emailSchema.safeParse(rawBody)
     if (!validationResult.success) {
-      console.warn('⚠️ [send-email] Validación fallida:', validationResult.error.flatten().fieldErrors)
+      logger.warn('⚠️ [send-email] Validación fallida:', validationResult.error.flatten().fieldErrors)
       return NextResponse.json(
         {
           success: false,
@@ -65,7 +66,7 @@ export async function POST(req) {
     const recipientStr = Array.isArray(to) ? to.join(', ') : to
 
     // 2. Enviar a través del servicio de Resend
-    console.log(`📨 [send-email] Iniciando envío de correo hacia: ${recipientStr} | Asunto: "${subject}"`)
+    logger.log(`📨 [send-email] Iniciando envío de correo hacia: ${recipientStr} | Asunto: "${subject}"`)
     const resendResult = await sendEmail({
       to,
       subject,
@@ -82,7 +83,7 @@ export async function POST(req) {
     // 3. Registrar en la tabla `email_logs` de Supabase usando el cliente con Service Role
     let logId = null
     try {
-      console.log(`📝 [send-email] Insertando registro en email_logs (Estado: ${status}, Resend ID: ${resendId || 'N/A'})...`)
+      logger.log(`📝 [send-email] Insertando registro en email_logs (Estado: ${status}, Resend ID: ${resendId || 'N/A'})...`)
       
       const insertPayload = {
         to_email: recipientStr,
@@ -107,7 +108,7 @@ export async function POST(req) {
         .single()
 
       if (logError) {
-        console.error('❌ [send-email] Error insertando en email_logs:', {
+        logger.error('❌ [send-email] Error insertando en email_logs:', {
           code: logError.code,
           message: logError.message,
           details: logError.details,
@@ -115,10 +116,10 @@ export async function POST(req) {
         })
       } else if (logData) {
         logId = logData.id
-        console.log(`✅ [send-email] Registro de correo guardado exitosamente en email_logs con ID: ${logId}`)
+        logger.log(`✅ [send-email] Registro de correo guardado exitosamente en email_logs con ID: ${logId}`)
       }
     } catch (dbErr) {
-      console.error('💥 [send-email] Excepción al interactuar con email_logs:', {
+      logger.error('💥 [send-email] Excepción al interactuar con email_logs:', {
         message: dbErr?.message || dbErr,
         stack: dbErr?.stack,
       })
@@ -146,7 +147,7 @@ export async function POST(req) {
       message: resendResult.simulated ? resendResult.message : 'Correo enviado exitosamente con Resend',
     })
   } catch (error) {
-    console.error('💥 [send-email] Error no controlado en POST handler:', {
+    logger.error('💥 [send-email] Error no controlado en POST handler:', {
       message: error?.message || error,
       stack: error?.stack,
     })

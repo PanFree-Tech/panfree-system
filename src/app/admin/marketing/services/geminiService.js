@@ -1,3 +1,4 @@
+import { log, warn, error } from '@/lib/logger'
 /**
  * 📁 UBICACIÓN: src/app/admin/marketing/services/geminiService.js
  * 📌 Servicio para generar copy publicitario y captions con Inteligencia Artificial (Gemini).
@@ -62,7 +63,7 @@ export const generateInstagramContent = async (product, options = {}) => {
       fullPost: fullPost.trim(),
     }
   } catch (error) {
-    console.warn('Fallo en geminiService, aplicando fallback seguro:', error?.message)
+    logger.warn('Fallo en geminiService, aplicando fallback seguro:', error?.message)
 
     // Fallback de contingencia local
     const pName = product?.nombre || 'Panificados Artesanales Sin Gluten'

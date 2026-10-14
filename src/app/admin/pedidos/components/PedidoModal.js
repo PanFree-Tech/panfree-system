@@ -11,6 +11,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../../../lib/supabase'
 import { formatPYG, S } from '../lib/config'
@@ -87,7 +88,7 @@ export default function PedidoModal({ onCerrar, onCreado }) {
         else setClienteNuevo((prev) => ({ ...prev, nombre: q }))
       }
     } catch (err) {
-      console.error('[PanFree] Error buscando cliente:', err)
+      logger.error('[PanFree] Error buscando cliente:', err)
     } finally {
       setBuscandoCli(false)
     }
@@ -237,7 +238,7 @@ export default function PedidoModal({ onCerrar, onCreado }) {
           }),
         })
       } catch (errNotif) {
-        console.warn('[n8n] Error no bloqueante al notificar pedido:', errNotif)
+        logger.warn('[n8n] Error no bloqueante al notificar pedido:', errNotif)
       }
 
       // Registrar en logs de auditoría
@@ -250,7 +251,7 @@ export default function PedidoModal({ onCerrar, onCreado }) {
 
       onCreado(pedidoDB.numero_pedido)
     } catch (err) {
-      console.error('[PanFree] Error creando pedido manual:', err)
+      logger.error('[PanFree] Error creando pedido manual:', err)
       setError(err.message || 'Error al crear el pedido. Intentá nuevamente.')
     } finally {
       setGuardando(false)

@@ -3,6 +3,7 @@
  * API para canjear premios del catálogo de fidelización usando puntos acumulados
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { canjearPremio } from '@/lib/dipticos'
 import { supabase } from '@/lib/supabase'
@@ -45,7 +46,7 @@ export async function POST(req) {
         return NextResponse.json(resultado, { status: resultado.success ? 200 : 400 })
 
     } catch (error) {
-        console.error('Error en /api/premios/canjear:', error)
+        logger.error('Error en /api/premios/canjear:', error)
         return NextResponse.json(
             { success: false, error: 'Error interno al canjear el premio' },
             { status: 500 }

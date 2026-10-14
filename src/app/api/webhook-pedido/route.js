@@ -6,6 +6,7 @@
  * 🔒 SEGURIDAD: Usa token para autenticar (N8N_INCOMING_TOKEN)
  */
 
+import { log, warn, error } from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { supabase } from '@/lib/supabase'
@@ -67,7 +68,7 @@ export async function POST(req) {
         leida: false,
       })
     } catch (notifErr) {
-      console.warn('[notificaciones_admin] Registro opcional:', notifErr.message)
+      logger.warn('[notificaciones_admin] Registro opcional:', notifErr.message)
     }
 
     return NextResponse.json({ 
@@ -77,7 +78,7 @@ export async function POST(req) {
     })
 
   } catch (error) {
-    console.error('Error en /api/webhook-pedido:', error)
+    logger.error('Error en /api/webhook-pedido:', error)
     return NextResponse.json(
       { error: error.message || 'Error interno' },
       { status: 500 }

@@ -13,6 +13,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -320,7 +321,7 @@ export default function PaginaConfiguracionAdmin() {
         setUsuarios(usuariosData)
       }
     } catch (err) {
-      console.error('Error cargando configuración:', err)
+      logger.error('Error cargando configuración:', err)
     } finally {
       setLoading(false)
     }
@@ -347,7 +348,7 @@ export default function PaginaConfiguracionAdmin() {
       setMensaje({ tipo: 'ok', texto: 'Configuración y variantes guardadas exitosamente.' })
       setTimeout(() => setMensaje(null), 3500)
     } catch (err) {
-      console.error('Error guardando configuración:', err)
+      logger.error('Error guardando configuración:', err)
       setMensaje({ tipo: 'err', texto: err.message || 'Error al guardar la configuración.' })
     } finally {
       setGuardando(false)

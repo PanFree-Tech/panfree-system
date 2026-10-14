@@ -1,6 +1,7 @@
 // src/components/ErrorBoundary.js
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import React from 'react'
 import { AlertCircle } from 'lucide-react'
 
@@ -25,7 +26,7 @@ export default class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     // Log del error en consola
-    console.error('🔥 ErrorBoundary capturó un error:', error, errorInfo)
+    logger.error('🔥 ErrorBoundary capturó un error:', error, errorInfo)
     
     // También se puede enviar a un servicio de reporting
     this.setState({

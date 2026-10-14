@@ -7,6 +7,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import styles from '../styles/marketing.module.css'
@@ -80,7 +81,7 @@ export default function EventCalendar({ onSelectEventForPromotion }) {
         setEventos(EVENTOS_DEFAULT)
       }
     } catch (err) {
-      console.warn('Error al cargar eventos de Supabase:', err.message)
+      logger.warn('Error al cargar eventos de Supabase:', err.message)
       setEventos(EVENTOS_DEFAULT)
     } finally {
       setCargando(false)
@@ -158,7 +159,7 @@ export default function EventCalendar({ onSelectEventForPromotion }) {
       setModalAbierto(false)
       cargarEventos()
     } catch (err) {
-      console.warn('Fallo guardado en Supabase, aplicando local:', err.message)
+      logger.warn('Fallo guardado en Supabase, aplicando local:', err.message)
       if (eventoEditando) {
         setEventos((prev) =>
           prev.map((e) => (e.id === eventoEditando.id ? { ...e, ...payload } : e))
@@ -185,7 +186,7 @@ export default function EventCalendar({ onSelectEventForPromotion }) {
           .eq('id', evento.id)
       }
     } catch (e) {
-      console.warn('Error al alternar estado en Supabase:', e.message)
+      logger.warn('Error al alternar estado en Supabase:', e.message)
     }
     setEventos((prev) =>
       prev.map((e) => (e.id === evento.id ? { ...e, activo: nuevoEstado } : e))

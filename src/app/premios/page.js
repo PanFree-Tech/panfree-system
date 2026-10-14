@@ -5,6 +5,7 @@
 
 'use client'
 
+import { log, warn, error } from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -56,7 +57,7 @@ export default function PremiosPublicosPage() {
                     setPremios(PREMIOS_DEFAULT)
                 }
             } catch (err) {
-                console.error('Error al cargar premios públicos:', err)
+                logger.error('Error al cargar premios públicos:', err)
                 setPremios(PREMIOS_DEFAULT)
             } finally {
                 setCargando(false)
