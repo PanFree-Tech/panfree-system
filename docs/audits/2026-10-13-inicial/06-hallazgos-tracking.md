@@ -1,7 +1,7 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
 **Ultima actualizacion:** 2026-10-14 (fin Sesion 14)
-**Total de hallazgos:** 44
+**Total de hallazgos:** 45
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 15 |
+| Abierto | 16 |
 | En curso | 0 |
 | Cerrado | 28 |
 | Aceptado | 1 |
@@ -22,7 +22,7 @@
 |---|---|---|
 | Critica | 9 | 7 |
 | Alta | 11 | 7 |
-| Media | 14 | 4 |
+| Media | 15 | 4 |
 | Baja | 7 | 1 |
 
 ---
@@ -78,6 +78,7 @@
 | BUG-009 | endpoint usa gemini-3.7-flash que no existe en AI Studio | F3 | P2 | Abierto | - |
 | SEC-018 | 3 API keys activas en Cloudinary sin trazabilidad | F2 | P2 | Abierto | - |
 | SEC-019 | 4 API keys activas en Gemini sin trazabilidad | F2 | P2 | Abierto | - |
+| SEC-020 | 9 items Bitwarden pendientes (se completan durante rotacion S15) | F2 | P2 | Abierto | - |
 
 ### Hallazgos bajos
 

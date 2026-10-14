@@ -774,3 +774,55 @@ e5bed103
 - (S15+) Bloque B: SEC-014..017 (chores de hardcodes).
 
 ---
+
+---
+
+## 2026-10-14 (Sesion 14 - Cierre)
+
+**Duracion:** ~2 horas (parte 2 de S14)
+**Objetivo:** Cerrar S14: tracking + hallazgos + estado Bitwarden
+
+**Completado:**
+- Bloque A: registrados 10 hallazgos nuevos en tracking.
+  - Tracking: 34 -> 45 hallazgos.
+  - Cerrado: BUG-010 (regresion logger S13).
+  - Nuevos: BUG-006..009, BUG-011, SEC-018, SEC-019, DOC-002, DOC-003.
+- Doc nuevo: 24-bugs-s14-gemini-y-otros.md (familia Gemini + keys).
+- Bloque B (parcial): documentado estado Bitwarden al cierre de S14.
+  - 3/12 items completos. 9 pendientes (se completan durante rotacion S15).
+  - SEC-020 registrado.
+- Doc nuevo: 24-bugs-s14-gemini-y-otros.md.
+- ROTACION-CLAVES.md: seccion "Estado de Bitwarden al cierre de S14".
+- ENVIRONMENT.md: referencia a la seccion nueva.
+
+**Commits:**
+- a6c9d4d0 docs(audit): registrar 10 hallazgos nuevos de S14 (BUG-006..011, SEC-018/019, DOC-002/003)
+- (pendiente) docs(session): cerrar sesion 14 (ENV) - Bloque A + Bitwarden parcial
+
+**Hallazgos cerrados:**
+- BUG-010: regresion del logger (ya cerrado en parte 1, formalizado en tracking).
+
+**Hallazgos nuevos:**
+- SEC-020: 9 items Bitwarden pendientes (se completan durante rotacion S15).
+
+**Bloqueantes:**
+- Ninguno.
+
+**Aprendizajes:**
+- En Bitwarden no se cargan valores viejos: se completa en el mismo flujo
+  de la rotacion (rotar + guardar nuevo + guardar viejo).
+- Los scripts de cierre no commitean; el commit se hace manual o en un
+  script 35 dedicado, para agrupar el "docs(session)" con todos los cambios.
+- Verificacion post-write con checks explicitos (string.Contains) evita
+  falsos OK. El script 34 valido 8/8, el 32 valido 17/17.
+
+**Proxima sesion (S15):**
+- F2-02: rotar JWT secret + keys Supabase.
+- F2-04: rotar Cloudinary API secret (resolver SEC-018 primero).
+- F2-05: rotar Resend API key.
+- F2-06: rotar Gemini API key (resolver SEC-019 primero).
+- F2-07 a F2-13: resto de rotaciones.
+- Completar items Bitwarden como subproducto de cada rotacion.
+- F3-07: BUG-001 (VAPID).
+
+---

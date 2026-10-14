@@ -1,6 +1,6 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-14 (fin Sesion 13)
+**Ultima actualizacion:** 2026-10-14 (fin Sesion 14)
 **Fase actual:** Fase 2 (EN CURSO)
 **Progreso global:** 49% (23 de 47 tareas)
 
@@ -12,10 +12,10 @@
 |---|---|---|---|---|---|
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
-| F2 - Rotacion claves | 14 | 0 | 0 | 14 | 0% |
+| F2 - Rotacion claves | 14 | 2 | 0 | 12 | 14% |
 | F3 - Codigo | 9 | 6 | 0 | 3 | 67% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **23** | **0** | **24** | **49%** |
+| **Total** | **47** | **25** | **0** | **22** | **53%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -31,9 +31,9 @@
 
 ## 3. Proximos 3 pasos
 
-1. **F3-07** - BUG-001: NEXT_PUBLIC_VAPID_KEY inconsistente (P2)
-2. **F3-08** - CONF-001: ESLint en build (P2)
-3. **Chores P3** - SEC-014..017 (hardcoded keys) para desbloquear Fase 2
+1. **Fase 2 - Rotaciones (S15)** - Bitwarden + rotar claves (F2-02, F2-04..F2-13)
+2. **F3-07** - BUG-001: NEXT_PUBLIC_VAPID_KEY inconsistente (P2)
+3. **SEC-018 / SEC-019** - Trazabilidad de keys Cloudinary/Gemini antes de rotar
 
 ## 4. Metricas clave
 
@@ -42,8 +42,8 @@
 | Advisors Supabase severidad 1-2 | 7 | 0 |
 | Advisors Supabase severidad 3 | 250+ | menos de 50 |
 | Claves productivas rotadas | 0 / 12 | 12 / 12 |
-| Claves en Bitwarden | 0 / 12 | 12 / 12 |
-| Hallazgos cerrados | 27 / 34 | 34 / 34 |
+| Claves en Bitwarden | 3 / 12 | 12 / 12 |
+| Hallazgos cerrados | 28 / 45 | 45 / 45 |
 | Documentos .md en docs/ | 30+ | 30+ (OK) |
 | Commits de remediacion | 8 | ~40 |
 
@@ -151,18 +151,21 @@
 
 ---
 
-**2026-10-14 - Sesion 14 (ENV) - PARCIAL**
+**2026-10-14 - Sesion 14 (ENV) - COMPLETA**
 - Bloque 0: sync docs S13 (commit fdcb6c70).
-- Chore gitignore: dejar de versionar .vercel/ + exceptuar .env.example
+- Chore gitignore: .vercel/ fuera del repo + exceptuar .env.example
   (commits 14ba0076 + a0cc5c8f).
 - F2-01: Supabase Owner a system.panfree (hecho).
 - F2-03: Cloudinary a system.panfree (hecho).
-- F2-14 Bitwarden: 3 de 13 items cargados (Supabase, Cloudinary, Gemini).
-- INCIDENTE: BUG-010 (regresion logger S13). App caida en produccion.
-  Fix en commit 757938c2. Deploy Ready. Verificado en incognito: OK.
-- Nuevos hallazgos pendientes de documentar en tracking:
-  BUG-010, BUG-011, SEC-018, SEC-019, BUG-006..009, DOC-002, DOC-003.
-- Continua en Sesion 15.
+- F2-14 Bitwarden: 3 de 12 items completos (Supabase, Cloudinary, Gemini).
+  Los 9 restantes se completan durante la rotacion (S15). SEC-020.
+- INCIDENTE BUG-010: regresion del logger S13. App caida en produccion.
+  Fix commit 757938c2. Deploy Ready. Verificado en incognito: OK.
+- Docs: 24-bugs-s14-gemini-y-otros.md creado (10 hallazgos nuevos).
+- Tracking actualizado: 34 -> 45 hallazgos. 28 cerrados.
+- Doc del incidente: 23-bug-010-logger-regresion.md.
+- Bloque A cerrado (commit a6c9d4d0).
+- Bloque B parcial (solo estructura, sin valores) -> S15.
 
 ---
 
