@@ -170,6 +170,60 @@ misma sesion y esta documentado en `23-bug-010-logger-regresion.md`.
 
 ---
 
+
+---
+
+## 9. Cierre de BUG-011 (2026-10-14, Sesion 15)
+
+**Estado:** Cerrado
+**Commit fix:** (pendiente)
+
+### Fix aplicado
+
+En `scripts/docs/29-fix-logger-import.ps1`, la linea final:
+
+```powershell
+Write-Ok ($modified + ' archivos modificados')
+```
+
+Se reemplazo por:
+
+```powershell
+Write-Ok "$modified archivos modificados"
+```
+
+**Causa raiz:** PowerShell interpreta `int + string` como suma
+aritmetica. Con `$modified` siendo `int`, el operador `+` intenta
+sumar y falla al no poder convertir el string a numero.
+
+**Fix:** usar interpolacion de string (`"$var texto"`), que
+convierte `$var` a string antes de concatenar.
+
+### Auditoria del script 29
+
+Se reviso el script completo buscando otros patrones del tipo
+`($var + string)`. Resultado documentado en la salida del script
+37 (ver commit correspondiente).
+
+### Versionado
+
+El script 29 estaba sin versionar (`??` en git status). Se
+versiona junto con el fix para preservar la trazabilidad y
+servir como plantilla de futuros fixes masivos de imports.
+
+### Verificacion
+
+- Script 29 sin la linea con bug.
+- Versionado en el repo.
+- Tracking actualizado (BUG-011 -> Cerrado).
+- STATUS.md con metricas actualizadas.
+
+### Referencias
+
+- [BUG-011 en tracking](./06-hallazgos-tracking.md)
+- [23-bug-010-logger-regresion.md](./23-bug-010-logger-regresion.md) - seccion "Hallazgo colateral"
+- [29-fix-logger-import.ps1](../../../scripts/docs/29-fix-logger-import.ps1)
+
 ## 8. Referencias
 
 - [Tracking de hallazgos](./06-hallazgos-tracking.md)

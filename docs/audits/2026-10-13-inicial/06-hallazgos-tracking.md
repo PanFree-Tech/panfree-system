@@ -11,7 +11,7 @@
 |---|---|
 | Abierto | 16 |
 | En curso | 0 |
-| Cerrado | 29 |
+| Cerrado | 30 |
 | Aceptado | 1 |
 
 ---
@@ -23,7 +23,7 @@
 | Critica | 9 | 7 |
 | Alta | 11 | 7 |
 | Media | 16 | 5 |
-| Baja | 7 | 1 |
+| Baja | 7 | 2 |
 
 ---
 
@@ -95,7 +95,7 @@
 | TST-001 | Cobertura de tests baja | F4 | P3 | Abierto | - |
 | DOC-001 | Falta PropTypes/JSDoc | F4 | P3 | Abierto | - |
 | BUG-005 | AuthModal inserta columnas sin GRANT post-F3-01 | F3 | P2 | Cerrado | 7b014cc4 |
-| BUG-011 | bug en script 29-fix-logger-import.ps1 (Write-Ok con $modified + string) | F3 | P3 | Abierto | - |
+| BUG-011 | bug en script 29-fix-logger-import.ps1 (Write-Ok con $modified + string) | F3 | P3 | Cerrado | (S15) |
 | DOC-002 | MARKETING_INTELLIGENT_SYSTEM.md menciona modelos gemini-3.5-flash inexistentes | F3 | P3 | Abierto | - |
 | DOC-003 | discrepancia endpoint frontend vs backend (geminiService) | F3 | P3 | Abierto | - |
 
