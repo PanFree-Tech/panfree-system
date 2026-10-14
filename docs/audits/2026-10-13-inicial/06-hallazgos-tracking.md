@@ -1,7 +1,7 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
-**Ultima actualizacion:** 2026-10-14 (fin Sesion 13)
-**Total de hallazgos:** 34
+**Ultima actualizacion:** 2026-10-14 (fin Sesion 14)
+**Total de hallazgos:** 44
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 6 |
+| Abierto | 15 |
 | En curso | 0 |
-| Cerrado | 27 |
+| Cerrado | 28 |
 | Aceptado | 1 |
 
 ---
@@ -20,10 +20,10 @@
 
 | Severidad | Cantidad | Cerrados |
 |---|---|---|
-| Critica | 8 | 6 |
+| Critica | 9 | 7 |
 | Alta | 11 | 7 |
-| Media | 8 | 4 |
-| Baja | 4 | 1 |
+| Media | 14 | 4 |
+| Baja | 7 | 1 |
 
 ---
 
@@ -41,6 +41,7 @@
 | DB-001c | Funciones SECURITY DEFINER publicas | F1 | P0 | Cerrado | 542e3a2e |
 | SEC-004 | UPDATE clientes.role desde cliente | F3 | P0 | Cerrado | 4d5bd9c2 |
 | SEC-005 | anon con DDL sobre clientes | F3 | P0 | Cerrado | 4d5bd9c2 |
+| BUG-010 | Regresion del logger (S13): import erroneo en 88 archivos | F3 | P1 | Cerrado | 757938c2 |
 
 ### Hallazgos altos
 
@@ -71,6 +72,12 @@
 | DB-001f | ~150 politicas duplicadas | F1 | P2 | Cerrado | e40d9244 |
 | SEC-010 | select_publico_productos exponia inactivos (leak) | F1 | P2 | Cerrado | e40d9244 |
 | SEC-012 | canjes_premios usa clientes.role en vez de is_admin() | F3 | P2 | Cerrado | (Sesion 9) |
+| BUG-006 | .env.example dice gemini-2.5-flash pero codigo usa gemini-3.1-flash-image | F3 | P2 | Abierto | - |
+| BUG-007 | IDs de modelo Gemini hardcodeados en marketing/page.js:51-52 | F3 | P2 | Abierto | - |
+| BUG-008 | geminiService llama a /generate-caption pero endpoint real es /generar-contenido | F3 | P2 | Abierto | - |
+| BUG-009 | endpoint usa gemini-3.7-flash que no existe en AI Studio | F3 | P2 | Abierto | - |
+| SEC-018 | 3 API keys activas en Cloudinary sin trazabilidad | F2 | P2 | Abierto | - |
+| SEC-019 | 4 API keys activas en Gemini sin trazabilidad | F2 | P2 | Abierto | - |
 
 ### Hallazgos bajos
 
@@ -86,6 +93,9 @@
 | TST-001 | Cobertura de tests baja | F4 | P3 | Abierto | - |
 | DOC-001 | Falta PropTypes/JSDoc | F4 | P3 | Abierto | - |
 | BUG-005 | AuthModal inserta columnas sin GRANT post-F3-01 | F3 | P2 | Cerrado | 7b014cc4 |
+| BUG-011 | bug en script 29-fix-logger-import.ps1 (Write-Ok con $modified + string) | F3 | P3 | Abierto | - |
+| DOC-002 | MARKETING_INTELLIGENT_SYSTEM.md menciona modelos gemini-3.5-flash inexistentes | F3 | P3 | Abierto | - |
+| DOC-003 | discrepancia endpoint frontend vs backend (geminiService) | F3 | P3 | Abierto | - |
 
 ---
 
