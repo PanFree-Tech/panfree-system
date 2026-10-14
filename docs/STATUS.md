@@ -15,7 +15,7 @@
 | F2 - Rotacion claves | 14 | 0 | 0 | 14 | 0% |
 | F3 - Codigo | 9 | 2 | 0 | 7 | 22% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **16** | **0** | **31** | **34%** |
+| **Total** | **47** | **19** | **0** | **28** | **40%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -69,37 +69,50 @@
 - Hallazgo DB-001e cerrado (hash 02311b72)
 - SQL versionado en supabase/migrations/
 - Script 10-documentar-f1-07.ps1 agregado
-- Verificador de links reporta 14 falsos positivos en HANDOFF-2026-10-13.md (pendiente arreglar en chore(tooling))
-
-**2026-10-13 - Sesion 3 (COMPLETA)**
-- F1-07: 79 politicas RLS optimizadas con InitPlan
-- 0 politicas DIRECTAS en pg_policies (antes: 79)
-- 81 politicas OPTIMIZADAS (antes: 0)
-- Hallazgo DB-001e cerrado (hash 02311b72)
-- SQL versionado en supabase/migrations/
-- Script 10-documentar-f1-07.ps1 agregado
-- Verificador de links reporta 14 falsos positivos en HANDOFF-2026-10-13.md (pendiente arreglar en chore(tooling))
-
----
-
 
 **2026-10-13 - Sesion 5 (COMPLETA)**
-- F3-01: SEC-003 cerrado (middleware lee solo `app_metadata`)
-- F3-01: `is_admin()` reescrita para leer de `app_metadata`
-- F3-01: 3 politicas P7 migradas a `app_metadata`
-- SEC-004 cerrado: `REVOKE UPDATE (role)` en `clientes`
-- SEC-005 cerrado: `anon` sin privilegios sobre `clientes`
-- SEC-006 cerrado: columnas sensibles bloqueadas en UPDATE
-- SEC-007 cerrado: `INSERT` sin `role` desde frontend
-- BUG-002 cerrado: `avatar` -> `avatar_url` en route.js
-- Doc: `docs/audits/
-2026-10-13
--inicial/14-f3-01-admin-app-metadata.md`
-- Migracion: `supabase/migrations/
-2026-10-13
--f3-01-admin-app-metadata.sql`
-- Commit middleware: 
-e5bed103
+- F3-01: SEC-003 cerrado (middleware lee solo app_metadata)
+- F3-01: is_admin() reescrita para leer de app_metadata
+- F3-01: 3 politicas P7 migradas a app_metadata
+- SEC-004/005/006/007 cerrados (grants por columna en clientes)
+- BUG-002 cerrado: avatar -> avatar_url
+- Doc: docs/audits/2026-10-13-inicial/14-f3-01-admin-app-metadata.md
+- Migracion: supabase/migrations/2026-10-13-f3-01-admin-app-metadata.sql
+- Commit middleware: e5bed103
+
+**2026-10-13 - Sesion 6 (COMPLETA)**
+- F1-08: 20 politicas RLS consolidadas/eliminadas
+- Hallazgos cerrados: DB-001f, SEC-010
+- Hallazgos nuevos: SEC-011, SEC-012, BUG-003
+- Doc: docs/audits/2026-10-13-inicial/15-f1-08-consolidacion-rls.md
+- Commit: e40d9244
+
+**2026-10-13 - Sesion 7 (COMPLETA)**
+- F1-09: 9 indices duplicados eliminados
+- Hallazgo DB-001i cerrado
+- Doc: docs/audits/2026-10-13-inicial/16-f1-09-indices-duplicados.md
+- Commit: d6957a61
+
+**2026-10-14 - Sesion 8 (COMPLETA)**
+- SEC-011 cerrado: email_logs SELECT qual=true removida
+- SEC-013 cerrado: email_logs INSERT permisiva removida
+- BUG-004 cerrado: endpoints migrados a SERVICE_ROLE_KEY
+- Doc: docs/audits/2026-10-13-inicial/17-f1-10-sec-011-email-logs.md
+- Commit: 5ded4ff6
+
+**2026-10-14 - Sesion 9 (COMPLETA)**
+- SEC-012 cerrado: canjes_premios alineado con ADR-002
+- Fase 1 al 100% (9/9, con F1-06 aceptada por plan Free)
+- Doc: docs/audits/2026-10-13-inicial/18-f1-11-sec-012-canjes-premios.md
+- Commit: ca21e7cc
+
+**2026-10-14 - Sesion 10 (COMPLETA)**
+- SEC-002 cerrado: claves hardcodeadas eliminadas de src/lib/supabase.js
+- 7 consumidores migrados a fail-fast
+- 4 hallazgos nuevos: SEC-014..017 (P3, chores futuros)
+- Fase 3 al 33% (3/9 tras reconocer F3-03 cerrada en S5)
+- Doc: docs/audits/2026-10-13-inicial/19-f3-02-sec-002-anon-key.md
+- Commits: 4a17c7d5, 9f427ef6
 
 ---
 

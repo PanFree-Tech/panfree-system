@@ -88,9 +88,9 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 
 | ID | Tarea | Prioridad | Esfuerzo | Estado | DoD |
 |---|---|---|---|---|---|
-| F3-01 | SEC-003: admin por app_metadata | P0 | S | Pendiente | Test con user normal rechazado |
-| F3-02 | SEC-002: quitar claves hardcodeadas | P1 | S | Pendiente | Sin valores reales en src/ |
-| F3-03 | SEC-006: redirectTo por env var | P1 | S | Pendiente | Usa NEXT_PUBLIC_SUPABASE_URL |
+| F3-01 | SEC-003: admin por app_metadata | P0 | S | OK | Test con user normal rechazado |
+| F3-02 | SEC-002: quitar claves hardcodeadas | P1 | S | OK | Sin valores reales en src/ |
+| F3-03 | SEC-006: redirectTo por env var | P1 | S | OK | Usa NEXT_PUBLIC_SUPABASE_URL |
 | F3-04 | AUTH-001: contrasenas fuertes | P1 | S | Pendiente | Minimo 10 chars + complejidad |
 | F3-05 | AUTH-002: registro sin duplicados | P1 | S | Pendiente | Upsert con onConflict |
 | F3-06 | DBG-001: quitar console.log en prod | P2 | M | Pendiente | NODE_ENV condicional |

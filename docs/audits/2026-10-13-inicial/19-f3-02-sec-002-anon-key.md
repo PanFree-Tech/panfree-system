@@ -171,8 +171,7 @@ Todos son P3 (higiene) y se agendan para sesiones de chores futuras.
 - [x] Diff limpio en los archivos clave.
 - [x] Doc de auditoria generado (este archivo).
 - [x] Tracking actualizado (SEC-002 -> Cerrado).
-- [ ] Commit pusheado con `security(src):`.
-
+- [x] Commit pusheado con `security(src):`.
 ---
 
 ## 8. Referencias

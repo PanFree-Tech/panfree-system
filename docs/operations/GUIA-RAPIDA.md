@@ -19,7 +19,7 @@
     type docs\BITACORA.md
 
     REM 5. Ver hallazgos abiertos
-    type docs\04-auditorias\2026-10-13-inicial\06-hallazgos-tracking.md
+    type docs\audits\2026-10-13-inicial\06-hallazgos-tracking.md
 
 ---
 
@@ -29,13 +29,13 @@
 |---|---|
 | Que hacer hoy | docs\STATUS.md |
 | Que se hizo ayer | docs\BITACORA.md |
-| Plan completo | docs\02-operaciones\PLAN-DE-TRABAJO.md |
-| Que hallazgos faltan | docs\04-auditorias\2026-10-13-inicial\06-hallazgos-tracking.md |
-| Como trabajar | docs\02-operaciones\SISTEMA-DE-TRABAJO.md |
-| Cuando el CI bloquea | docs\02-operaciones\POLITICA-CI-CD.md |
+| Plan completo | docs\operations\PLAN-DE-TRABAJO.md |
+| Que hallazgos faltan | docs\audits\2026-10-13-inicial\06-hallazgos-tracking.md |
+| Como trabajar | docs\operations\SISTEMA-DE-TRABAJO.md |
+| Cuando el CI bloquea | docs\operations\POLITICA-CI-CD.md |
 | Como se rota una clave | docs\05-runbooks\ |
 | Convenciones de commit | docs\06-referencias\convenciones-codigo.md |
-| Como desplegar | docs\02-operaciones\DEPLOYMENT.md |
+| Como desplegar | docs\operations\DEPLOYMENT.md |
 
 ---
 
@@ -59,6 +59,7 @@
 
 ## 5. Comandos frecuentes
 
+    # Los comandos de abajo funcionan tanto en cmd como en PowerShell.
     REM Ver estado
     git status
 

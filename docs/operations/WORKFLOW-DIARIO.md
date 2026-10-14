@@ -25,7 +25,7 @@ Anda al final del archivo. La ultima entrada te dice que se hizo.
 
 ### Paso 3 - Revisar hallazgos abiertos
 
-    type docs\04-auditorias\2026-10-13-inicial\06-hallazgos-tracking.md
+    type docs\audits\2026-10-13-inicial\06-hallazgos-tracking.md
 
 Fijate que hallazgos estan "En curso" o "Abierto" con prioridad P0/P1.
 
@@ -50,9 +50,9 @@ Para tareas chicas, trabajar directo en main.
 No mezclar temas.
 
 ### Regla 2 - Verificar antes de commitear
-
-    findstr /N "\"@" scripts\...\script.ps1
-
+# Cuenta aperturas y cierres de here-string (deben coincidir)
+(Select-String -Path script.ps1 -Pattern '@"').Count
+(Select-String -Path script.ps1 -Pattern '"@').Count
 ### Regla 3 - Documentar en el momento
 
 Cada vez que:
