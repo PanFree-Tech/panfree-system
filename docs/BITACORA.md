@@ -640,3 +640,79 @@ e5bed103
 - F3-05: AUTH-002 registro sin validar duplicados (P1).
 - Chores opcionales: .gitattributes, versionar scripts de cierre.
 
+---
+
+## 2026-10-14 (Sesion 12 - COMPLETA)
+
+**Duracion:** ~3 horas
+**Objetivo:** Cerrar F3-05 (AUTH-002) + BUG-005 (nuevo hallazgo colateral)
+
+**Completado:**
+- F3-05 / AUTH-002 cerrado: upsert con onConflict email en los 3 puntos
+  de insercion en public.clientes (register, AuthModal, callback OAuth).
+- BUG-005 detectado y cerrado: AuthModal.js insertaba is_active y role
+  sin GRANT post-F3-01. El flujo de registro desde el modal fallaba
+  silenciosamente en produccion.
+- Verificacion previa en Supabase: no hay UNIQUE en user_id, si en email.
+  GRANTs de authenticated confirmados. Se usa onConflict email.
+- Commits: 7b014cc4 (register + AuthModal + BUG-005) + f47b9417
+  (callback OAuth). El segundo commit fue necesario porque el script
+  25a no matcheo el bloque de callback/route.js.
+- Doc de auditoria: docs/audits/2026-10-13-inicial/21-f3-05-auth-002-duplicados.md
+- Fase 3: 4/9 -> 5/9 (56%).
+- Hallazgos cerrados: 24/34 -> 26/34.
+
+**Commits de la sesion:**
+- 7b014cc4 security(auth): evitar duplicados en registro y alinear AuthModal
+- f47b9417 fix(auth): completar F3-05 en callback OAuth (AUTH-002)
+- 7bbc7331 docs(audit): documentar cierre F3-05 y BUG-005
+
+**Hallazgos cerrados:**
+- AUTH-002: Registro sin validar duplicados
+- BUG-005: AuthModal inserta columnas sin GRANT post-F3-01
+
+**Hallazgos nuevos:**
+- BUG-005 (detectado durante el diagnostico, cerrado en el mismo fix)
+
+**Bloqueantes:**
+- Ninguno
+
+**Aprendizajes:**
+
+### PowerShell: here-strings y escapes (RECURRENTE)
+- El script 25a uso here-strings con caracteres no-ASCII en los strings
+  (emojis de check, flechas, acentos). Aunque el archivo .ps1 estaba
+  en ASCII puro, los -replace no matchearon por dos razones:
+  1. Los escapes \\uXXXX no se interpretan en PowerShell.
+  2. Los \\" dentro de comillas simples rompen el parser.
+- Solucion aplicada: reemplazar con .Replace() literal (no regex) sobre
+  strings sin escapes ni caracteres especiales. Funciona a la primera.
+- Leccion: para scripts que modifican codigo con comentarios no-ASCII,
+  usar .Replace() literal con anclas ASCII puras, NO here-strings con
+  escapes. Documentado en BITACORA S11, repetido en S12. Hay que
+  aplicarlo desde el diseno, no como correccion.
+
+### Idempotencia de scripts
+- El script 25a detecto correctamente que register/page.js y AuthModal.js
+  ya estaban modificados (idempotente). Solo fallo en callback/route.js.
+- El .Replace() literal con .Contains() previo es el patron correcto
+  para scripts de modificacion.
+
+### Desambiguacion de scope en F3-05
+- F3-05 no era solo "validar duplicados": los 3 puntos de insercion en
+  clientes tenian logicas distintas. El fix los unifico.
+- BUG-005 surgio del diagnostico previo (Paso 0 de queries). Detectar
+  el bug ANTES de disenar el fix evito un fix incompleto.
+
+### Deuda tecnica registrada
+- Tracking seccion 2 "Hallazgos por severidad" esta desactualizada desde
+  S7. No se toca en S12 porque requiere recalcular todos los hallazgos
+  (hay filas con severidad inconsistente en la tabla: BUG-004 y BUG-005
+  figuran en la seccion "bajos" pero son P2/Media).
+- Pendiente para una sesion de auditoria de docs.
+
+**Proxima sesion:**
+- F3-06: DBG-001 quitar console.log con datos sensibles (P1).
+- O bien: chores P3 (SEC-014..017) para desbloquear Fase 2.
+- O bien: arrancar Fase 2 (F2-01 + F2-14).
+

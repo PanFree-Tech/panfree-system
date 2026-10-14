@@ -128,6 +128,17 @@
 
 ---
 
+**2026-10-14 - Sesion 12 (COMPLETA)**
+- F3-05 / AUTH-002 cerrado: upsert con onConflict email en los 3 puntos
+  de insercion en clientes (register, AuthModal, callback OAuth).
+- BUG-005 detectado y cerrado: AuthModal.js insertaba is_active y role
+  sin GRANT post-F3-01. Registro desde el modal fallaba silenciosamente.
+- Verificacion previa en Supabase: no hay UNIQUE en user_id, si en email.
+- Doc de auditoria: docs/audits/2026-10-13-inicial/21-f3-05-auth-002-duplicados.md
+- Fase 3: 4/9 -> 5/9 (56%). Hallazgos: 24/34 -> 26/34.
+- Commits: 7b014cc4, f47b9417, 7bbc7331.
+
+---
 
 ## 6. Comandos utiles
 
