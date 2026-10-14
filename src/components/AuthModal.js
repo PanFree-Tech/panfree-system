@@ -110,7 +110,8 @@ export default function AuthModal() {
     if (!validacion.ok) {
       setError('La contraseÃ±a no es suficientemente fuerte. Faltan: ' + validacion.errores.join(', ') + '.')
       return
-    }    setLoading(true); limpiar()
+    }
+    setLoading(true); limpiar()
     try {
       const { data, error: errAuth } = await supabase.auth.signUp({ email, password })
       if (errAuth) throw errAuth
