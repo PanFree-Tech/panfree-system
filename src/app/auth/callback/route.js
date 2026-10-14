@@ -62,12 +62,12 @@ export async function GET(request) {
           // role, is_active, puntos_fidelidad, nivel_cliente → DEFAULT (ver migración
           // supabase/migrations/2026-10-13-f3-01-admin-app-metadata.sql).
           // BUG-002 fix: la columna real es avatar_url (no avatar).
-          await supabase.from('clientes').insert({
+          await supabase.from('clientes').upsert({
             nombre_completo: nombre,
             email: user.email,
             user_id: user.id,
             avatar_url: avatarUrl,
-          })
+          }, { onConflict: 'email' })
         }
       } catch (profileErr) {
         console.error('Error al registrar perfil de cliente:', profileErr)
