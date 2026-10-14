@@ -9,9 +9,9 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 15 |
+| Abierto | 14 |
 | En curso | 0 |
-| Cerrado | 31 |
+| Cerrado | 32 |
 | Aceptado | 1 |
 
 ---
@@ -22,7 +22,7 @@
 |---|---|---|
 | Critica | 9 | 7 |
 | Alta | 11 | 7 |
-| Media | 16 | 6 |
+| Media | 16 | 7 |
 | Baja | 7 | 2 |
 
 ---
@@ -77,7 +77,7 @@
 | BUG-008 | geminiService llama a /generate-caption pero endpoint real es /generar-contenido | F3 | P2 | Abierto | - |
 | BUG-009 | endpoint usa gemini-3.7-flash que no existe en AI Studio | F3 | P2 | Abierto | - |
 | SEC-018 | 3 API keys activas en Cloudinary sin trazabilidad | F2 | P2 | Cerrado | (S15) |
-| SEC-019 | 4 API keys activas en Gemini sin trazabilidad | F2 | P2 | Abierto | - |
+| SEC-019 | 4 API keys activas en Gemini sin trazabilidad | F2 | P2 | Cerrado | (S15) |
 | SEC-020 | 9 items Bitwarden pendientes (se completan durante rotacion S15) | F2 | P2 | Abierto | - |
 | SEC-008 | crear_usuario_admin sin chequeo de caller (eliminada) | F3 | P2 | Cerrado | (S15) |
 

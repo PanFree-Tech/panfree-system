@@ -269,6 +269,44 @@ Produccion operativa. Keys huerfanas eliminadas sin impacto.
 - [SEC-018 en tracking](./06-hallazgos-tracking.md)
 - [26-sec-018-cierre-cloudinary.md](./26-sec-018-cierre-cloudinary.md)
 
+
+---
+
+## 11. Resolucion SEC-019 (2026-10-14, Sesion 15)
+
+**Estado:** Cerrado
+**Commit fix:** (pendiente)
+**Tareas cerradas:** SEC-019 (trazabilidad) + F2-06 (rotacion).
+
+### Resumen
+
+Las 4 keys de Gemini fueron analizadas, 3 eliminadas y 1 rotada.
+
+### Resultado
+
+| Proyecto | Keys antes | Keys despues |
+|---|---|---|
+| gen-lang-client-0055191436 | 1 | 1 (rotada) |
+| gen-lang-client-0840688115 | 3 | 0 |
+| **Total** | **4** | **1** |
+
+### Rotacion (F2-06)
+
+- Key vieja: `Default Gemini Key` (...n9EA).
+- Key nueva: `panfree-production-2026-rotated`.
+- Guardada en Bitwarden (Produccion).
+- Vercel `GEMINI_API_KEY` actualizada + redeploy.
+- Verificacion end-to-end: marketing IA funciona (200 OK con hook/caption).
+
+### Documentacion completa
+
+- [27-sec-019-cierre-gemini.md](./27-sec-019-cierre-gemini.md)
+
+### Referencias
+
+- [SEC-019 en tracking](./06-hallazgos-tracking.md)
+- [27-sec-019-cierre-gemini.md](./27-sec-019-cierre-gemini.md)
+
 ## 8. Referencias
 
 - [Tracking de hallazgos](./06-hallazgos-tracking.md)
