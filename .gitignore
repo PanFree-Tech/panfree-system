@@ -40,3 +40,13 @@ backup-*.sql
 backup-*.json
 backup-*.csv
 PanFree-Backup-*.md
+
+# Vercel env pull
+.env.vercel.local
+
+# Vercel (por si se linkea más adelante)
+# Vercel
+.vercel/
+.vercel
+.env*
+!.env.example
