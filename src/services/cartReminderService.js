@@ -7,7 +7,7 @@
  *   - cancelCartReminder(userId) → cancela recordatorio programado
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { notifyCartAbandoned } from './pushService'
 
 const REMINDER_DELAY = 30 * 60 * 1000 // 30 minutos

@@ -4,7 +4,7 @@
  * 📌 DESCRIPCIÓN: Sistema de logs de auditoría para acciones del panel administrativo
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { supabase } from '../../../lib/supabase'
 
 export const AUDIT_ACTIONS = {

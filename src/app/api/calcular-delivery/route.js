@@ -6,7 +6,7 @@
  *    - ✅ AGREGADO: lógica de envío gratis cuando subtotal >= 50000
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'

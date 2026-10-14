@@ -7,7 +7,7 @@
  *    - Cruza con el calendario de eventos y reglas de negocio para optimizar ventas sin sobrecargar la cocina.
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 

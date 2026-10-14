@@ -5,7 +5,7 @@
  * 📖 DESCRIPCIÓN: Endpoint para probar el envío de correos con Resend a system.panfree@gmail.com
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { sendEmail, DEFAULT_ADMIN_EMAIL, DEFAULT_FROM_EMAIL } from '@/lib/resend'
 import { templatePruebaSistema } from '@/lib/email-templates'

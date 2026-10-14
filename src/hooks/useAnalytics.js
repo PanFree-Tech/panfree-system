@@ -11,7 +11,7 @@
  *    - Eventos Marketing: newsletter_subscribe, contact_whatsapp_click, view_promotion, select_promotion.
  * ⚠️  EN CASO DE MODIFICACIÓN SIGNIFICATIVA, actualizar este comentario.
  */
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { useCallback } from 'react'
 import { getCampaignForAnalytics } from './useCampaigns'
 

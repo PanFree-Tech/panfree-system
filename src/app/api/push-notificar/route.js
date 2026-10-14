@@ -9,7 +9,7 @@
  *    - Respuestas detalladas y tolerantes a fallos
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import webpush from 'web-push'

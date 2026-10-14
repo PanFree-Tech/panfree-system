@@ -6,7 +6,7 @@
  *    y estadísticas de promociones publicadas.
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 

@@ -5,7 +5,7 @@
 
 'use client'
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'

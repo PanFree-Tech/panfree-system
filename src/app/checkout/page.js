@@ -10,7 +10,7 @@
 ✅ GA4: Integración de eventos begin_checkout y purchase.
 */
 'use client'
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'

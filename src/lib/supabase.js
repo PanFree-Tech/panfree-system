@@ -5,7 +5,7 @@ DESCRIPCION: Cliente de Supabase - VERSION COMPATIBLE SSR Y NAVEGADOR
 SEGURIDAD (SEC-002): sin claves ni URLs hardcodeadas.
   Las env vars son obligatorias. Si faltan, fail-fast en runtime.
 */
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { createBrowserClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 

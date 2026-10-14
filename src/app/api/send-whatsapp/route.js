@@ -6,7 +6,7 @@
  * 🔒 SEGURIDAD: Solo usuarios autenticados o con token de servicio
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { enviarPlantillaWhatsApp } from '@/lib/whatsapp'

@@ -4,7 +4,7 @@
  * validación, canjes y gamificación de fidelidad en PanFree.
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { supabase } from './supabase'
 
 const CARACTERES_CODIGO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Sin caracteres ambiguos como O/0, I/1

@@ -3,7 +3,7 @@
  * API para canjear premios del catálogo de fidelización usando puntos acumulados
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { canjearPremio } from '@/lib/dipticos'
 import { supabase } from '@/lib/supabase'

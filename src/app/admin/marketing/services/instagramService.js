@@ -1,4 +1,4 @@
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 /**
  * 📁 UBICACIÓN: src/app/admin/marketing/services/instagramService.js
  * 📌 Servicio para publicar o programar contenidos en Instagram y gestionar el historial.

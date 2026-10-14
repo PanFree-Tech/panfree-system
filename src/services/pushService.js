@@ -1,4 +1,4 @@
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 /**
  * src/services/pushService.js
  * Servicio centralizado para notificaciones push

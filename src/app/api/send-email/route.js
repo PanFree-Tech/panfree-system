@@ -10,7 +10,7 @@
  *      la creación de logs incluso cuando la sesión actual no esté autenticada como el destinatario.
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'

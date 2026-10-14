@@ -6,7 +6,7 @@
  * 🔒 SEGURIDAD: Usa token para autenticar (N8N_INCOMING_TOKEN)
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { supabase } from '@/lib/supabase'

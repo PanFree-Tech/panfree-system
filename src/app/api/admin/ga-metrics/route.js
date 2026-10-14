@@ -1,5 +1,5 @@
 // src/app/api/admin/ga-metrics/route.js
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 

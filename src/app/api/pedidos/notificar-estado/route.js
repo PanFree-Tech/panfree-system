@@ -6,7 +6,7 @@
  *    - Si es 'cancelado', genera alerta interna en notificaciones_admin
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'

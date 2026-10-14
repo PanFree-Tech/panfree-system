@@ -3,7 +3,7 @@
  * Sistema de validación y aplicación de cupones
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { supabase } from './supabase'
 
 /**

@@ -1,4 +1,4 @@
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 /**
  * 📁 UBICACIÓN: src/app/admin/marketing/services/geminiService.js
  * 📌 Servicio para generar copy publicitario y captions con Inteligencia Artificial (Gemini).

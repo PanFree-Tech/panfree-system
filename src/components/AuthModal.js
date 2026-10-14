@@ -10,7 +10,7 @@
  * 5. Logging para facilitar debugging
  */
 'use client'
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {

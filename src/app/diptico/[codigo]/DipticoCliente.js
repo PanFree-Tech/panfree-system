@@ -1,7 +1,7 @@
 // src/app/diptico/[codigo]/DipticoCliente.js
 'use client'
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'

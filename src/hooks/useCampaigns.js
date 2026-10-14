@@ -9,7 +9,7 @@
  * ⚠️  EN CASO DE MODIFICACIÓN SIGNIFICATIVA, actualizar este comentario.
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { useEffect, useState, useCallback } from 'react'
 
 export const UTM_STORAGE_KEY = 'panfree_utm_campaign'

@@ -6,7 +6,7 @@
  *    Permite filtrar por estado (DISPONIBLE, CAPACIDAD LIMITADA, CERRADO) y categoría.
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 

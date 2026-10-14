@@ -6,7 +6,7 @@
  * 🔒 SEGURIDAD: Solo admin (verifica rol en app_metadata o token interno)
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'

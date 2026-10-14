@@ -1,5 +1,5 @@
 // src/app/api/admin/marketing/generar-imagen-cloudinary/route.js
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
 import { supabase } from '@/lib/supabase'

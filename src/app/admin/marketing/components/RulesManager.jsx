@@ -7,7 +7,7 @@
 
 'use client'
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import styles from '../styles/marketing.module.css'

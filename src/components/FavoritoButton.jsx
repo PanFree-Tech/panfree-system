@@ -1,6 +1,6 @@
 'use client'
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { useState } from 'react'
 import { Heart } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'

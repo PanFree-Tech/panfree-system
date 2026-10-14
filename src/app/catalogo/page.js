@@ -6,7 +6,7 @@
  *  - Carga segura de productos activos y disponibilidad desde Supabase
  *  - Normalización estricta de is_featured/destacado
  */
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
 import { normalizeProduct } from '@/lib/image-utils'
 import TiendaCliente from '../TiendaCliente'

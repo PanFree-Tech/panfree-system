@@ -1,6 +1,6 @@
 'use client'
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import React, { useState, useEffect, useMemo } from 'react'
 import { Tag, Sparkles, Calendar, DollarSign, Percent, Clock, CheckCircle2, AlertCircle, RefreshCw, X } from 'lucide-react'
 import { supabase } from '../../../../lib/supabase'

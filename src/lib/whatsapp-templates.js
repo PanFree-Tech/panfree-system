@@ -1,4 +1,4 @@
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 /**
  * 📁 src/lib/whatsapp-templates.js
  * 📅 PanFree WhatsApp Business API - Registro de Plantillas Aprobadas

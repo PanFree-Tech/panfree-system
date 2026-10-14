@@ -5,7 +5,7 @@
 
 'use client'
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { useState, useEffect, useCallback } from 'react'
 import { getScheduledPosts } from '../services/instagramService'
 import styles from '../styles/marketing.module.css'

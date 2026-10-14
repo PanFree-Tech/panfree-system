@@ -5,7 +5,7 @@
  * Panel de Administración de Cupones de Descuento y Fidelización PanFree
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {

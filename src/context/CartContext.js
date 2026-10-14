@@ -11,7 +11,7 @@
  */
 
 'use client'
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
 const CartContext = createContext()

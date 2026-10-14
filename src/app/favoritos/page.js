@@ -1,7 +1,7 @@
 // src/app/favoritos/page.js
 'use client'
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Heart, ShoppingBag } from 'lucide-react'

@@ -16,7 +16,7 @@
  *    - Si un motor falla (503 / 429 / High Demand) o no tiene API Key, pasa automáticamente al siguiente.
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
 import { supabase } from '@/lib/supabase'

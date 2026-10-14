@@ -5,7 +5,7 @@
 
 'use client'
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { useState } from 'react'
 import { generateInstagramContent } from '../services/geminiService'
 import { publishToInstagram } from '../services/instagramService'

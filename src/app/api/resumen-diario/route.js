@@ -5,7 +5,7 @@
  *    Calcula pedidos del día, ingresos totales, estados y productos más vendidos.
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'

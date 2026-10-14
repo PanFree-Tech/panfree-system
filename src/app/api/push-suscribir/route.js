@@ -7,7 +7,7 @@
  *    - DELETE: Elimina una suscripción específica (desde body o query params)
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'

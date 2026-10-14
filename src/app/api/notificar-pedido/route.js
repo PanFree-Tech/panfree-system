@@ -11,7 +11,7 @@
  * - Tolerante a fallos para no interrumpir la experiencia de compra
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import {

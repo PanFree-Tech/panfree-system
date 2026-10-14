@@ -3,7 +3,7 @@
  * 📅 PanFree - Servicio de Envío de Mensajes y Plantillas con WhatsApp Cloud API
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { WHATSAPP_TEMPLATES, obtenerPlantilla } from './whatsapp-templates'
 
 /**

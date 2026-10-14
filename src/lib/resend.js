@@ -8,7 +8,7 @@
  *    - Registro de auditoría y manejo resiliente de errores.
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { Resend } from 'resend'
 
 export const DEFAULT_FROM_EMAIL = 'PanFree <contacto@panfree.fit>'

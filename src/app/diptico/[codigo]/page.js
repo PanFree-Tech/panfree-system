@@ -1,5 +1,5 @@
 // src/app/diptico/[codigo]/page.js
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
 import DipticoCliente from './DipticoCliente'
 

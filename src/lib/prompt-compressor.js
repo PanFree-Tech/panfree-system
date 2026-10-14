@@ -1,4 +1,4 @@
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 // src/lib/prompt-compressor.js
 
 let compressorInstance = null

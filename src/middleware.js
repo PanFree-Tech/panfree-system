@@ -15,7 +15,7 @@
  *    - Web sin rol admin → Redirige a /unauthorized
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'

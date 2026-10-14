@@ -4,7 +4,7 @@
  * 📌 DESCRIPCIÓN: Endpoint para disparar alertas internas de stock bajo en materias primas.
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { notificarStockBajo } from '@/lib/notificaciones'
 

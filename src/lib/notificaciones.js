@@ -9,7 +9,7 @@
  *    - Integración tolerante a fallos y no bloqueante.
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { supabase } from './supabase'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { sendEmail, DEFAULT_ADMIN_EMAIL } from './resend'

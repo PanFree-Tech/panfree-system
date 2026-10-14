@@ -6,7 +6,7 @@
  *    - Actualiza el estado en la tabla email_logs según el ID del correo.
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 

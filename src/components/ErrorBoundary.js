@@ -1,7 +1,7 @@
 // src/components/ErrorBoundary.js
 'use client'
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import React from 'react'
 import { AlertCircle } from 'lucide-react'
 

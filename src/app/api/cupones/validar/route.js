@@ -3,7 +3,7 @@
  * API para validar cupones desde checkout
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { validarCupon, calcularDescuento } from '@/lib/cupones'
 

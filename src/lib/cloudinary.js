@@ -8,7 +8,7 @@
  *    - Subida y almacenamiento persistente en Cloudinary Media Library
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { v2 as cloudinary } from 'cloudinary'
 
 // Configuración perezosa / bajo demanda de Cloudinary

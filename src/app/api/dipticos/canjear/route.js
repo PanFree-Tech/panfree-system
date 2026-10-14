@@ -3,7 +3,7 @@
  * API segura para validar y canjear códigos de dípticos físicos con QR
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'

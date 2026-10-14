@@ -1,7 +1,7 @@
 /**
  * UBICACION: src/app/auth/callback/route.js
  */
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'

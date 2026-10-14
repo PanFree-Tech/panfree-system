@@ -5,7 +5,7 @@
  *    y devuelve la URL pública persistente y segura (res.cloudinary.com).
  */
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { getCloudinaryClient } from '@/lib/cloudinary'
 

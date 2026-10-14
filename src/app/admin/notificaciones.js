@@ -11,7 +11,7 @@
 
 'use client'
 
-import { log, warn, error } from '@/lib/logger'
+import logger from '@/lib/logger'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
