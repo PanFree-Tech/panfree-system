@@ -49,3 +49,9 @@ PanFree-Backup-*.md
 .vercel
 .env*
 !.env.example
+
+# Dumps de sesion - nunca commitear
+dump-s*.txt
+
+# Backups de scripts por sesion - nunca commitear
+.backup-s*/
