@@ -83,3 +83,49 @@ mismo flujo.
 
 SEC-020: 9 items Bitwarden pendientes. Se resuelven como subproducto
 de la rotacion en S15 (un servicio por commit).
+
+---
+
+## Estado de Bitwarden al cierre de S15 (2026-10-15)
+
+**Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
+
+### Items completos (3/12) - actualizados en S15
+
+| # | Item | Estado | Fecha | Notas |
+|---|---|---|---|---|
+| 1 | Supabase - Produccion | OK | 2026-10-15 (S15) | Migrado a sb_publishable_/sb_secret_ + JWT Signing Key rotada |
+| 2 | Cloudinary - Produccion | OK | 2026-10-15 (S15) | 3 keys huerfanas revocadas, quedo 1 activa |
+| 3 | Gemini - Produccion | OK | 2026-10-15 (S15) | Key rotada + 3 huerfanas eliminadas |
+
+### Items pendientes (9/12)
+
+Se completan durante la rotacion en S16. La estrategia sigue siendo:
+cuando se rote cada servicio, la key nueva se guarda en Bitwarden
+(Produccion) en el mismo flujo.
+
+| # | Item | Cuenta | Bloquea rotacion |
+|---|---|---|---|
+| 4 | Resend - Produccion | [S] | F2-05 |
+| 5 | Meta WhatsApp - Produccion | [S] | F2-07 |
+| 6 | Twilio - Produccion | [S] | F2-08 |
+| 7 | Instagram - Produccion | [S] | F2-09 |
+| 8 | n8n - Produccion | [S] | F2-10 |
+| 9 | GA4 - Produccion | [S] | F2-11 |
+| 10 | Clarity - Produccion | [S] | (no bloquea rotacion) |
+| 11 | VAPID - Produccion | [S] | F2-12 |
+| 12 | Secrets internos - Produccion | [S] | F2-13 / F4-06 |
+
+### Hallazgo SEC-020: actualizacion
+
+En S15 se completaron 3 items mas (aunque los items 1, 2 y 3 ya existian,
+se actualizaron con las keys rotadas). Los 9 items restantes siguen pendientes.
+SEC-020 sigue abierto hasta completar los 9.
+
+### Deuda tecnica detectada en S15
+
+- **@supabase/auth-helpers-nextjs@0.15.0 deprecado** (paquete legacy).
+  Migrar a @supabase/ssr en S16. No rompe el build, solo warnings.
+- **11 APIs IA secundarias en Vercel sin documentar**: ANTHROPIC, MISTRAL,
+  DEEPSEEK, COHERE, GROQ, CLOUDFLARE, POLLINATIONS, HF, AIHUBMIX, LEONARDO,
+  AGNES. Auditar en F2-13.

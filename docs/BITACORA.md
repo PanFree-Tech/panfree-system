@@ -826,3 +826,65 @@ e5bed103
 - F3-07: BUG-001 (VAPID).
 
 ---
+
+---
+
+## 2026-10-15 (Sesion 15 - COMPLETA)
+
+**Duracion:** ~6 horas
+**Objetivo:** Fase 2 (ENV) - Migracion Supabase + 5 hallazgos cerrados
+
+**Completado:**
+- SEC-008: funcion crear_usuario_admin eliminada (era SECURITY DEFINER sin uso).
+- BUG-011: bug en 29-fix-logger-import.ps1 corregido y script versionado.
+- SEC-018: 3 keys huerfanas de Cloudinary eliminadas (quedo 1 activa).
+- SEC-019 + F2-06: rotacion completa de Gemini API key + limpieza de 3 huerfanas.
+- F2-02: migracion completa de Supabase a Publishable/Secret keys.
+- Fix colateral: sanitizeSupabaseKey acepta formato sb_publishable_.
+- Legacy keys (anon/service_role) deshabilitadas en Supabase.
+- Supabase Advisors: 0 issues (criterio de salida de Fase 1 cumplido).
+- Bitwarden actualizado: Supabase, Cloudinary y Gemini con keys rotadas.
+
+**Commits:**
+- 7764b29f security(db): eliminar funcion sin uso crear_usuario_admin (SEC-008)
+- 5e111171 fix(scripts): corregir bug en 29-fix-logger-import.ps1 (BUG-011)
+- cb6dfe04 security(env): identificar y revocar keys huerfanas de Cloudinary (SEC-018)
+- b8767b31 security(env): rotar Gemini API key + revocar huerfanas (SEC-019, F2-06)
+- e17110f6 fix(supabase): aceptar formato sb_publishable en sanitizeSupabaseKey (F2-02)
+- ea82251e security(env): migrar Supabase a Publishable/Secret keys (F2-02)
+
+**Hallazgos cerrados:**
+- SEC-008: crear_usuario_admin sin chequeo de caller (eliminada)
+- BUG-011: bug en script 29-fix-logger-import.ps1
+- SEC-018: 3 API keys activas en Cloudinary sin trazabilidad
+- SEC-019: 4 API keys activas en Gemini sin trazabilidad
+
+**Hallazgos nuevos:**
+- Ninguno.
+
+**Bloqueantes:**
+- Ninguno.
+
+**Aprendizajes:**
+- Supabase migro a Signing Keys asimetricas (ECC P-256): el JWT Secret legacy
+  ya no existe. La rotacion es 1 click y no requiere actualizar Vercel.
+- Supabase depreco anon/service_role: la unica forma de rotarlas es migrar al
+  sistema nuevo (sb_publishable_ / sb_secret_). No hay comando CMD/PowerShell.
+- Vercel bloquea Secret con prefijo NEXT_PUBLIC_: hay que usar Config.
+- El SDK @supabase/supabase-js v2.112.3 soporta ambos formatos, pero el codigo
+  propio puede tener validaciones estrictas que hay que relajar (sanitizeSupabaseKey).
+- Cloudinary plan Free no expone "Last used" por API key: la identificacion se
+  hace por test empirico (upload) + eliminacion progresiva.
+- Google AI Studio muestra los 4 ultimos caracteres del ID de key, suficiente
+  para identificar sin exponer.
+- Los scripts de S14 son el patron a seguir: idempotentes, con backups,
+  verificacion post-write, y commits atomicos.
+
+**Proxima sesion (S16):**
+- F2-05: Rotar Resend API key (sin bloqueantes, rotacion sencilla).
+- F2-04: Rotacion completa de Cloudinary (crear key nueva + revocar la actual).
+- F2-13: Auditar las 11 APIs IA secundarias (ANTHROPIC, MISTRAL, DEEPSEEK, etc.).
+- F3-07: BUG-001 (VAPID inconsistente).
+- Chore: migrar @supabase/auth-helpers-nextjs -> @supabase/ssr.
+
+---

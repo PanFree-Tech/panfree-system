@@ -31,9 +31,9 @@
 
 ## 3. Proximos 3 pasos
 
-1. **Fase 2 - Rotaciones (S15)** - Bitwarden + rotar claves (F2-02, F2-04..F2-13)
-2. **F3-07** - BUG-001: NEXT_PUBLIC_VAPID_KEY inconsistente (P2)
-3. **SEC-018 / SEC-019** - Trazabilidad de keys Cloudinary/Gemini antes de rotar
+1. **F2-05** - Rotar Resend API key (sin bloqueantes)
+2. **F2-04** - Rotacion completa de Cloudinary (crear key nueva + revocar actual)
+3. **F2-13** - Auditar 11 APIs IA secundarias (ANTHROPIC, MISTRAL, DEEPSEEK, etc.)
 
 ## 4. Metricas clave
 
@@ -41,7 +41,7 @@
 |---|---|---|
 | Advisors Supabase severidad 1-2 | 7 | 0 |
 | Advisors Supabase severidad 3 | 250+ | menos de 50 |
-| Claves productivas rotadas | 0 / 12 | 12 / 12 |
+| Claves productivas rotadas | 3 / 12 | 12 / 12 |
 | Claves en Bitwarden | 3 / 12 | 12 / 12 |
 | Hallazgos cerrados | 32 / 46 | 46 / 46 |
 | Documentos .md en docs/ | 30+ | 30+ (OK) |
@@ -168,6 +168,21 @@
 - Bloque B parcial (solo estructura, sin valores) -> S15.
 
 ---
+
+
+---
+
+**2026-10-15 - Sesion 15 (ENV) - COMPLETA**
+- SEC-008: funcion crear_usuario_admin eliminada (era SECURITY DEFINER sin uso).
+- BUG-011: bug en script 29-fix-logger-import.ps1 corregido y versionado.
+- SEC-018: 3 keys huerfanas de Cloudinary eliminadas (quedo 1 activa).
+- SEC-019 + F2-06: rotacion completa de Gemini API key + limpieza de huerfanas.
+- F2-02: migracion completa de Supabase a Publishable/Secret keys.
+- Fix colateral: sanitizeSupabaseKey acepta formato sb_publishable_ (commit e17110f6).
+- Legacy keys (anon/service_role) deshabilitadas en Supabase.
+- Advisors Supabase: 0 issues (criterio de salida de Fase 1 cumplido).
+- Bitwarden actualizado: Supabase, Cloudinary y Gemini con keys rotadas.
+- 6 commits pusheados: 7764b29f, 5e111171, cb6dfe04, b8767b31, e17110f6, ea82251e.
 
 ## 6. Comandos utiles
 
