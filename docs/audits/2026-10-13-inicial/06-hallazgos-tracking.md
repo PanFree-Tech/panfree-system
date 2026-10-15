@@ -1,7 +1,7 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
-**Ultima actualizacion:** 2026-10-14 (fin Sesion 15)
-**Total de hallazgos:** 46
+**Ultima actualizacion:** 2026-10-15 (fin Sesion 16)
+**Total de hallazgos:** 51
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 14 |
+| Abierto | 19 |
 | En curso | 0 |
-| Cerrado | 32 |
+| Cerrado | 31 |
 | Aceptado | 1 |
 
 ---
@@ -93,7 +93,7 @@
 | SEC-016 | Cloudinary cloud name hardcodeado en 4 lugares | F3 | P3 | Abierto | - |
 | SEC-017 | GA4 Measurement ID hardcodeado en ga4/measurement/route.js | F3 | P3 | Abierto | - |
 | BUG-004 | test-email y resend-webhook usaban cliente sin privilegios | F3 | P2 | Cerrado | (Sesion 8) |
-| DB-001i | Indices duplicados | F1 | P3 | **Cerrado** | d6957a61 |
+| DB-001i | Indices duplicados | F1 | P3 | Cerrado | d6957a61 |
 | TST-001 | Cobertura de tests baja | F4 | P3 | Abierto | - |
 | DOC-001 | Falta PropTypes/JSDoc | F4 | P3 | Abierto | - |
 | BUG-005 | AuthModal inserta columnas sin GRANT post-F3-01 | F3 | P2 | Cerrado | 7b014cc4 |

@@ -119,7 +119,7 @@ de la rotacion en S15 (un servicio por commit).
 
 ### Items pendientes (9/12)
 
-Se completan durante la rotacion en S16. La estrategia sigue siendo:
+Se completan durante la rotacion en S17. La estrategia sigue siendo:
 cuando se rote cada servicio, la key nueva se guarda en Bitwarden
 (Produccion) en el mismo flujo.
 
@@ -172,7 +172,7 @@ SEC-020 sigue abierto hasta completar los 9.
 
 ### Items pendientes (9/12)
 
-Se completan durante la rotacion en S16. La estrategia es:
+Se completan durante la rotacion en S17. La estrategia es:
 rotar + verificar + revocar vieja + documentar en nota del item.
 
 | # | Item | Cuenta | Bloquea rotacion |
