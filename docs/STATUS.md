@@ -12,10 +12,10 @@
 |---|---|---|---|---|---|
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
-| F2 - Rotacion claves | 14 | 3 | 0 | 11 | 21% |
+| F2 - Rotacion claves | 14 | 4 | 0 | 10 | 29% |
 | F3 - Codigo | 9 | 6 | 0 | 3 | 67% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **25** | **0** | **22** | **53%** |
+| **Total** | **47** | **26** | **0** | **21** | **55%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
