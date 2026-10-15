@@ -1,7 +1,7 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
-**Ultima actualizacion:** 2026-10-15 (fin Sesion 16)
-**Total de hallazgos:** 51
+**Ultima actualizacion:** 2026-10-15 (fin Sesion 17)
+**Total de hallazgos:** 54
 
 ---
 
@@ -9,10 +9,10 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 19 |
+| Abierto | 20 |
 | En curso | 0 |
-| Cerrado | 31 |
-| Aceptado | 1 |
+| Cerrado | 32 |
+| Aceptado | 2 |
 
 ---
 
@@ -82,6 +82,9 @@
 | SEC-021 | Resend: 2 keys huerfanas revocadas + migracion [C]->[S] | F2 | P2 | Cerrado | (S16) |
 | DOC-004 | Resend documentado bajo [C] cuando era [S] | F2 | P2 | Cerrado | (S16) |
 | SEC-008 | crear_usuario_admin sin chequeo de caller (eliminada) | F3 | P2 | Cerrado | (S15) |
+| DOC-005 | Meta WhatsApp + Twilio: plomeria inerte | F2 | P2 | Cerrado | (S17) |
+| DOC-006 | Instagram Graph API: endpoints rotos con UI visible | F2 | P2 | Abierto | - |
+| DOC-007 | Bloqueante externo: Meta Business Verification requiere RUC | F2 | P2 | Aceptado | (S17) |
 
 ### Hallazgos bajos
 
