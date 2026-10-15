@@ -82,7 +82,7 @@ mismo item, tras ser revocada en el dashboard.
 
 | # | Item | Cuenta | Bloquea rotacion |
 |---|---|---|---|
-| 4 | Resend - Produccion | [S] | F2-05 |
+| 4 | Resend - Produccion | OK | 2026-10-15 (S16) | Migrado [C]->[S], dominio via Claim, key con scope minimo (F2-05, SEC-021, DOC-004) |
 | 5 | Meta WhatsApp - Produccion | [S] | F2-07 |
 | 6 | Twilio - Produccion | [S] | F2-08 |
 | 7 | Instagram - Produccion | [S] | F2-09 |
@@ -114,7 +114,7 @@ de la rotacion en S15 (un servicio por commit).
 | # | Item | Estado | Fecha | Notas |
 |---|---|---|---|---|
 | 1 | Supabase - Produccion | OK | 2026-10-15 (S15) | Migrado a sb_publishable_/sb_secret_ + JWT Signing Key rotada |
-| 2 | Cloudinary - Produccion | OK | 2026-10-15 (S15) | 3 keys huerfanas revocadas, quedo 1 activa |
+| 2 | Cloudinary - Produccion | OK | 2026-10-15 (S16) | 1 key rotada (F2-04) + 3 huerfanas revocadas. Ticket Root #392411 abierto. |
 | 3 | Gemini - Produccion | OK | 2026-10-15 (S15) | Key rotada + 3 huerfanas eliminadas |
 
 ### Items pendientes (9/12)
@@ -125,7 +125,7 @@ cuando se rote cada servicio, la key nueva se guarda en Bitwarden
 
 | # | Item | Cuenta | Bloquea rotacion |
 |---|---|---|---|
-| 4 | Resend - Produccion | [S] | F2-05 |
+| 4 | Resend - Produccion | OK | 2026-10-15 (S16) | Migrado [C]->[S], dominio via Claim, key con scope minimo (F2-05, SEC-021, DOC-004) |
 | 5 | Meta WhatsApp - Produccion | [S] | F2-07 |
 | 6 | Twilio - Produccion | [S] | F2-08 |
 | 7 | Instagram - Produccion | [S] | F2-09 |
@@ -167,7 +167,7 @@ SEC-020 sigue abierto hasta completar los 9.
 | # | Item | Estado | Fecha | Notas |
 |---|---|---|---|---|
 | 1 | Supabase - Produccion | OK | 2026-10-15 (S15) | Migrado a sb_publishable_/sb_secret_ + JWT Signing Key rotada |
-| 2 | Cloudinary - Produccion | OK | 2026-10-15 (S15) | 3 keys huerfanas revocadas, quedo 1 activa |
+| 2 | Cloudinary - Produccion | OK | 2026-10-15 (S16) | 1 key rotada (F2-04) + 3 huerfanas revocadas. Ticket Root #392411 abierto. |
 | 3 | Gemini - Produccion | OK | 2026-10-15 (S15) | Key rotada + 3 huerfanas eliminadas |
 
 ### Items pendientes (9/12)
@@ -177,7 +177,7 @@ rotar + verificar + revocar vieja + documentar en nota del item.
 
 | # | Item | Cuenta | Bloquea rotacion |
 |---|---|---|---|
-| 4 | Resend - Produccion | [S] | F2-05 |
+| 4 | Resend - Produccion | OK | 2026-10-15 (S16) | Migrado [C]->[S], dominio via Claim, key con scope minimo (F2-05, SEC-021, DOC-004) |
 | 5 | Meta WhatsApp - Produccion | [S] | F2-07 |
 | 6 | Twilio - Produccion | [S] | F2-08 |
 | 7 | Instagram - Produccion | [S] | F2-09 |
@@ -195,5 +195,5 @@ Sigue abierto. Se cierra cuando los 9 items pendientes esten completos
 ### Deuda tecnica al cierre de S16
 
 - Migrar @supabase/auth-helpers-nextjs -> @supabase/ssr.
-- F2-04 (rotar Cloudinary) pendiente.
+- (resuelto en S16) F2-04 Cloudinary: key rotada 2026-10-15.
 - Auditar 11 APIs IA secundarias (F2-13).

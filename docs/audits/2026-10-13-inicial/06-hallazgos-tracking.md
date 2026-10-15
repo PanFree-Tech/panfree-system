@@ -79,6 +79,8 @@
 | SEC-018 | 3 API keys activas en Cloudinary sin trazabilidad | F2 | P2 | Cerrado | (S15) |
 | SEC-019 | 4 API keys activas en Gemini sin trazabilidad | F2 | P2 | Cerrado | (S15) |
 | SEC-020 | 9 items Bitwarden pendientes (se completan durante rotacion S15) | F2 | P2 | Abierto | - |
+| SEC-021 | Resend: 2 keys huerfanas revocadas + migracion [C]->[S] | F2 | P2 | Cerrado | (S16) |
+| DOC-004 | Resend documentado bajo [C] cuando era [S] | F2 | P2 | Cerrado | (S16) |
 | SEC-008 | crear_usuario_admin sin chequeo de caller (eliminada) | F3 | P2 | Cerrado | (S15) |
 
 ### Hallazgos bajos

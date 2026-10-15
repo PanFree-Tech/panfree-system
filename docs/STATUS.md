@@ -1,8 +1,8 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-14 (fin Sesion 15)
+**Ultima actualizacion:** 2026-10-15 (fin Sesion 16)
 **Fase actual:** Fase 2 (EN CURSO)
-**Progreso global:** 51% (24 de 47 tareas)
+**Progreso global:** 60% (28 de 47 tareas)
 
 ---
 
@@ -209,8 +209,15 @@
 - [Guia Rapida](./operations/GUIA-RAPIDA.md)
 - [Tracking de hallazgos](./audits/2026-10-13-inicial/06-hallazgos-tracking.md)
 
+---
 
-
-
-
-
+**2026-10-15 - Sesion 16 (COMPLETA)**
+- F2-02 / Supabase: migrado a sb_publishable_/sb_secret_ + JWT Signing Key rotada (ea82251e).
+- F2-05 / Resend: migrado a system.panfree, dominio transferido via Claim, DNS actualizado,
+  key nueva con scope minimo, test de mail OK (doc 29-f2-05-rotar-resend.md).
+- F2-06 / Gemini: key rotada + 3 huerfanas eliminadas (b8767b31).
+- F2-04 / Cloudinary: key rotada hoy 2026-10-15. Ticket Root #392411 abierto.
+- SEC-008, SEC-018, SEC-019, SEC-021, BUG-011, DOC-004 cerrados.
+- Politica de rotacion sin coleccion "Legado" formalizada (66a69d3d + b15e8b6f).
+- Commits: ccd57f00, ea82251e, e17110f6, b8767b31, cb6dfe04, 7764b29f, 5e111171,
+  66a69d3d, b15e8b6f, 1f0420a5.

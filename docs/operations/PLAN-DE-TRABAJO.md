@@ -67,12 +67,12 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 
 | ID | Tarea | Prioridad | Esfuerzo | Estado | DoD |
 |---|---|---|---|---|---|
-| F2-01 | Migrar Supabase a system.panfree | P0 | S | Pendiente | system.panfree es Owner |
-| F2-02 | Rotar JWT secret + keys Supabase | P0 | M | Pendiente | Vercel + local OK |
-| F2-03 | Migrar Cloudinary a system.panfree | P1 | S | Pendiente | Imagenes se ven |
-| F2-04 | Rotar Cloudinary API secret | P1 | S | Pendiente | Vercel + local OK |
-| F2-05 | Rotar Resend API key | P1 | S | Pendiente | Mail de prueba OK |
-| F2-06 | Rotar Gemini API key | P1 | S | Pendiente | Marketing IA funciona |
+| F2-01 | Migrar Supabase a system.panfree | P0 | S | OK | system.panfree es Owner |
+| F2-02 | Rotar JWT secret + keys Supabase | P0 | M | OK | Vercel + local OK |
+| F2-03 | Migrar Cloudinary a system.panfree | P1 | S | En curso | Root User pendiente (ticket #392411) |
+| F2-04 | Rotar Cloudinary API secret | P1 | S | OK | Vercel + local OK |
+| F2-05 | Rotar Resend API key | P1 | S | OK | Mail de prueba OK |
+| F2-06 | Rotar Gemini API key | P1 | S | OK | Marketing IA funciona |
 | F2-07 | Migrar Meta WhatsApp a system.panfree | P2 | M | Pendiente | WABA responde |
 | F2-08 | Rotar Twilio auth token | P2 | S | Pendiente | WhatsApp fallback OK |
 | F2-09 | Rotar Instagram access token | P2 | S | Pendiente | Publicacion funciona |

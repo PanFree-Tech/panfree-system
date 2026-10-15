@@ -888,3 +888,70 @@ e5bed103
 - Chore: migrar @supabase/auth-helpers-nextjs -> @supabase/ssr.
 
 ---
+
+---
+
+## 2026-10-15 (Sesion 16 - COMPLETA)
+
+**Duracion:** ~6 horas
+**Objetivo:** Rotaciones Supabase + Cloudinary + Resend + Gemini + politica sin "Legado"
+
+**Completado:**
+- F2-02 / Supabase: migrado a sb_publishable_/sb_secret_ + JWT Signing Key rotada.
+- F2-04 / Cloudinary: key rotada. Ticket Root User #392411 abierto.
+- F2-05 / Resend: migracion [C]->[S], dominio via Claim, DNS en Spaceship,
+  key nueva con scope minimo, test de mail real OK.
+- F2-06 / Gemini: key rotada + 3 huerfanas eliminadas.
+- Politica de rotacion sin coleccion "Legado" formalizada en SISTEMA-DE-TRABAJO
+  y GESTION-DE-RIESGOS. Toda la documentacion operativa actualizada.
+- SEC-008, SEC-018, SEC-019, SEC-021, BUG-011, DOC-004 cerrados.
+- Doc 29: 29-f2-05-rotar-resend.md (248 lineas, con DNS, DoD, aprendizajes).
+
+**Commits:**
+- ccd57f00 docs(session): cerrar sesion 15 (ENV) - migracion Supabase + 5 hallazgos
+- ea82251e security(env): migrar Supabase a Publishable/Secret keys (F2-02)
+- e17110f6 fix(supabase): aceptar formato sb_publishable en sanitizeSupabaseKey (F2-02)
+- b8767b31 security(env): rotar Gemini API key + revocar huerfanas (SEC-019, F2-06)
+- cb6dfe04 security(env): identificar y revocar keys huerfanas de Cloudinary (SEC-018)
+- 5e111171 fix(scripts): corregir bug en 29-fix-logger-import.ps1 (BUG-011)
+- 7764b29f security(db): eliminar funcion sin uso crear_usuario_admin (SEC-008)
+- 66a69d3d docs(ops): formalizar politica de rotacion sin legacy (S16)
+- b15e8b6f docs(ops): documentar politica de rotacion en sistema y riesgos (S16)
+- 1f0420a5 docs(audit): documentar cierre F2-05 (SEC-021, DOC-004)
+
+**Hallazgos cerrados:**
+- SEC-008: funcion crear_usuario_admin sin uso
+- SEC-018: keys huerfanas Cloudinary revocadas
+- SEC-019: keys huerfanas Gemini revocadas
+- SEC-021: keys huerfanas Resend revocadas + migracion a [S]
+- BUG-011: bug en script 29-fix-logger-import.ps1
+- DOC-004: Resend mal documentado bajo cuenta [C]
+
+**Hallazgos nuevos:**
+- Ninguno (SEC-021 y DOC-004 fueron detectados durante F2-05 y cerrados en la misma sesion).
+
+**Bloqueantes:**
+- Ninguno. Cloudinary Root User pendiente (ticket #392411, no bloqueante).
+
+**Aprendizajes:**
+- Resend ya no usa Amazon SES. Migro a forge.rmta.net. Los registros DNS
+  cambiaron respecto a la documentacion vieja.
+- Domain Claim vs Domain Add en Resend: cuando el dominio esta en otra
+  cuenta, hay que hacer Claim con TXT en "@", no en un subdominio.
+- DKIM cambio de formato: antes v=DKIM1; k=rsa; p=..., ahora solo p=...
+- Verificar en Logs de Resend filtrado por API key es la forma mas confiable
+  de confirmar que la app usa la key nueva.
+- Cloudinary Root User no se puede transferir desde la consola: requiere
+  ticket a soporte. Se puede dejar como Master Admin operativamente.
+- Cloudinary: el dropdown de Severity en el form de soporte rota solo.
+  Priorizar el contenido del ticket, no la severidad.
+
+**Proxima sesion (S17):**
+- F2-07: migrar Meta WhatsApp a system.panfree.
+- F2-08: rotar Twilio auth token.
+- F2-09: rotar Instagram access token.
+- Esperar respuesta Cloudinary #392411 (2-4 dias habiles).
+- Continuar rotaciones restantes (n8n, GA4, VAPID, Secrets, APIs IA).
+- Cerrar SEC-020 cuando todos los items Bitwarden esten completos.
+
+---
