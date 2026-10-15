@@ -39,9 +39,9 @@
 2. Cloudinary
 3. Resend
 4. Gemini
-5. Meta WhatsApp
-6. Twilio
-7. Instagram
+5. Meta WhatsApp  [NO APLICA - ver DOC-005]
+6. Twilio        [NO APLICA - ver DOC-005]
+7. Instagram     [NO APLICA - ver DOC-006]
 8. n8n
 9. GA4
 10. VAPID
@@ -83,9 +83,9 @@ mismo item, tras ser revocada en el dashboard.
 | # | Item | Cuenta | Bloquea rotacion |
 |---|---|---|---|
 | 4 | Resend - Produccion | OK | 2026-10-15 (S16) | Migrado [C]->[S], dominio via Claim, key con scope minimo (F2-05, SEC-021, DOC-004) |
-| 5 | Meta WhatsApp - Produccion | [S] | F2-07 |
-| 6 | Twilio - Produccion | [S] | F2-08 |
-| 7 | Instagram - Produccion | [S] | F2-09 |
+| 5 | Meta WhatsApp - Produccion | NO APLICA - DOC-005 | 2026-10-15 (S17) | Plomeria inerte. Canal real es wa.me. Ver 30-doc-meta-plomeria-inerte.md |
+| 6 | Twilio - Produccion | NO APLICA - DOC-005 | 2026-10-15 (S17) | Plomeria inerte. Tokens nunca creados. Ver 30-doc-meta-plomeria-inerte.md |
+| 7 | Instagram - Produccion | ROTO - DOC-006 | 2026-10-15 (S17) | Endpoints activos, tokens ausentes. Publicar manual. Ver 30-doc-meta-plomeria-inerte.md |
 | 8 | n8n - Produccion | [S] | F2-10 |
 | 9 | GA4 - Produccion | [S] | F2-11 |
 | 10 | Clarity - Produccion | [S] | (no bloquea rotacion) |
@@ -126,9 +126,9 @@ cuando se rote cada servicio, la key nueva se guarda en Bitwarden
 | # | Item | Cuenta | Bloquea rotacion |
 |---|---|---|---|
 | 4 | Resend - Produccion | OK | 2026-10-15 (S16) | Migrado [C]->[S], dominio via Claim, key con scope minimo (F2-05, SEC-021, DOC-004) |
-| 5 | Meta WhatsApp - Produccion | [S] | F2-07 |
-| 6 | Twilio - Produccion | [S] | F2-08 |
-| 7 | Instagram - Produccion | [S] | F2-09 |
+| 5 | Meta WhatsApp - Produccion | NO APLICA - DOC-005 | 2026-10-15 (S17) | Plomeria inerte. Canal real es wa.me. Ver 30-doc-meta-plomeria-inerte.md |
+| 6 | Twilio - Produccion | NO APLICA - DOC-005 | 2026-10-15 (S17) | Plomeria inerte. Tokens nunca creados. Ver 30-doc-meta-plomeria-inerte.md |
+| 7 | Instagram - Produccion | ROTO - DOC-006 | 2026-10-15 (S17) | Endpoints activos, tokens ausentes. Publicar manual. Ver 30-doc-meta-plomeria-inerte.md |
 | 8 | n8n - Produccion | [S] | F2-10 |
 | 9 | GA4 - Produccion | [S] | F2-11 |
 | 10 | Clarity - Produccion | [S] | (no bloquea rotacion) |
@@ -178,9 +178,9 @@ rotar + verificar + revocar vieja + documentar en nota del item.
 | # | Item | Cuenta | Bloquea rotacion |
 |---|---|---|---|
 | 4 | Resend - Produccion | OK | 2026-10-15 (S16) | Migrado [C]->[S], dominio via Claim, key con scope minimo (F2-05, SEC-021, DOC-004) |
-| 5 | Meta WhatsApp - Produccion | [S] | F2-07 |
-| 6 | Twilio - Produccion | [S] | F2-08 |
-| 7 | Instagram - Produccion | [S] | F2-09 |
+| 5 | Meta WhatsApp - Produccion | NO APLICA - DOC-005 | 2026-10-15 (S17) | Plomeria inerte. Canal real es wa.me. Ver 30-doc-meta-plomeria-inerte.md |
+| 6 | Twilio - Produccion | NO APLICA - DOC-005 | 2026-10-15 (S17) | Plomeria inerte. Tokens nunca creados. Ver 30-doc-meta-plomeria-inerte.md |
+| 7 | Instagram - Produccion | ROTO - DOC-006 | 2026-10-15 (S17) | Endpoints activos, tokens ausentes. Publicar manual. Ver 30-doc-meta-plomeria-inerte.md |
 | 8 | n8n - Produccion | [S] | F2-10 |
 | 9 | GA4 - Produccion | [S] | F2-11 |
 | 10 | Clarity - Produccion | [S] | (no bloquea rotacion) |

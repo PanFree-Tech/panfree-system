@@ -73,9 +73,9 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 | F2-04 | Rotar Cloudinary API secret | P1 | S | OK | Vercel + local OK |
 | F2-05 | Rotar Resend API key | P1 | S | OK | Mail de prueba OK |
 | F2-06 | Rotar Gemini API key | P1 | S | OK | Marketing IA funciona |
-| F2-07 | Migrar Meta WhatsApp a system.panfree | P2 | M | Pendiente | WABA responde |
-| F2-08 | Rotar Twilio auth token | P2 | S | Pendiente | WhatsApp fallback OK |
-| F2-09 | Rotar Instagram access token | P2 | S | Pendiente | Publicacion funciona |
+| F2-07 | Migrar Meta WhatsApp a system.panfree | P2 | M | No aplica | Plomeria inerte (DOC-005). Canal real: wa.me |
+| F2-08 | Rotar Twilio auth token | P2 | S | No aplica | Plomeria inerte (DOC-005). Tokens nunca creados |
+| F2-09 | Rotar Instagram access token | P2 | S | No aplica | Endpoints rotos sin tokens (DOC-006). Publicar manual |
 | F2-10 | Rotar n8n webhook token | P2 | S | Pendiente | Webhook responde |
 | F2-11 | Rotar GA4 API secret | P3 | S | Pendiente | Metricas fluyen |
 | F2-12 | Regenerar par VAPID | P3 | M | Pendiente | Push funciona |
