@@ -12,10 +12,10 @@
 |---|---|---|---|---|---|
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
-| F2 - Rotacion claves | 14 | 4 | 0 | 10 | 29% |
+| F2 - Rotacion claves | 14 | 5 | 1 | 8 | 36% |
 | F3 - Codigo | 9 | 6 | 0 | 3 | 67% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **26** | **0** | **21** | **55%** |
+| **Total** | **47** | **28** | **1** | **18** | **60%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -42,8 +42,8 @@
 | Advisors Supabase severidad 1-2 | 7 | 0 |
 | Advisors Supabase severidad 3 | 250+ | menos de 50 |
 | Claves productivas rotadas | 3 / 12 | 12 / 12 |
-| Claves en Bitwarden | 3 / 12 | 12 / 12 |
-| Hallazgos cerrados | 32 / 46 | 46 / 46 |
+| Claves en Bitwarden | 4 / 12 | 12 / 12 |
+| Hallazgos cerrados | 31 / 47 | 47 / 47 |
 | Documentos .md en docs/ | 30+ | 30+ (OK) |
 | Commits de remediacion | 8 | ~40 |
 
