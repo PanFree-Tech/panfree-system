@@ -13,18 +13,16 @@ Ver .env.example en la raiz del repositorio.
 
 ## Almacenamiento
 
-Bitwarden - Organizacion PanFree - Coleccion Produccion
+Bitwarden - Organizacion PanFree - Coleccion Produccion.
+
+Una sola coleccion. No existe "Legado". El historial de rotaciones
+vive en la NOTA de cada item (key saliente completa + fecha de
+revocacion + tarea + motivo).
 
 ## Rotacion
 
-Ver ROTACION-CLAVES.md
+Ver ROTACION-CLAVES.md (procedimiento, rollback, modelo de Bitwarden).
 
 ## Estado de Bitwarden
 
-Ver seccion "Estado de Bitwarden al cierre de S14" en
-[ROTACION-CLAVES.md](./ROTACION-CLAVES.md).
-
-Al 2026-10-14 (S14): 3/12 items completos (Supabase, Cloudinary,
-Gemini). Los 9 restantes se completan durante la rotacion (S15)
-en el mismo flujo: rotar en el dashboard + guardar en Bitwarden
-(Produccion) + guardar viejo en Bitwarden (Legado).
+Ver ROTACION-CLAVES.md, seccion "Estado de Bitwarden al cierre de S16".
