@@ -1,7 +1,7 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
 **Ultima actualizacion:** 2026-10-15 (fin Sesion 17)
-**Total de hallazgos:** 54
+**Total de hallazgos:** 55
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 20 |
+| Abierto | 21 |
 | En curso | 0 |
 | Cerrado | 32 |
 | Aceptado | 2 |
@@ -85,6 +85,7 @@
 | DOC-005 | Meta WhatsApp + Twilio: plomeria inerte | F2 | P2 | Cerrado | (S17) |
 | DOC-006 | Instagram Graph API: endpoints rotos con UI visible | F2 | P2 | Abierto | - |
 | DOC-007 | Bloqueante externo: Meta Business Verification requiere RUC | F2 | P2 | Aceptado | (S17) |
+| DOC-008 | Seccion Marketing sin uso real (~8.100 lineas) - plan de retiro | F3 | P3 | Abierto | - |
 
 ### Hallazgos bajos
 
