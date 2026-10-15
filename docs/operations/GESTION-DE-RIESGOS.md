@@ -19,15 +19,18 @@
 **Descripcion:** al rotar el JWT secret de Supabase, todas las sesiones activas se invalidan. Si Vercel no se actualiza inmediatamente, el sitio queda caido.
 
 **Mitigacion:**
-- Guardar claves viejas en Bitwarden (coleccion Legado) ANTES de rotar
+- Rotar en horario de bajo trafico
+- Verificar la key nueva ANTES de revocar la vieja (test empirico + Logs)
+- La key vieja se revoca recien cuando la nueva esta confirmada en produccion
 - Tener Vercel abierto en otra pestana
 - Hacerlo en horario de bajo trafico
 - Documentar en runbook: docs/05-runbooks/rotar-claves-supabase.md
 
 **Plan de contingencia:**
-1. Restaurar claves viejas en Vercel
-2. Redeploy
-3. Investigar con calma
+1. Rotacion de emergencia: crear key nueva en el dashboard
+2. Actualizar Vercel
+3. Redeploy
+4. Investigar con calma (la key comprometida ya fue revocada)
 
 ---
 
@@ -117,6 +120,11 @@
 1. Usar el JSON exportado
 2. Si no: recuperar desde los dashboards de cada servicio
 3. Ultimo recurso: rotar TODO desde cero
+
+Nota S16: no existe coleccion "Legado". El historial de rotaciones
+vive en la nota de cada item (key saliente completa + fecha + motivo).
+Un export de la boveda (JSON encriptado) ya incluye esas notas; no hay
+una coleccion separada que respaldar.
 
 ---
 

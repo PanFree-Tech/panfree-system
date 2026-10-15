@@ -112,6 +112,18 @@ Ambos comandos deben devolver la MISMA cantidad de lineas.
 - Un commit por tarea
 - Prefixes: feat, fix, docs, chore, refactor, security, perf
 
+### 7.4 Politica de rotacion de claves
+
+- Una sola coleccion en Bitwarden: Organizacion PanFree -> Produccion.
+- No existe coleccion "Legado". Las keys salientes NO se guardan en
+  un item aparte: se revocan en el dashboard y se registran en la NOTA
+  del item de Produccion.
+- La nota del item incluye: key saliente COMPLETA + fecha de revocacion
+  + tarea (F2-XX) + motivo + hash del commit.
+- El rollback NO restaura keys viejas (ya revocadas). Es rotacion de
+  emergencia: crear key nueva + actualizar Vercel + redeploy.
+- Detalle completo en docs/operations/ROTACION-CLAVES.md.
+
 ---
 
 ## 8. Documentos de seguimiento
