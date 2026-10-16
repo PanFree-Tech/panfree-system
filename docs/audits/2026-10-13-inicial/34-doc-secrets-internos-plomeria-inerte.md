@@ -1,0 +1,109 @@
+# DOC-012: Secrets internos - plomeria inerte
+
+**Fecha:** 2026-10-16 (S18)
+**Estado:** Cerrado
+**Tarea:** F2-14 (Bitwarden) como subproducto
+**Relacionado:** DOC-009 (n8n), DOC-005 (Meta WhatsApp + Twilio)
+
+---
+
+## 1. Contexto
+
+En la planificacion original (dump S18) se asumia que F2-13 era
+"Secrets internos (CRON_SECRET, WEBHOOK_SECRET)". El PLAN-DE-TRABAJO
+real define F2-13 como "Auditar APIs IA secundarias" y F2-14 como
+"Guardar .env consolidado en Bitwarden".
+
+En Vercel existian 3 secrets internos desde hace 63 dias:
+
+- CRON_SECRET (Production + Preview)
+- WEBHOOK_SECRET (Production + Preview)
+- REVALIDATE_SECRET (Production + Preview) - no documentado en .env.example
+
+Antes de rotarlos, se ejecuto una auditoria (script 54) para confirmar
+el uso real en el codigo.
+
+---
+
+## 2. Evidencia
+
+### 2.1 Auditoria de codigo (src/)
+
+Cero coincidencias para los 3 patrones:
+
+- CRON_SECRET: 0 ocurrencias.
+- WEBHOOK_SECRET: 0 ocurrencias.
+- REVALIDATE_SECRET: 0 ocurrencias.
+
+### 2.2 Auditoria ampliada (todo el repo)
+
+Se busco en todo el repo (excepto node_modules, .next, .git):
+
+- 0 coincidencias en codigo (.js, .jsx, .ts, .tsx, .mjs, .json).
+- Solo aparecen en documentacion (docs/, README.md, backups).
+
+### 2.3 Busqueda de consumidores
+
+- NO existe src/app/api/cron/* (no hay Vercel Cron Jobs).
+- NO existe src/app/api/revalidate/* (no hay on-demand revalidation).
+- NO existe vercel.json (no hay crons ni revalidate definidos).
+- src/app/api/resend-webhook/ existe, pero NO lee WEBHOOK_SECRET.
+
+---
+
+## 3. Analisis
+
+Los 3 secrets son plomeria inerte, con el mismo patron que n8n (DOC-009),
+Meta WhatsApp, Twilio e Instagram (DOC-005/006):
+
+1. **CRON_SECRET**: nunca se implementaron cron jobs. No hay endpoint
+   que lo valide. No hay Vercel Cron configurado.
+2. **WEBHOOK_SECRET**: el endpoint /api/resend-webhook existe, pero
+   no valida firma HMAC con este secret.
+3. **REVALIDATE_SECRET**: no hay revalidateTag ni revalidatePath con
+   secret. No hay endpoint /api/revalidate.
+
+Conclusion: los 3 secrets fueron creados en el setup inicial como
+"plomeria preventiva" y nunca se activaron. No hay codigo que los
+consuma. No hay proveedor externo que los conozca.
+
+---
+
+## 4. Decision
+
+Se eliminan los 3 secrets de Vercel (Production + Preview).
+
+Razon:
+
+- No aporta rotarlos (no hay quien los use).
+- No aporta conservarlos (no hay codigo esperandolos).
+- A diferencia de n8n, no hay "codigo inerte que podria activarse":
+  nunca se escribio el endpoint que los usaria.
+- Eliminarlos reduce superficie de ataque y limpia el proyecto.
+
+Si en el futuro se implementan cron jobs o webhooks firmados, se
+crean secrets nuevos con el flujo estandar de rotacion.
+
+---
+
+## 5. Acciones ejecutadas
+
+- [x] Auditoria de codigo (script 54).
+- [x] Auditoria ampliada (todo el repo).
+- [x] Eliminado CRON_SECRET de Vercel (Production + Preview).
+- [x] Eliminado WEBHOOK_SECRET de Vercel (Production + Preview).
+- [x] Eliminado REVALIDATE_SECRET de Vercel (Production + Preview).
+- [x] .env.example: seccion SECRETS INTERNOS marcada como ELIMINADOS.
+- [x] Tracking: DOC-012 registrado.
+- [ ] Bitwarden: registrar en nota del item "Secrets internos" (cuando
+      se complete F2-14).
+
+---
+
+## 6. Referencias
+
+- Script: scripts/docs/54-auditar-secrets.ps1
+- Doc relacionado: 32-doc-n8n-plomeria-inerte.md (DOC-009)
+- Doc relacionado: 30-doc-meta-plomeria-inerte.md (DOC-005)
+- Tracking: 06-hallazgos-tracking.md
+- PLAN: docs/operations/PLAN-DE-TRABAJO.md (F2-14)

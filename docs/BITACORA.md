@@ -1088,3 +1088,17 @@ e5bed103
 
 **Pendiente:**
 - Reconsultar Cloudinary #392411 (a partir del 2026-10-18).
+
+**Bloque 4 (secrets internos - F2-14 subproducto):**
+- Auditoria de secrets internos (script 54).
+  - 0 coincidencias en src/ para CRON_SECRET, WEBHOOK_SECRET, REVALIDATE_SECRET.
+  - 0 coincidencias en todo el repo excepto docs.
+  - No hay vercel.json, ni /api/cron/*, ni /api/revalidate/*.
+  - REVALIDATE_SECRET no estaba documentado en .env.example.
+- Veredicto: los 3 secrets son plomeria inerte.
+- Eliminados de Vercel: CRON_SECRET, WEBHOOK_SECRET, REVALIDATE_SECRET (Production + Preview).
+- Doc nuevo: 34-doc-secrets-internos-plomeria-inerte.md (DOC-012).
+- .env.example: seccion SECRETS INTERNOS marcada como ELIMINADOS.
+
+**Hallazgos nuevos (bloque 4):**
+- DOC-012: Secrets internos plomeria inerte (Cerrado).
