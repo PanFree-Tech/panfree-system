@@ -1,7 +1,7 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
-**Ultima actualizacion:** 2026-10-16 (fin Sesion 20)
-**Total de hallazgos:** 63
+**Ultima actualizacion:** 2026-10-16 (fin Sesion 21)
+**Total de hallazgos:** 69
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 20 |
+| Abierto | 22 |
 | En curso | 0 |
-| Cerrado | 41 |
+| Cerrado | 42 |
 | Aceptado | 3 |
 
 ---
@@ -113,7 +113,6 @@
 | DOC-003 | discrepancia endpoint frontend vs backend (geminiService) | F3 | P3 | Abierto | - |
 | DOC-010 | Variables en Vercel sin documentar en .env.example (GA4 service account, REVALIDATE_SECRET) | F2 | P3 | Abierto | - |
 | DOC-011 | Variables en .env.example sin equivalente en Vercel (CLARITY, EMAIL_FROM, BASE_URL, GEMINI_MODEL, NEXA) | F2 | P3 | Abierto | - |
-
 | DOC-015 | Alias Vercel apuntaba a deployment viejo | F4 | P2 | No aplica (falsa alarma S21) | (S21) |
 | BUG-012 | PWAInstallPrompt.js leia NEXT_PUBLIC_VAPID_KEY (variable inexistente) | F3 | P2 | Cerrado (S20) | 5923f3a6 |
 | DOC-017 | Service Worker cacheaba HTML viejo (SW servia 5 chunks en vez de 16) | F3 | P2 | Cerrado (S21) | 16ea5eec |
