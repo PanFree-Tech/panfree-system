@@ -31,9 +31,13 @@
 
 ## 3. Proximos 3 pasos
 
-1. **Ticket Cloudinary #392411** - Verificar respuesta de soporte (2-4 dias habiles)
-2. **F2-10** - Rotar n8n webhook token
-3. **F2-14** - Auditar 11 APIs IA secundarias (ANTHROPIC, MISTRAL, DEEPSEEK, etc.)
+1. **F2-10** - Rotar n8n webhook token
+2. **F2-11** - Rotar GA4 API secret
+3. **F2-12** - Regenerar par VAPID
+
+> **Nota:** el ticket Cloudinary #392411 (Root User) no es un paso activo.
+> Depende de soporte externo (2-4 dias habiles desde 2026-10-15).
+> Reconsultar a partir del **2026-10-18**.
 
 ## 4. Metricas clave
 
