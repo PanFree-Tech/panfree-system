@@ -1310,3 +1310,74 @@ la referencia valida.
 - F2-14: Bitwarden consolidado (opcional, ya cubierto por items).
 - Reconciliar doc vs realidad: Bitwarden tiene 3 carpetas, doc dice 1.
 - Items sueltos en Bitwarden (panfree.fit, supabase.com) - auditar.
+
+---
+
+## 2026-10-16 (Sesion 21 - COMPLETA)
+
+**Duracion:** ~4 horas
+**Objetivo:** ENV - Fix Service Worker + recon + hallazgos menores
+
+**Completado:**
+
+### Bloque 0+1 - Recon + fix STATUS
+- 67a-v2: recon S21 (git + next.config.js).
+- Fix STATUS.md: header, progreso (76%), F2 (13/14), append S20.
+- Commit: 8cddc665.
+
+### Bloque 2 - Supabase legacy (DOC-016)
+- Auditoria inicial mostro "eyJ..." en Vercel env ls.
+- Verificacion con vercel env pull + Dashboard: valor real
+  es sb_publishable_. DOC-016 NO aplica.
+- Leccion: el CLI de Vercel puede mostrar el ojito con formato
+  JWT interno, no el valor real. Siempre verificar con env pull
+  o dashboard.
+
+### Bloque 3 - Service Worker (DOC-017)
+- Sintoma: /admin solo cargaba 5 scripts (framework base), no los
+  chunks de admin. La app se veia pero no hidrataba.
+- Diagnostico:
+  - view-source mostraba HTML correcto (13 scripts).
+  - document mostraba HTML viejo (5 scripts).
+  - El SW cacheaba HTML con CacheFirst (default de next-pwa).
+- Fix en next.config.js:
+  - clientsClaim: true.
+  - runtimeCaching custom (NetworkFirst para HTML).
+- Commit: 16ea5eec.
+- Verificacion: 16 scripts en el DOM (antes 5).
+
+### Hallazgos nuevos
+- DOC-017 (Service Worker): cerrado.
+- DOC-018 (meta apple deprecated): abierto F4 P3.
+- DOC-019 (icono 144x144 faltante): abierto F4 P3.
+- DOC-015 (alias Vercel): no aplica (falsa alarma).
+- DOC-016 (Supabase legacy): no aplica (falsa alarma).
+
+### Hallazgos cerrados en S21
+- DOC-017.
+
+**Commits S21:**
+- 16ea5eec fix(pwa): evitar cacheo de HTML en service worker (DOC-017)
+- 8cddc665 docs(status): actualizar STATUS a cierre S20 + recon S21
+- 82bf85f5 docs(audit): registrar DOC-017 + DOC-018 + DOC-019 (S21)
+
+**Bloqueantes:**
+- Ninguno.
+
+**Proxima sesion (S22):**
+- Bloque 4: rehacer 64b/64c (deuda S20).
+- Bloque 5: reconciliar Bitwarden vs docs (3 carpetas).
+- Cloudinary #392411 (reconsultar desde 2026-10-18).
+- F3-08 / F3-09 (ESLint + headers de seguridad).
+
+**Aprendizajes:**
+- El CLI de Vercel puede mostrar el ojito con formato JWT interno
+  para valores Sensitive. No confiar en env ls para verificar.
+- next-pwa sin runtimeCaching cachea HTML con CacheFirst.
+  Consecuencia: los clientes recurrentes quedan con HTML viejo
+  indefinidamente.
+- skipWaiting + clientsClaim son ambos necesarios para reemplazo
+  inmediato del SW.
+- Para docs con mucho codigo/comillas, creacion manual en VS Code
+  es mas robusta que scripts (el escaping en PowerShell 5.1 es
+  fragil).

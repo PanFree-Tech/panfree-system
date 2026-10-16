@@ -114,8 +114,11 @@
 | DOC-010 | Variables en Vercel sin documentar en .env.example (GA4 service account, REVALIDATE_SECRET) | F2 | P3 | Abierto | - |
 | DOC-011 | Variables en .env.example sin equivalente en Vercel (CLARITY, EMAIL_FROM, BASE_URL, GEMINI_MODEL, NEXA) | F2 | P3 | Abierto | - |
 
-| DOC-015 | Alias Vercel www.panfree.fit apuntaba a deployment viejo (hyx06fts0, 63d) | F4 | P2 | Abierto (revision S21) | (S20) |
+| DOC-015 | Alias Vercel apuntaba a deployment viejo | F4 | P2 | No aplica (falsa alarma S21) | (S21) |
 | BUG-012 | PWAInstallPrompt.js leia NEXT_PUBLIC_VAPID_KEY (variable inexistente) | F3 | P2 | Cerrado (S20) | 5923f3a6 |
+| DOC-017 | Service Worker cacheaba HTML viejo (SW servia 5 chunks en vez de 16) | F3 | P2 | Cerrado (S21) | 16ea5eec |
+| DOC-018 | meta apple-mobile-web-app-capable deprecado | F4 | P3 | Abierto | - |
+| DOC-019 | Icono icon-144x144.png faltante en manifest PWA | F4 | P3 | Abierto | - |
 ---
 
 ## 4. Como cerrar un hallazgo

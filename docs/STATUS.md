@@ -1,6 +1,6 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-16 (fin Sesion 20)
+**Ultima actualizacion:** 2026-10-16 (fin Sesion 21)
 **Fase actual:** Fase 2 (EN CURSO)
 **Progreso global:** 76% (36 de 47 tareas)
 
@@ -281,3 +281,16 @@
 - DOC-015 (nuevo): alias Vercel www.panfree.fit apuntaba a deployment viejo.
 - SEC-020 cerrado: todos los items Bitwarden rotables completos.
 - Commit: 5923f3a6 + 13f3cc96.
+
+---
+
+**2026-10-16 - Sesion 21 (ENV) - COMPLETA**
+- Fix PWA: Service Worker ya no cachea HTML viejo (DOC-017).
+  - next.config.js: clientsClaim: true + runtimeCaching custom.
+  - Verificacion: 5 scripts -> 16 scripts en /admin.
+  - Commit: 16ea5eec.
+- Recon S21: doc 40-recon-s21.md.
+- STATUS actualizado a cierre real de S20.
+- Hallazgos nuevos: DOC-018 (meta deprecated), DOC-019 (icono 144x144).
+- DOC-015 y DOC-016 resultaron falsas alarmas.
+- Commits S21: 16ea5eec, 8cddc665, 82bf85f5.
