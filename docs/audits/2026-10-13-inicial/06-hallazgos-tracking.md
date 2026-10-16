@@ -1,6 +1,6 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
-**Ultima actualizacion:** 2026-10-16 (Sesion 18 en curso)
+**Ultima actualizacion:** 2026-10-16 (fin Sesion 20)
 **Total de hallazgos:** 63
 
 ---
@@ -9,10 +9,10 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 24 |
+| Abierto | 20 |
 | En curso | 0 |
-| Cerrado | 36 |
-| Aceptado | 2 |
+| Cerrado | 41 |
+| Aceptado | 3 |
 
 ---
 
@@ -64,7 +64,7 @@
 
 | ID | Titulo | Fase | Prioridad | Estado | Commit |
 |---|---|---|---|---|---|
-| BUG-001 | NEXT_PUBLIC_VAPID_KEY inconsistente | F3 | P2 | Abierto | - |
+| BUG-001 | NEXT_PUBLIC_VAPID_KEY inconsistente | F3 | P2 | Cerrado (S20) | 5923f3a6 |
 | BUG-002 | route.js inserta avatar (columna avatar_url) | F3 | P2 | Cerrado | 4d5bd9c2 |
 | CONF-001 | ESLint ignorado en build | F3 | P2 | Abierto | - |
 | CONF-002 | Sin headers de seguridad | F3 | P2 | Abierto | - |
@@ -78,7 +78,7 @@
 | BUG-009 | endpoint usa gemini-3.7-flash que no existe en AI Studio | F3 | P2 | Abierto | - |
 | SEC-018 | 3 API keys activas en Cloudinary sin trazabilidad | F2 | P2 | Cerrado | (S15) |
 | SEC-019 | 4 API keys activas en Gemini sin trazabilidad | F2 | P2 | Cerrado | (S15) |
-| SEC-020 | 9 items Bitwarden pendientes (se completan durante rotacion S15) | F2 | P2 | Abierto | - |
+| SEC-020 | 9 items Bitwarden pendientes (se completan durante rotacion S15) | F2 | P2 | Cerrado (S20: VAPID era el ultimo) | (S20) |
 | SEC-021 | Resend: 2 keys huerfanas revocadas + migracion [C]->[S] | F2 | P2 | Cerrado | (S16) |
 | DOC-004 | Resend documentado bajo [C] cuando era [S] | F2 | P2 | Cerrado | (S16) |
 | SEC-008 | crear_usuario_admin sin chequeo de caller (eliminada) | F3 | P2 | Cerrado | (S15) |
@@ -89,7 +89,7 @@
 | DOC-009 | n8n: plomeria inerte, tokens nunca creados | F2 | P2 | Cerrado | (S18) |
 | SEC-022 | Variable basura NEXT_PUBLIC_UPLOAD_PRESETNEXT_PUBLIC_UPLOAD_PRESET en Vercel | F2 | P2 | Cerrado | (S18) |
 | SEC-023 | GA4 con dos juegos de credenciales coexistiendo en Vercel | F2 | P2 | Cerrado (S19) | No era duplicado: coexistencia legitima (Service Account + Measurement Protocol) |
-| SEC-024 | NEXT_PUBLIC_VAPID_EMAIL con valor sospechoso (?JWT?) | F2 | P2 | Abierto | - |
+| SEC-024 | NEXT_PUBLIC_VAPID_EMAIL con valor sospechoso (?JWT?) | F2 | P2 | No aplica (S20: artefacto del CLI de Vercel) | (S20) |
 | DOC-012 | Secrets internos (CRON_SECRET, WEBHOOK_SECRET, REVALIDATE_SECRET) plomeria inerte, eliminados de Vercel | F2 | P2 | Cerrado | (S18) |
 | DOC-013 | APIs IA secundarias (13 keys) plomeria inerte en Marketing, eliminadas de Vercel | F2 | P2 | Cerrado | (S18) |
 | DOC-014 | GA4 Service Account plomeria inerte (cargado en ga-metrics/route.js pero no usado) | F2 | P2 | Abierto (revision 2027-04-16) | (S19) |
@@ -99,7 +99,7 @@
 | ID | Titulo | Fase | Prioridad | Estado | Commit |
 |---|---|---|---|---|---|
 | BUG-003 | diptico/[codigo] usa .eq('activo') en vez de is_active | F3 | P3 | Abierto | - |
-| SEC-014 | VAPID key hardcodeada en src/app/admin/page.js | F3 | P3 | Abierto | - |
+| SEC-014 | VAPID key hardcodeada en src/app/admin/page.js | F3 | P3 | Cerrado (S20) | 5923f3a6 |
 | SEC-015 | URL Supabase hardcodeada en notificar-estado/route.js y notificaciones.js | F3 | P3 | Abierto | - |
 | SEC-016 | Cloudinary cloud name hardcodeado en 4 lugares | F3 | P3 | Abierto | - |
 | SEC-017 | GA4 Measurement ID hardcodeado en ga4/measurement/route.js | F3 | P3 | Abierto | - |
@@ -114,6 +114,8 @@
 | DOC-010 | Variables en Vercel sin documentar en .env.example (GA4 service account, REVALIDATE_SECRET) | F2 | P3 | Abierto | - |
 | DOC-011 | Variables en .env.example sin equivalente en Vercel (CLARITY, EMAIL_FROM, BASE_URL, GEMINI_MODEL, NEXA) | F2 | P3 | Abierto | - |
 
+| DOC-015 | Alias Vercel www.panfree.fit apuntaba a deployment viejo (hyx06fts0, 63d) | F4 | P2 | Abierto (revision S21) | (S20) |
+| BUG-012 | PWAInstallPrompt.js leia NEXT_PUBLIC_VAPID_KEY (variable inexistente) | F3 | P2 | Cerrado (S20) | 5923f3a6 |
 ---
 
 ## 4. Como cerrar un hallazgo

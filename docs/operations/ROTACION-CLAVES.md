@@ -337,3 +337,66 @@ estan completos: GA4, Clarity, VAPID.
 - Sistema simple de promociones en CartSidebar (DOC-008 seccion 9).
 - Ocultar la seccion Marketing del menu admin.
 - Limpieza de la seccion Marketing (~5.500-6.500 lineas, DOC-008).
+
+---
+
+## Estado de Bitwarden al cierre de S20 (2026-10-16)
+
+**Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
+**Carpeta:** PanFree System - Produccion
+
+### Cambios respecto a S19
+
+En S20 se completo la rotacion de VAPID (F2-12), ultimo item rotable
+pendiente. Tambien se corrigio el codigo que consumia la clave
+(F3-07, SEC-014, BUG-001, BUG-012).
+
+### Items completos (6/12)
+
+| # | Item | Estado | Fecha | Notas |
+|---|---|---|---|---|
+| 1 | Supabase - Produccion | OK | 2026-10-15 (S15) | sb_publishable_/sb_secret_ + JWT rotada |
+| 2 | Cloudinary - Produccion | OK | 2026-10-15 (S16) | 1 key rotada + 3 huerfanas. Ticket #392411 abierto |
+| 3 | Gemini - Produccion | OK | 2026-10-15 (S15) | Key rotada + 3 huerfanas eliminadas |
+| 4 | Resend - Produccion | OK | 2026-10-15 (S16) | Migrado [C]->[S], dominio via Claim |
+| 9 | GA4 - Produccion | OK | 2026-10-16 (S19) | 2 rotaciones (API secret + private key) |
+| 11 | **VAPID - Produccion** | **OK** | **2026-10-16 (S20)** | **Par rotado + fix de codigo. Par saliente: public recuperable, private irrecuperable** |
+
+### Items pendientes (6/12)
+
+| # | Item | Estado | Bloquea rotacion |
+|---|---|---|---|
+| 5 | Meta WhatsApp - Produccion | NO APLICA | DOC-005 |
+| 6 | Twilio - Produccion | NO APLICA | DOC-005 |
+| 7 | Instagram - Produccion | ROTO | DOC-006 |
+| 8 | n8n - Produccion | NO APLICA | DOC-009 |
+| 10 | Clarity - Produccion | Pendiente | (no bloquea rotacion) |
+| 12 | Secrets internos - Produccion | ELIMINADOS | DOC-012 (S18) |
+
+### Hallazgo SEC-020
+
+Cerrado en S20. Los items realmente rotables estan completos:
+Supabase, Cloudinary, Gemini, Resend, GA4, VAPID. Los items 5-6-7-8-12
+son "No aplica" o "Eliminados" por decision documentada. El item 10
+(Clarity) es la unica deuda menor, no bloqueante.
+
+### Politica de env.local
+
+Confirmado en S20: el archivo .env.local NO se mantiene en disco.
+Se reconstruye on-demand desde Bitwarden cuando se necesita
+desarrollo local. Esto reduce la superficie de exposicion.
+
+### Incidente S20-01 (par VAPID expuesto en chat IA)
+
+Par intermedio expuesto durante la generacion. Descartado sin cargarlo.
+Par valido generado con Out-File directo a archivo. Regla 7.5 aplicada.
+Documentado en doc 38-f2-12-rotar-vapid.md.
+
+### Deuda tecnica al cierre de S20
+
+- Rehacer 64b/64c en VS Code.
+- Auditar DOC-015: alias Vercel apuntaba a deployment viejo.
+- Migrar @supabase/auth-helpers-nextjs -> @supabase/ssr.
+- Sistema simple de promociones en CartSidebar (DOC-008 seccion 9).
+- Reconciliar doc Bitwarden (3 carpetas reales vs 1 en doc).
+- Auditar items sueltos: panfree.fit, supabase.com.

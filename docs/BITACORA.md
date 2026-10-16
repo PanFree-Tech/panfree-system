@@ -1228,3 +1228,85 @@ la referencia valida.
 - F3-07: fix BUG-001 (VAPID inconsistente en admin/page.js).
 - Reconsultar Cloudinary #392411 (a partir del 2026-10-18).
 - Backlog: sistema simple de promociones en CartSidebar (DOC-008 seccion 9).
+
+## 2026-10-16 (Sesion 20 - COMPLETA)
+
+**Duracion:** ~6 horas
+**Objetivo:** ENV - Chore scripts + F2-12 VAPID + F3-07 + cierre
+
+**Completado:**
+
+### Bloque 0 - Chore de arranque
+- 64a: reescribir 59-auditar-ga4.ps1 con scope total (patron 54).
+- 64a commiteado como 7d2bf3a8.
+- 64b/64c quedaron con contenido cruzado por here-strings anidados.
+- Deuda registrada: recrear 64b/64c bien en S21.
+
+### Bloque 1 - F2-12 VAPID + F3-07 + SEC-014 + BUG-001 + BUG-012
+
+**Auditoria previa:**
+- Confirmado BUG-001: clave hardcodeada en admin/page.js distinta a Vercel.
+- Confirmado SEC-014: la misma constante hardcodeada.
+- Confirmado BUG-012 (nuevo): PWAInstallPrompt.js leia NEXT_PUBLIC_VAPID_KEY inexistente.
+- Confirmado SEC-024: NO aplica. Era artefacto visual del CLI de Vercel.
+
+**Rotacion:**
+- Par VAPID generado con Out-File (regla 7.5 aplicada).
+- Incidente S20-01: un par intermedio quedo expuesto en el chat de IA.
+  Descartado sin cargarlo. Par valido generado con redireccion.
+- Bitwarden: item "VAPID - Produccion" creado en carpeta
+  "PanFree System - Produccion". 3 campos + nota con historial.
+- Vercel: Production + Preview con las 3 vars nuevas.
+- Supabase: push_subscriptions vaciada (suscripciones huerfanas).
+
+**Fix de codigo:**
+- src/app/admin/page.js: const VAPID_PUBLIC_KEY desde process.env.
+- src/components/PWAInstallPrompt.js: idem (variable correcta).
+- Commit: 5923f3a6.
+
+**Hallazgo colateral (DOC-015):**
+- Al verificar el bundle se descubrio que el alias www.panfree.fit
+  apuntaba a un deployment viejo (hyx06fts0, 63d). Vercel no actualiza
+  el alias automaticamente.
+- Fix: vercel --prod --force --yes. Deployment jc4bivlqy + alias OK.
+- Pendiente S21: auditar si fixes previos llegaron a produccion.
+
+**Verificacion end-to-end:**
+- Suscripcion desde /admin -> POST /api/push-suscribir 200.
+- 1 fila en push_subscriptions con user_id valido.
+
+**Hallazgos cerrados:**
+- F2-12 (rotacion VAPID)
+- F3-07 (fix BUG-001 en admin)
+- SEC-014 (VAPID key hardcodeada)
+- BUG-001 (VAPID inconsistente)
+- BUG-012 (PWAInstallPrompt leia variable inexistente)
+- SEC-024 (no aplica)
+
+**Hallazgos nuevos:**
+- DOC-015: alias Vercel apuntaba a deployment viejo (abierto, revision S21).
+
+**Commits S20:**
+- 7d2bf3a8 chore(scripts): reescribir 59 con scope total (patron 54)
+- 5923f3a6 fix(pwa,admin): unificar VAPID_PUBLIC_KEY desde env (F3-07, SEC-014, BUG-001, BUG-012)
+- (pendiente) docs(session): cerrar sesion 20 (ENV) - VAPID + cierre
+
+**Aprendizajes:**
+- Here-strings @'...'@ NO se anidan en PowerShell.
+- Regla 7.5 aplicada: secretos generados por CLI van a archivo con 2>&1 | Out-File.
+- Service Worker puede servir chunks viejos post-redeploy.
+- cache:no-store rompe fetch de chunks servidos por el SW.
+- performance.getEntriesByType tiene buffer limitado (150-250 entries).
+- Vercel alias NO se actualiza solo con push a main.
+- Regex PowerShell con (?m)^...$ no matchea confiable en Markdown tables.
+  Usar .Replace() literal.
+
+**Bloqueantes:**
+- Ninguno.
+
+**Proxima sesion (S21):**
+- Rehacer 64b/64c en VS Code (script 65 y 66 completos).
+- Auditar DOC-015: que fixes previos llegaron a produccion.
+- F2-14: Bitwarden consolidado (opcional, ya cubierto por items).
+- Reconciliar doc vs realidad: Bitwarden tiene 3 carpetas, doc dice 1.
+- Items sueltos en Bitwarden (panfree.fit, supabase.com) - auditar.

@@ -261,3 +261,13 @@
 - Credenciales de push: eliminadas las ajenas. Solo gh:github.com:PanFree-Tech.
 - Progress: F2 10/14 -> 11/14; global 70% -> 72%.
 - Scripts 59, 60, 61a, 61b, 62, 63a, 63b agregados.
+
+---
+
+**2026-10-16 - Sesion 20 (ENV) - COMPLETA**
+- F2-12: rotacion completa del par VAPID + fix de codigo.
+- F3-07 / SEC-014 / BUG-001 / BUG-012: VAPID_PUBLIC_KEY unificada desde env.
+- SEC-024: no aplica (era artefacto visual del CLI de Vercel).
+- DOC-015 (nuevo): alias Vercel www.panfree.fit apuntaba a deployment viejo.
+- Commit: 5923f3a6.
+- Pusheado + deploy Ready + alias actualizado con vercel --prod --force.
