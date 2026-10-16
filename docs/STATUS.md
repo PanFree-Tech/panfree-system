@@ -1,8 +1,8 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-15 (fin Sesion 17)
+**Ultima actualizacion:** 2026-10-16 (Sesion 18 en curso)
 **Fase actual:** Fase 2 (EN CURSO)
-**Progreso global:** 66% (31 de 47 tareas)
+**Progreso global:** 68% (32 de 47 tareas)
 
 ---
 
@@ -12,10 +12,10 @@
 |---|---|---|---|---|---|
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
-| F2 - Rotacion claves | 14 | 8 | 0 | 6 | 57% |
+| F2 - Rotacion claves | 14 | 9 | 0 | 5 | 64% |
 | F3 - Codigo | 9 | 6 | 0 | 3 | 67% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **31** | **0** | **16** | **66%** |
+| **Total** | **47** | **32** | **0** | **15** | **68%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -31,9 +31,9 @@
 
 ## 3. Proximos 3 pasos
 
-1. **F2-10** - Rotar n8n webhook token
-2. **F2-11** - Rotar GA4 API secret
-3. **F2-12** - Regenerar par VAPID
+1. **F2-11** - Rotar GA4 API secret (auditar los 2 juegos primero, ver SEC-023)
+2. **F2-12** - Regenerar par VAPID (verificar SEC-024 antes)
+3. **F2-13** - Auditar APIs IA secundarias
 
 > **Nota:** el ticket Cloudinary #392411 (Root User) no es un paso activo.
 > Depende de soporte externo (2-4 dias habiles desde 2026-10-15).

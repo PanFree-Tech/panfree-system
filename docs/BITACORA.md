@@ -1047,3 +1047,44 @@ e5bed103
 - F2-13: secrets internos (CRON_SECRET, WEBHOOK_SECRET).
 - F2-14: auditar APIs IA secundarias (11 pendientes).
 - Backlog: sistema simple de promociones en CartSidebar.
+
+---
+
+## 2026-10-16 (Sesion 18 - EN CURSO)
+
+**Duracion:** en curso
+**Objetivo:** ENV - F2-10 n8n (reformulada) + auditoria Vercel + hallazgos colaterales
+
+**Completado (parcial):**
+- Bloque 1: auditoria de n8n (script 52).
+  - Codigo: 20 coincidencias en 5 archivos.
+  - Vercel: 3 variables N8N_* NO existen.
+  - Veredicto: plomeria inerte. F2-10 reformulada a "No aplica".
+  - Doc nuevo: 32-doc-n8n-plomeria-inerte.md.
+- Bloque 2: auditoria completa de Vercel (vercel env ls).
+  - Detectada variable basura NEXT_PUBLIC_UPLOAD_PRESETNEXT_PUBLIC_UPLOAD_PRESET.
+  - SEC-022: eliminada de Production + Preview en Vercel.
+  - Doc nuevo: 33-doc-vercel-hallazgos.md.
+- Bloque 3: reformular PLAN-DE-TRABAJO + .env.example.
+  - F2-10 -> "No aplica" (mismo patron que F2-07/08/09).
+  - Seccion N8N en .env.example -> "NO USADO".
+
+**Hallazgos nuevos:**
+- DOC-009: n8n plomeria inerte (Cerrado).
+- SEC-022: variable basura en Vercel (Cerrado).
+- SEC-023: GA4 con dos juegos de credenciales coexistiendo (Abierto).
+- SEC-024: NEXT_PUBLIC_VAPID_EMAIL con valor sospechoso (Abierto).
+- DOC-010: variables en Vercel sin documentar (Abierto).
+- DOC-011: variables en .env.example sin equivalente en Vercel (Abierto).
+
+**Bloqueantes:**
+- Ninguno. Cloudinary #392411 se reconsulta a partir del 2026-10-18.
+
+**Proxima sesion / continuacion S18:**
+- F2-11: rotar GA4 API secret (resolver SEC-023 primero).
+- F2-12: regenerar par VAPID (resolver SEC-024 + BUG-001).
+- F2-13: secrets internos (CRON_SECRET, WEBHOOK_SECRET).
+- F2-14: auditar 11 APIs IA secundarias.
+
+**Pendiente:**
+- Reconsultar Cloudinary #392411 (a partir del 2026-10-18).

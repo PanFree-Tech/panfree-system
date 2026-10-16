@@ -76,7 +76,7 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 | F2-07 | Migrar Meta WhatsApp a system.panfree | P2 | M | No aplica | Plomeria inerte (DOC-005). Canal real: wa.me |
 | F2-08 | Rotar Twilio auth token | P2 | S | No aplica | Plomeria inerte (DOC-005). Tokens nunca creados |
 | F2-09 | Rotar Instagram access token | P2 | S | No aplica | Endpoints rotos sin tokens (DOC-006). Publicar manual |
-| F2-10 | Rotar n8n webhook token | P2 | S | Pendiente | Webhook responde |
+| F2-10 | Migrar n8n a system.panfree | P2 | S | No aplica | Plomeria inerte (DOC-009). Tokens nunca creados |
 | F2-11 | Rotar GA4 API secret | P3 | S | Pendiente | Metricas fluyen |
 | F2-12 | Regenerar par VAPID | P3 | M | Pendiente | Push funciona |
 | F2-13 | Auditar APIs IA secundarias | P3 | M | Pendiente | Usadas o eliminadas |

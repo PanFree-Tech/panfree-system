@@ -1,7 +1,7 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
-**Ultima actualizacion:** 2026-10-15 (fin Sesion 17)
-**Total de hallazgos:** 55
+**Ultima actualizacion:** 2026-10-16 (Sesion 18 en curso)
+**Total de hallazgos:** 61
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 21 |
+| Abierto | 24 |
 | En curso | 0 |
-| Cerrado | 32 |
+| Cerrado | 34 |
 | Aceptado | 2 |
 
 ---
@@ -22,8 +22,8 @@
 |---|---|---|
 | Critica | 9 | 7 |
 | Alta | 11 | 7 |
-| Media | 16 | 7 |
-| Baja | 7 | 2 |
+| Media | 21 | 9 |
+| Baja | 9 | 2 |
 
 ---
 
@@ -86,6 +86,10 @@
 | DOC-006 | Instagram Graph API: endpoints rotos con UI visible | F2 | P2 | Abierto | - |
 | DOC-007 | Bloqueante externo: Meta Business Verification requiere RUC | F2 | P2 | Aceptado | (S17) |
 | DOC-008 | Seccion Marketing sin uso real (~8.100 lineas) - plan de retiro | F3 | P3 | Abierto | - |
+| DOC-009 | n8n: plomeria inerte, tokens nunca creados | F2 | P2 | Cerrado | (S18) |
+| SEC-022 | Variable basura NEXT_PUBLIC_UPLOAD_PRESETNEXT_PUBLIC_UPLOAD_PRESET en Vercel | F2 | P2 | Cerrado | (S18) |
+| SEC-023 | GA4 con dos juegos de credenciales coexistiendo en Vercel | F2 | P2 | Abierto | - |
+| SEC-024 | NEXT_PUBLIC_VAPID_EMAIL con valor sospechoso (?JWT?) | F2 | P2 | Abierto | - |
 
 ### Hallazgos bajos
 
@@ -104,6 +108,8 @@
 | BUG-011 | bug en script 29-fix-logger-import.ps1 (Write-Ok con $modified + string) | F3 | P3 | Cerrado | (S15) |
 | DOC-002 | MARKETING_INTELLIGENT_SYSTEM.md menciona modelos gemini-3.5-flash inexistentes | F3 | P3 | Abierto | - |
 | DOC-003 | discrepancia endpoint frontend vs backend (geminiService) | F3 | P3 | Abierto | - |
+| DOC-010 | Variables en Vercel sin documentar en .env.example (GA4 service account, REVALIDATE_SECRET) | F2 | P3 | Abierto | - |
+| DOC-011 | Variables en .env.example sin equivalente en Vercel (CLARITY, EMAIL_FROM, BASE_URL, GEMINI_MODEL, NEXA) | F2 | P3 | Abierto | - |
 
 ---
 
