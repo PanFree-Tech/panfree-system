@@ -12,7 +12,7 @@
 | Abierto | 25 |
 | En curso | 0 |
 | Cerrado | 44 |
-| Aceptado | 3 |
+| Aceptado | 2 |
 
 ---
 
