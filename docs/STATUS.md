@@ -1,8 +1,8 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-15 (fin Sesion 16)
+**Ultima actualizacion:** 2026-10-15 (fin Sesion 17)
 **Fase actual:** Fase 2 (EN CURSO)
-**Progreso global:** 60% (28 de 47 tareas)
+**Progreso global:** 66% (31 de 47 tareas)
 
 ---
 
@@ -12,10 +12,10 @@
 |---|---|---|---|---|---|
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
-| F2 - Rotacion claves | 14 | 5 | 1 | 8 | 36% |
+| F2 - Rotacion claves | 14 | 8 | 0 | 6 | 57% |
 | F3 - Codigo | 9 | 6 | 0 | 3 | 67% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **28** | **1** | **18** | **60%** |
+| **Total** | **47** | **31** | **0** | **16** | **66%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -31,9 +31,9 @@
 
 ## 3. Proximos 3 pasos
 
-1. **F2-05** - Rotar Resend API key (sin bloqueantes)
-2. **F2-04** - Rotacion completa de Cloudinary (crear key nueva + revocar actual)
-3. **F2-13** - Auditar 11 APIs IA secundarias (ANTHROPIC, MISTRAL, DEEPSEEK, etc.)
+1. **Ticket Cloudinary #392411** - Verificar respuesta de soporte (2-4 dias habiles)
+2. **F2-10** - Rotar n8n webhook token
+3. **F2-14** - Auditar 11 APIs IA secundarias (ANTHROPIC, MISTRAL, DEEPSEEK, etc.)
 
 ## 4. Metricas clave
 
@@ -221,3 +221,21 @@
 - Politica de rotacion sin coleccion "Legado" formalizada (66a69d3d + b15e8b6f).
 - Commits: ccd57f00, ea82251e, e17110f6, b8767b31, cb6dfe04, 7764b29f, 5e111171,
   66a69d3d, b15e8b6f, 1f0420a5.
+
+---
+
+**2026-10-15 - Sesion 17 (ENV) - COMPLETA**
+- Bloque 0: chore de arranque. .gitignore + package-lock.json + 30 scripts S14-S16 versionados.
+- Bloque 1: reconciliar docs post-S16 (tracking, ROTACION-CLAVES, .env.example).
+- Bloque 2: ticket Cloudinary #392411 - sin respuesta, se reconsulta en S18.
+- Bloque 3: auditoria ecosistema Meta (DOC-005/006/007).
+  - Confirmado: ninguna variable Meta/Twilio/Instagram en Vercel.
+  - Canal real WhatsApp: wa.me/595984589845 (link directo, 20+ lugares).
+  - F2-07/08/09 reformuladas a "No aplica" o "Roto" segun corresponda.
+  - Bloqueante raiz: Meta Business Verification requiere RUC.
+- Bloque 4: auditoria seccion Marketing (DOC-008).
+  - ~8.100 lineas, no se usa. Duplica promos por producto y cupones existentes.
+  - Plan de retiro futuro documentado. No se toca codigo en S17.
+- 4 hallazgos nuevos: DOC-005 (cerrado), DOC-006 (abierto), DOC-007 (aceptado), DOC-008 (abierto).
+- F2: 5->8 OK (F2-07/08/09 cerradas como no aplica/roto).
+- Commits clave: d51245f7..f02937cf, a835c615.

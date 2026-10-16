@@ -197,3 +197,57 @@ Sigue abierto. Se cierra cuando los 9 items pendientes esten completos
 - Migrar @supabase/auth-helpers-nextjs -> @supabase/ssr.
 - (resuelto en S16) F2-04 Cloudinary: key rotada 2026-10-15.
 - Auditar 11 APIs IA secundarias (F2-13).
+
+---
+
+## Estado de Bitwarden al cierre de S17 (2026-10-15)
+
+**Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
+
+### Cambios respecto a S16
+
+En S17 no se roto ninguna key nueva. Se reformularon 3 tareas:
+
+| # | Item | Estado S17 | Motivo |
+|---|---|---|---|
+| 5 | Meta WhatsApp - Produccion | NO APLICA | Plomeria inerte (DOC-005). Canal real es wa.me |
+| 6 | Twilio - Produccion | NO APLICA | Plomeria inerte (DOC-005). Tokens nunca creados |
+| 7 | Instagram - Produccion | ROTO | Endpoints activos, tokens ausentes (DOC-006). Publicar manual |
+
+Ver docs/audits/2026-10-13-inicial/30-doc-meta-plomeria-inerte.md para el detalle completo.
+
+### Items completos (4/12)
+
+| # | Item | Estado | Fecha | Notas |
+|---|---|---|---|---|
+| 1 | Supabase - Produccion | OK | 2026-10-15 (S15) | sb_publishable_/sb_secret_ + JWT rotada |
+| 2 | Cloudinary - Produccion | OK | 2026-10-15 (S16) | 1 key rotada + 3 huerfanas revocadas. Ticket #392411 abierto |
+| 3 | Gemini - Produccion | OK | 2026-10-15 (S15) | Key rotada + 3 huerfanas eliminadas |
+| 4 | Resend - Produccion | OK | 2026-10-15 (S16) | Migrado [C]->[S], dominio via Claim, key con scope minimo |
+
+### Items pendientes (8/12)
+
+| # | Item | Cuenta | Bloquea rotacion |
+|---|---|---|---|
+| 5 | Meta WhatsApp - Produccion | NO APLICA | - (DOC-005) |
+| 6 | Twilio - Produccion | NO APLICA | - (DOC-005) |
+| 7 | Instagram - Produccion | ROTO | - (DOC-006) |
+| 8 | n8n - Produccion | [S] | F2-10 |
+| 9 | GA4 - Produccion | [S] | F2-11 |
+| 10 | Clarity - Produccion | [S] | (no bloquea rotacion) |
+| 11 | VAPID - Produccion | [S] | F2-12 |
+| 12 | Secrets internos - Produccion | [S] | F2-13 / F4-06 |
+
+### Hallazgo SEC-020
+
+Sigue abierto. Se cierra cuando los items realmente rotables esten completos:
+n8n, GA4, Clarity, VAPID, Secrets internos. Los items 5-6-7 se consideran cerrados
+por decision (no aplica / roto documentado).
+
+### Deuda tecnica al cierre de S17
+
+- Migrar @supabase/auth-helpers-nextjs -> @supabase/ssr.
+- Auditar 11 APIs IA secundarias (F2-14).
+- Sistema simple de promociones en CartSidebar (backlog, ver DOC-008 seccion 9).
+- Ocultar la seccion Marketing del menu admin (S17-B diferido).
+- Limpieza de la seccion Marketing (~5.500-6.500 lineas candidatas a retiro, ver DOC-008).
