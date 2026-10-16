@@ -33,8 +33,8 @@ export default function PWAInstallPrompt() {
       // solicitar permiso y suscribir si fue aceptado
       return Notification.requestPermission().then(permission => {
         if (permission !== 'granted') return null
-        // VAPID_PUBLIC_KEY debe inyectarse via env o meta tag
-        const VAPID_PUBLIC_KEY = window.__VAPID_PUBLIC_KEY__ || process.env.NEXT_PUBLIC_VAPID_KEY
+        // VAPID public key (desde env - fix BUG-012)
+        const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
         const converted = urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
         return reg.pushManager.subscribe({
           userVisibleOnly: true,

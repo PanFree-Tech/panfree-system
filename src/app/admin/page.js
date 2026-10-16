@@ -38,9 +38,8 @@ import { supabase } from '../../lib/supabase-client'
 import { COLORS } from './_styles'
 import { formatPYG, formatFecha } from './lib/helpers'
 
-// VAPID public key
-const VAPID_PUBLIC_KEY =
-  'BFja0jK4232iA8cec5oo9vaOguB9EKDyyyss7YWmYfsDv6cqEeZynD7Z9ozV82Yc1vgZmAIdw4mLWuXjn6jINKg'
+// VAPID public key (desde env - fix SEC-014 / BUG-001 / F3-07)
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
 
 function Tarjeta({ icon: Icon, titulo, valor, subtitulo, color = COLORS.verdeOscuro, href }) {
   return (
