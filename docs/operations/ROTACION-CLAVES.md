@@ -12,8 +12,10 @@
 
 ## Modelo de Bitwarden
 
-- Una sola coleccion: Bitwarden -> Organizacion PanFree -> Produccion.
-- No existe coleccion "Legado".
+- Bitwarden -> Organizacion PanFree tiene 3 carpetas: Claves Personales,
+  Desarrollo, Produccion.
+- La carpeta Produccion es la fuente de verdad para claves productivas.
+- No existe carpeta "Legado".
 - El historial de rotaciones vive en la NOTA de cada item de Bitwarden.
 
 ## Procedimiento

@@ -114,7 +114,9 @@ Ambos comandos deben devolver la MISMA cantidad de lineas.
 
 ### 7.4 Politica de rotacion de claves
 
-- Una sola coleccion en Bitwarden: Organizacion PanFree -> Produccion.
+- Bitwarden -> Organizacion PanFree tiene 3 carpetas: Claves Personales,
+  Desarrollo, Produccion. La carpeta Produccion es la fuente de verdad
+  para claves productivas.
 - No existe coleccion "Legado". Las keys salientes NO se guardan en
   un item aparte: se revocan en el dashboard y se registran en la NOTA
   del item de Produccion.

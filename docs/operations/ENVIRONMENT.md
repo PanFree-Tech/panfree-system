@@ -13,11 +13,16 @@ Ver .env.example en la raiz del repositorio.
 
 ## Almacenamiento
 
-Bitwarden - Organizacion PanFree - Coleccion Produccion.
+Bitwarden - Organizacion PanFree tiene 3 carpetas:
+- Claves Personales (n8n, admin, etc.)
+- Desarrollo
+- Produccion (fuente de verdad para claves productivas)
 
-Una sola coleccion. No existe "Legado". El historial de rotaciones
-vive en la NOTA de cada item (key saliente completa + fecha de
-revocacion + tarea + motivo).
+No existe carpeta "Legado". El historial de rotaciones vive en la
+NOTA de cada item (key saliente completa + fecha + tarea + motivo).
+
+Items sueltos: panfree.fit y supabase.com (sin sufijo - Produccion).
+Son logins de los dashboards (no API keys).
 
 ## Rotacion
 

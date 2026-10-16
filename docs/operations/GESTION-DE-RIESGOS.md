@@ -121,10 +121,14 @@
 2. Si no: recuperar desde los dashboards de cada servicio
 3. Ultimo recurso: rotar TODO desde cero
 
-Nota S16: no existe coleccion "Legado". El historial de rotaciones
+Nota S16+S22: no existe carpeta "Legado". El historial de rotaciones
 vive en la nota de cada item (key saliente completa + fecha + motivo).
 Un export de la boveda (JSON encriptado) ya incluye esas notas; no hay
-una coleccion separada que respaldar.
+una carpeta separada que respaldar.
+
+Nota S22: Bitwarden -> Organizacion PanFree tiene 3 carpetas
+(Claves Personales, Desarrollo, Produccion). Un export de la boveda
+las incluye todas.
 
 ---
 
