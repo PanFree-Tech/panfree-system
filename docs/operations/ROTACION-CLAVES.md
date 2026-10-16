@@ -63,11 +63,6 @@ no se restaura.
 
 ---
 
-> **Nota S23:** las secciones S14 a S19 usan el termino "Coleccion"
-> (terminologia legacy del setup inicial). A partir de S20 se usa el
-> modelo correcto de 3 carpetas. Ver "Modelo de Bitwarden" al inicio
-> de este documento para la politica vigente.
-
 ## Estado de Bitwarden al cierre de S14 (2026-10-14)
 
 **Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
@@ -349,8 +344,8 @@ estan completos: GA4, Clarity, VAPID.
 
 ## Estado de Bitwarden al cierre de S20 (2026-10-16)
 
-**Carpetas:** Claves Personales, Desarrollo, Produccion
-**Fuente de verdad:** Produccion
+**Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
+**Carpeta:** PanFree System - Produccion
 
 ### Cambios respecto a S19
 
@@ -412,8 +407,8 @@ Documentado en doc 38-f2-12-rotar-vapid.md.
 
 ## Estado de Bitwarden al cierre de S21 (2026-10-16)
 
-**Carpetas:** Claves Personales, Desarrollo, Produccion
-**Fuente de verdad:** Produccion
+**Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
+**Carpeta:** PanFree System - Produccion
 
 ### Cambios respecto a S20
 
@@ -422,7 +417,7 @@ En S21 NO se roto ninguna clave. La sesion se dedico a:
 - Fix del Service Worker (DOC-017, commit 16ea5eec).
 - Recon S21 (doc 40-recon-s21.md).
 - Descartar dos falsas alarmas: DOC-015 (alias Vercel apuntaba a
-  deployment viejo) y DOC-016 (Supabase legacy en Vercel Ã¢â‚¬â€ era un
+  deployment viejo) y DOC-016 (Supabase legacy en Vercel â€” era un
   artefacto visual del CLI de Vercel, no el valor real).
 
 ### Items completos (sin cambios respecto a S20, 6/12)
@@ -473,8 +468,7 @@ Sin cambios respecto a S20:
 
 ## Estado de Bitwarden al cierre de S22 (2026-10-16)
 
-**Carpetas:** Claves Personales, Desarrollo, Produccion
-**Fuente de verdad:** Produccion
+**Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
 
 ### Cambios respecto a S21
 
