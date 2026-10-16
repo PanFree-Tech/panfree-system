@@ -400,3 +400,64 @@ Documentado en doc 38-f2-12-rotar-vapid.md.
 - Sistema simple de promociones en CartSidebar (DOC-008 seccion 9).
 - Reconciliar doc Bitwarden (3 carpetas reales vs 1 en doc).
 - Auditar items sueltos: panfree.fit, supabase.com.
+
+---
+
+## Estado de Bitwarden al cierre de S21 (2026-10-16)
+
+**Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
+**Carpeta:** PanFree System - Produccion
+
+### Cambios respecto a S20
+
+En S21 NO se roto ninguna clave. La sesion se dedico a:
+
+- Fix del Service Worker (DOC-017, commit 16ea5eec).
+- Recon S21 (doc 40-recon-s21.md).
+- Descartar dos falsas alarmas: DOC-015 (alias Vercel apuntaba a
+  deployment viejo) y DOC-016 (Supabase legacy en Vercel â€” era un
+  artefacto visual del CLI de Vercel, no el valor real).
+
+### Items completos (sin cambios respecto a S20, 6/12)
+
+| # | Item | Estado | Fecha |
+|---|---|---|---|
+| 1 | Supabase - Produccion | OK | 2026-10-15 (S15) |
+| 2 | Cloudinary - Produccion | OK | 2026-10-15 (S16) |
+| 3 | Gemini - Produccion | OK | 2026-10-15 (S15) |
+| 4 | Resend - Produccion | OK | 2026-10-15 (S16) |
+| 9 | GA4 - Produccion | OK | 2026-10-16 (S19) |
+| 11 | VAPID - Produccion | OK | 2026-10-16 (S20) |
+
+### Items "No aplica" o "Rotos" (sin cambios)
+
+| # | Item | Estado |
+|---|---|---|
+| 5 | Meta WhatsApp - Produccion | NO APLICA (DOC-005) |
+| 6 | Twilio - Produccion | NO APLICA (DOC-005) |
+| 7 | Instagram - Produccion | ROTO (DOC-006) |
+| 8 | n8n - Produccion | NO APLICA (DOC-009) |
+| 10 | Clarity - Produccion | Pendiente (no bloqueante) |
+| 12 | Secrets internos - Produccion | ELIMINADOS (DOC-012) |
+
+### Hallazgo SEC-020
+
+Cerrado en S20. Sin cambios en S21.
+
+### Politica de env.local
+
+Confirmada en S20, sin cambios en S21: el archivo .env.local NO se
+mantiene en disco. Se reconstruye on-demand desde Bitwarden cuando
+se necesita desarrollo local.
+
+### Deuda tecnica al cierre de S21
+
+Sin cambios respecto a S20:
+
+- Rehacer 64b/64c en VS Code (diferido a S22).
+- Reconciliar doc Bitwarden (3 carpetas reales vs 1 en doc).
+- Auditar items sueltos: panfree.fit, supabase.com.
+- Migrar @supabase/auth-helpers-nextjs -> @supabase/ssr.
+- Sistema simple de promociones en CartSidebar (DOC-008 seccion 9).
+- Ocultar la seccion Marketing del menu admin.
+- Limpieza de la seccion Marketing (~5.500-6.500 lineas, DOC-008).
