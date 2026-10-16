@@ -1,8 +1,8 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-16 (fin Sesion 19)
+**Ultima actualizacion:** 2026-10-16 (fin Sesion 20)
 **Fase actual:** Fase 2 (EN CURSO)
-**Progreso global:** 72% (34 de 47 tareas)
+**Progreso global:** 76% (36 de 47 tareas)
 
 ---
 
@@ -12,10 +12,10 @@
 |---|---|---|---|---|---|
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
-| F2 - Rotacion claves | 14 | 11 | 0 | 3 | 79% |
+| F2 - Rotacion claves | 14 | 13 | 0 | 1 | 93% |
 | F3 - Codigo | 9 | 6 | 0 | 3 | 67% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **34** | **0** | **13** | **72%** |
+| **Total** | **47** | **36** | **0** | **11** | **76%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -31,7 +31,7 @@
 
 ## 3. Proximos 3 pasos
 
-1. **F2-12** - Regenerar par VAPID (verificar SEC-024 + BUG-001 antes)
+1. **F2-03** - Cloudinary Root User (reconsultar ticket #392411 desde 2026-10-18)
 2. **F2-14** - Guardar .env consolidado en Bitwarden
 3. **F3-07** - Fix BUG-001 (VAPID inconsistente en admin/page.js)
 
@@ -271,3 +271,13 @@
 - DOC-015 (nuevo): alias Vercel www.panfree.fit apuntaba a deployment viejo.
 - Commit: 5923f3a6.
 - Pusheado + deploy Ready + alias actualizado con vercel --prod --force.
+
+---
+
+**2026-10-16 - Sesion 20 (ENV) - COMPLETA**
+- F2-12: rotacion completa del par VAPID + fix de codigo.
+- F3-07 / SEC-014 / BUG-001 / BUG-012: VAPID_PUBLIC_KEY unificada desde env.
+- SEC-024: no aplica (era artefacto visual del CLI de Vercel).
+- DOC-015 (nuevo): alias Vercel www.panfree.fit apuntaba a deployment viejo.
+- SEC-020 cerrado: todos los items Bitwarden rotables completos.
+- Commit: 5923f3a6 + 13f3cc96.
