@@ -1,7 +1,7 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
 **Ultima actualizacion:** 2026-10-16 (Sesion 18 en curso)
-**Total de hallazgos:** 62
+**Total de hallazgos:** 63
 
 ---
 
@@ -11,7 +11,7 @@
 |---|---|
 | Abierto | 24 |
 | En curso | 0 |
-| Cerrado | 35 |
+| Cerrado | 36 |
 | Aceptado | 2 |
 
 ---
@@ -22,7 +22,7 @@
 |---|---|---|
 | Critica | 9 | 7 |
 | Alta | 11 | 7 |
-| Media | 22 | 10 |
+| Media | 23 | 11 |
 | Baja | 9 | 2 |
 
 ---
@@ -91,6 +91,7 @@
 | SEC-023 | GA4 con dos juegos de credenciales coexistiendo en Vercel | F2 | P2 | Abierto | - |
 | SEC-024 | NEXT_PUBLIC_VAPID_EMAIL con valor sospechoso (?JWT?) | F2 | P2 | Abierto | - |
 | DOC-012 | Secrets internos (CRON_SECRET, WEBHOOK_SECRET, REVALIDATE_SECRET) plomeria inerte, eliminados de Vercel | F2 | P2 | Cerrado | (S18) |
+| DOC-013 | APIs IA secundarias (13 keys) plomeria inerte en Marketing, eliminadas de Vercel | F2 | P2 | Cerrado | (S18) |
 
 ### Hallazgos bajos
 

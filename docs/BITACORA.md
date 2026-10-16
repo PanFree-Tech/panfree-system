@@ -1102,3 +1102,20 @@ e5bed103
 
 **Hallazgos nuevos (bloque 4):**
 - DOC-012: Secrets internos plomeria inerte (Cerrado).
+
+**Bloque 5 (APIs IA - F2-13):**
+- Auditoria de APIs IA secundarias (script 56).
+  - 45 coincidencias en 2 archivos de Marketing.
+  - 12 APIs usadas en codigo Marketing (generar-contenido + generar-imagen-cloudinary).
+  - 2 APIs sin uso en codigo (POLLINATIONS, REPLICATE).
+  - NEXA_API_KEY en codigo pero nunca en Vercel.
+- Veredicto: las 13 APIs IA son plomeria inerte dentro del modulo Marketing inerte.
+- Eliminadas de Vercel (Production + Preview): 13 variables.
+- Doc nuevo: 35-doc-apis-ia-eliminadas.md (DOC-013).
+- .env.example: seccion APIS IA marcada como ELIMINADAS.
+- PLAN: F2-13 reformulada a "No aplica".
+- Pendiente futuro: retirar el codigo de Marketing (referencias a estas APIs)
+  junto con el resto del modulo segun DOC-008. No se crea tarea nueva.
+
+**Hallazgos nuevos (bloque 5):**
+- DOC-013: APIs IA secundarias plomeria inerte (Cerrado).
