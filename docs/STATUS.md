@@ -191,33 +191,6 @@
 - Bitwarden actualizado: Supabase, Cloudinary y Gemini con keys rotadas.
 - 6 commits pusheados: 7764b29f, 5e111171, cb6dfe04, b8767b31, e17110f6, ea82251e.
 
-## 6. Comandos utiles
-
-    REM Ver estado actual
-    type docs\STATUS.md
-
-    REM Ver bitacora completa
-    type docs\BITACORA.md
-
-    REM Ver hallazgos abiertos
-    type docs\audits\2026-10-13-inicial\06-hallazgos-tracking.md
-
-    REM Verificar links de toda la documentacion
-    powershell -ExecutionPolicy Bypass -File scripts\docs\00-verificar-links.ps1
-
----
-
-## 7. Documentos relacionados
-
-- [Plan de Trabajo](./operations/PLAN-DE-TRABAJO.md)
-- [Bitacora](./BITACORA.md)
-- [Sistema de Trabajo](./operations/SISTEMA-DE-TRABAJO.md)
-- [Workflow Diario](./operations/WORKFLOW-DIARIO.md)
-- [Guia Rapida](./operations/GUIA-RAPIDA.md)
-- [Tracking de hallazgos](./audits/2026-10-13-inicial/06-hallazgos-tracking.md)
-
----
-
 **2026-10-15 - Sesion 16 (COMPLETA)**
 - F2-02 / Supabase: migrado a sb_publishable_/sb_secret_ + JWT Signing Key rotada (ea82251e).
 - F2-05 / Resend: migrado a system.panfree, dominio transferido via Claim, DNS actualizado,
@@ -295,3 +268,30 @@
 - Bloque 8 / F3-09: headers de seguridad (CONF-002).
 - Progreso: 76% -> 81%. F3: 78% -> 100%.
 - Commits S22: e1e1ce65, 53dbd4e8, 926dac53, 72627936, 9509d951, bd8315f3, a9fa9a7b, ce7cdd70.
+## 6. Comandos utiles
+
+    REM Ver estado actual
+    type docs\STATUS.md
+
+    REM Ver bitacora completa
+    type docs\BITACORA.md
+
+    REM Ver hallazgos abiertos
+    type docs\audits\2026-10-13-inicial\06-hallazgos-tracking.md
+
+    REM Verificar links de toda la documentacion
+    powershell -ExecutionPolicy Bypass -File scripts\docs\00-verificar-links.ps1
+
+---
+
+## 7. Documentos relacionados
+
+- [Plan de Trabajo](./operations/PLAN-DE-TRABAJO.md)
+- [Bitacora](./BITACORA.md)
+- [Sistema de Trabajo](./operations/SISTEMA-DE-TRABAJO.md)
+- [Workflow Diario](./operations/WORKFLOW-DIARIO.md)
+- [Guia Rapida](./operations/GUIA-RAPIDA.md)
+- [Tracking de hallazgos](./audits/2026-10-13-inicial/06-hallazgos-tracking.md)
+
+---
+
