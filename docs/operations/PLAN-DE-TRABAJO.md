@@ -95,8 +95,8 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 | F3-05 | AUTH-002: registro sin duplicados | P1 | S | OK | Upsert con onConflict |
 | F3-06 | DBG-001: quitar console.log en prod | P2 | M | OK | NODE_ENV condicional |
 | F3-07 | BUG-001: fix NEXT_PUBLIC_VAPID_KEY | P2 | S | OK | Variable consistente desde env (commit 5923f3a6) |
-| F3-08 | CONF-001: ESLint en build | P2 | S | Pendiente | ignoreDuringBuilds: false |
-| F3-09 | CONF-002: headers de seguridad | P2 | S | Pendiente | CSP, HSTS, X-Frame-Options |
+| F3-08 | CONF-001: ESLint en build | P2 | S | OK | ignoreDuringBuilds: false (commit a9fa9a7b) |
+| F3-09 | CONF-002: headers de seguridad | P2 | S | OK | 4 headers activos (commit ce7cdd70) |
 
 **Criterio de salida de Fase 3:** Ningun hallazgo critico de codigo pendiente.
 
