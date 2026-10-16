@@ -1381,3 +1381,97 @@ la referencia valida.
 - Para docs con mucho codigo/comillas, creacion manual en VS Code
   es mas robusta que scripts (el escaping en PowerShell 5.1 es
   fragil).
+
+---
+
+## 2026-10-16 (Sesion 22 - COMPLETA)
+
+**Duracion:** ~3 horas
+**Objetivo:** Sincronizacion de docs + fix orquestador + F3-08 + F3-09
+
+**Completado:**
+
+### Bloque 1 - STATUS.md sincronizado
+- Tabla: F3 6->7, Total 36->37.
+- Proximos pasos: F3-08 y F3-09 (los cerramos en la misma sesion).
+- Metricas: claves 3/12 -> 6/12, hallazgos 31/47 -> 42/67, commits 8 -> ~50.
+- Eliminada duplicacion de Sesion 20.
+- Commit: e1e1ce65.
+
+### Bloque 2 - Tracking sincronizado
+- Header: fin Sesion 20 -> fin Sesion 21.
+- Total: 63 -> 69 (conteo real de filas).
+- Resumen: Abierto 20->22, Cerrado 41->42.
+- Eliminada fila vacia entre DOC-011 y DOC-015.
+- Commit: 53dbd4e8.
+
+### Bloque 3 - PLAN-DE-TRABAJO sincronizado
+- F2-12: Pendiente -> OK.
+- F3-07: Pendiente -> OK.
+- Commit: 926dac53.
+
+### Bloque 4 - ROTACION-CLAVES: seccion S21 agregada
+- S21 no roto claves. Documentado en seccion nueva.
+- Commit: 72627936.
+
+### Bloque 5 - Reconciliar Bitwarden vs docs
+- 4 archivos: SISTEMA-DE-TRABAJO, ENVIRONMENT, ROTACION-CLAVES, GESTION-DE-RIESGOS.
+- 3 carpetas reales: Claves Personales, Desarrollo, Produccion.
+- Fix colateral (70b): el 70 no matcheo ROTACION por falso positivo.
+- Commit: 9509d951.
+
+### Bloque 6 - Fix orquestador GA4
+- Bug S20: `& powershell -File` anidado causaba loop infinito.
+- Fix S22: invocacion directa `& script.ps1`.
+- Script 71 verificado: 59 + 60 corren sin loop.
+- Commit: bd8315f3.
+
+### Bloque 7 - F3-08: ESLint en build (CONF-001)
+- next.config.js: `eslint.ignoreDuringBuilds: true -> false`.
+- Verificacion local: 4 warnings, 0 errores. Deploy OK.
+- En CI aparecieron ~30 warnings (Next.js corre ESLint sobre TODOS los archivos).
+- Commit: a9fa9a7b.
+
+### Bloque 8 - F3-09: Headers de seguridad (CONF-002)
+- Agregados 4 headers: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy.
+- HSTS ya servido por Vercel.
+- Verificacion post-deploy: 4/4 headers activos en www.panfree.fit.
+- Commit: ce7cdd70.
+
+**Hallazgos cerrados:**
+- CONF-001: ESLint ignorado en build.
+- CONF-002: Sin headers de seguridad.
+
+**Hallazgos nuevos:**
+- CONF-003: ~30 warnings de ESLint (mayoria <img> sin <Image />). F3 P3.
+- CONF-004: typescript.ignoreBuildErrors: true. F3 P2.
+- CONF-005: CSP pendiente. F3 P3.
+
+**Commits S22:**
+- e1e1ce65 docs(sync): corregir STATUS.md a estado real post-S21
+- 53dbd4e8 docs(sync): actualizar tracking con estado real post-S21
+- 926dac53 docs(sync): marcar F2-12 y F3-07 como OK en PLAN
+- 72627936 docs(sync): agregar seccion S21 a ROTACION-CLAVES
+- 9509d951 docs(env): reconciliar Bitwarden vs docs (3 carpetas)
+- bd8315f3 chore(scripts): fix orquestador GA4 con invocacion directa
+- a9fa9a7b chore(eslint): activar ESLint en build (F3-08, CONF-001)
+- ce7cdd70 security(headers): agregar headers de seguridad (F3-09, CONF-002)
+
+**Bloqueantes:**
+- Ninguno.
+
+**Proxima sesion (S23):**
+- F4-01: purgar historial de Git (SEC-001).
+- F4-05: confirmar package-lock.json.
+- Cloudinary #392411 (reconsultar desde 2026-10-18).
+- Backlog: 64b-reescribir-60 (auto-descubrimiento GA4).
+- Backlog: limpieza de warnings de ESLint (CONF-003).
+- Backlog: activar TypeScript en build (CONF-004).
+
+**Aprendizajes:**
+- Regex PowerShell no matchea confiable en Markdown tables. Usar .Replace() literal.
+- Falsos positivos en idempotencia: strings unicos y especificos, no fragmentos comunes.
+- `$h:` en strings PowerShell = error. Usar `-f` o `${h}`.
+- Orquestadores: invocacion directa `& script.ps1`, NO `powershell -File` anidado.
+- En CI, Next.js corre ESLint sobre TODOS los archivos (~30 warnings vs 4 local).
+- `vercel env ls` miente: siempre verificar con `env pull` o dashboard.

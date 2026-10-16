@@ -1,7 +1,7 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
-**Ultima actualizacion:** 2026-10-16 (fin Sesion 21)
-**Total de hallazgos:** 69
+**Ultima actualizacion:** 2026-10-16 (fin Sesion 22)
+**Total de hallazgos:** 72
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 22 |
+| Abierto | 25 |
 | En curso | 0 |
-| Cerrado | 42 |
+| Cerrado | 44 |
 | Aceptado | 3 |
 
 ---
@@ -66,8 +66,8 @@
 |---|---|---|---|---|---|
 | BUG-001 | NEXT_PUBLIC_VAPID_KEY inconsistente | F3 | P2 | Cerrado (S20) | 5923f3a6 |
 | BUG-002 | route.js inserta avatar (columna avatar_url) | F3 | P2 | Cerrado | 4d5bd9c2 |
-| CONF-001 | ESLint ignorado en build | F3 | P2 | Abierto | - |
-| CONF-002 | Sin headers de seguridad | F3 | P2 | Abierto | - |
+| CONF-001 | ESLint ignorado en build | F3 | P2 | Cerrado (S22) | a9fa9a7b |
+| CONF-002 | Sin headers de seguridad | F3 | P2 | Cerrado (S22) | ce7cdd70 |
 | DB-001e | ~60 politicas RLS sin optimizar | F1 | P2 | Cerrado | 02311b72 |
 | DB-001f | ~150 politicas duplicadas | F1 | P2 | Cerrado | e40d9244 |
 | SEC-010 | select_publico_productos exponia inactivos (leak) | F1 | P2 | Cerrado | e40d9244 |
@@ -118,6 +118,9 @@
 | DOC-017 | Service Worker cacheaba HTML viejo (SW servia 5 chunks en vez de 16) | F3 | P2 | Cerrado (S21) | 16ea5eec |
 | DOC-018 | meta apple-mobile-web-app-capable deprecado | F4 | P3 | Abierto | - |
 | DOC-019 | Icono icon-144x144.png faltante en manifest PWA | F4 | P3 | Abierto | - |
+| CONF-003 | ~30 warnings de ESLint en build (mayoria <img> sin <Image />) | F3 | P3 | Abierto | - |
+| CONF-004 | typescript.ignoreBuildErrors: true en next.config.js | F3 | P2 | Abierto | - |
+| CONF-005 | Content-Security-Policy (CSP) pendiente | F3 | P3 | Abierto | - |
 ---
 
 ## 4. Como cerrar un hallazgo

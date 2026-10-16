@@ -463,3 +463,34 @@ Sin cambios respecto a S20:
 - Sistema simple de promociones en CartSidebar (DOC-008 seccion 9).
 - Ocultar la seccion Marketing del menu admin.
 - Limpieza de la seccion Marketing (~5.500-6.500 lineas, DOC-008).
+
+---
+
+## Estado de Bitwarden al cierre de S22 (2026-10-16)
+
+**Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
+
+### Cambios respecto a S21
+
+En S22 NO se roto ninguna clave. La sesion se dedico a:
+- Sincronizacion de documentacion post-S21.
+- Fix del orquestador GA4 (deuda S20).
+- F3-08: activar ESLint en build (CONF-001).
+- F3-09: agregar headers de seguridad (CONF-002).
+
+### Items completos (sin cambios, 6/12)
+
+Supabase, Cloudinary, Gemini, Resend, GA4, VAPID.
+
+### Items "No aplica" o "Rotos" (sin cambios)
+
+Meta WhatsApp, Twilio, Instagram, n8n, Clarity, Secrets internos.
+
+### Deuda tecnica al cierre de S22
+
+- Rehacer 64b-reescribir-60 (auto-descubrimiento GA4).
+- Auditar items sueltos: panfree.fit, supabase.com (logins de dashboards).
+- Migrar @supabase/auth-helpers-nextjs -> @supabase/ssr.
+- Sistema simple de promociones en CartSidebar (DOC-008 seccion 9).
+- Ocultar seccion Marketing del menu admin.
+- Limpieza de la seccion Marketing (~5.500-6.500 lineas, DOC-008).

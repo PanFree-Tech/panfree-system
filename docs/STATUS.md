@@ -1,8 +1,8 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-16 (fin Sesion 21)
+**Ultima actualizacion:** 2026-10-16 (fin Sesion 22)
 **Fase actual:** Fase 2 (EN CURSO)
-**Progreso global:** 76% (36 de 47 tareas)
+**Progreso global:** 81% (38 de 47 tareas)
 
 ---
 
@@ -13,9 +13,9 @@
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
 | F2 - Rotacion claves | 14 | 13 | 0 | 1 | 93% |
-| F3 - Codigo | 9 | 7 | 0 | 2 | 78% |
+| F3 - Codigo | 9 | 9 | 0 | 0 | 100% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **37** | **0** | **10** | **79%** |
+| **Total** | **47** | **38** | **0** | **9** | **81%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -32,8 +32,8 @@
 ## 3. Proximos 3 pasos
 
 1. **F2-03** - Cloudinary Root User (reconsultar ticket #392411 desde 2026-10-18)
-2. **F3-08** - ESLint en build (CONF-001)
-3. **F3-09** - Headers de seguridad (CONF-002)
+2. **F4-01** - Purgar historial de Git (SEC-001)
+3. **F4-05** - Confirmar package-lock.json en repo
 
 > **Nueva deuda S19:** los hashes de commits en docs son pre-reescritura.
 > Ver nota en BITACORA (S19).
@@ -50,9 +50,9 @@
 | Advisors Supabase severidad 3 | 250+ | menos de 50 |
 | Claves productivas rotadas | 6 / 12 | 12 / 12 |
 | Claves en Bitwarden | 6 / 12 | 12 / 12 |
-| Hallazgos cerrados | 42 / 67 | 67 / 67 |
+| Hallazgos cerrados | 44 / 72 | 72 / 72 |
 | Documentos .md en docs/ | 30+ | 30+ (OK) |
-| Commits de remediacion | ~50 | ~50 (OK) |
+| Commits de remediacion | ~59 | ~59 (OK) |
 
 ---
 
@@ -285,3 +285,13 @@
 - Hallazgos nuevos: DOC-018 (meta deprecated), DOC-019 (icono 144x144).
 - DOC-015 y DOC-016 resultaron falsas alarmas.
 - Commits S21: 16ea5eec, 8cddc665, 82bf85f5.
+
+---
+
+**2026-10-16 - Sesion 22 (ENV) - COMPLETA**
+- Bloque 1-5: sincronizacion de docs post-S21 (STATUS, tracking, PLAN, ROTACION, Bitwarden vs docs).
+- Bloque 6: fix del orquestador GA4 (invocacion directa, sin powershell -File anidado).
+- Bloque 7 / F3-08: ESLint activo en build (CONF-001).
+- Bloque 8 / F3-09: headers de seguridad (CONF-002).
+- Progreso: 76% -> 81%. F3: 78% -> 100%.
+- Commits S22: e1e1ce65, 53dbd4e8, 926dac53, 72627936, 9509d951, bd8315f3, a9fa9a7b, ce7cdd70.
