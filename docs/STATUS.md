@@ -2,7 +2,7 @@
 
 **Ultima actualizacion:** 2026-10-16 (fin Sesion 18)
 **Fase actual:** Fase 2 (EN CURSO)
-**Progreso global:** 70% (33 de 47 tareas)
+**Progreso global:** 72% (34 de 47 tareas)
 
 ---
 
@@ -12,10 +12,10 @@
 |---|---|---|---|---|---|
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
-| F2 - Rotacion claves | 14 | 10 | 0 | 4 | 71% |
+| F2 - Rotacion claves | 14 | 11 | 0 | 3 | 79% |
 | F3 - Codigo | 9 | 6 | 0 | 3 | 67% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **33** | **0** | **14** | **70%** |
+| **Total** | **47** | **34** | **0** | **13** | **72%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -31,9 +31,9 @@
 
 ## 3. Proximos 3 pasos
 
-1. **F2-11** - Rotar GA4 API secret (auditar los 2 juegos primero, ver SEC-023)
-2. **F2-12** - Regenerar par VAPID (verificar SEC-024 antes)
-3. **F2-14** - Guardar .env consolidado en Bitwarden
+1. **F2-12** - Regenerar par VAPID (verificar SEC-024 + BUG-001 antes)
+2. **F2-14** - Guardar .env consolidado en Bitwarden
+3. **F3-07** - Fix BUG-001 (VAPID inconsistente en admin/page.js)
 
 > **Nota:** el ticket Cloudinary #392411 (Root User) no es un paso activo.
 > Depende de soporte externo (2-4 dias habiles desde 2026-10-15).

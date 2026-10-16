@@ -251,3 +251,89 @@ por decision (no aplica / roto documentado).
 - Sistema simple de promociones en CartSidebar (backlog, ver DOC-008 seccion 9).
 - Ocultar la seccion Marketing del menu admin (S17-B diferido).
 - Limpieza de la seccion Marketing (~5.500-6.500 lineas candidatas a retiro, ver DOC-008).
+
+---
+
+## Estado de Bitwarden al cierre de S18 (2026-10-16)
+
+**Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
+
+### Cambios respecto a S17
+
+En S18 no se roto ninguna key nueva. Se auditoron y eliminaron:
+
+- 13 APIs IA secundarias (DOC-013).
+- 3 secrets internos: CRON_SECRET, WEBHOOK_SECRET, REVALIDATE_SECRET (DOC-012).
+- 1 variable basura: NEXT_PUBLIC_UPLOAD_PRESETNEXT_PUBLIC_UPLOAD_PRESET (SEC-022).
+
+### Items completos (4/12)
+
+| # | Item | Estado | Fecha | Notas |
+|---|---|---|---|---|
+| 1 | Supabase - Produccion | OK | 2026-10-15 (S15) | sb_publishable_/sb_secret_ + JWT rotada |
+| 2 | Cloudinary - Produccion | OK | 2026-10-15 (S16) | 1 key rotada + 3 huerfanas revocadas. Ticket #392411 abierto |
+| 3 | Gemini - Produccion | OK | 2026-10-15 (S15) | Key rotada + 3 huerfanas eliminadas |
+| 4 | Resend - Produccion | OK | 2026-10-15 (S16) | Migrado [C]->[S], dominio via Claim, key con scope minimo |
+
+### Items pendientes (8/12)
+
+| # | Item | Estado | Bloquea rotacion |
+|---|---|---|---|
+| 5 | Meta WhatsApp - Produccion | NO APLICA | DOC-005 |
+| 6 | Twilio - Produccion | NO APLICA | DOC-005 |
+| 7 | Instagram - Produccion | ROTO | DOC-006 |
+| 8 | n8n - Produccion | NO APLICA | DOC-009 (plomeria inerte) |
+| 9 | GA4 - Produccion | Pendiente | F2-11 |
+| 10 | Clarity - Produccion | Pendiente | (no bloquea rotacion) |
+| 11 | VAPID - Produccion | Pendiente | F2-12 |
+| 12 | Secrets internos - Produccion | ELIMINADOS | DOC-012 (S18) |
+
+---
+
+## Estado de Bitwarden al cierre de S19 (2026-10-16)
+
+**Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
+
+### Cambios respecto a S18
+
+En S19 se completo la rotacion de GA4 (F2-11), con 2 sub-rotaciones:
+
+- GA4_API_SECRET: rotado (exposicion accidental + pendiente desde S18).
+- GA4_PRIVATE_KEY: rotado (obligatorio; valor legacy irrecuperable).
+
+Se creo el item "GA4 - Produccion" con 5 campos personalizados y nota
+con historial completo de rotaciones.
+
+### Items completos (5/12)
+
+| # | Item | Estado | Fecha | Notas |
+|---|---|---|---|---|
+| 1 | Supabase - Produccion | OK | 2026-10-15 (S15) | sb_publishable_/sb_secret_ + JWT rotada |
+| 2 | Cloudinary - Produccion | OK | 2026-10-15 (S16) | 1 key rotada + 3 huerfanas revocadas. Ticket #392411 abierto |
+| 3 | Gemini - Produccion | OK | 2026-10-15 (S15) | Key rotada + 3 huerfanas eliminadas |
+| 4 | Resend - Produccion | OK | 2026-10-15 (S16) | Migrado [C]->[S], dominio via Claim, key con scope minimo |
+| 9 | **GA4 - Produccion** | **OK** | **2026-10-16 (S19)** | **2 rotaciones (API secret + private key). Legacy recuperable + irrecuperable documentados** |
+
+### Items pendientes (7/12)
+
+| # | Item | Estado | Bloquea rotacion |
+|---|---|---|---|
+| 5 | Meta WhatsApp - Produccion | NO APLICA | DOC-005 |
+| 6 | Twilio - Produccion | NO APLICA | DOC-005 |
+| 7 | Instagram - Produccion | ROTO | DOC-006 |
+| 8 | n8n - Produccion | NO APLICA | DOC-009 |
+| 10 | Clarity - Produccion | Pendiente | (no bloquea rotacion) |
+| 11 | VAPID - Produccion | Pendiente | F2-12 |
+| 12 | Secrets internos - Produccion | ELIMINADOS | DOC-012 (S18) |
+
+### Hallazgo SEC-020
+
+Sigue abierto. Se cierra cuando los items realmente rotables
+estan completos: GA4, Clarity, VAPID.
+
+### Deuda tecnica al cierre de S19
+
+- Migrar @supabase/auth-helpers-nextjs -> @supabase/ssr.
+- Sistema simple de promociones en CartSidebar (DOC-008 seccion 9).
+- Ocultar la seccion Marketing del menu admin.
+- Limpieza de la seccion Marketing (~5.500-6.500 lineas, DOC-008).

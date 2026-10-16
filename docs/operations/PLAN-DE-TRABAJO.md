@@ -77,7 +77,7 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 | F2-08 | Rotar Twilio auth token | P2 | S | No aplica | Plomeria inerte (DOC-005). Tokens nunca creados |
 | F2-09 | Rotar Instagram access token | P2 | S | No aplica | Endpoints rotos sin tokens (DOC-006). Publicar manual |
 | F2-10 | Migrar n8n a system.panfree | P2 | S | No aplica | Plomeria inerte (DOC-009). Tokens nunca creados |
-| F2-11 | Rotar GA4 API secret | P3 | S | Pendiente | Metricas fluyen |
+| F2-11 | Rotar GA4 API secret + private key | P3 | S | OK | 2 rotaciones completas. Legacy recuperable + irrecuperable documentados. Cierra SEC-023 |
 | F2-12 | Regenerar par VAPID | P3 | M | Pendiente | Push funciona |
 | F2-13 | Auditar APIs IA secundarias | P3 | M | No aplica | 13 APIs eran plomeria inerte en Marketing (DOC-008). Eliminadas de Vercel (DOC-013). |
 | F2-14 | Guardar .env consolidado en Bitwarden | P0 | S | Pendiente | Nota segura creada. Incluye registrar en S18 la eliminacion de secrets internos (DOC-012). |

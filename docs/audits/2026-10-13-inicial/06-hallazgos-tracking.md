@@ -88,10 +88,11 @@
 | DOC-008 | Seccion Marketing sin uso real (~8.100 lineas) - plan de retiro | F3 | P3 | Abierto | - |
 | DOC-009 | n8n: plomeria inerte, tokens nunca creados | F2 | P2 | Cerrado | (S18) |
 | SEC-022 | Variable basura NEXT_PUBLIC_UPLOAD_PRESETNEXT_PUBLIC_UPLOAD_PRESET en Vercel | F2 | P2 | Cerrado | (S18) |
-| SEC-023 | GA4 con dos juegos de credenciales coexistiendo en Vercel | F2 | P2 | Abierto | - |
+| SEC-023 | GA4 con dos juegos de credenciales coexistiendo en Vercel | F2 | P2 | Cerrado (S19) | No era duplicado: coexistencia legitima (Service Account + Measurement Protocol) |
 | SEC-024 | NEXT_PUBLIC_VAPID_EMAIL con valor sospechoso (?JWT?) | F2 | P2 | Abierto | - |
 | DOC-012 | Secrets internos (CRON_SECRET, WEBHOOK_SECRET, REVALIDATE_SECRET) plomeria inerte, eliminados de Vercel | F2 | P2 | Cerrado | (S18) |
 | DOC-013 | APIs IA secundarias (13 keys) plomeria inerte en Marketing, eliminadas de Vercel | F2 | P2 | Cerrado | (S18) |
+| DOC-014 | GA4 Service Account plomeria inerte (cargado en ga-metrics/route.js pero no usado) | F2 | P2 | Abierto (revision 2027-04-16) | (S19) |
 
 ### Hallazgos bajos
 
