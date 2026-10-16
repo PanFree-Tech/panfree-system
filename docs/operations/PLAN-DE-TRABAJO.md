@@ -78,7 +78,7 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 | F2-09 | Rotar Instagram access token | P2 | S | No aplica | Endpoints rotos sin tokens (DOC-006). Publicar manual |
 | F2-10 | Migrar n8n a system.panfree | P2 | S | No aplica | Plomeria inerte (DOC-009). Tokens nunca creados |
 | F2-11 | Rotar GA4 API secret + private key | P3 | S | OK | 2 rotaciones completas. Legacy recuperable + irrecuperable documentados. Cierra SEC-023 |
-| F2-12 | Regenerar par VAPID | P3 | M | Pendiente | Push funciona |
+| F2-12 | Regenerar par VAPID | P3 | M | OK | Par rotado + fix codigo. Cierra F2-12, F3-07, SEC-014, BUG-001, BUG-012 |
 | F2-13 | Auditar APIs IA secundarias | P3 | M | No aplica | 13 APIs eran plomeria inerte en Marketing (DOC-008). Eliminadas de Vercel (DOC-013). |
 | F2-14 | Guardar .env consolidado en Bitwarden | P0 | S | Pendiente | Nota segura creada. Incluye registrar en S18 la eliminacion de secrets internos (DOC-012). |
 
@@ -94,7 +94,7 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 | F3-04 | AUTH-001: contrasenas fuertes | P1 | S | OK | Minimo 10 chars + complejidad |
 | F3-05 | AUTH-002: registro sin duplicados | P1 | S | OK | Upsert con onConflict |
 | F3-06 | DBG-001: quitar console.log en prod | P2 | M | OK | NODE_ENV condicional |
-| F3-07 | BUG-001: fix NEXT_PUBLIC_VAPID_KEY | P2 | S | Pendiente | Variable consistente |
+| F3-07 | BUG-001: fix NEXT_PUBLIC_VAPID_KEY | P2 | S | OK | Variable consistente desde env (commit 5923f3a6) |
 | F3-08 | CONF-001: ESLint en build | P2 | S | Pendiente | ignoreDuringBuilds: false |
 | F3-09 | CONF-002: headers de seguridad | P2 | S | Pendiente | CSP, HSTS, X-Frame-Options |
 
