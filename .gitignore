@@ -55,3 +55,7 @@ dump-s*.txt
 
 # Backups de scripts por sesion - nunca commitear
 .backup-s*/
+
+# Reportes de auditoria temporales - nunca commitear
+*-audit-*.txt
+*-endpoints-*.txt

@@ -1,6 +1,6 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-16 (fin Sesion 18)
+**Ultima actualizacion:** 2026-10-16 (fin Sesion 19)
 **Fase actual:** Fase 2 (EN CURSO)
 **Progreso global:** 72% (34 de 47 tareas)
 
@@ -34,6 +34,9 @@
 1. **F2-12** - Regenerar par VAPID (verificar SEC-024 + BUG-001 antes)
 2. **F2-14** - Guardar .env consolidado en Bitwarden
 3. **F3-07** - Fix BUG-001 (VAPID inconsistente en admin/page.js)
+
+> **Nueva deuda S19:** los hashes de commits en docs son pre-reescritura.
+> Ver nota en BITACORA (S19).
 
 > **Nota:** el ticket Cloudinary #392411 (Root User) no es un paso activo.
 > Depende de soporte externo (2-4 dias habiles desde 2026-10-15).
@@ -243,3 +246,18 @@
 - 4 hallazgos nuevos: DOC-005 (cerrado), DOC-006 (abierto), DOC-007 (aceptado), DOC-008 (abierto).
 - F2: 5->8 OK (F2-07/08/09 cerradas como no aplica/roto).
 - Commits clave: d51245f7..f02937cf, a835c615.
+
+
+---
+
+**2026-10-16 - Sesion 19 (ENV) - COMPLETA**
+- F2-11: rotacion completa de GA4 (2 sub-rotaciones).
+  - GA4_API_SECRET: rotado + secret viejo revocado.
+  - GA4_PRIVATE_KEY: rotado + key vieja revocada.
+- SEC-023 cerrado: no era duplicado (coexistencia legitima).
+- DOC-014 registrado: GA4 Service Account plomeria inerte.
+- Correccion de autoria del historial Git: filter-repo (script 62).
+  Todos los 333 commits firmados por Pedro J. Pirovani.
+- Credenciales de push: eliminadas las ajenas. Solo gh:github.com:PanFree-Tech.
+- Progress: F2 10/14 -> 11/14; global 70% -> 72%.
+- Scripts 59, 60, 61a, 61b, 62, 63a, 63b agregados.

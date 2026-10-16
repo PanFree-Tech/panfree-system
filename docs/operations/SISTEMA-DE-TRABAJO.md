@@ -126,6 +126,19 @@ Ambos comandos deben devolver la MISMA cantidad de lineas.
 
 ---
 
+### 7.5 Manejo de secretos en el chat de IA
+
+- **Nunca pegar valores de secretos reales en el chat de la IA.**
+  Aplica a: API keys, tokens, private keys, JWT secrets, contraseÃ±as.
+- Si se necesita validar que un valor esta bien cargado, verificar por
+  **comportamiento** (que la app funcione), no por inspeccion directa del valor.
+- Si se pega por error un secreto, **rotarlo inmediatamente** y documentar el
+  incidente en la bitacora de la sesion.
+- Motivo: los chats de IA quedan en logs de la plataforma (Anthropic, OpenAI,
+  etc.), en el historial local, y en backups. Aunque se rote despues, la
+  ventana de exposicion existe.
+
+---
 ## 8. Documentos de seguimiento
 
 | Documento | Actualizar cuando | Quien |

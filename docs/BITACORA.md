@@ -1120,3 +1120,111 @@ e5bed103
 **Hallazgos nuevos (bloque 5):**
 - DOC-013: APIs IA secundarias plomeria inerte (Cerrado).
  **Cierre S18:** - 5 bloques completados, 3 commits pusheados. - 3 tareas F2 cerradas: F2-10 (n8n No aplica), F2-13 (APIs IA No aplica),   subproducto de F2-14 (secrets internos eliminados de Vercel). - 8 hallazgos registrados: DOC-009/010/011/012/013, SEC-022/023/024. - Limpieza masiva de Vercel: 16 variables eliminadas   (13 APIs IA + 3 secrets internos). - Progreso: 66% -> 70% (33 de 47 tareas). - F2: 8/14 -> 10/14.  **Commits S18:** - 6ec46c30 docs(env): documentar n8n plomeria inerte y hallazgos de Vercel - 74486761 docs(env): documentar secrets internos como plomeria inerte - 9b99efe7 docs(env): auditar y eliminar 13 APIs IA secundarias  **Proxima sesion (S19):** - F2-11: rotar GA4 API secret (auditar SEC-023 primero). - F2-12: regenerar par VAPID (verificar SEC-024 + BUG-001). - F2-14: guardar .env consolidado en Bitwarden. - Backlog: sistema simple de promociones en CartSidebar (DOC-008 seccion 9). - Pendiente futuro: retiro del modulo Marketing completo (DOC-008).  **Bloqueantes:** - Ninguno. Cloudinary #392411 se reconsulta a partir del 2026-10-18.
+
+---
+
+## 2026-10-16 (Sesion 19 - COMPLETA)
+
+**Duracion:** ~8 horas
+**Objetivo:** ENV - Rotacion GA4 (F2-11) + correccion de autoria del historial
+
+**Completado:**
+
+### Bloque 1 - Auditoria GA4 (SEC-023)
+- Script 59: auditar variables GA4 en src/ (18 coincidencias en 4 archivos).
+- Script 60: leer endpoints que consumen credenciales GA4.
+- Conclusion: SEC-023 NO era duplicado. Coexistencia legitima:
+  - Grupo A (Service Account): plomeria inerte (ga-metrics/route.js
+    solo lee de Supabase, no usa Data API de Google).
+  - Grupo B (Measurement Protocol): activo (ga4/measurement/route.js).
+- Decision: conservar Grupo A. Rotar solo Grupo B.
+- Hallazgo nuevo: DOC-014 (Service Account plomeria inerte, revision 2027-04-16).
+
+### Bloque 2 - Rotacion de GA4_API_SECRET
+- Secret nuevo creado en GA4 Admin: panfree-system-2026-10-16.
+- Actualizado en Vercel (Production + Preview) + .env.local + Bitwarden.
+- Redeploy + verificacion empirica (debug_validation sin errores).
+- Secret viejo revocado: panfree-measurement-protocol
+  (9kBxpoPjR_aBo1H0-QyE8w, creado 2026-08-22).
+- Motivo adicional: exposicion accidental del secret en chat durante la
+  auditoria de S19.
+
+### Bloque 3 - Rotacion de GA4_PRIVATE_KEY
+- Key nueva creada en Google Cloud Console: panfree-system-2026-10-16.
+- Actualizada en Vercel + .env.local + Bitwarden.
+- Key vieja revocada (Key ID: 45522eb71b92a80fcdb49c5ff073786d9b02496b,
+  creada 2026-08-31).
+- Nota: el valor legacy fue IRRECUPERABLE (Google no lo expone post-creacion;
+  Vercel no lo muestra por Sensitive). Se documento como excepcion justificada
+  a la politica "guardar valor saliente completo".
+
+### Bloque 4 - Correccion de autoria del historial de Git
+- Descubierto: todos los commits de S1-S18 estaban firmados por
+  "Piromaniaco <dagnershd@gmail.com>" (familiar propietario de la PC).
+- Identificado: 4 autores distintos en el historial:
+  - Luciana Noelia Da Silva <luzzdevictoria@gmail.com>
+  - Panfree <contacto.panfree@gmail.com>
+  - PanFree-Tech <system.panfree@gmail.com>
+  - Piromaniaco <dagnershd@gmail.com>
+- Script 62: reescritura completa del historial con git filter-repo.
+  Todos los 333 commits ahora firmados por:
+  Pedro J. Pirovani <pirovanipedrojose@gmail.com>
+- Push force ejecutado: 88a54bcc -> 2ab9895e (historial reescrito).
+- Verificado en GitHub: todos los commits atribuidos a pjpirovani-soft.
+- Identidad local del repo configurada (no global).
+- Credenciales de push en Windows: eliminadas las de Piromaniaco y
+  paraguayffaametalstorm-debug. Solo queda gh:github.com:PanFree-Tech.
+
+### Cierre
+- Script 63a: chore .gitignore (reglas para *-audit-*.txt, *-endpoints-*.txt)
+  + git rm --cached de 2 .txt versionados por error.
+- Script 63b: documentacion de cierre (este).
+- Progreso: 70% -> 72% (34 de 47 tareas).
+- F2: 10/14 -> 11/14.
+
+**Commits S19:**
+- b87aadde security(env): rotar GA4 API secret y private key (F2-11, SEC-023)
+- 2ab9895e chore(scripts): agregar script 62 de correccion de autoria
+- (pendiente) chore(git): ignorar reportes de auditoria temporales
+- (pendiente) docs(session): cerrar sesion 19 (ENV) - rotacion GA4 + correccion de autoria
+
+**Hallazgos cerrados:**
+- SEC-023: GA4 con dos juegos de credenciales coexistiendo
+  -> Cerrado: no era duplicado, coexistencia legitima.
+
+**Hallazgos nuevos:**
+- DOC-014: GA4 Service Account plomeria inerte (Abierto, revision 2027-04-16).
+
+**Hallazgos reabiertos/afectados:**
+- SEC-001 (.env en historial Git): el filter-repo NO elimina los .env del
+  historial. Sigue pendiente F4-01.
+
+**Bloqueantes:**
+- Ninguno. Cloudinary #392411 se reconsulta a partir del 2026-10-18.
+
+**Aprendizajes:**
+- Auditoria previa evita rotaciones inutiles. SEC-023 parecia duplicado y
+  resulto coexistencia legitima. Mismo patron que S17/S18.
+- git filter-repo es la herramienta correcta para reescribir autoria.
+  `git filter-branch` es lento y deprecated.
+- La credencial de push (Windows Credential Manager) y el autor del commit
+  son cosas distintas. Corregir uno no corrige el otro.
+- La politica "guardar el valor saliente COMPLETO" tiene una excepcion
+  justificada: cuando el valor es tecnicamente irrecuperable (Google Cloud
+  private keys). Se documenta como "irrecuperable + revocado".
+- Los hashes de commits cambian tras filter-repo. Las referencias en docs
+  quedan obsoletas. Se documenta la nota "hashes pre-reescritura".
+
+**Nota S19 sobre hashes obsoletos:**
+El historial de Git fue reescrito (correccion de autoria, script 62).
+Los hashes de commits anteriores a S19 cambiaron. Las referencias a hashes
+en BITACORA.md, 06-hallazgos-tracking.md y docs de auditoria corresponden
+al historial pre-reescritura. Los mensajes de commit se preservan y son
+la referencia valida.
+
+**Proxima sesion (S20):**
+- F2-12: regenerar par VAPID (verificar SEC-024 + BUG-001 antes).
+- F2-14: guardar .env consolidado en Bitwarden.
+- F3-07: fix BUG-001 (VAPID inconsistente en admin/page.js).
+- Reconsultar Cloudinary #392411 (a partir del 2026-10-18).
+- Backlog: sistema simple de promociones en CartSidebar (DOC-008 seccion 9).
