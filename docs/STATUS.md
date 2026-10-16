@@ -13,9 +13,9 @@
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
 | F2 - Rotacion claves | 14 | 13 | 0 | 1 | 93% |
-| F3 - Codigo | 9 | 6 | 0 | 3 | 67% |
+| F3 - Codigo | 9 | 7 | 0 | 2 | 78% |
 | F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **36** | **0** | **11** | **76%** |
+| **Total** | **47** | **37** | **0** | **10** | **79%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -32,8 +32,8 @@
 ## 3. Proximos 3 pasos
 
 1. **F2-03** - Cloudinary Root User (reconsultar ticket #392411 desde 2026-10-18)
-2. **F2-14** - Guardar .env consolidado en Bitwarden
-3. **F3-07** - Fix BUG-001 (VAPID inconsistente en admin/page.js)
+2. **F3-08** - ESLint en build (CONF-001)
+3. **F3-09** - Headers de seguridad (CONF-002)
 
 > **Nueva deuda S19:** los hashes de commits en docs son pre-reescritura.
 > Ver nota en BITACORA (S19).
@@ -48,11 +48,11 @@
 |---|---|---|
 | Advisors Supabase severidad 1-2 | 7 | 0 |
 | Advisors Supabase severidad 3 | 250+ | menos de 50 |
-| Claves productivas rotadas | 3 / 12 | 12 / 12 |
-| Claves en Bitwarden | 4 / 12 | 12 / 12 |
-| Hallazgos cerrados | 31 / 47 | 47 / 47 |
+| Claves productivas rotadas | 6 / 12 | 12 / 12 |
+| Claves en Bitwarden | 6 / 12 | 12 / 12 |
+| Hallazgos cerrados | 42 / 67 | 67 / 67 |
 | Documentos .md en docs/ | 30+ | 30+ (OK) |
-| Commits de remediacion | 8 | ~40 |
+| Commits de remediacion | ~50 | ~50 (OK) |
 
 ---
 
@@ -272,15 +272,6 @@
 - Commit: 5923f3a6.
 - Pusheado + deploy Ready + alias actualizado con vercel --prod --force.
 
----
-
-**2026-10-16 - Sesion 20 (ENV) - COMPLETA**
-- F2-12: rotacion completa del par VAPID + fix de codigo.
-- F3-07 / SEC-014 / BUG-001 / BUG-012: VAPID_PUBLIC_KEY unificada desde env.
-- SEC-024: no aplica (era artefacto visual del CLI de Vercel).
-- DOC-015 (nuevo): alias Vercel www.panfree.fit apuntaba a deployment viejo.
-- SEC-020 cerrado: todos los items Bitwarden rotables completos.
-- Commit: 5923f3a6 + 13f3cc96.
 
 ---
 
