@@ -65,3 +65,6 @@ dump-s*.txt
 *.standalone.bak
 *.orig
 *.rej
+
+# Dumps de contexto de sesion (efimeros)
+DUMP-S*.txt

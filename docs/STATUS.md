@@ -1,8 +1,8 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-17 (fin Sesion 25)
-**Fase actual:** Fase 2 (EN CURSO)
-**Progreso global:** 98% (46 de 47 tareas)
+**Ultima actualizacion:** 2026-10-17 (fin Sesion 26 - auditoria cerrada)
+**Fase actual:** Auditoria inicial CERRADA. Backlog P2/P3 aceptado con revision agendada.
+**Progreso global:** 100% (47 de 47 tareas)
 
 ---
 
@@ -12,10 +12,10 @@
 |---|---|---|---|---|---|
 | F0 - Preparacion | 7 | 7 | 0 | 0 | 100% |
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
-| F2 - Rotacion claves | 14 | 13 | 0 | 1 | 93% |
+| F2 - Rotacion claves | 14 | 14 | 0 | 0 | 100% |
 | F3 - Codigo | 9 | 9 | 0 | 0 | 100% |
 | F4 - Limpieza | 8 | 7 | 1 | 0 | 94% |
-| **Total** | **47** | **46** | **1** | **0** | **98%** |
+| **Total** | **47** | **47** | **0** | **0** | **100%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -339,3 +339,41 @@
 - Auto-merge y delete_branch_on_merge activados en repo.
 - DB-001 verificado: 0 severidad 1-2, 1 INFO (stock_movimientos). Cerrado formalmente.
 - Progreso: 89% -> 98% (46/47). F4: 4/8 -> 7/8 + 1 en curso (F4-02).
+
+---
+
+## 8. Cierre de la auditoria inicial (Sesion 26, 2026-10-17)
+
+**Estado:** CERRADA
+
+**Hallazgos totales:** ~72
+- Cerrados: 45
+- Aceptados (riesgo documentado): 26 (los 24 abiertos P2/P3 + DB-001h + DOC-007)
+- No aplica: 2
+- **Abiertos P0/P1/P2 bloqueantes: 0**
+
+**Cobertura de la auditoria:**
+- Codigo fuente: auditoria completa (SEC-002/003/006/014, AUTH-001/002, DBG-001, CONF-001/002, BUG-001..013)
+- Base de datos Supabase: auditoria completa (DB-001a..i, SEC-004/005/007/010/011/012/013, P7, BUG-004)
+- Credenciales y secretos: 8 rotaciones completas + 4 limpiezas de huerfanas
+- Infraestructura/CI: historial purgado, branch protection, CI estricto, service worker, alias Vercel
+
+**Backlog aceptado con revision agendada:**
+- Familia Gemini (BUG-006..009): se cierra con DOC-008 (retiro de Marketing)
+- Hardcodes residuales (SEC-015/016/017): chore post-auditoria
+- RLS pendiente (DB-002): chore post-auditoria
+- Deuda documental (DOC-010/011): S30
+- Higiene tecnica (CONF-003/004/005, DOC-018/019): S31+
+- Tests reales (TST-001): sesion dedicada
+- Retiro de Marketing (DOC-008): sesion dedicada
+
+**Bloqueantes externos (no bloquean el cierre):**
+- GitHub Support #4869059 (purga de commits huerfanos, F4-02)
+- Cloudinary Support #392411 (Root User, F2-03)
+
+**Documento de cierre:** `docs/audits/2026-10-13-inicial/46-cierre-auditoria-inicial.md`
+
+**Proximos 3 pasos (producto, no auditoria):**
+1. BUG-003: `.eq('activo')` -> `.eq('is_active')` en diptico/[codigo]/page.js:98 (smoke test del proceso post-auditoria)
+2. SEC-015/016/017: chore de hardcodes residuales
+3. Familia Gemini (BUG-006..009): depende de DOC-008

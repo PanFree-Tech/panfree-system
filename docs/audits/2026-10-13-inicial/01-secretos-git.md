@@ -1,8 +1,9 @@
 ﻿# SEC-001 - Archivos .env en historial de Git
 
 **Severidad:** Critica
-**Estado:** Abierto
+**Estado:** Cerrado (S24, F4-01 - purga de historial completada)
 **Fecha:** 2026-10-13
+**Cierre:** 2026-10-17 (ver [41-f4-01-purga-historial.md](./41-f4-01-purga-historial.md))
 
 ## Evidencia
 
