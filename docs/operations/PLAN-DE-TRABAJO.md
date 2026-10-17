@@ -109,7 +109,7 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 | F4-03 | Eliminar archivos basura | P1 | S | OK | test.txt, next.config.js.standalone.bak, test-supabase.js eliminados (S25) |
 | F4-04 | Actualizar .gitignore | P1 | S | Pendiente | .env.production* bloqueado |
 | F4-05 | package-lock.json en repo | P1 | S | OK | Trackeado desde S17 (commit f9b1f7ba). npm ci verificado en S25 |
-| F4-06 | Configurar GitHub Secrets | P1 | S | No aplica | Workflows solo usan GITHUB_TOKEN (auto-provisionado). Sin secrets extra requeridos |
+| F4-06 | Configurar GitHub Secrets | P1 | S | OK | Placeholders NEXT_PUBLIC_* en ci.yml (no son secretos). Ver commit S25 |
 | F4-07 | CI estricto (sin continue-on-error) | P2 | S | OK | Workflows ya sin continue-on-error (verificado S25) |
 | F4-08 | Branch protection en main | P2 | S | Pendiente | PR obligatorio para merge |
 
