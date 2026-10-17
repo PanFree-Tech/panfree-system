@@ -15,7 +15,11 @@ import { v2 as cloudinary } from 'cloudinary'
 let isConfigured = false
 
 export function getCloudinaryClient() {
-  const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'd7simx38').trim().replace(/^["']|["']$/g, '')
+  const rawCloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+  if (!rawCloudName) {
+    throw new Error('CLOUDINARY_CLOUD_NAME o NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME no configurada')
+  }
+  const cloudName = rawCloudName.trim().replace(/^["']|["']$/g, '')
   const apiKey = (process.env.CLOUDINARY_API_KEY || '').trim().replace(/^["']|["']$/g, '')
   const apiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim().replace(/^["']|["']$/g, '')
 

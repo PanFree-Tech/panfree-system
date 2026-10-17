@@ -44,7 +44,10 @@ import { S } from '../_styles'
 // Subidor de Archivos a Cloudinary
 // ─────────────────────────────────────────────────────────────
 async function subirACloudinary(archivo, carpeta = 'logos') {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'd7simx38'
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+  if (!cloudName) {
+    throw new Error('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME no configurada')
+  }
   const uploadPreset = process.env.NEXT_PUBLIC_UPLOAD_PRESET || 'panfree_upload'
 
   const formData = new FormData()
