@@ -69,7 +69,7 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 |---|---|---|---|---|---|
 | F2-01 | Migrar Supabase a system.panfree | P0 | S | OK | system.panfree es Owner |
 | F2-02 | Rotar JWT secret + keys Supabase | P0 | M | OK | Vercel + local OK |
-| F2-03 | Migrar Cloudinary a system.panfree | P1 | S | En curso | Root User pendiente (ticket #392411) |
+| F2-03 | Migrar Cloudinary a system.panfree | P1 | S | Pendiente externo | Root User pendiente (ticket #392411). Migracion funcional OK desde S16; solo falta transferencia de Root User. |
 | F2-04 | Rotar Cloudinary API secret | P1 | S | OK | Vercel + local OK |
 | F2-05 | Rotar Resend API key | P1 | S | OK | Mail de prueba OK |
 | F2-06 | Rotar Gemini API key | P1 | S | OK | Marketing IA funciona |
@@ -105,7 +105,7 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 | ID | Tarea | Prioridad | Esfuerzo | Estado | DoD |
 |---|---|---|---|---|---|
 | F4-01 | Purgar historial de Git | P0 | M | OK | git filter-repo ejecutado en S24 (commit 7526022c) |
-| F4-02 | Ticket a GitHub Support | P0 | S | En curso | Ticket #4869059 enviado S24. Espera respuesta de soporte (2-5 dias habiles) |
+| F4-02 | Ticket a GitHub Support | P0 | S | Pendiente externo | Ticket #4869059 enviado S24. Espera respuesta de soporte (2-5 dias habiles). No bloquea cierre de auditoria. |
 | F4-03 | Eliminar archivos basura | P1 | S | OK | test.txt, next.config.js.standalone.bak, test-supabase.js eliminados (S25) |
 | F4-04 | Actualizar .gitignore | P1 | S | Pendiente | .env.production* bloqueado |
 | F4-05 | package-lock.json en repo | P1 | S | OK | Trackeado desde S17 (commit f9b1f7ba). npm ci verificado en S25 |

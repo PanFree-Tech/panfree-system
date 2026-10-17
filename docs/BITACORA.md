@@ -1840,7 +1840,7 @@ la referencia valida.
 
 ## 2026-10-17 (Sesion 26 - ENV) - COMPLETA
 
-**Duracion:** ~3 horas
+**Duracion:** ~6 horas
 **Objetivo:** Cierre formal de la auditoria inicial 2026-10-13
 
 **Completado:**
@@ -1861,7 +1861,8 @@ la referencia valida.
 - `46-cierre-auditoria-inicial.md`: creado (documento de cierre formal).
 
 ### Bloque 3 - Infraestructura de sesion
-- PR #22 mergeado (dump-session.ps1 + .gitignore para DUMP-S*.txt).
+- PR #23 mergeado via squash (318eab39): scripts 92a-92h + dump-session.ps1 + .gitignore.
+- PR #22 cerrado como obsoleto (sus cambios fueron incluidos en #23).
 - `scripts/docs/dump-session.ps1` disponible para proximas sesiones.
 
 **Hallazgos cerrados:**
