@@ -1,7 +1,7 @@
-﻿# DB-001 - 250+ Advisors de Supabase
+# DB-001 - 250+ Advisors de Supabase
 
 **Severidad:** Critica
-**Estado:** Abierto
+**Estado:** Cerrado (S25, 0 sev 1-2; S28 sin cambios pendientes)
 **Fecha:** 2026-10-13
 
 ## Resumen
