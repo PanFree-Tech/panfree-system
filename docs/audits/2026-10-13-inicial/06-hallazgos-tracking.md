@@ -1,7 +1,7 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
-**Ultima actualizacion:** 2026-10-17 (fin Sesion 24)
-**Total de hallazgos:** 72
+**Ultima actualizacion:** 2026-10-17 (fin Sesion 25)
+**Total de hallazgos:** 73
 
 ---
 
@@ -35,7 +35,7 @@
 |---|---|---|---|---|---|
 | SEC-001 | .env en historial Git | F4 | P0 | Cerrado | 82a (S24) |
 | SEC-003 | Admin por user_metadata | F3 | P0 | Cerrado | e5bed103 |
-| DB-001 | 250+ advisors Supabase | F1 | P0 | Abierto | - |
+| DB-001 | 250+ advisors Supabase | F1 | P0 | Cerrado | 93 (S25: 0 sev 1-2) |
 | DB-001a | Vistas SECURITY DEFINER | F1 | P0 | Cerrado | 8c5b311a |
 | DB-001b | Politicas RLS Always True | F1 | P0 | Cerrado | fea87bb2 |
 | DB-001c | Funciones SECURITY DEFINER publicas | F1 | P0 | Cerrado | 542e3a2e |
@@ -121,6 +121,8 @@
 | CONF-003 | ~30 warnings de ESLint en build (mayoria <img> sin <Image />) | F3 | P3 | Abierto | - |
 | CONF-004 | typescript.ignoreBuildErrors: true en next.config.js | F3 | P2 | Abierto | - |
 | CONF-005 | Content-Security-Policy (CSP) pendiente | F3 | P3 | Abierto | - |
+| BUG-013 | createClient top-level en test-email y resend-webhook rompia build en CI | F3 | P2 | Cerrado (S25) | 664488b3 |
+| DB-002 | public.stock_movimientos con RLS habilitado pero sin politicas | F1 | P3 | Abierto | - |
 ---
 
 ## 4. Como cerrar un hallazgo

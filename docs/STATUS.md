@@ -1,8 +1,8 @@
-﻿# Estado del Proyecto - PanFree System
+# Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-17 (en curso Sesion 25)
+**Ultima actualizacion:** 2026-10-17 (fin Sesion 25)
 **Fase actual:** Fase 2 (EN CURSO)
-**Progreso global:** 89% (42 de 47 tareas)
+**Progreso global:** 98% (46 de 47 tareas)
 
 ---
 
@@ -14,8 +14,8 @@
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
 | F2 - Rotacion claves | 14 | 13 | 0 | 1 | 93% |
 | F3 - Codigo | 9 | 9 | 0 | 0 | 100% |
-| F4 - Limpieza | 8 | 4 | 1 | 3 | 50% |
-| **Total** | **47** | **42** | **1** | **4** | **89%** |
+| F4 - Limpieza | 8 | 7 | 1 | 0 | 94% |
+| **Total** | **47** | **46** | **1** | **0** | **98%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -46,8 +46,8 @@
 
 | Metrica | Hoy | Meta |
 |---|---|---|
-| Advisors Supabase severidad 1-2 | 7 | 0 |
-| Advisors Supabase severidad 3 | 250+ | menos de 50 |
+| Advisors Supabase severidad 1-2 | 0 | 0 (OK) |
+| Advisors Supabase severidad 3 | 1 (INFO) | menos de 50 (OK) |
 | Claves productivas rotadas | 6 / 12 | 12 / 12 |
 | Claves en Bitwarden | 6 / 12 | 12 / 12 |
 | Hallazgos cerrados | 44 / 72 | 72 / 72 |
@@ -329,3 +329,13 @@
 
 ---
 
+**2026-10-17 - Sesion 25 (ENV) - COMPLETA**
+- F4-01, F4-03, F4-04, F4-05, F4-06, F4-07, F4-08 formalizadas.
+- F4-06: placeholders NEXT_PUBLIC_* en ci.yml.
+- F4-03: basura eliminada del repo.
+- F4-04: .gitignore con .env.production* y *.standalone.bak.
+- BUG-013: createClient top-level fix (CI verde).
+- F4-08: branch protection con enforce_admins true, PR obligatorio, required check lint-and-test.
+- Auto-merge y delete_branch_on_merge activados en repo.
+- DB-001 verificado: 0 severidad 1-2, 1 INFO (stock_movimientos). Cerrado formalmente.
+- Progreso: 89% -> 98% (46/47). F4: 4/8 -> 7/8 + 1 en curso (F4-02).
