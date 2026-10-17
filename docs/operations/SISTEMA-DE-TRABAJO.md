@@ -70,6 +70,53 @@ Ambos comandos deben devolver la MISMA cantidad de lineas.
 
 ---
 
+### 4.3 Line endings al modificar archivos
+
+Antes de modificar un archivo con un script, verificar su line ending:
+
+    $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $archivo).Path)
+    $texto = [System.Text.Encoding]::UTF8.GetString($bytes)
+    $cuentaCRLF = ([regex]::Matches($texto, "`r`n")).Count
+    $cuentaLF   = ([regex]::Matches($texto, "`n")).Count
+
+- Si el archivo es CRLF (mayoria en este repo): normalizar al leer con
+  `($contenido -split "`n") | ForEach-Object { $_.TrimEnd("`r") }`.
+  Y al escribir, usar `-join "`r`n"`.
+- Si el archivo es LF (BITACORA, STATUS): usar `-split "`n"` y `-join "`n"`.
+- Nunca asumir LF: en S23, el script 79d fallo porque comparaba con `-eq`
+  contra strings que tenian un `\r` residual invisible.
+
+### 4.4 Deteccion de mojibake
+
+Si un archivo tiene caracteres mal codificados (ej: "a con circunflejo +
+euro + comilla" en vez de em-dash), detectarlo con codigos Unicode:
+
+    $pA = [char]0x00E2  # a con circunflejo
+    $pEur = [char]0x20AC  # euro
+
+NO usar los caracteres literales en el script. Los .ps1 con caracteres
+no-ASCII rompen el parser de PowerShell 5.1.
+
+### 4.5 Invocacion de scripts
+
+Siempre invocar scripts con uno de estos formatos:
+
+    powershell -ExecutionPolicy Bypass -File scripts\docs\NN-script.ps1
+    & ".\scripts\docs\NN-script.ps1"
+
+Nunca invocar `scripts\docs\NN-script.ps1` directo desde la consola:
+PowerShell lo interpreta como comando (modulo), no como ruta.
+
+### 4.6 -NoCommit como default
+
+Los scripts de fix deben aceptar `-NoCommit` para dry-run:
+
+- Correr primero con `-NoCommit`: verifica el diff sin commitear.
+- Si el diff es correcto, commit manual o segunda corrida sin `-NoCommit`.
+- Previene commitear cambios no verificados.
+
+---
+
 ## 5. Verificaciones antes de commitear
 
 - [ ] findstr de "@ y @" cuentan igual
