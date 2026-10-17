@@ -1,4 +1,4 @@
-# Plan de Trabajo - PanFree System
+﻿# Plan de Trabajo - PanFree System
 
 **Version:** 1.0
 **Fecha:** 2026-10-13
@@ -104,13 +104,13 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 
 | ID | Tarea | Prioridad | Esfuerzo | Estado | DoD |
 |---|---|---|---|---|---|
-| F4-01 | Purgar historial de Git | P0 | M | Pendiente | git filter-repo ejecutado |
-| F4-02 | Ticket a GitHub Support | P0 | S | Pendiente | SHAs huerfanos eliminados |
+| F4-01 | Purgar historial de Git | P0 | M | OK | git filter-repo ejecutado en S24 (commit 7526022c) |
+| F4-02 | Ticket a GitHub Support | P0 | S | En curso | Ticket #4869059 enviado S24. Espera respuesta de soporte (2-5 dias habiles) |
 | F4-03 | Eliminar archivos basura | P1 | S | Pendiente | test.txt, .bak eliminados |
 | F4-04 | Actualizar .gitignore | P1 | S | Pendiente | .env.production* bloqueado |
-| F4-05 | package-lock.json en repo | P1 | S | Pendiente | npm ci funciona |
-| F4-06 | Configurar GitHub Secrets | P1 | S | Pendiente | CI corre build sin placeholders |
-| F4-07 | CI estricto (sin continue-on-error) | P2 | S | Pendiente | PRs fallan si tests fallan |
+| F4-05 | package-lock.json en repo | P1 | S | OK | Trackeado desde S17 (commit f9b1f7ba). npm ci verificado en S25 |
+| F4-06 | Configurar GitHub Secrets | P1 | S | No aplica | Workflows solo usan GITHUB_TOKEN (auto-provisionado). Sin secrets extra requeridos |
+| F4-07 | CI estricto (sin continue-on-error) | P2 | S | OK | Workflows ya sin continue-on-error (verificado S25) |
 | F4-08 | Branch protection en main | P2 | S | Pendiente | PR obligatorio para merge |
 
 **Criterio de salida de Fase 4:** Repositorio limpio, CI en verde, historial sin secretos.

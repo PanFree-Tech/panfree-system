@@ -1,8 +1,8 @@
-# Estado del Proyecto - PanFree System
+﻿# Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-17 (fin Sesion 24)
+**Ultima actualizacion:** 2026-10-17 (en curso Sesion 25)
 **Fase actual:** Fase 2 (EN CURSO)
-**Progreso global:** 81% (38 de 47 tareas)
+**Progreso global:** 89% (42 de 47 tareas)
 
 ---
 
@@ -14,8 +14,8 @@
 | F1 - Seguridad DB | 9 | 9 | 0 | 0 | 100% |
 | F2 - Rotacion claves | 14 | 13 | 0 | 1 | 93% |
 | F3 - Codigo | 9 | 9 | 0 | 0 | 100% |
-| F4 - Limpieza | 8 | 0 | 0 | 8 | 0% |
-| **Total** | **47** | **38** | **0** | **9** | **81%** |
+| F4 - Limpieza | 8 | 4 | 1 | 3 | 50% |
+| **Total** | **47** | **42** | **1** | **4** | **89%** |
 
 > **Nota Fase 1:** F1-06 (Leaked Password Protection) queda **Aceptada**
 > por limitacion del plan Free de Supabase. No es un pendiente tecnico.
@@ -293,6 +293,15 @@
 - F4-02: ticket a GitHub Support enviado.
 - Progreso: 81% (38/47) sin cambios (F4-01 cierra SEC-001, pero fase F4 sigue en 0/8).
 
+
+**2026-10-17 - Sesion 25 (ENV) - EN CURSO**
+- Recon S25: HEAD 4845a99e, tree limpio salvo script 84.
+- F4-01 verificado: 0 .env en historial, .env.example intacto.
+- F4-05 formalizado: package-lock.json trackeado desde S17 (f9b1f7ba).
+- F4-06 reformulado a "No aplica": workflows solo usan GITHUB_TOKEN.
+- F4-07 formalizado: ci.yml y security-scan.yml sin continue-on-error.
+- F4-02: ticket #4869059 sigue esperando respuesta de soporte.
+- Progreso: 81% -> 89% (42/47). F4: 0/8 -> 4/8 (+ 1 en curso).
 ## 6. Comandos utiles
 
     REM Ver estado actual
