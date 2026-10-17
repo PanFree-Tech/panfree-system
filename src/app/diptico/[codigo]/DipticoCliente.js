@@ -30,7 +30,6 @@ import {
 export default function DipticoCliente({
   codigo,
   producto,
-  tipoRegalo,
   relacionados,
 }) {
   const router = useRouter()
@@ -336,28 +335,6 @@ export default function DipticoCliente({
           )}
         </section>
 
-        {/* ─── SPECIAL GIFT BANNER (IF PRESENT) ─── */}
-        {tipoRegalo && (
-          <section className="bg-gradient-to-br from-[#fff7f0] to-[#fdede0] rounded-2xl border-2 border-[#f46e15]/40 p-6 shadow-sm relative overflow-hidden">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-[#f46e15] text-white rounded-xl shadow-md shadow-[#f46e15]/30">
-                <Gift size={26} />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-[#334c2b]">
-                  ¡Tienes un beneficio especial con este código!
-                </h3>
-                <p className="text-sm text-[#2d1f14]/80 mt-1 leading-relaxed">
-                  {tipoRegalo === 'descuento'
-                    ? 'Has recibido un descuento exclusivo aplicable en tu próxima compra de panadería.'
-                    : tipoRegalo === 'producto'
-                    ? 'Has recibido un producto de regalo adicional en tu próximo pedido.'
-                    : '¡Sorpresa! Has recibido un beneficio especial para consentirte.'}
-                </p>
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* ─── PRODUCT INFORMATION & ARTISANAL DETAILS ─── */}
         <section className="bg-white rounded-2xl shadow-sm border border-[#e8dfd3] p-6 sm:p-8">

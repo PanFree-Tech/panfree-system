@@ -105,7 +105,6 @@ export default async function PaginaDiptico({ params }) {
     <DipticoCliente
       codigo={codigoData.codigo}
       producto={producto}
-      tipoRegalo={codigoData.tipo_regalo || null}
       relacionados={relacionados || []}
     />
   )
