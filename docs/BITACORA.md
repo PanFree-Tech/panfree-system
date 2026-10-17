@@ -1923,3 +1923,92 @@ la referencia valida.
 - Chore de hardcodes (SEC-015/016/017) y limpieza de GRANTs (SEC-025).
 
 ---
+
+---
+
+## 2026-10-17 (Sesion 28 - ENV) - COMPLETA
+
+**Duracion:** ~6 horas
+**Objetivo:** Atacar deuda tecnica post-auditoria (hardcodes + GRANTs Supabase + limpieza diptico)
+
+**Completado:**
+
+### Bloque 1 - Recon empirico (pre-codigo)
+- Auditoria de grep para SEC-015/016/017: se encontro que la doc estaba desactualizada.
+  - SEC-015: 3 hits (no 2). AuthModal.js:171 era residual de SEC-006 no detectado en S5.
+  - SEC-016: 9 hits (no 4). 4 son cloudName (SEC-016a) + 5 son URLs de logo (SEC-016b).
+  - SEC-017: 1 hit confirmado.
+- Auditoria Supabase: anon tiene 7 privilegios sobre productos (incluido TRUNCATE).
+- Auditoria depto diptico: tipo_regalo NO existe en codigos_dipticos. fecha_expiracion SI existe y SI se valida en dipticos.js:122.
+
+### Bloque 2 - PR #27 (SEC-015a/b + SEC-017)
+- Fail-fast en 4 archivos: notificar-estado, notificaciones, AuthModal, ga4/measurement.
+- Commit del fix + commit de ci.yml (placeholders GA4 + Cloudinary).
+- CI fallo en el primer intento por falta de placeholders en ci.yml. Fix: agregar 2 lineas.
+- Merge: 42821c3. Smoke test en prod OK.
+
+### Bloque 3 - PR #28 (SEC-016a)
+- Fail-fast en cloudName en 4 archivos (lib/cloudinary, admin/configuracion, admin/productos, perfil).
+- Agregado NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME a Vercel (Production + Preview).
+- SEC-016b (7 URLs de logo) diferido a S31.
+- Merge: 8fb5ae0.
+
+### Bloque 4 - PR #29 (SEC-025)
+- Auditoria SQL: anon tenia TRUNCATE + 6 privilegios mas sobre productos.
+- Auditoria pg_policies: 0 policies TO anon sobre productos. Fix seguro.
+- Migracion SQL: REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER.
+- Merge: 375e44c.
+
+### Bloque 5 - PR #30 (BUG-0XX)
+- Eliminar tipoRegalo de props + bloque condicional en DipticoCliente.
+- Eliminar prop tipoRegalo en page.js.
+- Build local fallo por .env.local vacio. Fix: borrar archivo + limpiar .next/.
+- Merge: 2655e9ac.
+
+### Bloque 6 - Cierre documental (PR #5)
+- Tracking: SEC-015/016a/016b/017/025 cerrados, BUG-0XX cerrado, BUG-0YY falso positivo.
+- STATUS: proximos pasos actualizados.
+- BITACORA: esta entrada.
+- 05-criterios-aceptacion: DoD del build local.
+- POLITICA-CI-CD: placeholders en ci.yml.
+- 02-supabase-advisors: cerrado.
+- 99-plan-remediacion: historico.
+- HANDOFF-2026-10-13 movido a docs/handoffs/.
+
+**Commits:**
+- 42821c3 chore(hardcodes): SEC-015a/b + SEC-017 fail-fast (#27)
+- 8fb5ae0 chore(cloudinary): SEC-016a fail-fast en cloudName (#28)
+- 375e44c security(db): SEC-025 revocar privilegios anon sobre productos (#29)
+- 2655e9ac fix(diptico): limpiar tipoRegalo (BUG-0XX) (#30)
+- (pendiente) docs(cierre-s28): PR #5
+
+**Hallazgos cerrados:**
+- SEC-015: URL Supabase hardcodeada (3 hits).
+- SEC-016a: Cloudinary cloudName con fallback (4 archivos).
+- SEC-017: GA4 Measurement ID hardcodeado.
+- SEC-025: anon con TRUNCATE + 6 privilegios mas sobre productos.
+- BUG-0XX: tipo_regalo inexistente (codigo muerto).
+- BUG-0YY: verificado como FALSO POSITIVO.
+
+**Hallazgos nuevos:**
+- SEC-015b (residual de SEC-006, cerrado en el mismo PR).
+- SEC-016b (URLs de logo hardcodeadas, 7 hits, diferido a S31).
+
+**Bloqueantes:**
+- Cloudinary #392411: reconsultar 2026-10-18.
+- GitHub #4869059: pendiente.
+
+**Aprendizajes:**
+- `Select-String -Path` con rutas que tienen `[codigo]` falla por wildcards. Usar `-LiteralPath`.
+- `npm run build` local sin `.env.local` falla por el fail-fast de env vars. El build se verifica en CI (con placeholders) + Preview/Produccion (con valores reales).
+- `.Replace()` con PowerShell 5.1 puede fallar silenciosamente si hay indentacion distinta o CRLF vs LF. Para bloques JSX anidados, editar a mano en VS Code.
+- `Measure-Object -Line` no cuenta lineas vacias. `(Get-Content).Count` si. No son comparables.
+- Un falso positivo de auditoria (BUG-0YY) es tan valioso como un bug real: documenta que el codigo ya estaba bien.
+- Los 3 PRs de codigo (SEC-015/016/017) pueden ir juntos en un solo PR (SEC-015a/b + SEC-017) si tocan los mismos archivos/dominio.
+
+**Proxima sesion (S29):**
+- Familia Gemini (BUG-006..009) + retiro de Marketing (DOC-008).
+- DOC-002/003 (docs Marketing desalineadas).
+- TST-001 (tests reales, TBD).
+
+---

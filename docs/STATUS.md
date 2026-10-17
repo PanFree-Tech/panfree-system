@@ -1,6 +1,6 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-17 (fin Sesion 26 - auditoria cerrada)
+**Ultima actualizacion:** 2026-10-17 (fin Sesion 28 - cierre de hardcodes + BUG-0XX)
 **Fase actual:** Auditoria inicial CERRADA. Backlog P2/P3 aceptado con revision agendada.
 **Progreso global:** 100% (47 de 47 tareas)
 
@@ -31,15 +31,14 @@
 
 ## 3. Proximos 3 pasos
 
-2. **SEC-015/016/017** - Chore de hardcodes residuales (S28)
-3. **Familia Gemini** (BUG-006..009) - Depende de DOC-008 (S29)
+1. **S29: Familia Gemini + retiro de Marketing (DOC-008)** - Cierra BUG-006..009 + DOC-002/003 por eliminacion.
+2. **S30: RLS pendiente (DB-002) + docs desalineadas (DOC-010/011)** - Cierre de deuda post-auditoria.
+3. **S31+: Higiene tecnica (CONF-003/004/005, DOC-018/019, SEC-016b)**
 
-> **Nueva deuda S19:** los hashes de commits en docs son pre-reescritura.
-> Ver nota en BITACORA (S19).
+> **Nota:** S28 cerro 4 PRs de codigo (#27, #28, #29, #30). SEC-015/016a/017/025 + BUG-0XX. BUG-0YY resulto falso positivo.
 
-> **Nota:** el ticket Cloudinary #392411 (Root User) no es un paso activo.
-> Depende de soporte externo (2-4 dias habiles desde 2026-10-15).
-> Reconsultar a partir del **2026-10-18**.
+> **Nota:** ticket Cloudinary #392411 (Root User) - reconsultar a partir del 2026-10-18.
+> Ticket GitHub #4869059 (purga de commits huerfanos) - pendiente.
 
 ## 4. Metricas clave
 
@@ -318,6 +317,15 @@
 - Documento de cierre: docs/audits/2026-10-13-inicial/46-cierre-auditoria-inicial.md
 - PR #23 mergeado via squash (318eab39). PR #22 cerrado como obsoleto.
 - Scripts de sesion versionados: 92a-92h + dump-session.ps1 + 93 (este).
+
+**2026-10-17 - Sesion 28 (ENV) - COMPLETA**
+- PR #27: SEC-015a/b + SEC-017 fail-fast (42821c3). 4 archivos + ci.yml.
+- PR #28: SEC-016a cloudName fail-fast (8fb5ae0). 4 archivos.
+- PR #29: SEC-025 revocar grants anon sobre productos (375e44c). 1 migracion SQL.
+- PR #30: BUG-0XX eliminar tipoRegalo (2655e9ac). 2 archivos.
+- SEC-016b (7 URLs de logo hardcodeadas) diferido a S31.
+- BUG-0YY verificado como falso positivo (validacion existe en dipticos.js:122).
+- 5/5 CI verde en los 4 PRs. Smoke test post-deploy OK.
 
 ## 6. Comandos utiles
 
