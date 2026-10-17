@@ -111,7 +111,7 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 | F4-05 | package-lock.json en repo | P1 | S | OK | Trackeado desde S17 (commit f9b1f7ba). npm ci verificado en S25 |
 | F4-06 | Configurar GitHub Secrets | P1 | S | OK | Placeholders NEXT_PUBLIC_* en ci.yml (no son secretos). Ver commit S25 |
 | F4-07 | CI estricto (sin continue-on-error) | P2 | S | OK | Workflows ya sin continue-on-error (verificado S25) |
-| F4-08 | Branch protection en main | P2 | S | Pendiente | PR obligatorio para merge |
+| F4-08 | Branch protection en main | P2 | S | OK | PR obligatorio + status check lint-and-test + force push/deletion bloqueados (S25) |
 
 **Criterio de salida de Fase 4:** Repositorio limpio, CI en verde, historial sin secretos.
 
