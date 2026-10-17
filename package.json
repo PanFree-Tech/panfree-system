@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "echo \"No tests configured yet (TST-001)\" && exit 0",
     "migrar-imagenes": "node scripts/migrar-imagenes-cloudinary.js"
   },
   "dependencies": {

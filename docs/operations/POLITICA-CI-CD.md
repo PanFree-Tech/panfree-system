@@ -95,3 +95,21 @@ Definir cuando los workflows de GitHub Actions son **estrictos** (bloquean el me
 2. **Antes de pasar a estricto, probar 1 semana en tolerante.** Evita sorpresas.
 3. **Los secrets van en GitHub Secrets, nunca en el workflow.** Ver ${{ secrets.X }}.
 4. **Documentar cada cambio de politica.** Este archivo es la fuente de verdad.
+---
+
+## Nota S25: script 	est no-op
+
+El package.json **no tiene tests reales** (TST-001 sigue abierto).
+Para que el CI no falle en el step Test, se agrego un script
+\	est\ no-op al \package.json\:
+
+\\\json
+"test": "echo \"No tests configured yet (TST-001)\" && exit 0"
+\\\
+
+**Cuando se resuelva TST-001** (instalar Jest/Vitest + tests reales),
+reemplazar por el script real. Mientras tanto, el CI corre Lint y Build
+de verdad, y Test es un placeholder documentado.
+
+**Razon**: \--passWithNoTests\ es flag de Jest, no de npm. Sin script
+\	est\, npm falla antes de llegar a Jest.
