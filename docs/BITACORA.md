@@ -1615,3 +1615,223 @@ la referencia valida.
   porque .env* matchea .env.example (que SI debe estar versionado).
 - Los backups previos son OBLIGATORIOS en operaciones destructivas.
   En S24 se hicieron 2 (bundle + mirror) y ambos funcionaron.
+
+---
+
+## 2026-10-17 (Sesion 25 - ENV) - COMPLETA
+
+**Duracion:** ~6 horas
+**Objetivo:** Cerrar F4 (limpieza + CI estricto + branch protection) + BUG-013
+
+**Completado:**
+
+### Bloque 1 - Recon S25
+- HEAD 4845a99e, tree limpio. `package-lock.json` trackeado (F4-05).
+- `.gitignore` sin regla explicita para `.env.production*` (F4-04).
+- Basura trackeada: test.txt, next.config.js.standalone.bak, test-supabase.js (F4-03).
+- CI workflows: `ci.yml` y `security-scan.yml` sin `continue-on-error` (F4-07 ya hecho).
+- `.github/workflows/` existe, solo usa `GITHUB_TOKEN` (F4-06 "No aplica" inicial).
+
+### Bloque 2 - Sync PLAN/STATUS
+- F4-01 -> OK (S24). F4-05 -> OK (S17). F4-07 -> OK.
+- F4-06 marcada "No aplica" temporalmente (mal, se corrige despues).
+- STATUS: 81% -> 89% (42/47).
+
+### Bloque 3 - F4-04: .gitignore
+- Agregadas reglas explicitas: `.env.production*`, `*.standalone.bak`, `*.orig`, `*.rej`.
+- Commit: 44b9542d.
+
+### Bloque 4 - F4-03: Limpieza de basura
+- `git rm` de test.txt, next.config.js.standalone.bak, test-supabase.js.
+- Carpetas `.backup-s*/` limpiadas del disco (gitignored).
+- Commit: 19616916.
+
+### Bloque 5 - F4-06 + F4-07: CI estricto
+- F4-07 confirmado: workflows sin `continue-on-error`.
+- F4-06: placeholders `NEXT_PUBLIC_*` en `ci.yml` (no son secretos).
+- Commit: 01b363ea.
+
+### Bloque 6 - Fix CI: script test
+- `package.json` no tenia script `test`. `npm test -- --passWithNoTests` fallaba.
+- Agregado script `test` no-op: `echo "No tests configured yet (TST-001)" && exit 0`.
+- Documentado en POLITICA-CI-CD.md.
+- Commit: 0c5dad2c.
+
+### Bloque 7 - BUG-013: createClient top-level
+- `test-email/route.js` y `resend-webhook/route.js` instanciaban `createClient()` en top-level.
+- En build, `SERVICE_ROLE_KEY` undefined -> `supabaseKey is required` -> CI falla.
+- Fix: mover `createClient()` a `getSupabaseAdmin()`, ejecutado en runtime.
+- Doc: 42-bug-013-supabase-toplevel.md.
+- Commit: 664488b3.
+
+### Bloque 8 - F4-08: Branch protection
+- Script 91: branch protection via `gh api`.
+- Config: PR obligatorio, 0 aprobaciones, required check `lint-and-test`, force push/deletion bloqueados.
+- PR #18 mergeado (squash a `0fe7f319`).
+- Script 91b: correccion `enforce_admins: true` (mejor practica).
+- PR #19 mergeado (squash a `cbd983ee`).
+
+### Bloque 9 - Auto-merge + scripts
+- `allow_auto_merge` activado (repo).
+- `delete_branch_on_merge` activado (repo).
+- PR #20 (scripts 89-92) mergeado.
+
+**Hallazgos cerrados:**
+- F4-01, F4-03, F4-04, F4-05, F4-06, F4-07, F4-08.
+- BUG-013: createClient top-level (nuevo, cerrado en misma sesion).
+- DB-001: 250+ advisors Supabase (verificado: 0 severidad 1-2, 1 INFO).
+
+**Hallazgos nuevos:**
+- BUG-013: createClient top-level (cerrado).
+- DB-002: stock_movimientos RLS sin politicas (INFO, P3, S26).
+
+**Commits S25 (mergeados a main):**
+- b4daf705 docs(sync): formalizar F4-01, F4-05, F4-06, F4-07
+- 44b9542d chore(git): reglas explicitas .gitignore (F4-04)
+- 19616916 chore(repo): eliminar archivos basura (F4-03)
+- 01b363ea chore(ci): placeholders NEXT_PUBLIC_* (F4-06)
+- 0c5dad2c fix(ci): script test no-op (TST-001 placeholder)
+- 664488b3 fix(ci): createClient a runtime (BUG-013)
+- 0fe7f319 chore(repo): branch protection (F4-08, squash)
+- cbd983ee chore(repo): enforce_admins true (F4-08, squash)
+- (squash) chore(scripts): 89-92 de S25
+
+**Bloqueantes:**
+- F4-02 depende de GitHub Support (#4869059).
+- F2-03 depende de Cloudinary Support (#392411).
+
+**Proxima sesion (S26) - Deuda tecnica:**
+- CONF-003: ~30 warnings de ESLint.
+- CONF-004: typescript.ignoreBuildErrors.
+- CONF-005: CSP.
+- DOC-008: retiro de seccion Marketing (~5.500-6.500 lineas).
+- DOC-006: Instagram UI rota.
+- SEC-015, SEC-016, SEC-017: hardcodes restantes.
+- BUG-003: .eq(activo).
+- BUG-006 a BUG-009: familia Gemini.
+- DOC-002, DOC-003: docs Marketing.
+- DOC-010, DOC-011: vars .env.example vs Vercel.
+- DOC-018, DOC-019: meta apple, icono 144x144.
+- DB-002: stock_movimientos RLS sin politicas.
+- Vercel: previews fallan (investigar Build Logs).
+- Migrar @supabase/auth-helpers-nextjs -> @supabase/ssr.
+- TST-001: implementar tests reales.
+
+**Aprendizajes:**
+- GitHub Actions falla en `Test` si `package.json` no tiene script `test` (aunque `--passWithNoTests` sea flag de Jest).
+- `createClient()` en top-level rompe build cuando el modulo se importa en build time con env vars incompletas.
+- Branch protection con `enforce_admins: true` es la mejor practica. Sin bypass de admin.
+- Flujo PR + auto-merge es el estandar con branch protection.
+- `allow_auto_merge` y `delete_branch_on_merge` son configuraciones de repositorio, no de branch protection.
+- `gh pr merge --auto` requiere `allow_auto_merge: true` en el repo.
+- `mergeStateStatus: UNSTABLE` no bloquea merge (solo `BLOCKED` lo hace).
+
+---
+
+## 2026-10-17 (Sesion 25 - ENV) - COMPLETA
+
+**Duracion:** ~6 horas
+**Objetivo:** Cerrar F4 (limpieza + CI estricto + branch protection) + BUG-013
+
+**Completado:**
+
+### Bloque 1 - Recon S25
+- HEAD 4845a99e, tree limpio. `package-lock.json` trackeado (F4-05).
+- `.gitignore` sin regla explicita para `.env.production*` (F4-04).
+- Basura trackeada: test.txt, next.config.js.standalone.bak, test-supabase.js (F4-03).
+- CI workflows: `ci.yml` y `security-scan.yml` sin `continue-on-error` (F4-07 ya hecho).
+- `.github/workflows/` existe, solo usa `GITHUB_TOKEN` (F4-06 "No aplica" inicial).
+
+### Bloque 2 - Sync PLAN/STATUS
+- F4-01 -> OK (S24). F4-05 -> OK (S17). F4-07 -> OK.
+- F4-06 marcada "No aplica" temporalmente (mal, se corrige despues).
+- STATUS: 81% -> 89% (42/47).
+
+### Bloque 3 - F4-04: .gitignore
+- Agregadas reglas explicitas: `.env.production*`, `*.standalone.bak`, `*.orig`, `*.rej`.
+- Commit: 44b9542d.
+
+### Bloque 4 - F4-03: Limpieza de basura
+- `git rm` de test.txt, next.config.js.standalone.bak, test-supabase.js.
+- Carpetas `.backup-s*/` limpiadas del disco (gitignored).
+- Commit: 19616916.
+
+### Bloque 5 - F4-06 + F4-07: CI estricto
+- F4-07 confirmado: workflows sin `continue-on-error`.
+- F4-06: placeholders `NEXT_PUBLIC_*` en `ci.yml` (no son secretos).
+- Commit: 01b363ea.
+
+### Bloque 6 - Fix CI: script test
+- `package.json` no tenia script `test`. `npm test -- --passWithNoTests` fallaba.
+- Agregado script `test` no-op: `echo "No tests configured yet (TST-001)" && exit 0`.
+- Documentado en POLITICA-CI-CD.md.
+- Commit: 0c5dad2c.
+
+### Bloque 7 - BUG-013: createClient top-level
+- `test-email/route.js` y `resend-webhook/route.js` instanciaban `createClient()` en top-level.
+- En build, `SERVICE_ROLE_KEY` undefined -> `supabaseKey is required` -> CI falla.
+- Fix: mover `createClient()` a `getSupabaseAdmin()`, ejecutado en runtime.
+- Doc: 42-bug-013-supabase-toplevel.md.
+- Commit: 664488b3.
+
+### Bloque 8 - F4-08: Branch protection
+- Script 91: branch protection via `gh api`.
+- Config: PR obligatorio, 0 aprobaciones, required check `lint-and-test`, force push/deletion bloqueados.
+- PR #18 mergeado (squash a `0fe7f319`).
+- Script 91b: correccion `enforce_admins: true` (mejor practica).
+- PR #19 mergeado (squash a `cbd983ee`).
+
+### Bloque 9 - Auto-merge + scripts
+- `allow_auto_merge` activado (repo).
+- `delete_branch_on_merge` activado (repo).
+- PR #20 (scripts 89-92) mergeado.
+
+**Hallazgos cerrados:**
+- F4-01, F4-03, F4-04, F4-05, F4-06, F4-07, F4-08.
+- BUG-013: createClient top-level (nuevo, cerrado en misma sesion).
+- DB-001: 250+ advisors Supabase (verificado: 0 severidad 1-2, 1 INFO).
+
+**Hallazgos nuevos:**
+- BUG-013: createClient top-level (cerrado).
+- DB-002: stock_movimientos RLS sin politicas (INFO, P3, S26).
+
+**Commits S25 (mergeados a main):**
+- b4daf705 docs(sync): formalizar F4-01, F4-05, F4-06, F4-07
+- 44b9542d chore(git): reglas explicitas .gitignore (F4-04)
+- 19616916 chore(repo): eliminar archivos basura (F4-03)
+- 01b363ea chore(ci): placeholders NEXT_PUBLIC_* (F4-06)
+- 0c5dad2c fix(ci): script test no-op (TST-001 placeholder)
+- 664488b3 fix(ci): createClient a runtime (BUG-013)
+- 0fe7f319 chore(repo): branch protection (F4-08, squash)
+- cbd983ee chore(repo): enforce_admins true (F4-08, squash)
+- (squash) chore(scripts): 89-92 de S25
+
+**Bloqueantes:**
+- F4-02 depende de GitHub Support (#4869059).
+- F2-03 depende de Cloudinary Support (#392411).
+
+**Proxima sesion (S26) - Deuda tecnica:**
+- CONF-003: ~30 warnings de ESLint.
+- CONF-004: typescript.ignoreBuildErrors.
+- CONF-005: CSP.
+- DOC-008: retiro de seccion Marketing (~5.500-6.500 lineas).
+- DOC-006: Instagram UI rota.
+- SEC-015, SEC-016, SEC-017: hardcodes restantes.
+- BUG-003: .eq(activo).
+- BUG-006 a BUG-009: familia Gemini.
+- DOC-002, DOC-003: docs Marketing.
+- DOC-010, DOC-011: vars .env.example vs Vercel.
+- DOC-018, DOC-019: meta apple, icono 144x144.
+- DB-002: stock_movimientos RLS sin politicas.
+- Vercel: previews fallan (investigar Build Logs).
+- Migrar @supabase/auth-helpers-nextjs -> @supabase/ssr.
+- TST-001: implementar tests reales.
+
+**Aprendizajes:**
+- GitHub Actions falla en `Test` si `package.json` no tiene script `test` (aunque `--passWithNoTests` sea flag de Jest).
+- `createClient()` en top-level rompe build cuando el modulo se importa en build time con env vars incompletas.
+- Branch protection con `enforce_admins: true` es la mejor practica. Sin bypass de admin.
+- Flujo PR + auto-merge es el estandar con branch protection.
+- `allow_auto_merge` y `delete_branch_on_merge` son configuraciones de repositorio, no de branch protection.
+- `gh pr merge --auto` requiere `allow_auto_merge: true` en el repo.
+- `mergeStateStatus: UNSTABLE` no bloquea merge (solo `BLOCKED` lo hace).
