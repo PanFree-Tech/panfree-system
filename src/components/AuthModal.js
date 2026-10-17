@@ -168,7 +168,11 @@ export default function AuthModal() {
       // ✅ MEJOR PRÁCTICA: Usar la URL de callback de Supabase
       // Esto asegura que Google/Facebook redirijan a Supabase, 
       // que luego redirige a tu app
-      const redirectTo = 'https://gbdrcaumghykiipqgbty.supabase.co/auth/v1/callback'
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      if (!supabaseUrl) {
+        throw new Error('NEXT_PUBLIC_SUPABASE_URL no configurada')
+      }
+      const redirectTo = supabaseUrl + '/auth/v1/callback'
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
