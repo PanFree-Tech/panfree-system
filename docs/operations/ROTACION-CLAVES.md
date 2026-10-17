@@ -63,6 +63,11 @@ no se restaura.
 
 ---
 
+> **Nota S23:** las secciones S14 a S19 usan el termino "Coleccion"
+> (terminologia legacy del setup inicial). A partir de S20 se usa el
+> modelo correcto de 3 carpetas. Ver "Modelo de Bitwarden" al inicio
+> de este documento para la politica vigente.
+
 ## Estado de Bitwarden al cierre de S14 (2026-10-14)
 
 **Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
