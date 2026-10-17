@@ -113,3 +113,22 @@ de verdad, y Test es un placeholder documentado.
 
 **Razon**: \--passWithNoTests\ es flag de Jest, no de npm. Sin script
 \	est\, npm falla antes de llegar a Jest.
+
+---
+
+## Nota S25: Estado B activado
+
+A partir de S25, la rama `main` tiene branch protection activa:
+
+- **PR obligatorio** antes de mergear (0 aprobaciones: unico colaborador).
+- **Required status check**: `lint-and-test` (el job del `ci.yml`).
+- **Branch up to date** antes de mergear.
+- **Force push** y **deletion** bloqueados.
+- **Admin NO incluido**: bypass de emergencia documentado en `GESTION-DE-RIESGOS.md` R-03.
+
+**Implicancia**: no se puede pushear directo a `main`. Cada cambio
+va por PR, el CI corre, y solo mergea si pasa.
+
+**Excepcion de emergencia**: `enforce_admins: false` permite al admin
+pushear directo si el CI esta roto por causas externas. Documentar el
+motivo en el commit y en la bitacora.
