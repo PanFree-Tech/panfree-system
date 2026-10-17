@@ -132,3 +132,10 @@ va por PR, el CI corre, y solo mergea si pasa.
 **Excepcion de emergencia**: `enforce_admins: false` permite al admin
 pushear directo si el CI esta roto por causas externas. Documentar el
 motivo en el commit y en la bitacora.
+
+**Correccion S25 (mejor practica)**: `enforce_admins: true`.
+Ningun usuario, incluido el admin, puede pushear directo a `main`.
+Todo cambio va por PR. Si el CI falla, el PR no mergea.
+No hay bypass de emergencia. Si el CI esta roto por causas externas,
+se arregla el CI o se espera. Esto garantiza que `main` siempre
+tenga el CI en verde antes de recibir cambios.
