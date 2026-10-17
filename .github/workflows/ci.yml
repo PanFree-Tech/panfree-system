@@ -30,4 +30,6 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_placeholder_for_ci
+          NEXT_PUBLIC_GA_MEASUREMENT_ID: G-PLACEHOLDER
+          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: placeholder
         run: npm run build
