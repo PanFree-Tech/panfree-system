@@ -9,10 +9,17 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 24 |
+| Abierto | 0 |
 | En curso | 0 |
 | Cerrado | 45 |
-| Aceptado | 2 |
+| Aceptado con revision agendada | 26 |
+| No aplica | 2 |
+| **Total** | **~72** |
+
+> **Nota de cierre (S26, 2026-10-17):** los 24 hallazgos que estaban
+> "Abiertos" fueron reclasificados a "Aceptado con revision agendada"
+> segun su severidad (todos P2/P3) y condicion de desbloqueo. Ver
+> `46-cierre-auditoria-inicial.md` para el detalle por ID.
 
 ---
 
@@ -145,6 +152,33 @@
 | Aceptado | Riesgo aceptado, no se fixea |
 
 ---
+
+---
+
+## 7. Cierre de la auditoria (S26, 2026-10-17)
+
+Los 24 hallazgos que estaban "Abiertos" al cierre de S25 se
+reclasificaron segun esta tabla:
+
+| Categoria | IDs | Condicion de revision |
+|---|---|---|
+| Familia Gemini | BUG-006, BUG-007, BUG-008, BUG-009 | Se cierran con DOC-008 (retiro de Marketing) |
+| Hardcodes residuales | SEC-015, SEC-016, SEC-017 | Chore post-auditoria (S28) |
+| RLS pendiente | DB-002 | Chore post-auditoria (S30) |
+| Instagram roto | DOC-006 | Bloqueante externo: RUC / Meta Business Verification (DOC-007) |
+| Seccion Marketing inerte | DOC-008 | Sesion dedicada (retiro de ~6.000 lineas) |
+| GA4 Service Account inerte | DOC-014 | Revision 2027-04-16 |
+| Vars .env.example vs Vercel | DOC-010, DOC-011 | S30 |
+| Doc Marketing desalineada | DOC-002, DOC-003 | Se cierra con BUG-008 |
+| PWA cosmetico | DOC-018, DOC-019 | S31+ |
+| Higiene tecnica | CONF-003, CONF-004, CONF-005 | S31+ |
+| Tests reales | TST-001 | Sesion dedicada |
+| BUG funcional menor | BUG-003 | S27 (smoke test post-auditoria) |
+| PropTypes/JSDoc | DOC-001 | Backlog |
+
+**Todos los hallazgos P0/P1 estan cerrados o aceptados.** Ninguno de
+los 24 abiertos representa un riesgo critico o alto. La auditoria se
+considera **CERRADA**.
 
 ## 6. Referencias
 

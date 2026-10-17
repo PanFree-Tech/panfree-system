@@ -80,7 +80,7 @@ Dejar PanFree System en un estado **seguro, mantenible y auditable**, con:
 | F2-11 | Rotar GA4 API secret + private key | P3 | S | OK | 2 rotaciones completas. Legacy recuperable + irrecuperable documentados. Cierra SEC-023 |
 | F2-12 | Regenerar par VAPID | P3 | M | OK | Par rotado + fix codigo. Cierra F2-12, F3-07, SEC-014, BUG-001, BUG-012 |
 | F2-13 | Auditar APIs IA secundarias | P3 | M | No aplica | 13 APIs eran plomeria inerte en Marketing (DOC-008). Eliminadas de Vercel (DOC-013). |
-| F2-14 | Guardar .env consolidado en Bitwarden | P0 | S | Pendiente | Nota segura creada. Incluye registrar en S18 la eliminacion de secrets internos (DOC-012). |
+| F2-14 | Guardar .env consolidado en Bitwarden | P0 | S | OK | Keys productivas guardadas en Bitwarden (6 items en carpeta Produccion, con notas de rotacion). Vercel verificado en S26: 20 variables legitimas, 0 huerfanas. Reauditoria de Vercel: S30 (DOC-010/011). |
 
 **Criterio de salida de Fase 2:** Todas las claves productivas estan en Bitwarden y en Vercel, ninguna filtra en codigo.
 
