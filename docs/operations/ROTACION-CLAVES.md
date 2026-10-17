@@ -349,8 +349,8 @@ estan completos: GA4, Clarity, VAPID.
 
 ## Estado de Bitwarden al cierre de S20 (2026-10-16)
 
-**Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
-**Carpeta:** PanFree System - Produccion
+**Carpetas:** Claves Personales, Desarrollo, Produccion
+**Fuente de verdad:** Produccion
 
 ### Cambios respecto a S19
 
@@ -412,8 +412,8 @@ Documentado en doc 38-f2-12-rotar-vapid.md.
 
 ## Estado de Bitwarden al cierre de S21 (2026-10-16)
 
-**Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
-**Carpeta:** PanFree System - Produccion
+**Carpetas:** Claves Personales, Desarrollo, Produccion
+**Fuente de verdad:** Produccion
 
 ### Cambios respecto a S20
 
@@ -473,7 +473,8 @@ Sin cambios respecto a S20:
 
 ## Estado de Bitwarden al cierre de S22 (2026-10-16)
 
-**Coleccion:** Bitwarden -> Organizacion PanFree -> Produccion
+**Carpetas:** Claves Personales, Desarrollo, Produccion
+**Fuente de verdad:** Produccion
 
 ### Cambios respecto a S21
 
