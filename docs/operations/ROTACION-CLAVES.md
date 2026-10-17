@@ -417,7 +417,7 @@ En S21 NO se roto ninguna clave. La sesion se dedico a:
 - Fix del Service Worker (DOC-017, commit 16ea5eec).
 - Recon S21 (doc 40-recon-s21.md).
 - Descartar dos falsas alarmas: DOC-015 (alias Vercel apuntaba a
-  deployment viejo) y DOC-016 (Supabase legacy en Vercel â€” era un
+  deployment viejo) y DOC-016 (Supabase legacy en Vercel - era un
   artefacto visual del CLI de Vercel, no el valor real).
 
 ### Items completos (sin cambios respecto a S20, 6/12)
