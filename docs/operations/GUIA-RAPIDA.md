@@ -33,8 +33,8 @@
 | Que hallazgos faltan | docs\audits\2026-10-13-inicial\06-hallazgos-tracking.md |
 | Como trabajar | docs\operations\SISTEMA-DE-TRABAJO.md |
 | Cuando el CI bloquea | docs\operations\POLITICA-CI-CD.md |
-| Como se rota una clave | docs\05-runbooks\ |
-| Convenciones de commit | docs\06-referencias\convenciones-codigo.md |
+| Como se rota una clave | docs\operations\ROTACION-CLAVES.md |
+| Convenciones de commit | docs\operations\SISTEMA-DE-TRABAJO.md |
 | Como desplegar | docs\operations\DEPLOYMENT.md |
 
 ---
@@ -88,7 +88,7 @@
 | No se donde esta X | Buscar en este archivo, seccion "Mapa de documentos" |
 | El CI falla en rojo | Ver POLITICA-CI-CD.md |
 | Perdi una clave | Ver Bitwarden, organizacion PanFree |
-| Sitio caido | Ver docs\05-runbooks\deploy-rollback.md |
+| Sitio caido | Ver docs\runbooks\deploy-rollback.md |
 
 ---
 
