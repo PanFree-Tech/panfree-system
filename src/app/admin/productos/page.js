@@ -120,7 +120,10 @@ function GestorImagenesProducto({ imagenUrl, imagenesUrls = [], onChange }) {
   }
 
   async function subirArchivoCloudinary(archivo) {
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'd7simx38'
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+    if (!cloudName) {
+      throw new Error('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME no configurada')
+    }
     const uploadPreset = process.env.NEXT_PUBLIC_UPLOAD_PRESET || 'panfree_upload'
 
     const formData = new FormData()
