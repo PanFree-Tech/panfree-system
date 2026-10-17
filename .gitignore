@@ -59,3 +59,9 @@ dump-s*.txt
 # Reportes de auditoria temporales - nunca commitear
 *-audit-*.txt
 *-endpoints-*.txt
+
+# Reglas explicitas agregadas en S25 (F4-04)
+.env.production*
+*.standalone.bak
+*.orig
+*.rej
