@@ -15,7 +15,10 @@ import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 
-const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || process.env.GA_MEASUREMENT_ID || 'G-QE8GQS3MSR'
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || process.env.GA_MEASUREMENT_ID
+if (!GA_MEASUREMENT_ID) {
+  throw new Error('NEXT_PUBLIC_GA_MEASUREMENT_ID no configurada')
+}
 const GA4_API_SECRET = process.env.GA4_API_SECRET
 
 // Schema de validación de ítems de e-commerce
