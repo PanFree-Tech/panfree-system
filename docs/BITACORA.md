@@ -1900,3 +1900,26 @@ la referencia valida.
   abierto; si es P2/P3, puede aceptarse con fecha de revision.
 - `vercel env ls` confirma la lista de variables sin exponer valores
   Secret. Es la forma correcta de auditar Vercel sin tocar el `.env`.
+**2026-10-17 - Sesion 27 (BUG-003) - COMPLETA**
+**Duracion:** ~2 horas
+**Objetivo:** Resolver BUG-003 y validar el flujo PR/CI post-auditoria.
+
+**Completado:**
+- Fix de 1 linea en page.js (.eq(''activo'') -> .eq(''is_active'')).
+- PR #25 creado y mergeado (squash 168d1d54) con CI 5/5 verde.
+- Base de datos validada: columna is_active existe y hay 12 productos activos.
+- Smoke test exitoso en produccion (/diptico/A7K3P9) con 4 productos renderizados.
+- Hallazgos colaterales: SEC-025 (permisos excesivos anon en productos), BUG-0XX (tipo_regalo inexistente), BUG-0YY (falta validar fecha_expiracion).
+
+**Hallazgos cerrados:**
+- BUG-003: Query de relacionados usa columna incorrecta.
+
+**Hallazgos nuevos (backlog):**
+- SEC-025: GRANT excesivo de anon en tabla productos.
+- BUG-0XX: page.js referencia codigoData.tipo_regalo (columna no existe).
+- BUG-0YY: page.js no chequea fecha_expiracion antes de canjear.
+
+**Proxima sesion (S28):**
+- Chore de hardcodes (SEC-015/016/017) y limpieza de GRANTs (SEC-025).
+
+---
