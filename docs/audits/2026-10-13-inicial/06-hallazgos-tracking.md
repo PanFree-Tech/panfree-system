@@ -105,7 +105,7 @@
 
 | ID | Titulo | Fase | Prioridad | Estado | Commit |
 |---|---|---|---|---|---|
-| BUG-003 | diptico/[codigo] usa .eq('activo') en vez de is_active | F3 | P3 | Abierto | - |
+| BUG-003 | diptico/[codigo] usa .eq('activo') en vez de is_active | F3 | P3 | Cerrado (S27, PR #25) | 168d1d54 |
 | SEC-014 | VAPID key hardcodeada en src/app/admin/page.js | F3 | P3 | Cerrado (S20) | 5923f3a6 |
 | SEC-015 | URL Supabase hardcodeada en notificar-estado/route.js y notificaciones.js | F3 | P3 | Abierto | - |
 | SEC-016 | Cloudinary cloud name hardcodeado en 4 lugares | F3 | P3 | Abierto | - |

@@ -31,7 +31,6 @@
 
 ## 3. Proximos 3 pasos
 
-1. **BUG-003** - `.eq('activo')` -> `.eq('is_active')` en `diptico/[codigo]/page.js:98` (S27, smoke test post-auditoria)
 2. **SEC-015/016/017** - Chore de hardcodes residuales (S28)
 3. **Familia Gemini** (BUG-006..009) - Depende de DOC-008 (S29)
 
@@ -57,6 +56,15 @@
 ---
 
 ## 5. Ultima actividad
+
+**2026-10-17 - Sesion 27 (BUG-003) - COMPLETA**
+- BUG-003 cerrado end-to-end. Fix .eq(''activo'') -> .eq(''is_active'') en diptico/[codigo]/page.js:101 (PR #25, squash 168d1d54).
+- Validado en DB: columna is_active (boolean) existe, hay 12 productos activos.
+- Validado en Produccion: alias de Vercel apunta al deploy correcto.
+- Smoke test OK: 4 productos relacionados renderizados en /diptico/A7K3P9.
+- Primer PR mergeado con enforce_admins: true.
+- Hallazgos colaterales: SEC-025, BUG-0XX, BUG-0YY.
+
 
 **2026-10-13 - Sesion 2 (COMPLETA)**
 - 8 commits de remediacion pusheados
