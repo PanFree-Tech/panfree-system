@@ -1,6 +1,6 @@
 # Tracking de Hallazgos - Auditoria 2026-10-13
 
-**Ultima actualizacion:** 2026-10-16 (fin Sesion 22)
+**Ultima actualizacion:** 2026-10-17 (fin Sesion 24)
 **Total de hallazgos:** 72
 
 ---
@@ -9,9 +9,9 @@
 
 | Estado | Cantidad |
 |---|---|
-| Abierto | 25 |
+| Abierto | 24 |
 | En curso | 0 |
-| Cerrado | 44 |
+| Cerrado | 45 |
 | Aceptado | 2 |
 
 ---
@@ -33,7 +33,7 @@
 
 | ID | Titulo | Fase | Prioridad | Estado | Commit |
 |---|---|---|---|---|---|
-| SEC-001 | .env en historial Git | F4 | P0 | Abierto | - |
+| SEC-001 | .env en historial Git | F4 | P0 | Cerrado | 82a (S24) |
 | SEC-003 | Admin por user_metadata | F3 | P0 | Cerrado | e5bed103 |
 | DB-001 | 250+ advisors Supabase | F1 | P0 | Abierto | - |
 | DB-001a | Vistas SECURITY DEFINER | F1 | P0 | Cerrado | 8c5b311a |

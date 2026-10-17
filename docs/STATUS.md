@@ -1,6 +1,6 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-17 (fin Sesion 23)
+**Ultima actualizacion:** 2026-10-17 (fin Sesion 24)
 **Fase actual:** Fase 2 (EN CURSO)
 **Progreso global:** 81% (38 de 47 tareas)
 
@@ -280,6 +280,18 @@
   - GUIA-RAPIDA: rutas obsoletas (ae3cd460).
 - Sin hallazgos tecnicos cerrados ni nuevos.
 - Progreso: 81% (38/47) sin cambios.
+
+---
+
+**2026-10-17 - Sesion 24 (ENV) - COMPLETA**
+- F4-01: purga de historial de Git (SEC-001).
+  - Backup previo (bundle 73MB + mirror 68MB).
+  - git filter-repo con --force: 363 commits, 32 con .env* reescritos.
+  - HEAD: 691ea92c -> 7526022c.
+  - Verificacion: 0 .env en historial, .env.example intacto.
+  - Push force OK. Doc 41-f4-01-purga-historial.md creado.
+- F4-02: ticket a GitHub Support enviado.
+- Progreso: 81% (38/47) sin cambios (F4-01 cierra SEC-001, pero fase F4 sigue en 0/8).
 
 ## 6. Comandos utiles
 
