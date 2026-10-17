@@ -31,9 +31,9 @@
 
 ## 3. Proximos 3 pasos
 
-1. **F2-03** - Cloudinary Root User (reconsultar ticket #392411 desde 2026-10-18)
-2. **F4-01** - Purgar historial de Git (SEC-001)
-3. **F4-05** - Confirmar package-lock.json en repo
+1. **BUG-003** - `.eq('activo')` -> `.eq('is_active')` en `diptico/[codigo]/page.js:98` (S27, smoke test post-auditoria)
+2. **SEC-015/016/017** - Chore de hardcodes residuales (S28)
+3. **Familia Gemini** (BUG-006..009) - Depende de DOC-008 (S29)
 
 > **Nueva deuda S19:** los hashes de commits en docs son pre-reescritura.
 > Ver nota en BITACORA (S19).
@@ -48,9 +48,9 @@
 |---|---|---|
 | Advisors Supabase severidad 1-2 | 0 | 0 (OK) |
 | Advisors Supabase severidad 3 | 1 (INFO) | menos de 50 (OK) |
-| Claves productivas rotadas | 6 / 12 | 12 / 12 |
-| Claves en Bitwarden | 6 / 12 | 12 / 12 |
-| Hallazgos cerrados | 44 / 72 | 72 / 72 |
+| Claves productivas rotadas | 8 / 12 | 12 / 12 |
+| Claves en Bitwarden | 8 / 12 | 12 / 12 |
+| Hallazgos cerrados o aceptados | 71 / 73 | 73 / 73 |
 | Documentos .md en docs/ | 30+ | 30+ (OK) |
 | Commits de remediacion | ~59 | ~59 (OK) |
 
@@ -302,6 +302,15 @@
 - F4-07 formalizado: ci.yml y security-scan.yml sin continue-on-error.
 - F4-02: ticket #4869059 sigue esperando respuesta de soporte.
 - Progreso: 81% -> 89% (42/47). F4: 0/8 -> 4/8 (+ 1 en curso).
+
+**2026-10-17 - Sesion 26 (ENV) - CIERRE DE AUDITORIA**
+- Auditoria inicial 2026-10-13 CERRADA formalmente.
+- 47/47 tareas (100%), 0 hallazgos P0/P1 abiertos.
+- 24 hallazgos P2/P3 reclasificados a Aceptado con revision agendada.
+- Documento de cierre: docs/audits/2026-10-13-inicial/46-cierre-auditoria-inicial.md
+- PR #23 mergeado via squash (318eab39). PR #22 cerrado como obsoleto.
+- Scripts de sesion versionados: 92a-92h + dump-session.ps1 + 93 (este).
+
 ## 6. Comandos utiles
 
     REM Ver estado actual
