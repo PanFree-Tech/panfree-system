@@ -11,14 +11,23 @@ import { sendEmail, DEFAULT_ADMIN_EMAIL, DEFAULT_FROM_EMAIL } from '@/lib/resend
 import { templatePruebaSistema } from '@/lib/email-templates'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    }
+  )
+}
 
 export const dynamic = 'force-dynamic'
 
 async function handleTestEmail(req) {
+  const supabaseAdmin = getSupabaseAdmin()
   try {
     const url = new URL(req.url)
     const destinatario = url.searchParams.get('to') || DEFAULT_ADMIN_EMAIL
