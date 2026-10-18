@@ -1,4 +1,8 @@
-﻿# Plan de Remediacion - Auditoria 2026-10-13
+# HISTORICO - Plan de Remediacion (Auditoria 2026-10-13)
+
+> **Este documento es historico.** El estado real esta en PLAN-DE-TRABAJO.md y 06-hallazgos-tracking.md. Se preserva por trazabilidad.
+
+# Plan de Remediacion - Auditoria 2026-10-13
 
 ## Fases
 

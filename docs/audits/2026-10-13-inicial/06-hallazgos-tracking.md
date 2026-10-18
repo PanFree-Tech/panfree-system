@@ -107,9 +107,11 @@
 |---|---|---|---|---|---|
 | BUG-003 | diptico/[codigo] usa .eq('activo') en vez de is_active | F3 | P3 | Cerrado (S27, PR #25) | 168d1d54 |
 | SEC-014 | VAPID key hardcodeada en src/app/admin/page.js | F3 | P3 | Cerrado (S20) | 5923f3a6 |
-| SEC-015 | URL Supabase hardcodeada en notificar-estado/route.js y notificaciones.js | F3 | P3 | Abierto | - |
-| SEC-016 | Cloudinary cloud name hardcodeado en 4 lugares | F3 | P3 | Abierto | - |
-| SEC-017 | GA4 Measurement ID hardcodeado en ga4/measurement/route.js | F3 | P3 | Abierto | - |
+| SEC-015 | URL Supabase hardcodeada en notificar-estado/route.js y notificaciones.js | F3 | P3 | Cerrado (S28) | 42821c3 |
+| SEC-016a | Cloudinary cloud name con fallback silencioso en 4 archivos | F3 | P3 | Cerrado (S28) | 8fb5ae0 |
+| SEC-016b | URLs de logo hardcodeadas en 7 archivos (logo-panfree) | F3 | P3 | Abierto (S31) | - |
+| SEC-017 | GA4 Measurement ID hardcodeado en ga4/measurement/route.js | F3 | P3 | Cerrado (S28) | 42821c3 |
+| SEC-025 | anon con INSERT/UPDATE/DELETE/TRUNCATE sobre productos (RLS lo bloquea, defensa en profundidad) | F3 | P2 | Cerrado (S28) | 375e44c |
 | BUG-004 | test-email y resend-webhook usaban cliente sin privilegios | F3 | P2 | Cerrado | (Sesion 8) |
 | DB-001i | Indices duplicados | F1 | P3 | Cerrado | d6957a61 |
 | TST-001 | Cobertura de tests baja | F4 | P3 | Abierto | - |
@@ -129,8 +131,12 @@
 | CONF-004 | typescript.ignoreBuildErrors: true en next.config.js | F3 | P2 | Abierto | - |
 | CONF-005 | Content-Security-Policy (CSP) pendiente | F3 | P3 | Abierto | - |
 | BUG-013 | createClient top-level en test-email y resend-webhook rompia build en CI | F3 | P2 | Cerrado (S25) | 664488b3 |
+| BUG-0XX | page.js referencia codigoData.tipo_regalo (columna inexistente en codigos_dipticos) | F3 | P3 | Cerrado (S28) | 2655e9ac |
+| BUG-0YY | page.js no chequea fecha_expiracion antes de canjear | F3 | P3 | Verificado S28: falso positivo | - |
 | DB-002 | public.stock_movimientos con RLS habilitado pero sin politicas | F1 | P3 | Abierto | - |
 ---
+
+> **BUG-0YY (falso positivo, S28):** Verificado en S28. La validacion de `fecha_expiracion` **existe** en `src/lib/dipticos.js:122` (dentro de `validarCodigo()`), que se ejecuta antes del canje via `canjearCodigo()` desde `src/app/api/dipticos/canjear/route.js`. El codigo **ya valida expiracion correctamente**. El diagnostico original de S27 fue incorrecto. **Cerrado sin cambios de codigo.**
 
 ## 4. Como cerrar un hallazgo
 
