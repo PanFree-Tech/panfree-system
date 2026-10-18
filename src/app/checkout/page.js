@@ -493,211 +493,59 @@ export default function PaginaCheckout() {
     
     setEnviando(true)
     try {
-      logger.log('📌 1. Buscando cliente por email:', datos.email.trim())
-      let clienteId = null
-      const { data: clienteExistente, error: errClienteExistente } = await supabase
-        .from('clientes')
-        .select('id')
-        .eq('email', datos.email.trim())
-        .maybeSingle()
-      
-      if (errClienteExistente) {
-        logger.error('❌ Error buscando cliente:', errClienteExistente)
-        throw errClienteExistente
-      }
-      
-      if (clienteExistente) {
-        logger.log('📌 2. Cliente encontrado:', clienteExistente.id)
-        clienteId = clienteExistente.id
-        const { error: updateError } = await supabase
-          .from('clientes')
-          .update({
-            nombre_completo: datos.nombre.trim(),
-            telefono:        datos.telefono.trim() || null,
-            user_id:         usuario?.id || null,
-            updated_at:      new Date().toISOString(),
-          })
-          .eq('id', clienteId)
-        
-        if (updateError) {
-          logger.error('❌ Error al actualizar cliente:', updateError)
-          throw updateError
-        }
-        logger.log('✅ Cliente actualizado:', clienteId)
-      } else {
-        logger.log('📌 2. Cliente no encontrado, creando nuevo...')
-        const { data: nuevoCliente, error: errCliente } = await supabase
-          .from('clientes')
-          .insert({
-            nombre_completo: datos.nombre.trim(),
-            email:           datos.email.trim(),
-            telefono:        datos.telefono.trim() || null,
-            user_id:         usuario?.id || null,
-            direccion_ciudad: 'Encarnación',
-            direccion_provincia: 'Itapúa',
-            is_active: true,
-          })
-          .select('id')
-          .single()
-        
-        if (errCliente) throw errCliente
-        clienteId = nuevoCliente.id
-        logger.log('✅ Cliente creado:', clienteId)
-      }
-      
-      const direccionCompleta = metodoEntrega === 'delivery'
-        ? [datos.direccion.trim(), datos.referencia.trim()].filter(Boolean).join(' — ')
-        : null
-      
-      logger.log('📌 3. Creando pedido...')
-      const puntosGanados = Math.floor(totalFinal / 1000)
+      const res = await fetch('/api/checkout/crear-pedido', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cliente: {
+            nombre: datos.nombre.trim(),
+            email: datos.email.trim(),
+            telefono: datos.telefono.trim(),
+            userId: usuario?.id || null,
+          },
+          items: items.map(i => ({
+            id: i.id,
+            nombre: i.nombre,
+            cantidad: i.cantidad,
+            precio_venta: i.precio_venta,
+          })),
+          metodoEntrega,
+          metodoPago,
+          direccion: {
+            direccion: datos.direccion,
+            referencia: datos.referencia,
+            zona: datos.zona,
+          },
+          deliveryInfo,
+          cupon: cuponAplicado ? { id: cuponAplicado.id, codigo: cuponAplicado.codigo } : null,
+          descuento: descuentoAplicado,
+        }),
+      })
 
-      const { data: pedidoDB, error: errPedido } = await supabase
-        .from('pedidos')
-        .insert({
-          cliente_id:            clienteId,
-          estado:                'pendiente',
-          metodo_entrega:        metodoEntrega,
-          entrega_direccion:     direccionCompleta,
-          entrega_costo:         costoDelivery,
-          entrega_distancia_km:  deliveryInfo?.distancia_km   || null,
-          entrega_lat:           deliveryInfo?.lat            || null,
-          entrega_lng:           deliveryInfo?.lng            || null,
-          subtotal:              total,
-          cupon_codigo:          cuponAplicado?.codigo        || null,
-          descuento_monto:       descuentoAplicado            || 0,
-          puntos_ganados:        puntosGanados,
-          puntos_usados:         0,
-          total_final:           totalFinal,
-          estado_pago:           'pendiente',
-          metodo_pago:           metodoPago,
-          creado_por:            usuario?.id || null,
-        })
-        .select('id, numero_pedido')
-        .single()
-      
-      if (errPedido) {
-        logger.error('❌ Error al crear pedido:', errPedido)
-        throw errPedido
-      }
-      
-      const numeroPedido = pedidoDB.numero_pedido
-      logger.log('✅ Pedido creado:', numeroPedido)
+      const data = await res.json()
 
-      // Registrar canje de cupón si aplica
-      if (cuponAplicado && descuentoAplicado > 0) {
-        try {
-          await supabase.from('cupones_canjeados').insert({
-            cupon_id: cuponAplicado.id,
-            cliente_id: clienteId,
-            pedido_id: pedidoDB.id,
-            descuento_obtenido: descuentoAplicado,
-          })
-          const { data: cData } = await supabase
-            .from('cupones_descuento')
-            .select('usos_actuales')
-            .eq('id', cuponAplicado.id)
-            .single()
-          await supabase
-            .from('cupones_descuento')
-            .update({ usos_actuales: (cData?.usos_actuales || 0) + 1 })
-            .eq('id', cuponAplicado.id)
-        } catch (cErr) {
-          logger.warn('⚠️ No se pudo registrar canje de cupón:', cErr)
-        }
+      if (!data.success) {
+        throw new Error(data.error || 'Error al procesar el pedido')
       }
 
-      // Actualizar puntos de fidelidad del cliente
-      try {
-        const { data: cInfo } = await supabase
-          .from('clientes')
-          .select('puntos_fidelidad')
-          .eq('id', clienteId)
-          .single()
-        const nuevosPuntos = (cInfo?.puntos_fidelidad || 0) + puntosGanados
-        let nivelCliente = 'bronce'
-        if (nuevosPuntos >= 5000) nivelCliente = 'vip'
-        else if (nuevosPuntos >= 1500) nivelCliente = 'oro'
-        else if (nuevosPuntos >= 500) nivelCliente = 'plata'
-
-        await supabase.from('clientes').update({
-          puntos_fidelidad: nuevosPuntos,
-          nivel_cliente: nivelCliente,
-        }).eq('id', clienteId)
-      } catch (fErr) {
-        logger.warn('⚠️ No se pudo actualizar puntos de fidelidad:', fErr)
-      }
-
-      logger.log('📌 4. Creando detalle del pedido...')
-      
-      const detalles = items.map(item => ({
-        pedido_id:       pedidoDB.id,
-        producto_id:     item.id,
-        cantidad:        item.cantidad,
-        precio_unitario: item.precio_venta,
-      }))
-      
-      const { error: errDetalle } = await supabase
-        .from('detalle_pedido')
-        .insert(detalles)
-      
-      if (errDetalle) throw errDetalle
-      logger.log('✅ Detalle creado')
-      
       setPedidoExito({
-        numeroPedido,
+        numeroPedido: data.numeroPedido,
         metodoPago,
         metodoEntrega,
-        direccion:    direccionCompleta,
-        subtotal:     total,
+        direccion: metodoEntrega === 'delivery' ? datos.direccion : null,
+        subtotal: total,
         costoDelivery,
-        totalFinal,
-        nombre:       datos.nombre,
-        telefono:     datos.telefono,
-        items:        [...items],
+        totalFinal: data.total,
+        nombre: datos.nombre,
+        telefono: datos.telefono,
+        items: [...items],
       })
       vaciarCarrito()
 
-      // GA4: purchase — con los datos reales de la orden ya creada
-      purchase({ numeroPedido, totalFinal, costoDelivery, items: [...items] })
-
-      logger.log('📌 5. Enviando notificación de pedido...')
-      try {
-        const headers = { 'Content-Type': 'application/json' }
-        if (process.env.NEXT_PUBLIC_API_TOKEN) {
-          headers['Authorization'] = `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`
-        }
-
-        await fetch('/api/notificar-pedido', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            pedido: {
-              numero: numeroPedido,
-              total: Number(totalFinal),
-              metodoPago: metodoPago,
-              metodoEntrega: metodoEntrega,
-              items: items.map(i => ({
-                nombre: i.nombre,
-                cantidad: Number(i.cantidad),
-                precio: Number(i.precio_venta),
-              })),
-            },
-            cliente: {
-              nombre: datos.nombre,
-              email: datos.email || null,
-              telefono: datos.telefono,
-              direccion: datos.direccion || null,
-            },
-          }),
-        })
-        logger.log('✅ Pedido notificado a n8n vía API interna')
-      } catch (err) {
-        logger.error('❌ Error al enviar notificación de pedido:', err)
-      }
+      purchase({ numeroPedido: data.numeroPedido, totalFinal: data.total, costoDelivery, items: [...items] })
     } catch (err) {
-      logger.error('❌ Error al crear pedido:', err)
-      setError('Ocurrió un error al procesar el pedido. Intentá de nuevo o contactanos por WhatsApp.')
+      logger.error('Error al crear pedido:', err)
+      setError(err.message || 'Ocurrió un error al procesar el pedido. Intentá de nuevo o contactanos por WhatsApp.')
     } finally {
       setEnviando(false)
     }
