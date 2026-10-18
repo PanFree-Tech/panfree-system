@@ -127,13 +127,14 @@ src/
         ▼
 [Confirmación de Compra]
         │
-        ├──> INSERT en tabla `clientes` (o actualización si existe)
-        ├──> INSERT en tabla `pedidos` (estado: 'pendiente', estado_pago: 'pendiente')
-        ├──> INSERT en tabla `detalle_pedido` (productos y cantidades)
-        ├──> UPDATE `productos` (incrementa `current_orders` para cálculo Made-To-Order)
-        ├──> POST /api/notificar-pedido (dispara webhook a n8n y alerta admin)
-        ├──> POST /api/send-email (envía comprobante al cliente y alerta a la panadería)
-        └──> Abre enlace de WhatsApp con mensaje preformateado hacia la tienda
+        ├──> POST /api/checkout/crear-pedido (server-side, service_role)
+        │    ├──> Busca/crea cliente (con user_id: null si es invitado)
+        │    ├──> INSERT en tabla `pedidos` (trigger `pedidos_numero_automatico` genera PF-YYYY-XXXX)
+        │    ├──> INSERT en tabla `detalle_pedido` (productos y cantidades)
+        │    ├──> Actualiza cupón (si aplica)
+        │    ├──> Actualiza puntos de fidelidad
+        │    └──> POST /api/notificar-pedido (fire-and-forget)
+        └──> Cliente ve pantalla de éxito con PF-YYYY-XXXX
         │
         ▼
 [Seguimiento /pedido/[numero]] ──> Cliente consulta el estado en tiempo real
@@ -219,12 +220,12 @@ src/
 1. **Middleware de Rutas (`src/middleware.js`):**
    - Intercepta todas las peticiones a `/admin/*` (excepto `/admin/login`).
    - Valida la sesión activa con `supabase.auth.getUser()`.
-   - Verifica los roles administrativos autorizados en `user.app_metadata.role` o `user.user_metadata.role`.
+   - Verifica los roles administrativos autorizados en `user.app_metadata.role` (ADR-002). **`user_metadata.role` fue eliminado en SEC-003 (era editable por el usuario).**
    - Redirecciona usuarios sin sesión a `/admin/login` y usuarios sin privilegios a `/unauthorized`.
 2. **Row Level Security (RLS) en PostgreSQL:**
    - La base de datos aplica reglas estrictas a nivel de fila.
    - Tablas públicas (`productos`, `configuracion_sitio`, `premios`) permiten `SELECT` libre.
-   - Tablas transaccionales (`pedidos`, `clientes`, `cupones_canjeados`) permiten inserciones validadas desde el cliente.
+   - Tablas transaccionales (`pedidos`, `clientes`, `cupones_canjeados`): **`anon` NO puede INSERT directo** (GRANT revocado en S5). Todo va por endpoints server-side con `service_role` (ver BUSINESS-LOGIC.md).
    - Tablas operativas (`insumos`, `recetas`, `produccion`, `costos_fijos`, `logs_auditoria`) están restringidas exclusivamente a usuarios con rol administrativo autenticado.
 3. **Aislamiento de Operaciones Sensibles (Service Role):**
    - Operaciones críticas (auditoría en `logs_auditoria`, logging de correos en `email_logs`, notificaciones masivas) se ejecutan del lado del servidor mediante `SUPABASE_SERVICE_ROLE_KEY`, evitando exponer credenciales maestras en el frontend.

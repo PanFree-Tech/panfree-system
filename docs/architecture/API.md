@@ -11,7 +11,8 @@
 ## 📋 Resumen de Endpoints
 
 ### 🛒 E-commerce & Checkout Público
-- `POST /api/calcular-delivery` — Cotiza costo y disponibilidad de envío según zona o coordenadas.
+- `POST /api/calcular-delivery` — Cotiza costo y disponibilidad de envío según zona o coordenadas.
+- `POST /api/checkout/crear-pedido` - Crea pedido, cliente y detalle (server-side, service_role). Ver seccion 13.
 - `POST /api/cupones/validar` — Valida cupones de descuento y calcula ahorro.
 - `POST /api/dipticos/canjear` — Canjea códigos QR de dípticos físicos y suma puntos de fidelidad.
 - `POST /api/premios/canjear` — Canjea premios del catálogo con puntos de fidelización.
@@ -54,6 +55,49 @@ Calcula la tarifa de envío a domicilio según el barrio/zona seleccionada o dis
 ```json
 {
   "zona": "Centro",
+---
+
+### 13. POST /api/checkout/crear-pedido
+
+Endpoint server-side que crea un pedido completo (cliente + pedido + detalle) usando service_role. El navegador NO hace INSERT directo a Supabase.
+
+**Autenticación:** Pública (acepta invitados y logueados).
+
+**Request Body:**
+```json
+{
+  "cliente": { "nombre": "Test S29", "email": "test@example.com", "telefono": "0981123456", "userId": null },
+  "items": [{ "id": "uuid-producto", "nombre": "Chipa", "cantidad": 1, "precio_venta": 5000 }],
+  "metodoEntrega": "retiro",
+  "metodoPago": "efectivo",
+  "direccion": { "direccion": "", "referencia": "", "zona": "" },
+  "deliveryInfo": null,
+  "cupon": null,
+  "descuento": 0
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "numeroPedido": "PF-2026-0012",
+  "pedidoId": "uuid-pedido",
+  "total": 5000,
+  "subtotal": 5000,
+  "costoDelivery": 0,
+  "puntosGanados": 5
+}
+```
+
+**Que hace internamente:**
+1. Busca/crea cliente (con user_id: null si invitado).
+2. INSERT en pedidos (trigger pedidos_numero_automatico genera PF-YYYY-XXXX).
+3. INSERT en detalle_pedido.
+4. Actualiza cupon (si aplica) y puntos de fidelidad.
+5. Notifica (/api/notificar-pedido, fire-and-forget).
+
+---
   "direccion": "Mcal. Estigarribia c/ Tomás Romero Pereira",
   "subtotal": 120000,
   "lat": -27.3305,
