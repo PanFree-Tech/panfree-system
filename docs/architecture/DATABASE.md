@@ -316,3 +316,20 @@ Control de equipamiento, consumo eléctrico y estructura contable.
 2. **`vista_energia_mensual`:** Calcula el costo mensual acumulado de energía eléctrica de todas las maquinarias activas y permanentes.
 3. **`vista_disponibilidad_productos`:** Evalúa si cada producto tiene stock o capacidad de producción suficiente según las órdenes activas en el modelo Made-To-Order.
 4. **`vista_resumen_produccion`:** Totaliza lotes del mes, cantidades producidas y costos acumulados de producción.
+
+
+---
+
+## Nota S30: columnas informativas y stock_movimientos
+
+Las siguientes columnas de `productos` NO se usan en el checkout ni en el catalogo (0 referencias en src/):
+- `current_orders`: informativa (para el admin).
+- `production_capacity`: informativa.
+- `order_available`: informativa.
+- `availability_status`: informativa.
+
+Se dejan en la DB para futuras features (capacidad de produccion, deshabilitar productos temporalmente). No borrar.
+
+La tabla `stock_movimientos` era usada por el trigger `on_pedido_confirmado` (eliminado en S30). Actualmente no se insertan filas nuevas desde pedidos. Se mantiene por si el admin la consulta para auditoria de insumos.
+
+---
