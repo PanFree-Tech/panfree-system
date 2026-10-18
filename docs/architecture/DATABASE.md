@@ -64,7 +64,7 @@ Almacena el catálogo de panificados y dulces artesanales sin gluten, con soport
 | `imagen_url` | `text` | SÍ | - | URL pública de la imagen en Cloudinary |
 | `is_active` | `boolean` | NO | `true` | Habilitado para la venta |
 | `is_featured` | `boolean` | NO | `false` | Destacado en la portada de la tienda |
-| `stock` | `integer` | SÍ | `null` | Stock físico disponible |
+| `stock` | `integer` | SÍ | `null` | Informativo (PanFree es Made-To-Order, no hay stock físico) |
 | `production_capacity` | `integer` | NO | `10` | Capacidad máxima de producción diaria |
 | `current_orders` | `integer` | NO | `0` | Órdenes activas recibidas en el día |
 | `lead_time` | `integer` | NO | `24` | Tiempo estimado de elaboración en horas |
