@@ -1,4 +1,4 @@
-/** @type {import('next').NextConfig} */
+﻿/** @type {import('next').NextConfig} */
 const withPWA = require('next-pwa')({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
@@ -18,9 +18,18 @@ const withPWA = require('next-pwa')({
   ],
   publicExcludes: ['!npl/**/*', '!api/**/*'],
   runtimeCaching: [
-    {
-      // HTML: NetworkFirst para evitar servir HTML viejo cacheado
-      urlPattern: ({ request }) => request.destination === 'document',
+        {
+      // AUD-004: excluir rutas privadas de la cachÃ© HTML
+      urlPattern: ({ request, url }) => {
+        if (request.destination !== 'document') return false
+        if (url.pathname.startsWith('/admin')) return false
+        if (url.pathname.startsWith('/api')) return false
+        if (url.pathname.startsWith('/login')) return false
+        if (url.pathname.startsWith('/register')) return false
+        if (url.pathname.startsWith('/perfil')) return false
+        if (url.pathname.startsWith('/checkout')) return false
+        return true
+      },
       handler: 'NetworkFirst',
       options: {
         cacheName: 'html-cache',
@@ -133,3 +142,4 @@ const nextConfig = {
 }
 
 module.exports = withPWA(nextConfig)
+
