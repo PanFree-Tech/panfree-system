@@ -1,12 +1,12 @@
 /**
- * 📁 UBICACIÓN: src/app/admin/layout.js
- * 📅 ACTUALIZADO: 2026-08-28
- * 📌 DESCRIPCIÓN: Layout del panel administrativo con:
- *    - Sidebar responsivo (drawer móvil + toggle escritorio)
- *    - Navegación modular completa y verificación de rol admin
+ * Ã°Å¸â€œÂ UBICACIÃƒâ€œN: src/app/admin/layout.js
+ * Ã°Å¸â€œâ€¦ ACTUALIZADO: 2026-08-28
+ * Ã°Å¸â€œÅ’ DESCRIPCIÃƒâ€œN: Layout del panel administrativo con:
+ *    - Sidebar responsivo (drawer mÃƒÂ³vil + toggle escritorio)
+ *    - NavegaciÃƒÂ³n modular completa y verificaciÃƒÂ³n de rol admin
  *    - Notificaciones en tiempo real (tabla notificaciones_admin)
- *    - Integración nativa de Notificaciones Push Web (VAPID) con autologin/suscripción
- *    - Banner intuitivo para activación de permisos push si está en estado 'default'
+ *    - IntegraciÃƒÂ³n nativa de Notificaciones Push Web (VAPID) con autologin/suscripciÃƒÂ³n
+ *    - Banner intuitivo para activaciÃƒÂ³n de permisos push si estÃƒÂ¡ en estado 'default'
  */
 
 'use client'
@@ -77,12 +77,12 @@ export default function AdminLayout({ children }) {
     loading: pushLoading,
   } = usePushNotifications()
 
-  // Cerrar sidebar móvil automáticamente al cambiar de ruta
+  // Cerrar sidebar mÃƒÂ³vil automÃƒÂ¡ticamente al cambiar de ruta
   useEffect(() => {
     setSidebarMovilAbierto(false)
   }, [pathname])
 
-  // Ajustar estado por defecto del sidebar según tamaño de pantalla
+  // Ajustar estado por defecto del sidebar segÃƒÂºn tamaÃƒÂ±o de pantalla
   useEffect(() => {
     if (isMobile || isTablet) {
       setSidebarAbierto(true)
@@ -94,32 +94,28 @@ export default function AdminLayout({ children }) {
 
     async function verificarAdmin() {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("getUser() timeout")), 10000)); const { data: { user }, error } = await Promise.race([supabase.auth.getUser(), timeoutPromise])
 
         if (error || !session) {
           if (mounted) router.replace('/admin/login')
           return
         }
 
-        const rol = session.user?.raw_user_meta_data?.role || session.user?.user_metadata?.role || session.user?.app_metadata?.role
+        const rol = user.app_metadata?.role
 
         if (rol !== 'admin') {
-          logger.warn('[PanFree] Acceso no autorizado al panel admin:', session.user.email)
+          logger.warn('[PanFree] Acceso no autorizado al panel admin:', user.email)
           await supabase.auth.signOut()
           if (mounted) router.replace('/')
           return
         }
 
-        if (mounted) {
-          setAdminUser(session.user)
-          setAdminConfirmado(true)
-          setVerificando(false)
-        }
+        if (mounted) { setAdminUser(user); setAdminConfirmado(true); }
 
       } catch (err) {
-        logger.error('[PanFree] Error verificando sesión admin:', err)
+        logger.error('[PanFree] Error verificando sesiÃƒÂ³n admin:', err)
         if (mounted) router.replace('/admin/login')
-      }
+      } finally { if (mounted) setVerificando(false) }
     }
 
     verificarAdmin()
@@ -129,11 +125,11 @@ export default function AdminLayout({ children }) {
         if (mounted) router.replace('/admin/login')
         return
       }
-      const rol = session.user?.raw_user_meta_data?.role || session.user?.user_metadata?.role || session.user?.app_metadata?.role
+      const rol = user.app_metadata?.role
       if (rol !== 'admin') {
         if (mounted) router.replace('/')
       } else {
-        if (mounted) setAdminUser(session.user)
+        if (mounted) setAdminUser(user)
       }
     })
 
@@ -143,11 +139,11 @@ export default function AdminLayout({ children }) {
     }
   }, [router])
 
-  // ── Auto-suscripción automática a Push si el permiso ya está concedido ('granted') ──
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Auto-suscripciÃƒÂ³n automÃƒÂ¡tica a Push si el permiso ya estÃƒÂ¡ concedido ('granted') Ã¢â€â‚¬Ã¢â€â‚¬
   useEffect(() => {
     if (adminConfirmado && adminUser?.id && pushSupported && pushPermission === 'granted' && !pushSubscribed && !pushLoading) {
       pushSubscribe(adminUser.id).catch((err) => {
-        logger.warn('⚠️ Auto-suscripción push admin:', err.message)
+        logger.warn('Ã¢Å¡Â Ã¯Â¸Â Auto-suscripciÃƒÂ³n push admin:', err.message)
       })
     }
   }, [adminConfirmado, adminUser, pushSupported, pushPermission, pushSubscribed, pushLoading, pushSubscribe])
@@ -169,11 +165,11 @@ export default function AdminLayout({ children }) {
   const handleTestPush = async () => {
     setMensajePushTest('Enviando...')
     const res = await sendTestNotification(
-      '🍞 ¡Prueba de Notificación Push!',
-      'Si estás viendo esto, las notificaciones push de PanFree están activas y funcionando correctamente.'
+      'Ã°Å¸ÂÅ¾ Ã‚Â¡Prueba de NotificaciÃƒÂ³n Push!',
+      'Si estÃƒÂ¡s viendo esto, las notificaciones push de PanFree estÃƒÂ¡n activas y funcionando correctamente.'
     )
     if (res?.success) {
-      setMensajePushTest('¡Notificación enviada!')
+      setMensajePushTest('Ã‚Â¡NotificaciÃƒÂ³n enviada!')
       setTimeout(() => setMensajePushTest(null), 3500)
     } else {
       setMensajePushTest('Error al enviar')
@@ -181,7 +177,7 @@ export default function AdminLayout({ children }) {
     }
   }
 
-  // ── Menú de navegación con Lucide Icons ──
+  // Ã¢â€â‚¬Ã¢â€â‚¬ MenÃƒÂº de navegaciÃƒÂ³n con Lucide Icons Ã¢â€â‚¬Ã¢â€â‚¬
   const menuItems = [
     { href: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/admin/pedidos', icon: Package, label: 'Pedidos' },
@@ -191,13 +187,13 @@ export default function AdminLayout({ children }) {
     { href: '/admin/insumos', icon: Wheat, label: 'Insumos' },
     { href: '/admin/clientes', icon: Users, label: 'Clientes' },
     { href: '/admin/proveedores', icon: Building2, label: 'Proveedores' },
-    { href: '/admin/produccion', icon: Factory, label: 'Producción' },
+    { href: '/admin/produccion', icon: Factory, label: 'ProducciÃƒÂ³n' },
     { href: '/admin/costos', icon: DollarSign, label: 'Costos' },
     { href: '/admin/maquinarias', icon: Wrench, label: 'Maquinarias' },
-    { href: '/admin/dipticos', icon: QrCode, label: 'Dípticos' },
+    { href: '/admin/dipticos', icon: QrCode, label: 'DÃƒÂ­pticos' },
     { href: '/admin/cupones', icon: Tag, label: 'Cupones' },
     { href: '/admin/correos', icon: Mail, label: 'Correos' },
-    { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
+    { href: '/admin/configuracion', icon: Settings, label: 'ConfiguraciÃƒÂ³n' },
     { href: '/admin/reportes', icon: TrendingUp, label: 'Reportes' },
     { href: '/admin/analytics', icon: TrendingUp, label: 'Analytics' },
     { href: '/admin/ayuda', icon: HelpCircle, label: 'Ayuda' },
@@ -217,7 +213,7 @@ export default function AdminLayout({ children }) {
       }}>
         <Loader2 className="animate-spin" size={40} color="#334c2b" />
         <p style={{ color: '#334c2b', fontSize: '1rem', fontWeight: '600', margin: 0 }}>
-          Verificando acceso…
+          Verificando accesoÃ¢â‚¬Â¦
         </p>
       </div>
     )
@@ -230,7 +226,7 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className={styles.adminContainer}>
-      {/* Backdrop overlay para móvil */}
+      {/* Backdrop overlay para mÃƒÂ³vil */}
       {sidebarMovilAbierto && (
         <div
           className={styles.backdropOverlay}
@@ -255,13 +251,13 @@ export default function AdminLayout({ children }) {
             <Croissant size={22} color="#f46e15" style={{ margin: '0 auto' }} />
           )}
 
-          {/* Botón cerrar en móvil o colapsar en escritorio */}
+          {/* BotÃƒÂ³n cerrar en mÃƒÂ³vil o colapsar en escritorio */}
           {esPantallaPequena ? (
             <button
               type="button"
               className={styles.toggleBtn}
               onClick={() => setSidebarMovilAbierto(false)}
-              aria-label="Cerrar menú"
+              aria-label="Cerrar menÃƒÂº"
             >
               <X size={20} />
             </button>
@@ -270,16 +266,16 @@ export default function AdminLayout({ children }) {
               type="button"
               className={styles.toggleBtn}
               onClick={() => setSidebarAbierto(!sidebarAbierto)}
-              title={sidebarAbierto ? 'Colapsar menú' : 'Expandir menú'}
-              aria-label={sidebarAbierto ? 'Colapsar menú' : 'Expandir menú'}
+              title={sidebarAbierto ? 'Colapsar menÃƒÂº' : 'Expandir menÃƒÂº'}
+              aria-label={sidebarAbierto ? 'Colapsar menÃƒÂº' : 'Expandir menÃƒÂº'}
             >
               {sidebarAbierto ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
             </button>
           )}
         </div>
 
-        {/* Navegación modular */}
-        <nav className={styles.sidebarNav} aria-label="Menú principal">
+        {/* NavegaciÃƒÂ³n modular */}
+        <nav className={styles.sidebarNav} aria-label="MenÃƒÂº principal">
           {menuItems.map((item) => {
             const Icon = item.icon
             const esActivo = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
@@ -312,7 +308,7 @@ export default function AdminLayout({ children }) {
             style={{ justifyContent: mostrarTextoSidebar ? 'flex-start' : 'center' }}
           >
             <Globe size={18} style={{ flexShrink: 0 }} />
-            {mostrarTextoSidebar && <span>Ver tienda ↗</span>}
+            {mostrarTextoSidebar && <span>Ver tienda Ã¢â€ â€”</span>}
           </a>
           <BtnLogout sidebarAbierto={mostrarTextoSidebar} />
         </div>
@@ -323,12 +319,12 @@ export default function AdminLayout({ children }) {
         {/* Header superior */}
         <header className={styles.header}>
           <div className={styles.headerBrand}>
-            {/* Botón hamburguesa visible solo en pantallas pequeñas */}
+            {/* BotÃƒÂ³n hamburguesa visible solo en pantallas pequeÃƒÂ±as */}
             <button
               type="button"
               className={styles.hamburgerBtn}
               onClick={() => setSidebarMovilAbierto(true)}
-              aria-label="Abrir menú de navegación"
+              aria-label="Abrir menÃƒÂº de navegaciÃƒÂ³n"
             >
               <Menu size={24} />
             </button>
@@ -340,7 +336,7 @@ export default function AdminLayout({ children }) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            {/* Indicador y botón de prueba de Push Web */}
+            {/* Indicador y botÃƒÂ³n de prueba de Push Web */}
             {pushSubscribed ? (
               <button
                 type="button"
@@ -395,7 +391,7 @@ export default function AdminLayout({ children }) {
           </div>
         </header>
 
-        {/* Banner para activar Notificaciones Push cuando el permiso está en 'default' */}
+        {/* Banner para activar Notificaciones Push cuando el permiso estÃƒÂ¡ en 'default' */}
         {pushSupported && pushPermission === 'default' && mostrarPromptPush && (
           <div
             style={{
@@ -418,7 +414,7 @@ export default function AdminLayout({ children }) {
               <BellRing size={22} color="#f46e15" style={{ flexShrink: 0 }} />
               <div>
                 <p style={{ margin: 0, fontWeight: '700', fontSize: '0.88rem', color: '#fff' }}>
-                  ¿Deseas recibir alertas de nuevos pedidos al instante?
+                  Ã‚Â¿Deseas recibir alertas de nuevos pedidos al instante?
                 </p>
                 <p style={{ margin: '0.15rem 0 0', fontSize: '0.78rem', color: '#d5cbb8', lineHeight: '1.3' }}>
                   Te notificaremos inmediatamente en tu navegador cuando entre un nuevo pedido, incluso si tienes el panel minimizado.
@@ -469,7 +465,7 @@ export default function AdminLayout({ children }) {
           </div>
         )}
 
-        {/* Área de trabajo de cada página */}
+        {/* ÃƒÂrea de trabajo de cada pÃƒÂ¡gina */}
         <main className={styles.mainContent}>
           {children}
         </main>
@@ -485,11 +481,11 @@ function BtnLogout({ sidebarAbierto }) {
   async function handleLogout() {
     try {
       setSaliendo(true)
-      await registrarAuditoria(AUDIT_ACTIONS.USUARIO_LOGOUT, 'Cierre de sesión manual desde el admin layout')
+      await registrarAuditoria(AUDIT_ACTIONS.USUARIO_LOGOUT, 'Cierre de sesiÃƒÂ³n manual desde el admin layout')
       await supabase.auth.signOut()
       router.replace('/admin/login')
     } catch (err) {
-      logger.error('[PanFree] Error al cerrar sesión:', err)
+      logger.error('[PanFree] Error al cerrar sesiÃƒÂ³n:', err)
       router.replace('/admin/login')
     }
   }
@@ -499,14 +495,14 @@ function BtnLogout({ sidebarAbierto }) {
       type="button"
       onClick={handleLogout}
       disabled={saliendo}
-      title="Cerrar sesión"
+      title="Cerrar sesiÃƒÂ³n"
       className={styles.btnLogout}
       style={{
         padding: sidebarAbierto ? '0.55rem 0.8rem' : '0.55rem 0',
       }}
     >
       <LogOut size={18} style={{ flexShrink: 0 }} />
-      {sidebarAbierto && <span>{saliendo ? 'Saliendo…' : 'Cerrar sesión'}</span>}
+      {sidebarAbierto && <span>{saliendo ? 'SaliendoÃ¢â‚¬Â¦' : 'Cerrar sesiÃƒÂ³n'}</span>}
     </button>
   )
 }
