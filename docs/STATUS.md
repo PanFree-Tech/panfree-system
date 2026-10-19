@@ -1,6 +1,6 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-19 (fin Sesion 31 - retiro de Marketing + familia Gemini + fix DNS panfree.fit)
+**Ultima actualizacion:** 2026-10-19 (fin Sesion 33 - TST-001 cerrado, auditoria inicial 100%)
 **Fase actual:** Auditoria inicial CERRADA. Backlog P2/P3 aceptado con revision agendada.
 **Progreso global:** 100% (47 de 47 tareas)
 
@@ -412,3 +412,21 @@
 1. S31: Retiro de Marketing (DOC-008) + Familia Gemini (cierra BUG-006..009, DOC-002/003/006, SEC-016b)
 2. S32: RLS pendiente (DB-002) + docs desalineadas (DOC-010/011)
 3. S33+: Higiene tecnica (CONF-003/004/005, DOC-018/019) + TST-001
+**2026-10-19 - Sesion 32 (ENV) - COMPLETA**
+- DB-003: drop de reglas_promocion, promociones_historico, instagram_posts.
+- Backup de reglas_promocion (4 filas) en docs/audits/.../48-s32-backup-reglas-promocion.json.
+- DB-002: cerrado (stock_movimientos RLS sin politicas, 0 referencias en frontend).
+- .env.example: Instagram borrado, CLOUDINARY_CLOUD_NAME + GA4 Service Account documentados.
+- PR #39 mergeado.
+
+**2026-10-19 - Sesion 33 (ENV) - COMPLETA**
+- CONF-003: ESLint configurado (no-img-element off, no-unescaped-entities off, hooks como warn).
+- CONF-004: typescript.ignoreBuildErrors no aplica (proyecto JS).
+- CONF-005: Content-Security-Policy agregado en next.config.js.
+- DOC-018/019: PWA corregida (appleWebApp capable, icono 144x144, manifest sin mojibake).
+- TST-001: infraestructura de testing completa (Jest + RTL).
+  - jest.setup.js con mocks de Supabase y next/navigation.
+  - 25 tests en 4 suites: validar-password (10), cupones (5), dipticos (6), ProductCard (4).
+  - Script 'test' en package.json funcional.
+- PRs #40 y #41 mergeados.
+- **Auditoria inicial 2026-10-13: 100% CERRADA.** Todos los hallazgos cerrados o aceptados.
