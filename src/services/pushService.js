@@ -1,41 +1,46 @@
 import logger from '@/lib/logger'
+import { supabase } from '@/lib/supabase'
 /**
  * src/services/pushService.js
  * Servicio centralizado para notificaciones push
- * SOLO para eventos importantes (pedidos, envíos, etc.)
+ * SOLO para eventos importantes (pedidos, envÃƒÆ’Ã‚Â­os, etc.)
  */
 
-// Configuración
+// ConfiguraciÃƒÆ’Ã‚Â³n
 const THROTTLE_MS = 60000 // 1 minuto entre notificaciones
 let lastNotificationTime = 0
 let notificationInProgress = false
 
 /**
- * Enviar notificación push
+ * Enviar notificaciÃƒÆ’Ã‚Â³n push
  * @param {Object} data - { title, body, icon, url }
  */
 export async function sendPushNotification(data) {
   // 1. Verificar throttling
   const now = Date.now()
   if (notificationInProgress || (now - lastNotificationTime < THROTTLE_MS)) {
-    logger.warn('🔕 Notificación push bloqueada por throttle')
+    logger.warn('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â¢ NotificaciÃƒÆ’Ã‚Â³n push bloqueada por throttle')
     return { success: false, message: 'Throttled' }
   }
 
   // 2. Validar datos
   if (!data?.title || !data?.body) {
-    logger.warn('⚠️ Datos de notificación incompletos')
+    logger.warn('ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Datos de notificaciÃƒÆ’Ã‚Â³n incompletos')
     return { success: false, message: 'Datos incompletos' }
   }
 
-  // 3. Enviar notificación
+  // 3. Enviar notificaciÃƒÆ’Ã‚Â³n
   notificationInProgress = true
   lastNotificationTime = now
 
   try {
+    const { data: { session } } = await supabase.auth.getSession()
     const response = await fetch('/api/push-notificar', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+      },
       body: JSON.stringify({
         titulo: data.title,
         cuerpo: data.body,
@@ -45,10 +50,10 @@ export async function sendPushNotification(data) {
     })
 
     const result = await response.json()
-    logger.log(`📨 Notificación enviada: ${result.enviadas || 0} enviadas`)
+    logger.log(`ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¨ NotificaciÃƒÆ’Ã‚Â³n enviada: ${result.enviadas || 0} enviadas`)
     return result
   } catch (error) {
-    logger.error('❌ Error enviando notificación push:', error)
+    logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Error enviando notificaciÃƒÆ’Ã‚Â³n push:', error)
     return { success: false, error: error.message }
   } finally {
     notificationInProgress = false
@@ -56,29 +61,29 @@ export async function sendPushNotification(data) {
 }
 
 /**
- * Notificación de pedido confirmado
+ * NotificaciÃƒÆ’Ã‚Â³n de pedido confirmado
  */
 export function notifyOrderConfirmed(orderData) {
   return sendPushNotification({
-    title: '✅ ¡Pedido confirmado!',
-    body: `Tu pedido #${orderData.id} ha sido confirmado. Estará listo en 24-48 horas.`,
+    title: 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Ãƒâ€šÃ‚Â¡Pedido confirmado!',
+    body: `Tu pedido #${orderData.id} ha sido confirmado. EstarÃƒÆ’Ã‚Â¡ listo en 24-48 horas.`,
     url: `/pedido/${orderData.id}`,
   })
 }
 
 /**
- * Notificación de pedido enviado
+ * NotificaciÃƒÆ’Ã‚Â³n de pedido enviado
  */
 export function notifyOrderShipped(orderData) {
   return sendPushNotification({
-    title: '🚚 ¡Pedido enviado!',
-    body: `Tu pedido #${orderData.id} está en camino. ¡Llegará pronto!`,
+    title: 'ÃƒÂ°Ã…Â¸Ã…Â¡Ã…Â¡ Ãƒâ€šÃ‚Â¡Pedido enviado!',
+    body: `Tu pedido #${orderData.id} estÃƒÆ’Ã‚Â¡ en camino. Ãƒâ€šÃ‚Â¡LlegarÃƒÆ’Ã‚Â¡ pronto!`,
     url: `/pedido/${orderData.id}`,
   })
 }
 
 /**
- * Notificación de carrito abandonado (se programa para después de 30 min)
+ * NotificaciÃƒÆ’Ã‚Â³n de carrito abandonado (se programa para despuÃƒÆ’Ã‚Â©s de 30 min)
  */
 export function notifyCartAbandoned(cartData) {
   if (!cartData?.items?.length) return
@@ -87,8 +92,8 @@ export function notifyCartAbandoned(cartData) {
   const totalPrice = cartData.total
 
   return sendPushNotification({
-    title: '🛒 ¿Olvidaste algo?',
-    body: `Tienes ${totalItems} productos en tu carrito por ₲ ${totalPrice.toLocaleString('es-PY')}. ¡No esperes más!`,
+    title: 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂºÃ¢â‚¬â„¢ Ãƒâ€šÃ‚Â¿Olvidaste algo?',
+    body: `Tienes ${totalItems} productos en tu carrito por ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â² ${totalPrice.toLocaleString('es-PY')}. Ãƒâ€šÃ‚Â¡No esperes mÃƒÆ’Ã‚Â¡s!`,
     url: '/carrito',
   })
 }

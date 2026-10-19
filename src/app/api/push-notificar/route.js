@@ -1,12 +1,7 @@
 /**
- * 📁 UBICACIÓN: src/app/api/push-notificar/route.js
- * 📅 ACTUALIZADO: 2026-08-28
- * 📌 DESCRIPCIÓN: Endpoint para enviar notificaciones Push Web (VAPID) con web-push:
- *    - Validación estricta y sanitización de UUIDs (evita errores PostgreSQL 22P02)
- *    - Envío a un usuario específico (user_id / userId) o a todos los administradores (rol = 'admin')
- *    - Deduplicación por endpoint (un dispositivo real = 1 notificación)
- *    - Limpieza automática de suscripciones vencidas o desinstaladas (HTTP 410 Gone / 404 Not Found)
- *    - Respuestas detalladas y tolerantes a fallos
+ * src/app/api/push-notificar/route.js
+ *
+ * AUD-010: auth obligatoria, sin fallback a difusion general.
  */
 
 import logger from '@/lib/logger'
@@ -14,34 +9,24 @@ import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
 import { sanitizeSupabaseUrl, sanitizeSupabaseKey } from '@/lib/supabase'
+import { requireAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
-/**
- * Regex estándar para validar UUID v4 (8-4-4-4-12 caracteres hexadecimales)
- */
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-/**
- * Valida si un valor es un string con formato UUID válido
- * @param {any} value 
- * @returns {boolean}
- */
 function isValidUUID(value) {
   if (!value || typeof value !== 'string') return false
   return UUID_REGEX.test(value.trim())
 }
 
-/**
- * Configura VAPID en web-push usando variables de entorno
- */
 function getWebPush() {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
   const privateKey = process.env.VAPID_PRIVATE_KEY
   const emailContact = process.env.NEXT_PUBLIC_VAPID_EMAIL || process.env.VAPID_SUBJECT || 'mailto:contacto@panfree.py'
 
   if (!publicKey || !privateKey) {
-    logger.warn('⚠️ [Push] Claves VAPID no encontradas en variables de entorno')
+    logger.warn('[Push] Claves VAPID no encontradas en variables de entorno')
     return null
   }
 
@@ -53,14 +38,11 @@ function getWebPush() {
     webpush.setVapidDetails(subject, publicKey, privateKey)
     return webpush
   } catch (err) {
-    logger.error('❌ [Push] Error configurando webpush VAPID:', err.message)
+    logger.error('[Push] Error configurando webpush VAPID:', err.message)
     return null
   }
 }
 
-/**
- * Obtiene el cliente Supabase con service_role si está disponible
- */
 function getDbClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const supabaseUrl = sanitizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL)
@@ -74,6 +56,10 @@ function getDbClient() {
 
 export async function POST(request) {
   try {
+    // AUD-010: auth obligatoria antes de cualquier operacion
+    const auth = await requireAuth(request, { requireAdmin: true })
+    if (!auth.ok) return auth.response
+
     const wp = getWebPush()
     if (!wp) {
       return NextResponse.json({
@@ -87,7 +73,7 @@ export async function POST(request) {
     try {
       body = await request.json()
     } catch (e) {
-      return NextResponse.json({ error: 'Cuerpo de solicitud JSON inválido' }, { status: 400 })
+      return NextResponse.json({ error: 'Cuerpo de solicitud JSON invalido' }, { status: 400 })
     }
 
     const {
@@ -106,8 +92,8 @@ export async function POST(request) {
       badge,
     } = body
 
-    const finalTitle = titulo || title || '🍞 PanFree - Nuevo Pedido'
-    const finalBody = cuerpo || mensaje || bodyText || 'Tienes una nueva notificación en el panel'
+    const finalTitle = titulo || title || 'PanFree - Nuevo Pedido'
+    const finalBody = cuerpo || mensaje || bodyText || 'Tienes una nueva notificacion en el panel'
     const finalUrl = url || url_accion || '/admin/pedidos'
     const finalIcon = icon || '/icons/icon-192x192.png'
     const finalBadge = badge || '/icons/icon-96x96.png'
@@ -119,12 +105,12 @@ export async function POST(request) {
     const db = getDbClient()
     let subscriptions = []
 
-    // ── 1. Caso: Enviar a un usuario específico ──
+    // 1. Caso: Enviar a un usuario especifico
     if (targetUserId) {
       if (!isValidUUID(targetUserId)) {
         return NextResponse.json({
           success: false,
-          error: `El ID de usuario "${targetUserId}" no es un UUID válido.`,
+          error: `El ID de usuario "${targetUserId}" no es un UUID valido.`,
           recibido: targetUserId,
         }, { status: 400 })
       }
@@ -142,9 +128,9 @@ export async function POST(request) {
       }
 
       subscriptions = data || []
-    } 
-    // ── 2. Caso: Enviar a todos los administradores o difusión general ──
-    else if (sendToAdmins || !targetUserId) {
+    }
+    // 2. Caso: Enviar a administradores (AUD-010: sin fallback a difusion)
+    else if (sendToAdmins === true) {
       let adminAuthIds = []
 
       try {
@@ -159,7 +145,7 @@ export async function POST(request) {
             .filter(id => isValidUUID(id))
         }
       } catch (adminQueryErr) {
-        logger.warn('⚠️ [Push] Error consultando tabla usuarios:', adminQueryErr.message)
+        logger.warn('[Push] Error consultando tabla usuarios:', adminQueryErr.message)
       }
 
       if (adminAuthIds.length > 0) {
@@ -172,34 +158,29 @@ export async function POST(request) {
           subscriptions = adminSubs
         }
       }
-
-      if (subscriptions.length === 0) {
-        const { data: allSubs, error: allSubsErr } = await db
-          .from('push_subscriptions')
-          .select('*')
-          .limit(50)
-
-        if (!allSubsErr && allSubs) {
-          subscriptions = allSubs
-        }
-      }
+    }
+    else {
+      return NextResponse.json({
+        success: false,
+        error: 'Debe especificar user_id o sendToAdmins=true',
+      }, { status: 400 })
     }
 
     if (subscriptions.length === 0) {
       return NextResponse.json({
         success: true,
-        message: 'No hay dispositivos suscritos para recibir la notificación push',
+        message: 'No hay dispositivos suscritos para recibir la notificacion push',
         enviadas: 0,
         total: 0,
       })
     }
 
-    // ── 3. Deduplicar suscripciones por endpoint ──
+    // 3. Deduplicar suscripciones por endpoint
     const subsUnicas = Array.from(
       new Map(subscriptions.map(s => [s.endpoint, s])).values()
     )
 
-    logger.log(`📨 [Push] Enviando notificación a ${subsUnicas.length} endpoints únicos`)
+    logger.log(`[Push] Enviando notificacion a ${subsUnicas.length} endpoints unicos`)
 
     const payload = JSON.stringify({
       title: finalTitle,
@@ -244,7 +225,7 @@ export async function POST(request) {
           await wp.sendNotification(pushSubscription, payload)
           enviadas++
         } catch (err) {
-          logger.error(`⚠️ [Push] Error enviando a endpoint (${err.statusCode || err.message})`)
+          logger.error(`[Push] Error enviando a endpoint (${err.statusCode || err.message})`)
           fallos++
           if (err.statusCode === 410 || err.statusCode === 404) {
             endpointsAEliminar.push(sub.endpoint)
@@ -253,9 +234,9 @@ export async function POST(request) {
       })
     )
 
-    // ── 4. Limpieza automática de endpoints caducados (CORREGIDO) ──
+    // 4. Limpieza automatica de endpoints caducados
     if (endpointsAEliminar.length > 0) {
-      logger.log(`🧹 [Push] Eliminando ${endpointsAEliminar.length} suscripciones caducadas...`)
+      logger.log(`[Push] Eliminando ${endpointsAEliminar.length} suscripciones caducadas...`)
       try {
         await db
           .from('push_subscriptions')
@@ -274,7 +255,7 @@ export async function POST(request) {
       mensaje: `Notificaciones push enviadas a ${enviadas} de ${subsUnicas.length} dispositivos`,
     })
   } catch (error) {
-    logger.error('💥 [Push] Error general en /api/push-notificar:', error)
+    logger.error('[Push] Error general en /api/push-notificar:', error)
     return NextResponse.json({
       success: false,
       error: error.message || 'Error interno al enviar notificaciones push',
