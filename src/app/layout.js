@@ -48,6 +48,7 @@ export const metadata = {
   },
 
   appleWebApp: {
+    capable: true,
     capable:         true,
     statusBarStyle:  'default',
     title:           'PanFree',

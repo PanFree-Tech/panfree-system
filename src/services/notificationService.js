@@ -10,6 +10,8 @@ import { sendPushNotification } from './pushService'
 export { sendPushNotification as sendNotification }
 
 // Para código que espera la API anterior
-export default {
+const notificationService = {
   sendNotification: sendPushNotification,
 }
+
+export default notificationService
