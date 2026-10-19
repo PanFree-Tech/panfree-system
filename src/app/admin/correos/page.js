@@ -66,7 +66,7 @@ export default function AdminCorreosPage() {
     try {
       setProbandoEnvio(true)
       setTestResultado(null)
-      const res = await fetch('/api/admin/marketing/test-email', { method: 'POST' })
+      const res = await fetch('/api/admin/test-email', { method: 'POST' })
       const data = await res.json()
 
       if (res.ok && data.success) {
