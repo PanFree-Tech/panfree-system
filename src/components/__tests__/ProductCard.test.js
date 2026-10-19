@@ -1,5 +1,14 @@
-import { render, screen } from '@testing-library/react'
+﻿import { render, screen } from '@testing-library/react'
+import { CartProvider } from '@/context/CartContext'
+import { AuthProvider } from '@/context/AuthContext'
 import ProductCard from '../ProductCard'
+
+// Wrapper para proveer los contextos de carrito y autenticación
+const renderWithProviders = (ui) => render(
+  <AuthProvider>
+    <CartProvider>{ui}</CartProvider>
+  </AuthProvider>
+)
 
 describe('ProductCard', () => {
   const mockProducto = {
@@ -22,24 +31,24 @@ describe('ProductCard', () => {
   }
 
   it('renders product name', () => {
-    render(<ProductCard producto={mockProducto} onAddToCart={() => {}} />)
+    renderWithProviders(<ProductCard producto={mockProducto} onAddToCart={() => {}} />)
     expect(screen.getByText('Pan Sin Gluten')).toBeInTheDocument()
   })
 
   it('renders standard price formatted with Gs.', () => {
-    render(<ProductCard producto={mockProducto} onAddToCart={() => {}} />)
+    renderWithProviders(<ProductCard producto={mockProducto} onAddToCart={() => {}} />)
     expect(screen.getByText('Gs. 50.000')).toBeInTheDocument()
   })
 
   it('renders promotional price and savings when promo is active', () => {
-    render(<ProductCard producto={mockProductoPromo} onAddToCart={() => {}} />)
+    renderWithProviders(<ProductCard producto={mockProductoPromo} onAddToCart={() => {}} />)
     expect(screen.getByText('Gs. 40.000')).toBeInTheDocument()
     expect(screen.getByText('Gs. 50.000')).toBeInTheDocument()
     expect(screen.getByText(/AHORRAS Gs\. 10\.000/i)).toBeInTheDocument()
   })
 
   it('returns null when producto is missing', () => {
-    const { container } = render(<ProductCard producto={null} onAddToCart={() => {}} />)
+    const { container } = renderWithProviders(<ProductCard producto={null} onAddToCart={() => {}} />)
     expect(container.firstChild).toBeNull()
   })
 })
