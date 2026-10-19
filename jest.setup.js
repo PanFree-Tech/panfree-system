@@ -1,4 +1,4 @@
-﻿import '@testing-library/jest-dom';
+import '@testing-library/jest-dom';
 
 // Mock de Supabase para tests (evita fail-fast por env vars faltantes)
 jest.mock('@/lib/supabase', () => ({
@@ -24,6 +24,7 @@ jest.mock('@/lib/supabase', () => ({
         getPublicUrl: jest.fn().mockReturnValue({ data: { publicUrl: 'https://example.com/test.jpg' } }),
       }),
     },
+    rpc: jest.fn().mockResolvedValue({ data: null, error: null }),
   },
   sanitizeSupabaseUrl: jest.fn((url) => url || 'https://mock.supabase.co'),
   sanitizeSupabaseKey: jest.fn((key) => key || 'mock-key'),
