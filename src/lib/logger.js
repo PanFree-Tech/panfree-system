@@ -21,4 +21,6 @@ export function error(...args) {
   console.error(...args)
 }
 
-export default { log, warn, error }
+const logger = { log, warn, error }
+
+export default logger

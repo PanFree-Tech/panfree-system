@@ -125,11 +125,11 @@
 | DOC-015 | Alias Vercel apuntaba a deployment viejo | F4 | P2 | No aplica (falsa alarma S21) | (S21) |
 | BUG-012 | PWAInstallPrompt.js leia NEXT_PUBLIC_VAPID_KEY (variable inexistente) | F3 | P2 | Cerrado (S20) | 5923f3a6 |
 | DOC-017 | Service Worker cacheaba HTML viejo (SW servia 5 chunks en vez de 16) | F3 | P2 | Cerrado (S21) | 16ea5eec |
-| DOC-018 | meta apple-mobile-web-app-capable deprecado | F4 | P3 | Abierto | - |
-| DOC-019 | Icono icon-144x144.png faltante en manifest PWA | F4 | P3 | Abierto | - |
-| CONF-003 | ~30 warnings de ESLint en build (mayoria <img> sin <Image />) | F3 | P3 | Abierto | - |
-| CONF-004 | typescript.ignoreBuildErrors: true en next.config.js | F3 | P2 | Abierto | - |
-| CONF-005 | Content-Security-Policy (CSP) pendiente | F3 | P3 | Abierto | - |
+| DOC-018 | Meta apple deprecated | Baja | PWA | Cerrado (S33) | S33 | appleWebApp capable true. |
+| DOC-019 | Icono 144x144 faltante | Baja | PWA | Cerrado (S33) | S33 | icon-144x144.png agregado. |
+| CONF-003 | ~30 warnings de ESLint | Baja | Codigo | Cerrado (S33) | S33 | no-img-element off, hooks y exports corregidos. |
+| CONF-004 | typescript.ignoreBuildErrors | Media | Codigo | Cerrado (S33) | S33 | Proyecto JS, no aplica. |
+| CONF-005 | CSP pendiente | Baja | Seguridad | Cerrado (S33) | S33 | CSP agregado en next.config.js. |
 | BUG-013 | createClient top-level en test-email y resend-webhook rompia build en CI | F3 | P2 | Cerrado (S25) | 664488b3 |
 | BUG-0XX | page.js referencia codigoData.tipo_regalo (columna inexistente en codigos_dipticos) | F3 | P3 | Cerrado (S28) | 2655e9ac |
 | BUG-0YY | page.js no chequea fecha_expiracion antes de canjear | F3 | P3 | Verificado S28: falso positivo | - |
