@@ -1,17 +1,18 @@
 /**
- * 📁 src/lib/dipticos.js
- * Servicio integral para gestión de códigos de dípticos físicos, QR,
- * validación, canjes y gamificación de fidelidad en PanFree.
+ * src/lib/dipticos.js
+ * Servicio integral para gestion de codigos de dipticos fisicos, QR,
+ * validacion, canjes y gamificacion de fidelidad en PanFree.
+ *
+ * AUD-006: canjes usan RPCs atomicos (canjear_diptico, canjear_premio)
+ * en vez de INSERT+UPDATE+UPDATE manual. Elimina race conditions y
+ * delegacion de puntos al cliente.
  */
 
 import logger from '@/lib/logger'
 import { supabase } from './supabase'
 
-const CARACTERES_CODIGO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Sin caracteres ambiguos como O/0, I/1
+const CARACTERES_CODIGO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 
-/**
- * Genera un código aleatorio de 6 caracteres alfanuméricos
- */
 export function generarCodigo() {
     let codigo = ''
     for (let i = 0; i < 6; i++) {
@@ -20,15 +21,12 @@ export function generarCodigo() {
     return codigo
 }
 
-/**
- * Genera un código único comprobando en la base de datos (con fallback seguro)
- */
 export async function generarCodigoUnico() {
     try {
         const { data, error } = await supabase.rpc('generar_codigo_diptico_unico')
         if (!error && data) return data
     } catch {
-        // Fallback a generación en JavaScript si el RPC aún no fue ejecutado en SQL
+        // Fallback a generacion en JavaScript si el RPC no esta disponible
     }
 
     let codigo = ''
@@ -52,12 +50,6 @@ export async function generarCodigoUnico() {
     return codigo
 }
 
-/**
- * Genera un lote de códigos listos para inserción
- * @param {number} cantidad
- * @param {string} [loteId]
- * @param {number} [diasValidez=365]
- */
 export async function generarLoteCantidad(cantidad = 50, loteId = null, diasValidez = 365) {
     const cant = Math.max(1, Math.min(1000, Number(cantidad) || 50))
     const lote = loteId || `LOTE-${new Date().toISOString().slice(0, 10)}-${generarCodigo().slice(0, 4)}`
@@ -66,8 +58,6 @@ export async function generarLoteCantidad(cantidad = 50, loteId = null, diasVali
     const fechaExpIso = fechaExp.toISOString()
 
     const setCodigos = new Set()
-
-    // Intentar primero obtener códigos únicos
     while (setCodigos.size < cant) {
         setCodigos.add(generarCodigo())
     }
@@ -87,248 +77,107 @@ export async function generarLoteCantidad(cantidad = 50, loteId = null, diasVali
 }
 
 /**
- * Valida un código de díptico
- * @param {string} codigo
- * @returns {Promise<{valido: boolean, mensaje?: string, codigo?: object}>}
+ * AUD-006: validarCodigo usa RPC (SELECT USING(true) fue eliminado).
  */
 export async function validarCodigo(codigo) {
     if (!codigo || typeof codigo !== 'string') {
-        return { valido: false, mensaje: 'Debes ingresar un código válido' }
+        return { valido: false, mensaje: 'Debes ingresar un codigo valido' }
     }
 
     const codigoLimpio = codigo.trim().toUpperCase()
     if (codigoLimpio.length !== 6) {
-        return { valido: false, mensaje: 'El código debe tener exactamente 6 caracteres' }
+        return { valido: false, mensaje: 'El codigo debe tener exactamente 6 caracteres' }
     }
 
     try {
-        const { data, error } = await supabase
-            .from('codigos_dipticos')
-            .select('*')
-            .eq('codigo', codigoLimpio)
-            .maybeSingle()
+        const { data, error } = await supabase.rpc('validar_codigo_diptico', { p_codigo: codigoLimpio })
 
-        if (error || !data) {
-            return { valido: false, mensaje: 'El código ingresado no existe o es incorrecto' }
+        if (error) {
+            logger.error('Error al validar codigo diptico:', error)
+            return { valido: false, mensaje: 'Error al verificar el codigo en el sistema' }
         }
 
-        if (data.canjeado) {
-            return {
-                valido: false,
-                mensaje: `Este código ya fue canjeado el ${new Date(data.canjeado_en || data.created_at).toLocaleDateString('es-PY')}`
-            }
-        }
-
-        if (data.fecha_expiracion && new Date() > new Date(data.fecha_expiracion)) {
-            return { valido: false, mensaje: 'Este código ha expirado' }
-        }
-
-        return { valido: true, codigo: data }
+        return data
     } catch (err) {
-        logger.error('Error al validar código díptico:', err)
-        return { valido: false, mensaje: 'Error al verificar el código en el sistema' }
+        logger.error('Error al validar codigo diptico:', err)
+        return { valido: false, mensaje: 'Error al verificar el codigo en el sistema' }
     }
 }
 
 /**
- * Canjea un código de díptico y asigna los 100 puntos al cliente
- * @param {string} codigo
- * @param {string} clienteId
- * @returns {Promise<{success: boolean, puntos?: number, mensaje?: string, canje?: object}>}
+ * AUD-006: canjearCodigo usa RPC atomico canjear_diptico.
+ * El RPC verifica auth, bloquea fila con FOR UPDATE, marca canjeado,
+ * inserta canje, suma puntos y recalcula nivel en una transaccion.
  */
-export async function canjearCodigo(codigo, clienteId) {
-    if (!clienteId) {
-        return { success: false, mensaje: 'Identificador de cliente no válido' }
+export async function canjearCodigo(codigo) {
+    if (!codigo || typeof codigo !== 'string') {
+        return { success: false, mensaje: 'Codigo invalido' }
     }
-
-    const validacion = await validarCodigo(codigo)
-    if (!validacion.valido) {
-        return { success: false, mensaje: validacion.mensaje }
-    }
-
-    const codigoObj = validacion.codigo
-    const ahoraIso = new Date().toISOString()
-    const puntosAGanar = 100
 
     try {
-        // 1. Registrar canje en tabla canjes_dipticos
-        const { data: canje, error: canjeError } = await supabase
-            .from('canjes_dipticos')
-            .insert({
-                codigo_id: codigoObj.id,
-                cliente_id: clienteId,
-                puntos_ganados: puntosAGanar,
-                created_at: ahoraIso
-            })
-            .select()
-            .single()
+        const { data, error } = await supabase.rpc('canjear_diptico', {
+            p_codigo: codigo.trim().toUpperCase()
+        })
 
-        if (canjeError) {
-            logger.error('Error insertando canje:', canjeError)
-            // Si ya existe registro de canje
-            if (canjeError.code === '23505') {
-                return { success: false, mensaje: 'Este código ya fue registrado para canje' }
-            }
-            throw canjeError
+        if (error) {
+            logger.error('Error en RPC canjear_diptico:', error)
+            return { success: false, mensaje: error.message || 'Error al procesar el canje' }
         }
 
-        // 2. Marcar código como canjeado en tabla codigos_dipticos
-        const { error: updateCodigoError } = await supabase
-            .from('codigos_dipticos')
-            .update({
-                canjeado: true,
-                canjeado_por: clienteId,
-                canjeado_en: ahoraIso
-            })
-            .eq('id', codigoObj.id)
-
-        if (updateCodigoError) {
-            logger.warn('Advertencia actualizando código díptico:', updateCodigoError)
-        }
-
-        // 3. Asegurar actualización de puntos y nivel del cliente
-        try {
-            const { data: clienteActual } = await supabase
-                .from('clientes')
-                .select('puntos_fidelidad')
-                .eq('id', clienteId)
-                .single()
-
-            const nuevosPuntos = (clienteActual?.puntos_fidelidad || 0) + puntosAGanar
-            let nuevoNivel = 'bronce'
-            if (nuevosPuntos >= 1000) nuevoNivel = 'vip'
-            else if (nuevosPuntos >= 500) nuevoNivel = 'oro'
-            else if (nuevosPuntos >= 200) nuevoNivel = 'plata'
-
-            await supabase
-                .from('clientes')
-                .update({
-                    puntos_fidelidad: nuevosPuntos,
-                    nivel_cliente: nuevoNivel,
-                    updated_at: ahoraIso
-                })
-                .eq('id', clienteId)
-        } catch (clienteErr) {
-            logger.warn('Trigger o actualización cliente manejada:', clienteErr)
+        if (!data?.success) {
+            return { success: false, mensaje: data?.error || 'No se pudo procesar el canje' }
         }
 
         return {
             success: true,
-            puntos: puntosAGanar,
-            mensaje: `¡Excelente! Has sumado ${puntosAGanar} puntos a tu cuenta de fidelidad PanFree.`,
-            canje
+            puntos: data.puntos_ganados,
+            nuevoNivel: data.nuevo_nivel,
+            puntosTotales: data.puntos_totales,
+            mensaje: `Excelente! Has sumado ${data.puntos_ganados} puntos a tu cuenta.`
         }
     } catch (err) {
         logger.error('Error en canjearCodigo:', err)
-        return { success: false, mensaje: 'Ocurrió un problema al procesar el canje del código' }
+        return { success: false, mensaje: 'Ocurrio un problema al procesar el canje' }
     }
 }
 
 /**
- * Canjea un premio del catálogo de fidelidad descontando los puntos
- * @param {string} premioId
- * @param {string} clienteId
+ * AUD-006: canjearPremio usa RPC atomico canjear_premio.
  */
-export async function canjearPremio(premioId, clienteId) {
+export async function canjearPremio(premioId) {
+    if (!premioId) {
+        return { success: false, mensaje: 'ID de premio invalido' }
+    }
+
     try {
-        const { data: premio, error: premioErr } = await supabase
-            .from('premios')
-            .select('*')
-            .eq('id', premioId)
-            .eq('activo', true)
-            .single()
+        const { data, error } = await supabase.rpc('canjear_premio', {
+            p_premio_id: premioId
+        })
 
-        if (premioErr || !premio) {
-            return { success: false, mensaje: 'El premio seleccionado no está disponible' }
+        if (error) {
+            logger.error('Error en RPC canjear_premio:', error)
+            return { success: false, mensaje: error.message || 'Error al procesar el canje' }
         }
 
-        const { data: cliente, error: clienteErr } = await supabase
-            .from('clientes')
-            .select('puntos_fidelidad, nombre_completo, email')
-            .eq('id', clienteId)
-            .single()
-
-        if (clienteErr || !cliente) {
-            return { success: false, mensaje: 'Cliente no encontrado' }
+        if (!data?.success) {
+            return { success: false, mensaje: data?.error || 'No se pudo procesar el canje' }
         }
-
-        const puntosActuales = cliente.puntos_fidelidad || 0
-        if (puntosActuales < premio.costo_puntos) {
-            return {
-                success: false,
-                mensaje: `Puntos insuficientes. Necesitas ${premio.costo_puntos} pts y tienes ${puntosActuales} pts.`
-            }
-        }
-
-        // Generar un código de cupón único para el usuario si es descuento o beneficio
-        const cuponGenerado = `CANJE-${premio.tipo.slice(0, 3).toUpperCase()}-${generarCodigo()}`
-
-        // 1. Registrar canje de premio
-        const { data: registroCanje, error: regErr } = await supabase
-            .from('canjes_premios')
-            .insert({
-                premio_id: premio.id,
-                cliente_id: clienteId,
-                puntos_gastados: premio.costo_puntos,
-                cupon_generado: cuponGenerado,
-                estado: 'completado',
-                created_at: new Date().toISOString()
-            })
-            .select()
-            .single()
-
-        if (regErr) {
-            logger.warn('Error registrando canje en tabla canjes_premios:', regErr)
-        }
-
-        // 2. Si el premio es de descuento o delivery, crear cupón en cupones_descuento para usar en checkout
-        if (premio.tipo === 'descuento' || premio.tipo === 'delivery_gratis') {
-            const esPorcentaje = premio.tipo === 'descuento' && Number(premio.valor) <= 100
-            await supabase.from('cupones_descuento').insert({
-                codigo: cuponGenerado,
-                descripcion: `Premio canjeado: ${premio.nombre}`,
-                tipo_descuento: esPorcentaje ? 'porcentaje' : 'monto_fijo',
-                valor_descuento: Number(premio.valor) || 10,
-                monto_minimo_compra: 0,
-                limite_usos_total: 1,
-                usos_actuales: 0,
-                limite_por_cliente: 1,
-                activo: true
-            })
-        }
-
-        // 3. Descontar puntos al cliente
-        const puntosRestantes = puntosActuales - premio.costo_puntos
-        let nuevoNivel = 'bronce'
-        if (puntosRestantes >= 1000) nuevoNivel = 'vip'
-        else if (puntosRestantes >= 500) nuevoNivel = 'oro'
-        else if (puntosRestantes >= 200) nuevoNivel = 'plata'
-
-        await supabase
-            .from('clientes')
-            .update({
-                puntos_fidelidad: puntosRestantes,
-                nivel_cliente: nuevoNivel,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', clienteId)
 
         return {
             success: true,
-            mensaje: `¡Felicidades! Canjeaste "${premio.nombre}". Tu cupón es: ${cuponGenerado}`,
-            cupon: cuponGenerado,
-            puntosRestantes,
-            premio
+            cupon: data.cupon,
+            puntosGastados: data.puntos_gastados,
+            puntosRestantes: data.puntos_restantes,
+            nuevoNivel: data.nuevo_nivel,
+            premio: data.premio_nombre,
+            mensaje: `Felicidades! Canjeaste "${data.premio_nombre}". Tu cupon es: ${data.cupon}`
         }
     } catch (err) {
-        logger.error('Error al canjear premio:', err)
-        return { success: false, mensaje: 'Error interno al procesar el canje de premio' }
+        logger.error('Error en canjearPremio:', err)
+        return { success: false, mensaje: 'Error interno al procesar el canje' }
     }
 }
 
-/**
- * Obtiene métricas y estadísticas de códigos de dípticos
- */
 export async function getEstadisticas() {
     try {
         const { data, error } = await supabase
@@ -353,14 +202,11 @@ export async function getEstadisticas() {
             tasaCanje: tasa
         }
     } catch (err) {
-        logger.error('Error obteniendo estadísticas de dípticos:', err)
+        logger.error('Error obteniendo estadisticas de dipticos:', err)
         return { total: 0, activos: 0, canjeados: 0, lotes: 0, tasaCanje: '0%' }
     }
 }
 
-/**
- * Definición de niveles de gamificación
- */
 export const NIVELES_GAMIFICACION = [
     { id: 'bronce', nombre: 'Bronce', min: 0, max: 199, emoji: '🥉', color: '#b7996b', bg: '#fdf8f0', badgeClass: 'bg-amber-100 text-amber-900 border-amber-300' },
     { id: 'plata', nombre: 'Plata', min: 200, max: 499, emoji: '🥈', color: '#78909c', bg: '#f0f4f8', badgeClass: 'bg-slate-100 text-slate-800 border-slate-300' },
