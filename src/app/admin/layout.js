@@ -194,7 +194,6 @@ export default function AdminLayout({ children }) {
     { href: '/admin/produccion', icon: Factory, label: 'Producción' },
     { href: '/admin/costos', icon: DollarSign, label: 'Costos' },
     { href: '/admin/maquinarias', icon: Wrench, label: 'Maquinarias' },
-    { href: '/admin/marketing', icon: Megaphone, label: 'Marketing' },
     { href: '/admin/dipticos', icon: QrCode, label: 'Dípticos' },
     { href: '/admin/cupones', icon: Tag, label: 'Cupones' },
     { href: '/admin/correos', icon: Mail, label: 'Correos' },
