@@ -43,7 +43,7 @@
 4. Gemini
 5. Meta WhatsApp  [NO APLICA - ver DOC-005]
 6. Twilio        [NO APLICA - ver DOC-005]
-7. Instagram     [NO APLICA - ver DOC-006]
+7. Instagram     [NO APLICA - DOC-006. Modulo Marketing retirado en S31.]
 8. n8n
 9. GA4
 10. VAPID

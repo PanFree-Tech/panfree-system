@@ -16,9 +16,9 @@
 | **npm** | >= 9.x | Gestor de paquetes de dependencias |
 | **Supabase Project** | PostgreSQL 15 | Base de datos, autenticación y políticas RLS |
 | **Cloudinary Account** | Cloudinary Media API | Almacenamiento, transformación y CDN de imágenes |
-| **Google Cloud / AI Studio** | Gemini API Key | Modelos generativos para marketing inteligente |
+| **Google Cloud / AI Studio** | Gemini API Key | (Retirado en S31. DOC-008.) |
 | **Resend Account** | Resend API Key | Envío de correos transaccionales y de marketing |
-| **Meta for Developers** | Instagram Graph API / WhatsApp API | Publicación en Instagram y notificaciones WhatsApp |
+| **Meta for Developers** | Instagram Graph API / WhatsApp API | (Retirado en S31. DOC-008.) |
 | **Google Analytics 4** | GA4 Measurement ID | Medición de tráfico y eventos de e-commerce |
 | **Vercel / Cloud Run** | Producción | Hosting de frontend y funciones de API |
 
@@ -68,12 +68,6 @@ TWILIO_AUTH_TOKEN=tu_twilio_token
 TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
 
 # ==========================================
-# 6. INSTAGRAM GRAPH API (Meta)
-# ==========================================
-INSTAGRAM_ACCESS_TOKEN=tu_meta_user_token
-INSTAGRAM_BUSINESS_ID=tu_instagram_business_account_id
-
-# ==========================================
 # 7. AUTOMATIZACIÓN (n8n Webhook)
 # ==========================================
 N8N_WEBHOOK_URL=https://tu-instancia.n8n.cloud/webhook/pedido
@@ -111,7 +105,7 @@ Ejecuta los scripts SQL ubicados en el directorio `/migrations/` en el **SQL Edi
 3. `add_promociones_y_fidelizacion.sql` (Cupones de descuento, puntos de clientes y ofertas).
 4. `add_dipticos_y_gamificacion.sql` (Códigos de dípticos QR, catálogo de premios y triggers).
 5. `add-production-capacity.sql` (Capacidad Made-To-Order y cálculo de disponibilidad).
-6. `create_marketing_smart_tables.sql` (Reglas comerciales, eventos de calendario y posts de Instagram).
+6. `create_marketing_smart_tables.sql` (RETIRADO en S31. No ejecutar.)
 7. `create_email_logs.sql` (Auditoría de despachos de correo con Resend).
 8. `create_logs_auditoria.sql` (Auditoría de acciones administrativas del ERP).
 9. `add_logo_variantes_configuracion.sql` (Variantes temáticas de logos en JSONB).
@@ -151,7 +145,7 @@ Copia todas las variables de la sección 2 en la pestaña **Environment Variable
 - El remitente configurado por defecto es `PanFree <contacto@panfree.fit>`.
 
 ### 5.3. n8n Workflow
-- Importa el archivo `/n8n/marketing_automation_workflow.json` en tu instancia de n8n.
+- n8n: NO USADO (DOC-009). El archivo histórico existe pero no se ejecuta.
 - Configura las credenciales HTTP con la URL de producción `https://panfree.fit/api/...` y el token secreto `N8N_WEBHOOK_TOKEN`.
 
 ---
@@ -163,6 +157,6 @@ Copia todas las variables de la sección 2 en la pestaña **Environment Variable
 - [ ] **Tracking:** `/pedido/[numero]` muestra el estado del pedido en tiempo real.
 - [ ] **Panel ERP:** Acceso seguro a `/admin` mediante autenticación y redirección adecuada para no autorizados.
 - [ ] **Recetas y Costos:** Visualización correcta del desglose de ingredientes y cálculo del Margen Real.
-- [ ] **Marketing IA:** Generación de copies con Gemini AI y renderizado en Canvas funcional.
+- [ ] ~~Marketing IA~~ (retirado en S31, DOC-008)
 - [ ] **Canje Dípticos:** Endpoint `/api/dipticos/canjear` suma puntos correctamente al escanear QR.
 - [ ] **Correos:** Recepción de comprobante en `email_logs` y bandeja de entrada.
