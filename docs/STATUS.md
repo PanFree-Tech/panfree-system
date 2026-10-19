@@ -1,6 +1,6 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-17 (fin Sesion 28 - cierre de hardcodes + BUG-0XX)
+**Ultima actualizacion:** 2026-10-19 (fin Sesion 30 - trigger de stock eliminado + docs informativas)
 **Fase actual:** Auditoria inicial CERRADA. Backlog P2/P3 aceptado con revision agendada.
 **Progreso global:** 100% (47 de 47 tareas)
 
@@ -31,9 +31,9 @@
 
 ## 3. Proximos 3 pasos
 
-1. **S29: Familia Gemini + retiro de Marketing (DOC-008)** - Cierra BUG-006..009 + DOC-002/003 por eliminacion.
-2. **S30: RLS pendiente (DB-002) + docs desalineadas (DOC-010/011)** - Cierre de deuda post-auditoria.
-3. **S31+: Higiene tecnica (CONF-003/004/005, DOC-018/019, SEC-016b)**
+1. **S31 (en curso): Retiro de Marketing (DOC-008) + Familia Gemini** - Cierra BUG-006..009, DOC-002/003/006, SEC-016b por eliminacion del modulo.
+2. **S32: RLS pendiente (DB-002) + docs desalineadas (DOC-010/011)** - Cierre de deuda post-auditoria.
+3. **S33+: Higiene tecnica (CONF-003/004/005, DOC-018/019) + TST-001 (tests reales)**
 
 > **Nota:** S28 cerro 4 PRs de codigo (#27, #28, #29, #30). SEC-015/016a/017/025 + BUG-0XX. BUG-0YY resulto falso positivo.
 
@@ -301,14 +301,6 @@
 - Progreso: 81% (38/47) sin cambios (F4-01 cierra SEC-001, pero fase F4 sigue en 0/8).
 
 
-**2026-10-17 - Sesion 25 (ENV) - EN CURSO**
-- Recon S25: HEAD 4845a99e, tree limpio salvo script 84.
-- F4-01 verificado: 0 .env en historial, .env.example intacto.
-- F4-05 formalizado: package-lock.json trackeado desde S17 (f9b1f7ba).
-- F4-06 reformulado a "No aplica": workflows solo usan GITHUB_TOKEN.
-- F4-07 formalizado: ci.yml y security-scan.yml sin continue-on-error.
-- F4-02: ticket #4869059 sigue esperando respuesta de soporte.
-- Progreso: 81% -> 89% (42/47). F4: 0/8 -> 4/8 (+ 1 en curso).
 
 **2026-10-17 - Sesion 26 (ENV) - CIERRE DE AUDITORIA**
 - Auditoria inicial 2026-10-13 CERRADA formalmente.
@@ -327,6 +319,24 @@
 - BUG-0YY verificado como falso positivo (validacion existe en dipticos.js:122).
 - 5/5 CI verde en los 4 PRs. Smoke test post-deploy OK.
 
+**2026-10-18 - PR #32 (P0) - Checkout de invitados - COMPLETA**
+- Fix P0: checkout roto para usuarios no autenticados (ventas perdidas).
+- PR #32 mergeado (squash 3e5dfede).
+- Hallazgo: no figuraba en sesiones previas; detectado y corregido en el mismo PR.
+
+**2026-10-18 - Sesion 29 - Fix vista disponibilidad + BUSINESS-LOGIC - COMPLETA**
+- Fix vista_disponibilidad_productos (migracion 2026-10-19-s29-fix-vista-disponibilidad.sql).
+- BUSINESS-LOGIC.md documentado: modelo Made-To-Order puro (no stock fisico).
+- Doc: docs/architecture/BUSINESS-LOGIC.md.
+- PR #33 mergeado (squash 76609dbe).
+
+**2026-10-19 - Sesion 30 - Trigger de stock eliminado - COMPLETA**
+- Trigger on_pedido_confirmado -> actualizar_stock_pedido() ELIMINADO.
+  Motivo: bloqueaba pedidos sin stock fisico (contradice Made-To-Order)
+  y causaba doble descuento al pasar de confirmado a entregado.
+- Tabla stock_movimientos se mantiene (consulta admin), pero sin inserciones desde pedidos.
+- Columnas stock_actual, production_capacity, current_orders documentadas como informativas.
+- PR #34 mergeado (squash 0061bf47).
 ## 6. Comandos utiles
 
     REM Ver estado actual
@@ -390,7 +400,7 @@
 - Deuda documental (DOC-010/011): S30
 - Higiene tecnica (CONF-003/004/005, DOC-018/019): S31+
 - Tests reales (TST-001): sesion dedicada
-- Retiro de Marketing (DOC-008): sesion dedicada
+- Retiro de Marketing (DOC-008): **EN CURSO en S31** (2026-10-19)
 
 **Bloqueantes externos (no bloquean el cierre):**
 - GitHub Support #4869059 (purga de commits huerfanos, F4-02)
@@ -399,6 +409,6 @@
 **Documento de cierre:** `docs/audits/2026-10-13-inicial/46-cierre-auditoria-inicial.md`
 
 **Proximos 3 pasos (producto, no auditoria):**
-1. BUG-003: `.eq('activo')` -> `.eq('is_active')` en diptico/[codigo]/page.js:98 (smoke test del proceso post-auditoria)
-2. SEC-015/016/017: chore de hardcodes residuales
-3. Familia Gemini (BUG-006..009): depende de DOC-008
+1. S31: Retiro de Marketing (DOC-008) + Familia Gemini (cierra BUG-006..009, DOC-002/003/006, SEC-016b)
+2. S32: RLS pendiente (DB-002) + docs desalineadas (DOC-010/011)
+3. S33+: Higiene tecnica (CONF-003/004/005, DOC-018/019) + TST-001
