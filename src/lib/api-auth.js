@@ -12,6 +12,7 @@
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { sanitizeSupabaseUrl, sanitizeSupabaseKey } from '@/lib/supabase'
 
 function getSupabaseAuthClient() {
@@ -19,6 +20,21 @@ function getSupabaseAuthClient() {
   const anonKey = sanitizeSupabaseKey(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)
   return createServerClient(url, anonKey, {
     cookies: { getAll: () => [], setAll: () => {} },
+  })
+}
+
+/**
+ * Cliente con service_role para leer datos que requieren bypass de RLS.
+ * Solo se usa despues de validar el JWT con getUser(token).
+ */
+function getSupabaseAdminClient() {
+  const url = sanitizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL)
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceRoleKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY no configurada')
+  }
+  return createSupabaseClient(url, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
   })
 }
 
@@ -67,9 +83,10 @@ export async function requireAuth(req, { requireAdmin = true } = {}) {
       }
     }
 
-    // 4. Si requireAdmin, verificar rol en tabla clientes (patron is_admin)
+    // 4. Si requireAdmin, verificar rol en tabla clientes (con service_role, bypass RLS)
     if (requireAdmin) {
-      const { data: cliente } = await supabase
+      const adminClient = getSupabaseAdminClient()
+      const { data: cliente } = await adminClient
         .from('clientes')
         .select('role')
         .eq('user_id', user.id)
