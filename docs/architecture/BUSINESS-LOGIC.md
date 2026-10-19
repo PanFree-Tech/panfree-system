@@ -36,6 +36,16 @@ Cliente → carrito → checkout → `POST /api/checkout/crear-pedido` (service_
 - `current_orders`: si no se usa, evaluar eliminar.
 - Vista `vista_disponibilidad_productos`: ya arreglada en S29 (migración `2026-10-19-s29-fix-vista-disponibilidad.sql`).
 
+## 7. Trigger de stock (eliminado en S30)
+
+El trigger `on_pedido_confirmado` -> `actualizar_stock_pedido()` fue eliminado en S30.
+Descontaba stock al confirmar/entregar pedidos, lo cual:
+- Bloqueaba pedidos si no habia stock fisico (contradice Made-To-Order).
+- Causaba doble descuento al cambiar de 'confirmado' a 'entregado'.
+
+En S30 se elimino el trigger y la funcion. La tabla `stock_movimientos` se mantiene (por si el admin la consulta), pero no se insertan filas nuevas desde pedidos.
+
+---
 ## 6. Referencias
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md)
