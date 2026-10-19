@@ -1,7 +1,7 @@
 /**
- * 📁 UBICACIÓN: src/app/api/admin/marketing/test-email/route.js
+ * 📁 UBICACIÓN: src/app/api/admin/test-email/route.js
  * 📅 ACTUALIZADO: 2026-08-22
- * 📌 ENDPOINT: GET & POST /api/admin/marketing/test-email
+ * 📌 ENDPOINT: GET & POST /api/admin/test-email
  * 📖 DESCRIPCIÓN: Endpoint para probar el envío de correos con Resend a system.panfree@gmail.com
  */
 
