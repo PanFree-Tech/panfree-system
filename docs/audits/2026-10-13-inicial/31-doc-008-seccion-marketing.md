@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-15 (S17)
 **Autor:** Pedro J. Pirovani
-**Estado:** Abierto
+**Estado:** CERRADO (S31, 2026-10-19)
 **Severidad:** Baja (deuda de limpieza, no bug ni seguridad)
 **Tipo:** Auditoria + plan de revision
 
@@ -218,3 +218,25 @@ Si al **2027-04-15** (6 meses) no se ha ejecutado la sesion de limpieza, revisar
 - [DOC-005/006/007 - Meta plomeria inerte](./30-doc-meta-plomeria-inerte.md)
 - [ROTACION-CLAVES](../../operations/ROTACION-CLAVES.md)
 - [PLAN-DE-TRABAJO](../../operations/PLAN-DE-TRABAJO.md)
+---
+
+## 12. Cierre S31 (2026-10-19)
+
+**Estado:** CERRADO
+
+**Ejecutado en S31:**
+- PR #36: mover `test-email` fuera del módulo (desbloqueo técnico).
+- PR #37: retiro atómico del módulo completo (~9.540 líneas borradas).
+  - 25 archivos/dirs borrados (components, hooks, services, utils, styles, 10 endpoints).
+  - `/admin/marketing/page.js` reescrita como página informativa (ASCII puro).
+  - `/admin/ayuda/marketing/page.js` reescrita como página informativa.
+  - Item "Marketing" quitado de `layout.js` y `admin/page.js`.
+- Borrado de código muerto:
+  - `buildMarketingImageTransformationUrl()` en `lib/cloudinary.js`.
+  - `templateNotificacionMarketing()` en `lib/email-templates.js`.
+
+**Hallazgos cerrados:** DOC-002, DOC-003, DOC-006, DOC-008, BUG-006, BUG-007, BUG-008, BUG-009, SEC-016b.
+
+**Pendiente para S32:** tablas huérfanas `reglas_promocion`, `promociones_historico`, `instagram_posts` (evaluar drop).
+
+**Verificación:** smoke test en producción OK (`panfree.fit` → redirect 308 → `www.panfree.fit`, menú sin Marketing, promos y cupones funcionando).

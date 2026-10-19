@@ -1950,3 +1950,36 @@ la referencia valida.
 - Tabla stock_movimientos se mantiene (consulta admin), sin inserciones desde pedidos.
 - stock_actual, production_capacity, current_orders documentadas como informativas.
 - PR #34 mergeado (squash 0061bf47).
+## 2026-10-19 (Sesion 31 - ENV) - COMPLETA
+
+**Duracion:** ~8 horas
+**Objetivo:** Retiro de Marketing (DOC-008) + familia Gemini + fix DNS.
+
+**Completado:**
+- PR #35: sync docs (STATUS + BITACORA a realidad post-S30).
+- PR #36: mover test-email fuera del modulo Marketing (desbloqueo tecnico).
+- PR #37: retiro atomico del modulo Marketing (~9.540 lineas borradas).
+  - 25 archivos/dirs borrados (components, hooks, services, utils, styles, 10 endpoints).
+  - /admin/marketing/page.js y /admin/ayuda/marketing/page.js reescritas como informativas (ASCII puro).
+  - Item "Marketing" quitado de layout.js y admin/page.js.
+- Codigo muerto borrado:
+  - buildMarketingImageTransformationUrl() en lib/cloudinary.js (0 llamadas).
+  - templateNotificacionMarketing() en lib/email-templates.js (0 llamadas).
+- Fix DNS: panfree.fit (apex) agregado a Vercel con redirect 308 -> www.panfree.fit.
+- Verificacion de promos y cupones: confirmados vivos en codigo real.
+- Smoke test en produccion OK.
+
+**Hallazgos cerrados:**
+- DOC-002, DOC-003, DOC-006, DOC-008, BUG-006, BUG-007, BUG-008, BUG-009, SEC-016b, DOC-020 (nuevo).
+
+**Hallazgos nuevos:**
+- DOC-020: panfree.fit (apex) no redirigia a www. Cerrado en S31.
+- DB-003: tablas huerfanas reglas_promocion, promociones_historico, instagram_posts. Abierto para S32.
+
+**Aprendizajes:**
+- Retiro atomico > retiro por partes: 1 PR, 1 revert, 0 estado intermedio roto.
+- Paginas informativas (ASCII puro) > 404: mejor UX y documenta la decision in-situ.
+- Grep de imports cruzados antes de borrar es obligatorio.
+- Vercel CLI en PowerShell 5.1 rompe con NativeCommandError. Usar cmd /c.
+- vercel inspect <dominio> no funciona: usar vercel domains inspect.
+- Redirect apex -> www es la mejor practica.

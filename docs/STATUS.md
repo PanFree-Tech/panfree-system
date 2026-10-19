@@ -1,6 +1,6 @@
 # Estado del Proyecto - PanFree System
 
-**Ultima actualizacion:** 2026-10-19 (fin Sesion 30 - trigger de stock eliminado + docs informativas)
+**Ultima actualizacion:** 2026-10-19 (fin Sesion 31 - retiro de Marketing + familia Gemini + fix DNS panfree.fit)
 **Fase actual:** Auditoria inicial CERRADA. Backlog P2/P3 aceptado con revision agendada.
 **Progreso global:** 100% (47 de 47 tareas)
 
@@ -31,9 +31,9 @@
 
 ## 3. Proximos 3 pasos
 
-1. **S31 (en curso): Retiro de Marketing (DOC-008) + Familia Gemini** - Cierra BUG-006..009, DOC-002/003/006, SEC-016b por eliminacion del modulo.
-2. **S32: RLS pendiente (DB-002) + docs desalineadas (DOC-010/011)** - Cierre de deuda post-auditoria.
-3. **S33+: Higiene tecnica (CONF-003/004/005, DOC-018/019) + TST-001 (tests reales)**
+1. **S32 (proximo): RLS pendiente (DB-002/DB-003) + docs desalineadas (DOC-010/011)** - Cierre de deuda post-auditoria.
+2. **S33: Higiene tecnica (CONF-003/004/005, DOC-018/019) + TST-001 (tests reales)**
+3. **S34+: Deuda restante (DOC-014, DB-003 drop, etc.)**
 
 > **Nota:** S28 cerro 4 PRs de codigo (#27, #28, #29, #30). SEC-015/016a/017/025 + BUG-0XX. BUG-0YY resulto falso positivo.
 

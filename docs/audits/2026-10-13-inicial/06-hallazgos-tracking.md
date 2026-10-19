@@ -79,10 +79,10 @@
 | DB-001f | ~150 politicas duplicadas | F1 | P2 | Cerrado | e40d9244 |
 | SEC-010 | select_publico_productos exponia inactivos (leak) | F1 | P2 | Cerrado | e40d9244 |
 | SEC-012 | canjes_premios usa clientes.role en vez de is_admin() | F3 | P2 | Cerrado | (Sesion 9) |
-| BUG-006 | .env.example dice gemini-2.5-flash pero codigo usa gemini-3.1-flash-image | F3 | P2 | Abierto | - |
-| BUG-007 | IDs de modelo Gemini hardcodeados en marketing/page.js:51-52 | F3 | P2 | Abierto | - |
-| BUG-008 | geminiService llama a /generate-caption pero endpoint real es /generar-contenido | F3 | P2 | Abierto | - |
-| BUG-009 | endpoint usa gemini-3.7-flash que no existe en AI Studio | F3 | P2 | Abierto | - |
+| BUG-006 | .env.example dice gemini-2.5-flash pero codigo usa gemini-3.1-flash-image | F3 | P2 | Cerrado (S31) | - |
+| BUG-007 | IDs de modelo Gemini hardcodeados en marketing/page.js:51-52 | F3 | P2 | Cerrado (S31) | - |
+| BUG-008 | geminiService llama a /generate-caption pero endpoint real es /generar-contenido | F3 | P2 | Cerrado (S31) | - |
+| BUG-009 | endpoint usa gemini-3.7-flash que no existe en AI Studio | F3 | P2 | Cerrado (S31) | - |
 | SEC-018 | 3 API keys activas en Cloudinary sin trazabilidad | F2 | P2 | Cerrado | (S15) |
 | SEC-019 | 4 API keys activas en Gemini sin trazabilidad | F2 | P2 | Cerrado | (S15) |
 | SEC-020 | 9 items Bitwarden pendientes (se completan durante rotacion S15) | F2 | P2 | Cerrado (S20: VAPID era el ultimo) | (S20) |
@@ -90,9 +90,9 @@
 | DOC-004 | Resend documentado bajo [C] cuando era [S] | F2 | P2 | Cerrado | (S16) |
 | SEC-008 | crear_usuario_admin sin chequeo de caller (eliminada) | F3 | P2 | Cerrado | (S15) |
 | DOC-005 | Meta WhatsApp + Twilio: plomeria inerte | F2 | P2 | Cerrado | (S17) |
-| DOC-006 | Instagram Graph API: endpoints rotos con UI visible | F2 | P2 | Abierto | - |
+| DOC-006 | Instagram Graph API: endpoints rotos con UI visible | F2 | P2 | Cerrado (S31) | - |
 | DOC-007 | Bloqueante externo: Meta Business Verification requiere RUC | F2 | P2 | Aceptado | (S17) |
-| DOC-008 | Seccion Marketing sin uso real (~8.100 lineas) - plan de retiro | F3 | P3 | Abierto | - |
+| DOC-008 | Seccion Marketing sin uso real (~8.100 lineas) - plan de retiro | F3 | P3 | Cerrado (S31) | - |
 | DOC-009 | n8n: plomeria inerte, tokens nunca creados | F2 | P2 | Cerrado | (S18) |
 | SEC-022 | Variable basura NEXT_PUBLIC_UPLOAD_PRESETNEXT_PUBLIC_UPLOAD_PRESET en Vercel | F2 | P2 | Cerrado | (S18) |
 | SEC-023 | GA4 con dos juegos de credenciales coexistiendo en Vercel | F2 | P2 | Cerrado (S19) | No era duplicado: coexistencia legitima (Service Account + Measurement Protocol) |
@@ -118,8 +118,8 @@
 | DOC-001 | Falta PropTypes/JSDoc | F4 | P3 | Abierto | - |
 | BUG-005 | AuthModal inserta columnas sin GRANT post-F3-01 | F3 | P2 | Cerrado | 7b014cc4 |
 | BUG-011 | bug en script 29-fix-logger-import.ps1 (Write-Ok con $modified + string) | F3 | P3 | Cerrado | (S15) |
-| DOC-002 | MARKETING_INTELLIGENT_SYSTEM.md menciona modelos gemini-3.5-flash inexistentes | F3 | P3 | Abierto | - |
-| DOC-003 | discrepancia endpoint frontend vs backend (geminiService) | F3 | P3 | Abierto | - |
+| DOC-002 | MARKETING_INTELLIGENT_SYSTEM.md menciona modelos gemini-3.5-flash inexistentes | F3 | P3 | Cerrado (S31) | - |
+| DOC-003 | discrepancia endpoint frontend vs backend (geminiService) | F3 | P3 | Cerrado (S31) | - |
 | DOC-010 | Variables en Vercel sin documentar en .env.example (GA4 service account, REVALIDATE_SECRET) | F2 | P3 | Abierto | - |
 | DOC-011 | Variables en .env.example sin equivalente en Vercel (CLARITY, EMAIL_FROM, BASE_URL, GEMINI_MODEL, NEXA) | F2 | P3 | Abierto | - |
 | DOC-015 | Alias Vercel apuntaba a deployment viejo | F4 | P2 | No aplica (falsa alarma S21) | (S21) |
@@ -194,9 +194,5 @@ considera **CERRADA**.
 - [Advisors de Supabase](./02-supabase-advisors.md)
 - [F1-07 InitPlan](./13-f1-07-rls-initplan.md)
 - [F1-08 Consolidacion](./15-f1-08-consolidacion-rls.md)
-
-
-
-
-
-
+| DOC-020 | panfree.fit (apex) no redirigía a www.panfree.fit | Baja | Config | Cerrado (S31) | S31 | Vercel Domains: agregado panfree.fit con redirect 308 a www. |
+| DB-003 | Tablas huérfanas tras retiro de Marketing: eglas_promocion, promociones_historico, instagram_posts | Baja | DB | Abierto | S32 | Evaluar drop con migración versionada y backup previo. |
