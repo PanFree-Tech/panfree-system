@@ -1,17 +1,28 @@
 // src/app/api/admin/ga-metrics/route.js
 import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+import { requireAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request) {
-  // ── DEBUG: Verificar variables de entorno ──
-  logger.log('🔍 GA_PROPERTY_ID:', process.env.GA_PROPERTY_ID ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
-  logger.log('🔍 GA4_CLIENT_EMAIL:', process.env.GA4_CLIENT_EMAIL ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
-  logger.log('🔍 GA4_PRIVATE_KEY:', process.env.GA4_PRIVATE_KEY ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
-  logger.log('🔍 GA4_PROJECT_ID:', process.env.GA4_PROJECT_ID ? '✅ DEFINIDO' : '❌ NO DEFINIDO')
-  // ──────────────────────────────────────────────
+    // Fase 3 Sprint 2: auth obligatoria + service_role
+    const auth = await requireAuth(request, { requireAdmin: true })
+    if (!auth.ok) return auth.response
+
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    )
+
+  // â”€â”€ DEBUG: Verificar variables de entorno â”€â”€
+  logger.log('ðŸ” GA_PROPERTY_ID:', process.env.GA_PROPERTY_ID ? 'âœ… DEFINIDO' : 'âŒ NO DEFINIDO')
+  logger.log('ðŸ” GA4_CLIENT_EMAIL:', process.env.GA4_CLIENT_EMAIL ? 'âœ… DEFINIDO' : 'âŒ NO DEFINIDO')
+  logger.log('ðŸ” GA4_PRIVATE_KEY:', process.env.GA4_PRIVATE_KEY ? 'âœ… DEFINIDO' : 'âŒ NO DEFINIDO')
+  logger.log('ðŸ” GA4_PROJECT_ID:', process.env.GA4_PROJECT_ID ? 'âœ… DEFINIDO' : 'âŒ NO DEFINIDO')
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   try {
     const { searchParams } = new URL(request.url)
     const periodo = searchParams.get('periodo') || '7d'
@@ -33,7 +44,7 @@ export async function GET(request) {
     const fechaInicioStr = fechaInicio.toISOString()
     const hoyStr = new Date().toISOString()
 
-    // ── 1. PEDIDOS DEL PERÍODO ──
+    // â”€â”€ 1. PEDIDOS DEL PERÃODO â”€â”€
     const { data: pedidos, error: pedidosError } = await supabase
       .from('pedidos')
       .select('total_final, estado, created_at, cliente_id')
@@ -42,10 +53,11 @@ export async function GET(request) {
       .neq('estado', 'cancelado')
 
     if (pedidosError) {
+      logger.error('[ga-metrics] pedidosError:', pedidosError)
       return NextResponse.json({ success: false, error: pedidosError.message }, { status: 500 })
     }
 
-    // ── 2. PEDIDOS HISTÓRICOS (para ingresos totales) ──
+    // â”€â”€ 2. PEDIDOS HISTÃ“RICOS (para ingresos totales) â”€â”€
     const { data: pedidosHistoricos, error: historicError } = await supabase
       .from('pedidos')
       .select('total_final, cliente_id, created_at')
@@ -53,10 +65,10 @@ export async function GET(request) {
       .order('created_at', { ascending: true })
 
     if (historicError) {
-      logger.warn('Error cargando pedidos históricos:', historicError.message)
+      logger.warn('Error cargando pedidos histÃ³ricos:', historicError.message)
     }
 
-    // ── 3. CLICKS EN ANUNCIOS (UTM) ──
+    // â”€â”€ 3. CLICKS EN ANUNCIOS (UTM) â”€â”€
     // Buscar en la tabla de analytics o en pedidos si tienen campos UTM
     // Si no hay tabla de UTMs, usar datos de ejemplo o de GA4
     const { data: utmData, error: utmError } = await supabase
@@ -70,9 +82,9 @@ export async function GET(request) {
       logger.warn('Error cargando datos UTM:', utmError.message)
     }
 
-    // ── 4. CALCULAR MÉTRICAS ──
+    // â”€â”€ 4. CALCULAR MÃ‰TRICAS â”€â”€
 
-    // 4.1 Métricas del período
+    // 4.1 MÃ©tricas del perÃ­odo
     const ingresosPeriodo = pedidos?.reduce((sum, p) => sum + (p.total_final || 0), 0) || 0
     const pedidosTotales = pedidos?.length || 0
     const pedidosCompletados = pedidos?.filter(p => p.estado === 'entregado' || p.estado === 'confirmado').length || 0
@@ -81,7 +93,7 @@ export async function GET(request) {
     const ticketPromedio = pedidosTotales > 0 ? Math.round(ingresosPeriodo / pedidosTotales) : 0
     const conversionRate = pedidosTotales > 0 ? Math.round((pedidosCompletados / pedidosTotales) * 100) : 0
 
-    // 4.2 Métricas históricas (INGRESOS TOTALES)
+    // 4.2 MÃ©tricas histÃ³ricas (INGRESOS TOTALES)
     const ingresosHistoricos = pedidosHistoricos?.reduce((sum, p) => sum + (p.total_final || 0), 0) || 0
     const clientesHistoricos = new Set(pedidosHistoricos?.map(p => p.cliente_id).filter(Boolean))
     const totalClientes = clientesHistoricos.size || 1
@@ -99,7 +111,7 @@ export async function GET(request) {
       }
       clicksPorFuente[source]++
       
-      // Agrupar por campaña (utm_campaign)
+      // Agrupar por campaÃ±a (utm_campaign)
       const campania = item.utm_campaign || 'sin_campania'
       if (!clicksPorCampania[campania]) {
         clicksPorCampania[campania] = 0
@@ -123,13 +135,13 @@ export async function GET(request) {
     return NextResponse.json({
       success: true,
       resumen: {
-        // Período
+        // PerÃ­odo
         revenue: ingresosPeriodo,
         pedidos: pedidosTotales,
         usuarios: usuariosUnicos,
         ticketPromedio: ticketPromedio,
         conversion_rate: conversionRate,
-        // Histórico
+        // HistÃ³rico
         ingresos_totales: ingresosHistoricos,
         ltv: ltv,
         clientes_unicos: totalClientes,
