@@ -1983,3 +1983,26 @@ la referencia valida.
 - Vercel CLI en PowerShell 5.1 rompe con NativeCommandError. Usar cmd /c.
 - vercel inspect <dominio> no funciona: usar vercel domains inspect.
 - Redirect apex -> www es la mejor practica.
+## 2026-10-19 (Sesion 32 - ENV) - COMPLETA
+
+**Objetivo:** Cierre de DB-002/DB-003 + .env.example.
+
+**Completado:**
+- DB-003: drop de tablas huerfanas de Marketing (reglas_promocion, promociones_historico, instagram_posts).
+- Backup de reglas_promocion (4 filas) en 48-s32-backup-reglas-promocion.json.
+- DB-002: cerrado (stock_movimientos RLS habilitado sin politicas, 0 refs en frontend).
+- .env.example: Instagram borrado, GA4 Service Account + CLOUDINARY_CLOUD_NAME documentados.
+
+## 2026-10-19 (Sesion 33 - ENV) - COMPLETA
+
+**Objetivo:** Higiene tecnica + TST-001 (tests reales).
+
+**Completado:**
+- CONF-003: ESLint configurado (warnings no bloqueantes).
+- CONF-004: TypeScript no aplica (proyecto JS).
+- CONF-005: CSP agregado en next.config.js.
+- DOC-018/019: PWA corregida (appleWebApp, manifest, icono 144x144).
+- TST-001: Jest + RTL configurados. 25 tests en 4 suites (0 fallos).
+- **Auditoria inicial 2026-10-13: 100% CERRADA.**
+
+**Hito:** Todos los hallazgos de la auditoria inicial (P0, P1, P2, P3) cerrados o aceptados con revision agendada.
