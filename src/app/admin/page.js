@@ -571,7 +571,6 @@ export default function AdminDashboard() {
             { href: '/admin/costos', icon: DollarSign, label: 'Costos' },
             { href: '/admin/pedidos', icon: Package, label: 'Pedidos' },
             { href: '/admin/clientes', icon: Users, label: 'Clientes' },
-            { href: '/admin/marketing', icon: Megaphone, label: 'Marketing' },
             { href: '/admin/reportes', icon: TrendingUp, label: 'Reportes' },
             { href: '/admin/ayuda', icon: HelpCircle, label: 'Ayuda' },
           ].map((item) => {
