@@ -68,3 +68,6 @@ dump-s*.txt
 
 # Dumps de contexto de sesion (efimeros)
 DUMP-S*.txt
+
+dump-*.txt
+pr-body-*.md
