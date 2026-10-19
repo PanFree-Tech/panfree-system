@@ -94,9 +94,16 @@ export default function AdminLayout({ children }) {
 
     async function verificarAdmin() {
       try {
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("getUser() timeout")), 10000)); const { data: { user }, error } = await Promise.race([supabase.auth.getUser(), timeoutPromise])
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('getUser() timeout')), 10000)
+        )
 
-        if (error || !session) {
+        const { data: { user }, error } = await Promise.race([
+          supabase.auth.getUser(),
+          timeoutPromise,
+        ])
+
+        if (error || !user) {
           if (mounted) router.replace('/admin/login')
           return
         }
@@ -110,12 +117,16 @@ export default function AdminLayout({ children }) {
           return
         }
 
-        if (mounted) { setAdminUser(user); setAdminConfirmado(true); }
-
+        if (mounted) {
+          setAdminUser(user)
+          setAdminConfirmado(true)
+        }
       } catch (err) {
-        logger.error('[PanFree] Error verificando sesiÃƒÂ³n admin:', err)
+        logger.error('[PanFree] Error verificando sesion admin:', err)
         if (mounted) router.replace('/admin/login')
-      } finally { if (mounted) setVerificando(false) }
+      } finally {
+        if (mounted) setVerificando(false)
+      }
     }
 
     verificarAdmin()
@@ -125,11 +136,11 @@ export default function AdminLayout({ children }) {
         if (mounted) router.replace('/admin/login')
         return
       }
-      const rol = user.app_metadata?.role
+      const rol = session.user?.app_metadata?.role
       if (rol !== 'admin') {
         if (mounted) router.replace('/')
       } else {
-        if (mounted) setAdminUser(user)
+        if (mounted) setAdminUser(session.user)
       }
     })
 
