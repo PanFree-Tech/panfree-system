@@ -299,10 +299,7 @@ Control de equipamiento, consumo eléctrico y estructura contable.
 
 ## 5. Módulo de Marketing Inteligente & Auditoría
 
-- **`reglas_promocion`:** Políticas comerciales automáticas (`condicion` en JSONB, `descuento_min`, `descuento_max`, `prioridad`).
 - **`eventos_calendario`:** Fechas clave de Encarnación y gastronomía celíaca (`nombre`, `fecha_inicio`, `fecha_fin`, `productos_relacionados`).
-- **`promociones_historico`:** Registro de promociones generadas por IA (`producto_id`, `regla_id`, `captions_generados`, `estado`).
-- **`instagram_posts`:** Trazabilidad de publicaciones en Meta Graph API (`post_id`, `caption`, `image_url`, `status`).
 - **`email_logs`:** Registro auditado de correos enviados vía Resend (`to_email`, `subject`, `status`, `resend_id`, `error_message`).
 - **`logs_auditoria`:** Registro de eventos de seguridad y cambios administrativos (`accion`, `detalle`, `usuario_id`, `ip`).
 - **`configuracion_sitio`:** Identidad de marca (`nombre_tienda`, `logo_url`, `logo_rosa_url`, `logo_variantes` en JSONB, `banner_titulo`).

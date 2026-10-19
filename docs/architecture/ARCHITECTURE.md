@@ -25,7 +25,7 @@ PanFree System es una solución de software empresarial híbrida que integra en 
 │  │  - Carrito Reactivo (CartContext)        │  │  - Pedidos, Clientes & Cupones     │  │
 │  │  - Checkout & Cálculo de Delivery        │  │  - Insumos, Compras & Recetas      │  │
 │  │  - Tracking de Pedidos en Vivo           │  │  - Producción, Maquinarias & Costos│  │
-│  │  - Portal de Puntos & Canje de Dípticos  │  │  - Marketing Inteligente & Canvas  │  │
+│  │  - Portal de Puntos & Canje de Dípticos  │  │  - (Módulo Marketing retirado)     │  │
 │  │  - PWA Service Worker & Push             │  │  - Configuración & Branding        │  │
 │  └──────────────────────────────────────────┘  └────────────────────────────────────┘  │
 └──────────────────────────────────────────┬─────────────────────────────────────────────┘
@@ -42,7 +42,7 @@ PanFree System es una solución de software empresarial híbrida que integra en 
 │  │  - SSR initial data fetching         │    │  - Delivery Calculation Engine       │  │
 │  │  - Static metadata & SEO generation  │    │  - Coupon & Diptico Validation       │  │
 │  │  - Layouts & Root Providers          │    │  - Notification Dispatcher (WA/Mail) │  │
-│  │                                      │    │  - Gemini AI Marketing Decision Engine│ │
+│  │                                      │    │  - (Motor IA retirado)                │ │
 │  │                                      │    │  - Webhook Handlers (Resend, n8n)    │  │
 │  │                                      │    │  - Analytics & Audit Logger (Service)│  │
 │  └──────────────────────────────────────┘    └──────────────────────────────────────┘  │
@@ -53,7 +53,7 @@ PanFree System es una solución de software empresarial híbrida que integra en 
 ┌────────▼──────────────┐       ┌──────────▼───────────┐         ┌───────────▼───────────┐
 │   PERSISTENCIA & AUTH │       │    MEDIA STORAGE     │         │ SERVICIOS EXTERNOS    │
 │   (Supabase / Postgres)│      │    (Cloudinary CDN)  │         │                       │
-│ - PostgreSQL 15 Engine │      │ - Catálogo Productos │         │ - Google Gemini SDK   │
+│ - PostgreSQL 15 Engine │      │ - Catálogo Productos │         │ - (Gemini retirado)   │
 │ - Row Level Security  │       │ - Variantes de Logos │         │ - Resend Email API    │
 │ - Triggers & Functions│       │ - Banners & Favicon  │         │ - Meta WhatsApp Cloud │
 │ - Views & Calculators │       │ - Avatares Usuarios  │         │ - n8n Webhook Engine  │
@@ -94,7 +94,6 @@ src/
 │   │   ├── produccion/               # Lotes de elaboración diaria (PROD-YYYY-NNNN)
 │   │   ├── maquinarias/              # Inventario de equipamiento y consumo eléctrico (kWh)
 │   │   ├── costos/                   # Análisis financiero: Margen Bruto, Costos Fijos y Margen Real
-│   │   ├── marketing/                # Motor de marketing inteligente con IA y diseñador Canvas
 │   │   ├── cupones/                  # Administración de cupones de descuento
 │   │   ├── dipticos/                 # Control de lotes de dípticos impresos y códigos QR
 │   │   ├── correos/                  # Centro de despacho de correos con Resend y plantillas HTML
@@ -232,7 +231,7 @@ src/
 
 ### 5.2. Matriz de Roles y Permisos
 
-| Módulo / Recurso | Cliente (`cliente`) | Operador (`operador`) | Marketing (`marketing`) | Repartidor (`repartidor`) | Administrador (`admin`) |
+| Módulo / Recurso | Cliente (`cliente`) | Operador (`operador`) | Repartidor (`repartidor`) | Administrador (`admin`) |
 |---|---|---|---|---|---|
 | Tienda & Checkout | ✅ Total | ✅ Total | ✅ Total | ✅ Total | ✅ Total |
 | Ver Perfil & Puntos | ✅ Propios | ✅ Propios | ✅ Propios | ✅ Propios | ✅ Todos |
@@ -242,7 +241,6 @@ src/
 | Producción & Lotes | ❌ No | ✅ Registrar Lotes | ❌ No | ❌ No | ✅ Total |
 | Compras & Proveedores | ❌ No | ✅ Registrar Recepción | ❌ No | ❌ No | ✅ Total |
 | Costos & Finanzas | ❌ No | ❌ No | ❌ No | ❌ No | ✅ Total |
-| Marketing & Canvas | ❌ No | ❌ No | ✅ Total | ❌ No | ✅ Total |
 | Configuración & Roles | ❌ No | ❌ No | ❌ No | ❌ No | ✅ Total |
 
 ---

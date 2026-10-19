@@ -7,7 +7,7 @@
 [![Resend](https://img.shields.io/badge/Resend-Email-000000?style=for-the-badge&logo=resend)](https://resend.com)
 [![Vercel](https://img.shields.io/badge/deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://panfree.fit)
 
-**PanFree System** es una plataforma tecnológica integral (ERP + E-commerce + Marketing con IA) diseñada a medida para la gestión operativa, productiva, financiera y comercial de **PanFree**, panadería y repostería artesanal 100% libre de gluten ubicada en Encarnación, Paraguay.
+**PanFree System** es una plataforma tecnológica integral (ERP + E-commerce) diseñada a medida para la gestión operativa, productiva, financiera y comercial de **PanFree**, panadería y repostería artesanal 100% libre de gluten ubicada en Encarnación, Paraguay.
 
 ---
 
@@ -32,7 +32,7 @@
 El sistema unifica en una sola plataforma:
 - **Tienda Pública de Alto Rendimiento:** Catálogo interactivo categorizado, fichas técnicas de productos aptos para celíacos, carrito reactivo sincronizado, checkout fluido de 1 solo paso, cálculo dinámico de delivery según zona/distancia, cupones de descuento, gamificación y seguimiento de pedidos en tiempo real.
 - **Sistema ERP Backoffice Completo:** Control de inventario de insumos (materias primas), fichas de recetas con desglose de costos, cálculo del Precio Promedio Ponderado (PPP), compras a proveedores, órdenes de producción con mermas, costeo energético de maquinarias (kWh), análisis de márgenes reales (bruto + prorrateo de costos fijos) y reportes ejecutivos.
-- **Motor de Marketing Inteligente:** Asistente generativo multimodal con **Google Gemini** para copies persuasivos y hashtags, **Diseñador Visual HTML5 Canvas** para banners y stories en múltiples formatos, calendario de festividades y eventos astronómicos/gastronómicos de Paraguay, y publicación programada a **Instagram Graph API**.
+- **Módulo Marketing:** Retirado en S31 (DOC-008) por falta de uso. Las promociones por producto y cupones siguen activos en `/admin/productos` y `/admin/cupones`.
 - **Fidelización y Gamificación:** Códigos QR en dípticos físicos para acumulación de puntos, sistema de niveles (Bronce, Plata, Oro, VIP) y catálogo de premios canjeables.
 - **Comunicaciones Omnicanal:** Notificaciones automáticas y transaccionales vía WhatsApp (Meta Cloud API / Twilio), correos HTML con **Resend** y webhooks con **n8n**.
 
@@ -100,7 +100,7 @@ El sistema unifica en una sola plataforma:
    - **Margen Bruto:** Precio de venta vs. Costo directo de receta.
    - **Costos Fijos:** Registro mensual de alquiler, nómina laboral, servicios, depreciaciones y energía.
    - **Margen Real:** Prorrateo de costos fijos por unidad/kg producida para conocer la rentabilidad neta real.
-10. **Marketing Inteligente con IA (`/admin/marketing`):** Generador de promociones con IA Gemini, diseñador gráfico interactivo en Canvas HTML5 para posts (4:5), historias (9:16) y banners (1:1), calendario de eventos comerciales y publicación directa en Instagram Graph API.
+10. ~~Marketing Inteligente con IA~~ (retirado en S31, DOC-008).
 11. **Cupones & Dípticos QR (`/admin/cupones` y `/admin/dipticos`):** Generación de códigos promocionales y lotes de dípticos impresos con códigos alfanuméricos únicos para campañas de fidelización.
 12. **Comunicaciones & Correos (`/admin/correos`):** Redacción y despacho de correos transaccionales y newsletters utilizando Resend con plantillas HTML responsivas y auditoría en `email_logs`.
 13. **Configuración & Branding (`/admin/configuracion`):** Gestión de logotipo oficial, variantes temáticas (Octubre Rosa, Navidad, etc.), banners del Hero, datos de contacto, zonas de delivery y roles de usuarios (`admin`, `operador`, `repartidor`, `marketing`).
@@ -233,17 +233,11 @@ NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=tu_cloud_name
 CLOUDINARY_API_KEY=tu_api_key
 CLOUDINARY_API_SECRET=tu_api_secret
 
-# Google Gemini AI
-GEMINI_API_KEY=tu_gemini_api_key
-
 # Resend Email
 RESEND_API_KEY=tu_resend_api_key
 
-# WhatsApp / Twilio / Meta
-WHATSAPP_ACCESS_TOKEN=tu_meta_token
-WHATSAPP_PHONE_NUMBER_ID=tu_phone_id
-WHATSAPP_TEAM_NUMBER=595984589845
-
+# WhatsApp / Twilio / Meta (NO USADO - DOC-005)
+# WHATSAPP_ACCESS_TOKEN=
 # Google Analytics 4
 NEXT_PUBLIC_GA_MEASUREMENT_ID=G-QE8GQS3MSR
 GA4_API_SECRET=tu_ga4_api_secret
@@ -254,10 +248,8 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY=tu_vapid_public_key
 VAPID_PRIVATE_KEY=tu_vapid_private_key
 NEXT_PUBLIC_VAPID_EMAIL=contacto@panfree.fit
 
-# n8n Webhook & Seguridad
-N8N_WEBHOOK_URL=https://tu-instancia.n8n.cloud/webhook/pedido
-N8N_WEBHOOK_TOKEN=tu_token_secreto
-CRON_SECRET=tu_cron_secret
+# n8n (NO USADO - DOC-009)
+# N8N_WEBHOOK_URL=
 ```
 
 ---
@@ -279,7 +271,7 @@ Consulta la guía completa en [DEPLOYMENT.md](DEPLOYMENT.md).
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Arquitectura de software, flujos de datos, seguridad RLS, roles y patrones |
 | [API.md](API.md) | Catálogo completo de endpoints REST (request, response, códigos de estado) |
 | [DATABASE.md](DATABASE.md) | Esquema relacional de Supabase, tablas, claves foráneas, vistas y triggers |
-| [MARKETING_INTELLIGENT_SYSTEM.md](MARKETING_INTELLIGENT_SYSTEM.md) | Manual operativo del sistema de marketing con IA, Canvas y automatizaciones |
+| ~~MARKETING_INTELLIGENT_SYSTEM.md~~ | Retirado en S31 (DOC-008). |
 | [GA4-IMPLEMENTACION.md](GA4-IMPLEMENTACION.md) | Especificación de eventos analíticos, consentimiento y Measurement Protocol |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Guía paso a paso de aprovisionamiento, migraciones y despliegue |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Estándares de desarrollo, convención de commits y pull requests |
