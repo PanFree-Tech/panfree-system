@@ -133,7 +133,7 @@
 | BUG-013 | createClient top-level en test-email y resend-webhook rompia build en CI | F3 | P2 | Cerrado (S25) | 664488b3 |
 | BUG-0XX | page.js referencia codigoData.tipo_regalo (columna inexistente en codigos_dipticos) | F3 | P3 | Cerrado (S28) | 2655e9ac |
 | BUG-0YY | page.js no chequea fecha_expiracion antes de canjear | F3 | P3 | Verificado S28: falso positivo | - |
-| DB-002 | public.stock_movimientos con RLS habilitado pero sin politicas | F1 | P3 | Abierto | - |
+| DB-002 | `stock_movimientos` RLS sin politicas | INFO | DB | Cerrado (S32) | S32 | RLS habilitado, 0 politicas. Solo accesible via service_role/dashboard. 0 referencias en frontend. Estado seguro. |
 ---
 
 > **BUG-0YY (falso positivo, S28):** Verificado en S28. La validacion de `fecha_expiracion` **existe** en `src/lib/dipticos.js:122` (dentro de `validarCodigo()`), que se ejecuta antes del canje via `canjearCodigo()` desde `src/app/api/dipticos/canjear/route.js`. El codigo **ya valida expiracion correctamente**. El diagnostico original de S27 fue incorrecto. **Cerrado sin cambios de codigo.**
@@ -195,4 +195,4 @@ considera **CERRADA**.
 - [F1-07 InitPlan](./13-f1-07-rls-initplan.md)
 - [F1-08 Consolidacion](./15-f1-08-consolidacion-rls.md)
 | DOC-020 | panfree.fit (apex) no redirigía a www.panfree.fit | Baja | Config | Cerrado (S31) | S31 | Vercel Domains: agregado panfree.fit con redirect 308 a www. |
-| DB-003 | Tablas huérfanas tras retiro de Marketing: eglas_promocion, promociones_historico, instagram_posts | Baja | DB | Abierto | S32 | Evaluar drop con migración versionada y backup previo. |
+| DB-003 | Tablas huerfanas tras retiro de Marketing: `reglas_promocion`, `promociones_historico`, `instagram_posts` | Baja | DB | Cerrado (S32) | S32 | Tablas dropeadas con migracion `2026-10-19-s32-drop-tablas-marketing.sql`. Backup de `reglas_promocion` (4 filas) en `docs/audits/2026-10-13-inicial/48-s32-backup-reglas-promocion.json`. |

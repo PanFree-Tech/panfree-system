@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "tabla": "reglas_promocion",
+    "motivo": "Backup previo a drop por retiro del modulo Marketing (DOC-008, S31).",
+    "fecha": "2026-10-19",
+    "sesion": "S32"
+  },
+  "datos": [
+    {
+      "id": "b7f17ee8-5432-4593-9478-e52d47925ae2",
+      "nombre": "Liquidacion por excedente",
+      "descripcion": "Productos con alto inventario y margen objetivo",
+      "condicion": { "margen_minimo": 30, "inventario_minimo": 50 },
+      "tipo_costo": "objetivo",
+      "descuento_min": 15,
+      "descuento_max": 20,
+      "prioridad": 10,
+      "activo": true,
+      "created_at": "2026-08-20T23:55:41.688188",
+      "updated_at": "2026-08-20T23:55:41.688188"
+    },
+    {
+      "id": "6c17851c-700d-4114-908b-14a35a227c96",
+      "nombre": "Oferta por evento",
+      "descripcion": "Productos relacionados al evento activo",
+      "condicion": { "evento_activo": true, "margen_minimo": 25 },
+      "tipo_costo": "competitivo",
+      "descuento_min": 10,
+      "descuento_max": 15,
+      "prioridad": 20,
+      "activo": true,
+      "created_at": "2026-08-20T23:55:41.688188",
+      "updated_at": "2026-08-20T23:55:41.688188"
+    },
+    {
+      "id": "365ca571-84bb-4687-a6d1-834577532a89",
+      "nombre": "Promocion premium",
+      "descripcion": "Productos con alto margen y baja rotacion",
+      "condicion": { "rotacion": "baja", "margen_minimo": 45 },
+      "tipo_costo": "premium",
+      "descuento_min": 5,
+      "descuento_max": 10,
+      "prioridad": 30,
+      "activo": true,
+      "created_at": "2026-08-20T23:55:41.688188",
+      "updated_at": "2026-08-20T23:55:41.688188"
+    },
+    {
+      "id": "b7220d20-1818-4374-b388-a318bda47033",
+      "nombre": "Producto estrella",
+      "descripcion": "Productos destacados con buen margen",
+      "condicion": { "es_destacado": true, "margen_minimo": 35 },
+      "tipo_costo": "objetivo",
+      "descuento_min": 8,
+      "descuento_max": 12,
+      "prioridad": 15,
+      "activo": true,
+      "created_at": "2026-08-20T23:55:41.688188",
+      "updated_at": "2026-08-20T23:55:41.688188"
+    }
+  ]
+}
