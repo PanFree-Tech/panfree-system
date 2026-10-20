@@ -1,10 +1,22 @@
-﻿import logger from '@/lib/logger'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { sanitizeSupabaseUrl } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+import { sanitizeSupabaseUrl, sanitizeSupabaseKey } from '@/lib/supabase'
 
 const supabaseUrl = sanitizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL)
 const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim()) || (() => { throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY no configurada') })()
+
+function getSupabaseAdmin() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceRoleKey) {
+    logger.warn('[middleware] SUPABASE_SERVICE_ROLE_KEY no configurada, no se puede verificar clientes.role')
+    return null
+  }
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl
@@ -42,7 +54,29 @@ export async function middleware(request) {
     return NextResponse.redirect(loginUrl)
   }
 
-  const role = user.app_metadata?.role
+  // Fase 4 #1: verificar rol real en clientes.role (ADR-002)
+  // Fallback: app_metadata.role (compatibilidad con el JWT viejo)
+  let role = user.app_metadata?.role
+
+  const adminClient = getSupabaseAdmin()
+  if (adminClient) {
+    try {
+      const { data: cliente, error: clienteError } = await adminClient
+        .from('clientes')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (clienteError) {
+        logger.warn('[middleware] Error consultando clientes.role:', clienteError.message)
+      } else if (cliente?.role) {
+        role = cliente.role
+      }
+    } catch (e) {
+      logger.warn('[middleware] Excepcion consultando clientes.role:', e?.message)
+    }
+  }
+
   if (role !== 'admin') {
     if (isApiAdmin) return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 403 })
     return NextResponse.redirect(new URL('/unauthorized', request.url))
