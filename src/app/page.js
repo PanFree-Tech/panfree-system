@@ -5,6 +5,7 @@ import TiendaCliente from './TiendaCliente'
 
 // Revalidar cada 5 minutos
 export const revalidate = 300
+export const dynamic = 'force-dynamic'
 
 async function cargarDatos() {
   try {
