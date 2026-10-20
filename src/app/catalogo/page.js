@@ -2,9 +2,9 @@
  * UBICACION: src/app/catalogo/page.js
  * ACTUALIZADO: 2026-08-27
  * DESCRIPCION:
- *  - Server Component para vista de Catálogo completo
+ *  - Server Component para vista de CatÃ¡logo completo
  *  - Carga segura de productos activos y disponibilidad desde Supabase
- *  - Normalización estricta de is_featured/destacado
+ *  - NormalizaciÃ³n estricta de is_featured/destacado
  */
 import logger from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
@@ -12,6 +12,7 @@ import { normalizeProduct } from '@/lib/image-utils'
 import TiendaCliente from '../TiendaCliente'
 
 export const revalidate = 300
+export const dynamic = 'force-dynamic'
 
 async function cargarDatos() {
   try {
@@ -28,7 +29,7 @@ async function cargarDatos() {
     ])
 
     if (errProd) {
-      logger.error('Error cargando productos en catálogo:', errProd)
+      logger.error('Error cargando productos en catÃ¡logo:', errProd)
     }
     if (errDisp) {
       logger.warn('Nota: vista_disponibilidad_productos no disponible:', errDisp?.message)
@@ -55,7 +56,7 @@ async function cargarDatos() {
       disponibilidad: dispMap,
     }
   } catch (err) {
-    logger.error('Error cargando datos de Supabase en catálogo:', err)
+    logger.error('Error cargando datos de Supabase en catÃ¡logo:', err)
     return {
       productos: [],
       disponibilidad: {},
