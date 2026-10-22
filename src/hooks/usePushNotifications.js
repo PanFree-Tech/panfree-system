@@ -1,11 +1,11 @@
 /**
- * ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â UBICACIÃƒÆ’Ã¢â‚¬Å“N: src/hooks/usePushNotifications.js
+ * ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â UBICACIÃƒÆ’Ã¢â‚¬Å“N: src/hooks/usePushNotifications.js
  * ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦ ACTUALIZADO: 2026-08-28
  * ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ DESCRIPCIÃƒÆ’Ã¢â‚¬Å“N: Hook de React para gestionar Push Notifications Web (VAPID) y Service Worker en PanFree:
  *    - DetecciÃƒÆ’Ã‚Â³n de compatibilidad en el navegador
  *    - Solicitud de permisos con feedback claro (default, granted, denied)
  *    - SuscripciÃƒÆ’Ã‚Â³n y registro automÃƒÆ’Ã‚Â¡tico/manual sincronizado con Supabase (/api/push-suscribir)
- *    - EnvÃƒÆ’Ã‚Â­o de notificaciones de prueba (sendTestNotification)
+ *    - EnvÃƒÆ’Ã‚Âo de notificaciones de prueba (sendTestNotification)
  */
 
 'use client'
@@ -38,7 +38,7 @@ export function usePushNotifications() {
   const [error, setError] = useState(null)
   const isSubscribingRef = useRef(false)
 
-  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 1. Verificar soporte y estado inicial de suscripciÃƒÆ’Ã‚Â³n ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 1. Verificar soporte y estado inicial de suscripciÃƒÆ’Ã‚Â³n ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   const checkSubscriptionStatus = useCallback(async () => {
     try {
       if (
@@ -83,7 +83,7 @@ export function usePushNotifications() {
         setIsSubscribed(false)
       }
     } catch (err) {
-      logger.warn('ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â [Push Hook] Error verificando estado de push:', err)
+      logger.warn('ÃƒÂ¢Ã…Â¡Ã‚ÂÃƒÂ¯Ã‚Â¸Ã‚Â [Push Hook] Error verificando estado de push:', err)
       setError(err.message)
     } finally {
       setLoading(false)
@@ -94,7 +94,7 @@ export function usePushNotifications() {
     checkSubscriptionStatus()
   }, [checkSubscriptionStatus])
 
-  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 2. Solicitar permiso al usuario de forma explÃƒÆ’Ã‚Â­cita ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 2. Solicitar permiso al usuario de forma explÃƒÆ’Ã‚Âcita ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   const requestPermission = async () => {
     if (!isSupported) {
       setError('Las notificaciones push no estÃƒÆ’Ã‚Â¡n soportadas en este navegador')
@@ -106,13 +106,13 @@ export function usePushNotifications() {
       setPermission(result)
       return result
     } catch (err) {
-      logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ [Push Hook] Error solicitando permiso:', err)
+      logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ [Push Hook] Error solicitando permiso:', err)
       setError(err.message)
       return 'denied'
     }
   }
 
-  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 3. Suscribir dispositivo y guardar en Supabase ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 3. Suscribir dispositivo y guardar en Supabase ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   const subscribe = async (userId = null) => {
     if (!isSupported) {
       setError('Notificaciones no soportadas en este navegador')
@@ -120,7 +120,7 @@ export function usePushNotifications() {
     }
 
     if (isSubscribingRef.current) {
-      logger.log('ÃƒÂ¢Ã‚ÂÃ‚Â³ [Push Hook] SuscripciÃƒÆ’Ã‚Â³n en curso, esperando...')
+      logger.log('ÃƒÂ¢Ã‚ÂÃ‚Â³ [Push Hook] SuscripciÃƒÆ’Ã‚Â³n en curso, esperando...')
       return { success: false, inProgress: true }
     }
 
@@ -173,7 +173,7 @@ export function usePushNotifications() {
         })
       }
 
-      // 5. Guardar suscripciÃƒÆ’Ã‚Â³n en Supabase vÃƒÆ’Ã‚Â­a API
+      // 5. Guardar suscripciÃƒÆ’Ã‚Â³n en Supabase vÃƒÆ’Ã‚Âa API
       const subPayload = pushSub.toJSON ? pushSub.toJSON() : pushSub
       const response = await fetch('/api/push-suscribir', {
         method: 'POST',
@@ -196,7 +196,7 @@ export function usePushNotifications() {
 
       return { success: true, subscription: pushSub }
     } catch (err) {
-      logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ [Push Hook] Error al suscribir a push:', err)
+      logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ [Push Hook] Error al suscribir a push:', err)
       setError(err.message)
       return { success: false, error: err.message }
     } finally {
@@ -205,7 +205,7 @@ export function usePushNotifications() {
     }
   }
 
-  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 4. Desuscribir dispositivo ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 4. Desuscribir dispositivo ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   const unsubscribe = async () => {
     if (!isSupported) return { success: false }
 
@@ -231,7 +231,7 @@ export function usePushNotifications() {
       setIsSubscribed(false)
       return { success: true }
     } catch (err) {
-      logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ [Push Hook] Error al desuscribir:', err)
+      logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ [Push Hook] Error al desuscribir:', err)
       setError(err.message)
       return { success: false, error: err.message }
     } finally {
@@ -239,7 +239,7 @@ export function usePushNotifications() {
     }
   }
 
-  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 5. Enviar notificaciÃƒÆ’Ã‚Â³n de prueba ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 5. Enviar notificaciÃƒÆ’Ã‚Â³n de prueba ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   const sendTestNotification = async (customTitle, customBody) => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -250,7 +250,7 @@ export function usePushNotifications() {
           ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
         },
         body: JSON.stringify({
-          titulo: customTitle || 'ÃƒÂ°Ã…Â¸Ã‚ÂÃ…Â¾ NotificaciÃƒÆ’Ã‚Â³n de Prueba - PanFree',
+          titulo: customTitle || 'ÃƒÂ°Ã…Â¸Ã‚ÂÃ…Â¾ NotificaciÃƒÆ’Ã‚Â³n de Prueba - PanFree',
           cuerpo: customBody || 'Ãƒâ€šÃ‚Â¡El sistema de notificaciones Push Web estÃƒÆ’Ã‚Â¡ funcionando correctamente!',
           url_accion: '/admin/pedidos',
           sendToAdmins: true,
@@ -260,7 +260,7 @@ export function usePushNotifications() {
       const result = await response.json()
       return result
     } catch (err) {
-      logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ [Push Hook] Error enviando prueba:', err)
+      logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ [Push Hook] Error enviando prueba:', err)
       return { success: false, error: err.message }
     }
   }

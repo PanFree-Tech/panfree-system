@@ -18,10 +18,10 @@ export async function GET(request) {
     )
 
   // â”€â”€ DEBUG: Verificar variables de entorno â”€â”€
-  logger.log('ðŸ” GA_PROPERTY_ID:', process.env.GA_PROPERTY_ID ? 'âœ… DEFINIDO' : 'âŒ NO DEFINIDO')
-  logger.log('ðŸ” GA4_CLIENT_EMAIL:', process.env.GA4_CLIENT_EMAIL ? 'âœ… DEFINIDO' : 'âŒ NO DEFINIDO')
-  logger.log('ðŸ” GA4_PRIVATE_KEY:', process.env.GA4_PRIVATE_KEY ? 'âœ… DEFINIDO' : 'âŒ NO DEFINIDO')
-  logger.log('ðŸ” GA4_PROJECT_ID:', process.env.GA4_PROJECT_ID ? 'âœ… DEFINIDO' : 'âŒ NO DEFINIDO')
+  logger.log('ðŸ” GA_PROPERTY_ID:', process.env.GA_PROPERTY_ID ? 'âœ… DEFINIDO' : 'âŒ NO DEFINIDO')
+  logger.log('ðŸ” GA4_CLIENT_EMAIL:', process.env.GA4_CLIENT_EMAIL ? 'âœ… DEFINIDO' : 'âŒ NO DEFINIDO')
+  logger.log('ðŸ” GA4_PRIVATE_KEY:', process.env.GA4_PRIVATE_KEY ? 'âœ… DEFINIDO' : 'âŒ NO DEFINIDO')
+  logger.log('ðŸ” GA4_PROJECT_ID:', process.env.GA4_PROJECT_ID ? 'âœ… DEFINIDO' : 'âŒ NO DEFINIDO')
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   try {
     const { searchParams } = new URL(request.url)
@@ -44,7 +44,7 @@ export async function GET(request) {
     const fechaInicioStr = fechaInicio.toISOString()
     const hoyStr = new Date().toISOString()
 
-    // â”€â”€ 1. PEDIDOS DEL PERÃODO â”€â”€
+    // â”€â”€ 1. PEDIDOS DEL PERÃODO â”€â”€
     const { data: pedidos, error: pedidosError } = await supabase
       .from('pedidos')
       .select('total_final, estado, created_at, cliente_id')

@@ -4,19 +4,19 @@
  *   - viewport y themeColor movidos al export `viewport` separado (Next.js 14 lo requiere)
  *   - Agregado metadataBase (eliminaba warning de Open Graph)
  * CAMBIOS 2026-03-04:
- *   - favicon.ico agregado como ÃƒÂ­cono principal (shortcut)
+ *   - favicon.ico agregado como ícono principal (shortcut)
  *   - keywords, authors, creator, publisher para mejor SEO
- *   - title como objeto con template para pÃƒÂ¡ginas internas
+ *   - title como objeto con template para páginas internas
  *   - og:image con alt descriptivo
  *   - link rel="shortcut icon" en  
  * CAMBIOS 2026-03-07:
- *   - Ã¢Å“â€¦ NUEVO: FloatingCartButton (botÃƒÂ³n flotante en mÃƒÂ³vil)
+ *   - Ã¢Å“â€¦ NUEVO: FloatingCartButton (botón flotante en móvil)
  *   - Ã¢Å“â€¦ NUEVO: SlideCart (carrito deslizable)
  *   - Ã¢Å“â€¦ NUEVO: ToastNotification (notificaciones emergentes)
  * CAMBIOS 2026-08-15:
  *   - Ã¢Å“â€¦ FIX: Mover CartInitializer a layout-client.js (Client Component)
  * CAMBIOS 2026-08-16:
- *   - Ã¢Å“â€¦ NUEVO: Metaetiqueta de verificaciÃƒÂ³n de dominio de Facebook
+ *   - Ã¢Å“â€¦ NUEVO: Metaetiqueta de verificación de dominio de Facebook
  *     facebook-domain-verification: b1zdu5wmi3jvuvzewn9incwwy4uavo
  * CAMBIOS 2026-08-29:
  *   - Ã¢Å“â€¦ NUEVO: Agregado componente Header en el layout principal
@@ -26,23 +26,23 @@ import './globals.css'
 import LayoutClient from './layout-client'
 
 // ============================================
-// METADATOS (SEO) - CON VERIFICACIÃƒâ€œN DE FACEBOOK
+// METADATOS (SEO) - CON VERIFICACIÓN DE FACEBOOK
 // ============================================
 export const metadata = {
   metadataBase: new URL('https://panfree.fit'),
 
   title: {
-    default:  'PanFree Ã¢â‚¬â€ Panificados Sin Gluten | EncarnaciÃƒÂ³n, Paraguay',
+    default:  'PanFree Ã¢â‚¬â€ Panificados Sin Gluten | Encarnación, Paraguay',
     template: '%s | PanFree',
   },
-  description: 'El placer de volver a comer libremente. Panificados artesanales sin gluten en EncarnaciÃƒÂ³n, Paraguay.',
-  keywords: ['sin gluten', 'panificados', 'panaderÃƒÂ­a', 'EncarnaciÃƒÂ³n', 'Paraguay', 'celÃƒÂ­aco', 'sin TACC', 'PanFree'],
+  description: 'El placer de volver a comer libremente. Panificados artesanales sin gluten en Encarnación, Paraguay.',
+  keywords: ['sin gluten', 'panificados', 'panadería', 'Encarnación', 'Paraguay', 'celíaco', 'sin TACC', 'PanFree'],
   authors:   [{ name: 'PanFree' }],
   creator:   'PanFree',
   publisher: 'PanFree',
   manifest:  '/manifest.json',
 
-  // Ã¢Å“â€¦ VERIFICACIÃƒâ€œN DE DOMINIO PARA FACEBOOK
+  // Ã¢Å“â€¦ VERIFICACIÓN DE DOMINIO PARA FACEBOOK
    verification: {
     facebook: 'e74odtvc4c40a654s1hw4jl1rkdcep',
   },
@@ -64,15 +64,15 @@ export const metadata = {
     locale:      'es_PY',
     url:         'https://panfree.fit',
     siteName:    'PanFree',
-    title:       'PanFree Ã¢â‚¬â€ Panificados Sin Gluten',
+    title:       'PanFree Ã¢â‚¬â€ Panificados Sin Gluten',
     description: 'El placer de volver a comer libremente.',
-    images: [{ url: '/og-image.jpg', width: 1200, height: 630,  alt: 'PanFree Ã¢â‚¬â€ Panificados Sin Gluten' }],
+    images: [{ url: '/og-image.jpg', width: 1200, height: 630,  alt: 'PanFree Ã¢â‚¬â€ Panificados Sin Gluten' }],
   },
 
   twitter: {
     card:        'summary_large_image',
     title:       'PanFree',
-    description: 'Panificados sin gluten en EncarnaciÃƒÂ³n',
+    description: 'Panificados sin gluten en Encarnación',
     images:      ['/og-image.jpg'],
   },
 

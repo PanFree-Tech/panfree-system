@@ -1,6 +1,6 @@
 /**
- * Ã°Å¸â€œÂ src/app/perfil/puntos/page.js
- * Dashboard de fidelizaciÃƒÂ³n y gamificaciÃƒÂ³n: puntos, niveles, catÃƒÂ¡logo de premios e historial.
+ * Ã°Å¸â€œÂ src/app/perfil/puntos/page.js
+ * Dashboard de fidelización y gamificación: puntos, niveles, catálogo de premios e historial.
  */
 
 'use client'
@@ -43,11 +43,11 @@ const NIVELES = [
 ]
 
 const PREMIOS_DEFAULT = [
-    { id: 'p1', nombre: 'Descuento 10%', descripcion: '10% de descuento en tu prÃƒÂ³xima compra', costo_puntos: 100, tipo: 'descuento', valor: '10', icono: 'Ã°Å¸â€ºÂÃ¯Â¸Â' },
-    { id: 'p2', nombre: 'Delivery Gratis', descripcion: 'EnvÃƒÂ­o gratis en tu prÃƒÂ³ximo pedido', costo_puntos: 150, tipo: 'delivery_gratis', valor: '0', icono: 'Ã°Å¸Å¡Å¡' },
-    { id: 'p3', nombre: 'BudÃƒÂ­n de Naranja', descripcion: 'BudÃƒÂ­n de naranja sin gluten (unidad)', costo_puntos: 200, tipo: 'producto_gratis', valor: 'BudÃƒÂ­n de Naranja', icono: 'Ã°Å¸Â§Â' },
-    { id: 'p4', nombre: 'Muffin Surtido', descripcion: 'Caja de 6 muffins surtidos', costo_puntos: 250, tipo: 'producto_gratis', valor: 'Muffin Surtido', icono: 'Ã°Å¸Â§Â' },
-    { id: 'p5', nombre: 'Pan de Campo', descripcion: 'Pan de campo artesanal (500g)', costo_puntos: 300, tipo: 'producto_gratis', valor: 'Pan de Campo', icono: 'Ã°Å¸ÂÅ¾' },
+    { id: 'p1', nombre: 'Descuento 10%', descripcion: '10% de descuento en tu próxima compra', costo_puntos: 100, tipo: 'descuento', valor: '10', icono: 'Ã°Å¸â€ºÂÃ¯Â¸Â' },
+    { id: 'p2', nombre: 'Delivery Gratis', descripcion: 'Envío gratis en tu próximo pedido', costo_puntos: 150, tipo: 'delivery_gratis', valor: '0', icono: 'Ã°Å¸Å¡Å¡' },
+    { id: 'p3', nombre: 'Budín de Naranja', descripcion: 'Budín de naranja sin gluten (unidad)', costo_puntos: 200, tipo: 'producto_gratis', valor: 'Budín de Naranja', icono: 'Ã°Å¸Â§Â' },
+    { id: 'p4', nombre: 'Muffin Surtido', descripcion: 'Caja de 6 muffins surtidos', costo_puntos: 250, tipo: 'producto_gratis', valor: 'Muffin Surtido', icono: 'Ã°Å¸Â§Â' },
+    { id: 'p5', nombre: 'Pan de Campo', descripcion: 'Pan de campo artesanal (500g)', costo_puntos: 300, tipo: 'producto_gratis', valor: 'Pan de Campo', icono: 'Ã°Å¸ÂÅ¾' },
 ]
 
 function obtenerInfoNivel(puntos = 0) {
@@ -147,7 +147,7 @@ export default function PuntosPage() {
                 // Adaptar si no tienen icono
                 const adaptados = premiosData.map(p => ({
                     ...p,
-                    icono: p.icono || (p.tipo === 'delivery_gratis' ? 'Ã°Å¸Å¡Å¡' : p.tipo === 'descuento' ? 'Ã°Å¸â€ºÂÃ¯Â¸Â' : 'Ã°Å¸ÂÅ¾')
+                    icono: p.icono || (p.tipo === 'delivery_gratis' ? 'Ã°Å¸Å¡Å¡' : p.tipo === 'descuento' ? 'Ã°Å¸â€ºÂÃ¯Â¸Â' : 'Ã°Å¸ÂÅ¾')
                 }))
                 setPremios(adaptados)
             } else {
@@ -194,7 +194,7 @@ export default function PuntosPage() {
             return
         }
 
-        const confirma = window.confirm(`Ã‚Â¿ConfirmÃƒÂ¡s el canje de "${premio.nombre}" por ${premio.costo_puntos} puntos?`)
+        const confirma = window.confirm(`Ã‚Â¿Confirmás el canje de "${premio.nombre}" por ${premio.costo_puntos} puntos?`)
         if (!confirma) return
 
         setCanjeandoPremioId(premio.id)
@@ -234,7 +234,7 @@ export default function PuntosPage() {
             logger.error('Error canjeando premio:', err)
             setMensajePremio({
                 tipo: 'error',
-                texto: 'Error de conexiÃƒÂ³n al procesar el canje.'
+                texto: 'Error de conexión al procesar el canje.'
             })
         } finally {
             setCanjeandoPremioId(null)
@@ -268,19 +268,19 @@ export default function PuntosPage() {
                         Club PanFree Fidelidad
                     </h2>
                     <p className="text-sm text-[#8a7a6b] mb-6 leading-relaxed">
-                        IniciÃƒÂ¡ sesiÃƒÂ³n para consultar tus puntos acumulados, subir de nivel y canjear premios exclusivos en panaderÃƒÂ­a libre de gluten.
+                        Iniciá sesión para consultar tus puntos acumulados, subir de nivel y canjear premios exclusivos en panadería libre de gluten.
                     </p>
                     <button
                         onClick={() => abrirModal ? abrirModal() : router.push('/login?redirect=/perfil/puntos')}
                         className="w-full py-3.5 px-6 bg-[#f46e15] hover:bg-[#e05b0a] text-white rounded-xl font-bold text-base shadow-md shadow-[#f46e15]/20 hover:shadow-lg transition-all duration-200"
                     >
-                        Iniciar SesiÃƒÂ³n / Registrarme
+                        Iniciar Sesión / Registrarme
                     </button>
                     <Link
                         href="/premios"
                         className="inline-block mt-4 text-xs font-semibold text-[#334c2b] hover:text-[#f46e15] transition"
                     >
-                        Ver catÃƒÂ¡logo pÃƒÂºblico de premios Ã¢â€ â€™
+                        Ver catálogo público de premios Ã¢â€â€™
                     </Link>
                 </div>
             </div>
@@ -295,7 +295,7 @@ export default function PuntosPage() {
         <div className="min-h-screen bg-[#fcfaf7] text-[#2d1f14] py-8 px-4 sm:px-6 antialiased">
             <div className="max-w-5xl mx-auto space-y-8">
 
-                {/* Barra de navegaciÃƒÂ³n superior */}
+                {/* Barra de navegación superior */}
                 <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-[#e8dfd3]/80">
                     <Link
                         href="/perfil"
@@ -311,7 +311,7 @@ export default function PuntosPage() {
                             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#8a7a6b] hover:text-[#334c2b] transition px-3 py-1.5 rounded-lg border border-[#e8dfd3] bg-white"
                         >
                             <Gift size={14} className="text-[#f46e15]" />
-                            <span>CatÃƒÂ¡logo PÃƒÂºblico</span>
+                            <span>Catálogo Público</span>
                         </Link>
 
                         <Link
@@ -319,7 +319,7 @@ export default function PuntosPage() {
                             className="inline-flex items-center gap-2 bg-[#f46e15] hover:bg-[#e05b0a] text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-xl shadow-sm hover:shadow-md transition"
                         >
                             <QrCode size={16} />
-                            <span>Canjear Nuevo DÃƒÂ­ptico</span>
+                            <span>Canjear Nuevo Díptico</span>
                         </Link>
                     </div>
                 </div>
@@ -334,12 +334,12 @@ export default function PuntosPage() {
                             Ã‚Â¡Hola, {nombreUsuario.split(' ')[0]}!
                         </h1>
                         <p className="text-xs sm:text-sm text-[#8a7a6b]">
-                            AcumulÃƒÂ¡ puntos con tus compras y dÃƒÂ­pticos para canjear por premios deliciosos.
+                            Acumulá puntos con tus compras y dípticos para canjear por premios deliciosos.
                         </p>
                     </div>
                 </div>
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ BANNER PRINCIPAL DE PUNTOS Y GAMIFICACIÃƒâ€œN Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ BANNER PRINCIPAL DE PUNTOS Y GAMIFICACIÓN Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
                 <section className="bg-white rounded-2xl shadow-sm border border-[#e8dfd3] p-6 sm:p-8 relative overflow-hidden transition-all duration-200">
                     <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#b7996b] via-[#f46e15] to-[#334c2b]" />
 
@@ -382,7 +382,7 @@ export default function PuntosPage() {
                                     </div>
                                 ) : (
                                     <span className="text-xs font-bold text-[#b8860b] bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">
-                                        Ã‚Â¡Nivel MÃƒÂ¡ximo VIP Alcanzado! Ã°Å¸â€˜â€˜
+                                        Ã‚Â¡Nivel Máximo VIP Alcanzado! Ã°Å¸â€˜â€˜
                                     </span>
                                 )}
                             </div>
@@ -401,7 +401,7 @@ export default function PuntosPage() {
                                 </div>
                                 {siguienteNivel && (
                                     <p className="text-[11px] text-[#8a7a6b] text-right">
-                                        Te faltan <strong className="text-[#334c2b]">{puntosParaSiguiente} pts</strong> para subir de categorÃƒÂ­a.
+                                        Te faltan <strong className="text-[#334c2b]">{puntosParaSiguiente} pts</strong> para subir de categoría.
                                     </p>
                                 )}
                             </div>
@@ -439,7 +439,7 @@ export default function PuntosPage() {
                     </div>
                 </section>
 
-                {/* NotificaciÃƒÂ³n de canje de premio */}
+                {/* Notificación de canje de premio */}
                 {mensajePremio && (
                     <div className={`p-4 rounded-2xl border flex items-start gap-3 text-sm animate-fadeIn ${
                         mensajePremio.tipo === 'success'
@@ -473,7 +473,7 @@ export default function PuntosPage() {
                     </div>
                 )}
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ CATÃƒÂLOGO DE PREMIOS CANJEABLES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ CATÃƒÂLOGO DE PREMIOS CANJEABLES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
                 <section className="space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div>
@@ -481,11 +481,11 @@ export default function PuntosPage() {
                                 Recompensas Disponibles
                             </span>
                             <h2 className="text-xl sm:text-2xl font-extrabold text-[#334c2b]">
-                                CatÃƒÂ¡logo de Premios
+                                Catálogo de Premios
                             </h2>
                         </div>
                         <p className="text-xs text-[#8a7a6b]">
-                            ElegÃƒÂ­ tu premio favorito y canjealo al instante con tus puntos.
+                            Elegí tu premio favorito y canjealo al instante con tus puntos.
                         </p>
                     </div>
 
@@ -511,7 +511,7 @@ export default function PuntosPage() {
                                     )}
 
                                     <div>
-                                        <div className="text-4xl mb-3">{premio.icono || 'Ã°Å¸Å½Â'}</div>
+                                        <div className="text-4xl mb-3">{premio.icono || 'Ã°Å¸Å½Â'}</div>
                                         <h3 className="text-lg font-bold text-[#334c2b] mb-1">
                                             {premio.nombre}
                                         </h3>
@@ -556,7 +556,7 @@ export default function PuntosPage() {
                     </div>
                 </section>
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HISTORIAL DE ACTIVIDAD (COLAPSABLE / ELEGANTE) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HISTORIAL DE ACTIVIDAD (COLAPSABLE / ELEGANTE) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
                 <section className="bg-white rounded-2xl border border-[#e8dfd3] shadow-sm overflow-hidden">
                     <button
                         onClick={() => setMostrarHistorial(!mostrarHistorial)}
@@ -571,7 +571,7 @@ export default function PuntosPage() {
                                     Historial de Puntos y Premios
                                 </h3>
                                 <p className="text-xs text-[#8a7a6b]">
-                                    ConsultÃƒÂ¡ tus dÃƒÂ­pticos canjeados y cupones generados
+                                    Consultá tus dípticos canjeados y cupones generados
                                 </p>
                             </div>
                         </div>
@@ -583,18 +583,18 @@ export default function PuntosPage() {
 
                     {mostrarHistorial && (
                         <div className="p-6 pt-0 border-t border-[#f0e9df] grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                            {/* DÃƒÂ­pticos Canjeados */}
+                            {/* Dípticos Canjeados */}
                             <div className="bg-[#fcfaf7] p-4 rounded-xl border border-[#e8dfd3]">
                                 <h4 className="text-xs font-bold text-[#334c2b] uppercase tracking-wider mb-3 flex items-center gap-1.5">
                                     <QrCode size={15} className="text-[#f46e15]" />
-                                    DÃƒÂ­pticos FÃƒÂ­sicos Canjeados
+                                    Dípticos Físicos Canjeados
                                 </h4>
 
                                 {historialCanjes.length === 0 ? (
                                     <div className="text-center py-6 text-xs text-[#8a7a6b]">
-                                        <p>AÃƒÂºn no has canjeado ningÃƒÂºn cÃƒÂ³digo de dÃƒÂ­ptico.</p>
+                                        <p>Aún no has canjeado ningún código de díptico.</p>
                                         <Link href="/canjear" className="text-[#f46e15] font-semibold mt-1 inline-block hover:underline">
-                                            Canjear mi primer cÃƒÂ³digo Ã¢â€ â€™
+                                            Canjear mi primer código Ã¢â€â€™
                                         </Link>
                                     </div>
                                 ) : (
@@ -603,7 +603,7 @@ export default function PuntosPage() {
                                             <thead>
                                                 <tr className="border-b border-[#e8dfd3] text-[#8a7a6b]">
                                                     <th className="py-2">Fecha</th>
-                                                    <th className="py-2">CÃƒÂ³digo</th>
+                                                    <th className="py-2">Código</th>
                                                     <th className="py-2 text-right">Puntos</th>
                                                 </tr>
                                             </thead>
@@ -614,7 +614,7 @@ export default function PuntosPage() {
                                                             {new Date(item.created_at).toLocaleDateString('es-PY')}
                                                         </td>
                                                         <td className="py-2 font-mono font-bold text-[#334c2b]">
-                                                            {item.codigos_dipticos?.codigo || 'DÃƒÂPTICO'}
+                                                            {item.codigos_dipticos?.codigo || 'DÃƒÂPTICO'}
                                                         </td>
                                                         <td className="py-2 text-right font-extrabold text-emerald-600">
                                                             +{item.puntos_ganados}
@@ -636,7 +636,7 @@ export default function PuntosPage() {
 
                                 {historialPremios.length === 0 ? (
                                     <div className="text-center py-6 text-xs text-[#8a7a6b]">
-                                        <p>Cuando canjees premios, aquÃƒÂ­ verÃƒÂ¡s tus cupones activos.</p>
+                                        <p>Cuando canjees premios, aquí verás tus cupones activos.</p>
                                     </div>
                                 ) : (
                                     <div className="overflow-x-auto">
@@ -644,7 +644,7 @@ export default function PuntosPage() {
                                             <thead>
                                                 <tr className="border-b border-[#e8dfd3] text-[#8a7a6b]">
                                                     <th className="py-2">Premio</th>
-                                                    <th className="py-2">CupÃƒÂ³n</th>
+                                                    <th className="py-2">Cupón</th>
                                                     <th className="py-2 text-right">Puntos</th>
                                                 </tr>
                                             </thead>
@@ -664,7 +664,7 @@ export default function PuntosPage() {
                                                                     <Copy size={10} />
                                                                 </button>
                                                             ) : (
-                                                                <span className="text-gray-400">Ã¢â‚¬â€</span>
+                                                                <span className="text-gray-400">Ã¢â‚¬â€</span>
                                                             )}
                                                         </td>
                                                         <td className="py-2 text-right font-extrabold text-rose-600">
@@ -681,14 +681,14 @@ export default function PuntosPage() {
                     )}
                 </section>
 
-                {/* Bases de la promociÃƒÂ³n footer link */}
+                {/* Bases de la promoción footer link */}
                 <div className="text-center pt-4">
                     <Link
                         href="/promocion-dipticos-bases"
                         className="text-xs text-[#8a7a6b] hover:text-[#f46e15] hover:underline"
                         target="_blank"
                     >
-                        Ver Bases y Condiciones de la PromociÃƒÂ³n de Puntos Ã¢â€ â€™
+                        Ver Bases y Condiciones de la Promoción de Puntos Ã¢â€â€™
                     </Link>
                 </div>
 

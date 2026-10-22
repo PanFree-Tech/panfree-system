@@ -1,5 +1,5 @@
 /**
- * ðŸ“ UBICACIÃ“N: src/lib/notificaciones.js
+ * ðŸ“ UBICACIÃ“N: src/lib/notificaciones.js
  * ðŸ“… ACTUALIZADO: 2026-08-28
  * ðŸ“Œ DESCRIPCIÃ“N: Servicio centralizado de notificaciones internas, transaccionales y Push Web (VAPID) para PanFree:
  *    - Notificaciones internas para el panel de administraciÃ³n (tabla notificaciones_admin)
@@ -68,17 +68,17 @@ function getWebPushInstance() {
     webpush.setVapidDetails(subject, publicKey, privateKey)
     return webpush
   } catch (err) {
-    logger.warn('âš ï¸ [Push] No se pudo configurar webpush en notificaciones.js:', err.message)
+    logger.warn('âšï¸ [Push] No se pudo configurar webpush en notificaciones.js:', err.message)
     return null
   }
 }
 
 /**
- * EnvÃ­a una notificaciÃ³n Push Web a un usuario especÃ­fico
+ * EnvÃa una notificaciÃ³n Push Web a un usuario especÃfico
  * 
  * @param {Object} param
  * @param {string} param.userId - ID del usuario (de auth.users o tabla usuarios)
- * @param {string} param.titulo - TÃ­tulo de la notificaciÃ³n
+ * @param {string} param.titulo - TÃtulo de la notificaciÃ³n
  * @param {string} param.mensaje - Cuerpo del mensaje
  * @param {string} [param.url] - URL de destino al hacer clic (default: '/admin/pedidos')
  * @returns {Promise<{success: boolean, enviadas: number, error?: string}>}
@@ -88,14 +88,14 @@ export async function enviarPushAdmin({ userId, titulo, mensaje, url = '/admin/p
 
   const cleanUserId = typeof userId === 'string' ? userId.trim() : String(userId).trim()
   if (!isValidUUID(cleanUserId)) {
-    logger.warn(`âš ï¸ [Push] userId invÃ¡lido recibido ("${cleanUserId}"). Se requiere formato UUID vÃ¡lido.`)
+    logger.warn(`âšï¸ [Push] userId invÃ¡lido recibido ("${cleanUserId}"). Se requiere formato UUID vÃ¡lido.`)
     return { success: false, enviadas: 0, error: `UUID invÃ¡lido: ${cleanUserId}` }
   }
 
   try {
     const wp = getWebPushInstance()
     if (!wp) {
-      logger.log('â„¹ï¸ [Push] Claves VAPID no disponibles en el entorno. Omitiendo push.')
+      logger.log('â„¹ï¸ [Push] Claves VAPID no disponibles en el entorno. Omitiendo push.')
       return { success: false, enviadas: 0, error: 'VAPID no configurado' }
     }
 
@@ -106,7 +106,7 @@ export async function enviarPushAdmin({ userId, titulo, mensaje, url = '/admin/p
       .eq('user_id', cleanUserId)
 
     if (error || !subs || subs.length === 0) {
-      logger.log(`â„¹ï¸ [Push] Usuario ${cleanUserId} no tiene suscripciones push activas.`)
+      logger.log(`â„¹ï¸ [Push] Usuario ${cleanUserId} no tiene suscripciones push activas.`)
       return { success: true, enviadas: 0, message: 'Usuario no suscrito' }
     }
 
@@ -155,17 +155,17 @@ export async function enviarPushAdmin({ userId, titulo, mensaje, url = '/admin/p
 
     return { success: true, enviadas, total: subs.length }
   } catch (err) {
-    logger.error(`âŒ [Push] Error enviando push a admin ${userId}:`, err)
+    logger.error(`âŒ [Push] Error enviando push a admin ${userId}:`, err)
     return { success: false, enviadas: 0, error: err.message }
   }
 }
 
 /**
- * EnvÃ­a una notificaciÃ³n Push Web a TODOS los administradores registrados
+ * EnvÃa una notificaciÃ³n Push Web a TODOS los administradores registrados
  * Obtiene los IDs de los administradores desde la tabla `usuarios` (rol = 'admin')
  * 
  * @param {Object} param
- * @param {string} param.titulo - TÃ­tulo de la notificaciÃ³n
+ * @param {string} param.titulo - TÃtulo de la notificaciÃ³n
  * @param {string} param.mensaje - Cuerpo del mensaje
  * @param {string} [param.url] - URL de destino al hacer clic (default: '/admin/pedidos')
  * @returns {Promise<{success: boolean, enviadas: number, total: number}>}
@@ -174,7 +174,7 @@ export async function enviarPushATodosLosAdmins({ titulo, mensaje, url = '/admin
   try {
     const wp = getWebPushInstance()
     if (!wp) {
-      logger.log('â„¹ï¸ [Push] Claves VAPID no disponibles en el entorno. Omitiendo push a admins.')
+      logger.log('â„¹ï¸ [Push] Claves VAPID no disponibles en el entorno. Omitiendo push a admins.')
       return { success: false, enviadas: 0, total: 0, error: 'VAPID no configurado' }
     }
 
@@ -195,7 +195,7 @@ export async function enviarPushATodosLosAdmins({ titulo, mensaje, url = '/admin
           .filter(isValidUUID)
       }
     } catch (e) {
-      logger.warn('âš ï¸ [Push] Error consultando tabla usuarios para admins:', e.message)
+      logger.warn('âšï¸ [Push] Error consultando tabla usuarios para admins:', e.message)
     }
 
     // 2. Buscar suscripciones push de estos administradores (o todas si no hay filtro estricto)
@@ -208,18 +208,18 @@ export async function enviarPushATodosLosAdmins({ titulo, mensaje, url = '/admin
 
     let subscriptionsToSend = subs || []
 
-    // Fallback: si no encontrÃ³ por IDs especÃ­ficos, tomar todas las suscripciones registradas
+    // Fallback: si no encontrÃ³ por IDs especÃficos, tomar todas las suscripciones registradas
     if (subscriptionsToSend.length === 0) {
       const { data: allSubs } = await db.from('push_subscriptions').select('*').limit(50)
       subscriptionsToSend = allSubs || []
     }
 
     if (subscriptionsToSend.length === 0) {
-      logger.log('â„¹ï¸ [Push] No hay administradores suscritos a Push Notifications Web.')
+      logger.log('â„¹ï¸ [Push] No hay administradores suscritos a Push Notifications Web.')
       return { success: true, enviadas: 0, total: 0 }
     }
 
-    // 3. Deduplicar por endpoint (un dispositivo fÃ­sico = un envÃ­o)
+    // 3. Deduplicar por endpoint (un dispositivo fÃsico = un envÃo)
     const subsUnicas = Array.from(
       new Map(subscriptionsToSend.map((s) => [s.endpoint, s])).values()
     )
@@ -299,7 +299,7 @@ export async function crearNotificacion({ tipo, titulo, mensaje, link = null, me
     const { data, error } = await db.from('notificaciones_admin').insert([payload]).select().single()
 
     if (error) {
-      logger.warn('âš ï¸ [Notificaciones] Error al insertar en notificaciones_admin:', error.message)
+      logger.warn('âšï¸ [Notificaciones] Error al insertar en notificaciones_admin:', error.message)
       return { success: false, error: error.message }
     }
 
@@ -311,7 +311,7 @@ export async function crearNotificacion({ tipo, titulo, mensaje, link = null, me
 }
 
 /**
- * Obtiene las notificaciones no leÃ­das para el panel de administraciÃ³n
+ * Obtiene las notificaciones no leÃdas para el panel de administraciÃ³n
  */
 export async function obtenerNotificacionesNoLeidas(limit = 50) {
   try {
@@ -341,7 +341,7 @@ export async function obtenerNotificacionesNoLeidas(limit = 50) {
 }
 
 /**
- * Marca una notificaciÃ³n especÃ­fica como leÃ­da
+ * Marca una notificaciÃ³n especÃfica como leÃda
  */
 export async function marcarNotificacionComoLeida(id) {
   if (!id) return false
@@ -364,7 +364,7 @@ export async function marcarNotificacionComoLeida(id) {
 }
 
 /**
- * Marca todas las notificaciones no leÃ­das como leÃ­das
+ * Marca todas las notificaciones no leÃdas como leÃdas
  */
 export async function marcarTodasComoLeidas() {
   try {
@@ -386,14 +386,14 @@ export async function marcarTodasComoLeidas() {
 }
 
 /**
- * EnvÃ­a el correo de confirmaciÃ³n de compra al cliente
+ * EnvÃa el correo de confirmaciÃ³n de compra al cliente
  */
 export async function enviarEmailConfirmacionCliente(pedido, cliente, items = []) {
   const emailCliente = cliente?.email
   const numeroPedido = pedido?.numero_pedido || pedido?.numero || 'N/A'
 
   if (!emailCliente) {
-    logger.log(`â„¹ï¸ [Email] Cliente sin correo para pedido #${numeroPedido}. Omitiendo envÃ­o.`)
+    logger.log(`â„¹ï¸ [Email] Cliente sin correo para pedido #${numeroPedido}. Omitiendo envÃo.`)
     return { success: false, error: 'Cliente sin email registrado' }
   }
 
@@ -401,13 +401,13 @@ export async function enviarEmailConfirmacionCliente(pedido, cliente, items = []
     const html = templateConfirmacionCompra({ pedido, cliente, items })
     const res = await sendEmail({
       to: emailCliente,
-      subject: `ðŸž Â¡Gracias por tu pedido #${numeroPedido}! - PanFree Sin Gluten`,
+      subject: `ðŸž Â¡Gracias por tu pedido #${numeroPedido}! - PanFree Sin Gluten`,
       html,
     })
 
     return res
   } catch (err) {
-    logger.error(`âŒ [Email] Error enviando confirmaciÃ³n a ${emailCliente}:`, err)
+    logger.error(`âŒ [Email] Error enviando confirmaciÃ³n a ${emailCliente}:`, err)
     return { success: false, error: err.message }
   }
 }
@@ -451,7 +451,7 @@ export async function notificarNuevoPedido(pedido, cliente, items = []) {
     mensaje: `${nombreCliente} realizÃ³ un pedido por ${total} â‚² (${metodoEntrega})`,
     url: `/admin/pedidos`,
   }).catch((err) => {
-    logger.warn('âš ï¸ [Push Admin] Error no bloqueante al notificar push a admins:', err.message)
+    logger.warn('âšï¸ [Push Admin] Error no bloqueante al notificar push a admins:', err.message)
     return { success: false, error: err.message }
   })
   promises.push(pushPromise)
@@ -480,7 +480,7 @@ export async function notificarNuevoPedido(pedido, cliente, items = []) {
       args: [pedido, cliente],
       permitirFallback: true,
     }).catch((err) => {
-      logger.warn('âš ï¸ [WhatsApp Admin] Error no bloqueante al notificar a admin:', err.message)
+      logger.warn('âšï¸ [WhatsApp Admin] Error no bloqueante al notificar a admin:', err.message)
       return { success: false, error: err.message }
     })
     promises.push(waPromise)
@@ -524,7 +524,7 @@ export async function notificarCambioEstadoPedido(pedido, cliente, nuevoEstado) 
         html,
       })
     } catch (err) {
-      logger.error(`âŒ [Notificaciones] Error enviando email de estado ${nuevoEstado} a ${emailCliente}:`, err)
+      logger.error(`âŒ [Notificaciones] Error enviando email de estado ${nuevoEstado} a ${emailCliente}:`, err)
       emailResult = { success: false, error: err.message }
     }
   }
@@ -533,7 +533,7 @@ export async function notificarCambioEstadoPedido(pedido, cliente, nuevoEstado) 
   if (nuevoEstado === 'cancelado') {
     dbResult = await crearNotificacion({
       tipo: 'cancelacion',
-      titulo: `âŒ Pedido #${numeroPedido} cancelado`,
+      titulo: `âŒ Pedido #${numeroPedido} cancelado`,
       mensaje: `El pedido de ${nombreCliente} por ${Number(pedido?.total_final || 0).toLocaleString('es-PY')} â‚² fue cancelado.`,
       link: `/admin/pedidos`,
       metadata: {
@@ -544,7 +544,7 @@ export async function notificarCambioEstadoPedido(pedido, cliente, nuevoEstado) 
     })
 
     enviarPushATodosLosAdmins({
-      titulo: `âŒ Pedido #${numeroPedido} cancelado`,
+      titulo: `âŒ Pedido #${numeroPedido} cancelado`,
       mensaje: `El pedido de ${nombreCliente} fue cancelado.`,
       url: `/admin/pedidos`,
     }).catch(() => {})
@@ -562,12 +562,12 @@ export async function notificarStockBajo(insumo) {
   const stockMinimo = insumo?.stock_minimo ?? 0
   const unidad = insumo?.unidad_medida || 'un.'
 
-  logger.log(`âš ï¸ [Notificaciones] Alerta de stock bajo para ${nombre}: ${stockActual}/${stockMinimo} ${unidad}`)
+  logger.log(`âšï¸ [Notificaciones] Alerta de stock bajo para ${nombre}: ${stockActual}/${stockMinimo} ${unidad}`)
 
   const dbPromise = crearNotificacion({
     tipo: 'stock_bajo',
-    titulo: `âš ï¸ Stock bajo: ${nombre}`,
-    mensaje: `Quedan ${stockActual} ${unidad} (mÃ­nimo establecido: ${stockMinimo} ${unidad})`,
+    titulo: `âšï¸ Stock bajo: ${nombre}`,
+    mensaje: `Quedan ${stockActual} ${unidad} (mÃnimo establecido: ${stockMinimo} ${unidad})`,
     link: `/admin/insumos`,
     metadata: {
       insumo_id: insumo?.id,
@@ -585,13 +585,13 @@ export async function notificarStockBajo(insumo) {
 
   const emailPromise = sendEmail({
     to: adminEmails,
-    subject: `âš ï¸ [STOCK BAJO] ${nombre} (${stockActual} ${unidad} restantes) - PanFree`,
+    subject: `âšï¸ [STOCK BAJO] ${nombre} (${stockActual} ${unidad} restantes) - PanFree`,
     html: templateAlertaStockBajo({ insumo }),
   })
 
   const pushPromise = enviarPushATodosLosAdmins({
-    titulo: `âš ï¸ Stock bajo: ${nombre}`,
-    mensaje: `Quedan ${stockActual} ${unidad} (mÃ­nimo: ${stockMinimo})`,
+    titulo: `âšï¸ Stock bajo: ${nombre}`,
+    mensaje: `Quedan ${stockActual} ${unidad} (mÃnimo: ${stockMinimo})`,
     url: `/admin/insumos`,
   }).catch(() => {})
 

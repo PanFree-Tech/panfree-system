@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase'
 /**
  * src/services/pushService.js
  * Servicio centralizado para notificaciones push
- * SOLO para eventos importantes (pedidos, envÃƒÆ’Ã‚Â­os, etc.)
+ * SOLO para eventos importantes (pedidos, envÃƒÆ’Ã‚Âos, etc.)
  */
 
 // ConfiguraciÃƒÆ’Ã‚Â³n
@@ -19,13 +19,13 @@ export async function sendPushNotification(data) {
   // 1. Verificar throttling
   const now = Date.now()
   if (notificationInProgress || (now - lastNotificationTime < THROTTLE_MS)) {
-    logger.warn('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â¢ NotificaciÃƒÆ’Ã‚Â³n push bloqueada por throttle')
+    logger.warn('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â¢ NotificaciÃƒÆ’Ã‚Â³n push bloqueada por throttle')
     return { success: false, message: 'Throttled' }
   }
 
   // 2. Validar datos
   if (!data?.title || !data?.body) {
-    logger.warn('ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Datos de notificaciÃƒÆ’Ã‚Â³n incompletos')
+    logger.warn('ÃƒÂ¢Ã…Â¡Ã‚ÂÃƒÂ¯Ã‚Â¸Ã‚Â Datos de notificaciÃƒÆ’Ã‚Â³n incompletos')
     return { success: false, message: 'Datos incompletos' }
   }
 
@@ -53,7 +53,7 @@ export async function sendPushNotification(data) {
     logger.log(`ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¨ NotificaciÃƒÆ’Ã‚Â³n enviada: ${result.enviadas || 0} enviadas`)
     return result
   } catch (error) {
-    logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Error enviando notificaciÃƒÆ’Ã‚Â³n push:', error)
+    logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Error enviando notificaciÃƒÆ’Ã‚Â³n push:', error)
     return { success: false, error: error.message }
   } finally {
     notificationInProgress = false

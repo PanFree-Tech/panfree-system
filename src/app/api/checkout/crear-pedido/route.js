@@ -9,7 +9,7 @@
  *  1. Busca/crea cliente (service_role)
  *  2. Crea pedido (service_role, trigger genera numero_pedido)
  *  3. Crea detalle_pedido (service_role)
- *  4. Actualiza cupÃƒÂ³n y puntos (service_role)
+ *  4. Actualiza cupón y puntos (service_role)
  *  5. Notifica (fire-and-forget)
  */
 
@@ -51,16 +51,16 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: 'Email requerido' }, { status: 400 })
     }
     if (!telefono || !telefono.trim()) {
-      return NextResponse.json({ success: false, error: 'TelÃƒÂ©fono requerido' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Teléfono requerido' }, { status: 400 })
     }
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ success: false, error: 'Carrito vacÃƒÂ­o' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Carrito vacío' }, { status: 400 })
     }
     if (!['retiro', 'delivery'].includes(metodoEntrega)) {
-      return NextResponse.json({ success: false, error: 'MÃƒÂ©todo de entrega invÃƒÂ¡lido' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Método de entrega inválido' }, { status: 400 })
     }
     if (metodoEntrega === 'delivery' && !deliveryInfo?.disponible) {
-      return NextResponse.json({ success: false, error: 'DirecciÃƒÂ³n fuera de zona de delivery' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Dirección fuera de zona de delivery' }, { status: 400 })
     }
 
     const admin = getSupabaseAdmin()
@@ -108,8 +108,8 @@ export async function POST(req) {
           email: emailNormalizado,
           telefono: telefono.trim() || null,
           user_id: userId || null,
-          direccion_ciudad: 'EncarnaciÃƒÂ³n',
-          direccion_provincia: 'ItapÃƒÂºa',
+          direccion_ciudad: 'Encarnación',
+          direccion_provincia: 'Itapúa',
         })
         .select('id')
         .single()
@@ -171,7 +171,7 @@ export async function POST(req) {
       throw errDetalle
     }
 
-    // 5. Registrar cupÃƒÂ³n
+    // 5. Registrar cupón
     if (cupon?.id && descuentoMonto > 0) {
       try {
         await admin.from('cupones_canjeados').insert({
@@ -190,7 +190,7 @@ export async function POST(req) {
           .update({ usos_actuales: (cData?.usos_actuales || 0) + 1 })
           .eq('id', cupon.id)
       } catch (cErr) {
-        logger.warn('No se pudo registrar cupÃƒÂ³n:', cErr)
+        logger.warn('No se pudo registrar cupón:', cErr)
       }
     }
 
