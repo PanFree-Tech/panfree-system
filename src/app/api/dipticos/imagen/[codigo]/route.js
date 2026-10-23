@@ -25,8 +25,15 @@ export async function GET(request, { params }) {
 
   const producto = diptico.productos
   const nombreProducto = producto?.nombre || 'PanFree'
-  const descripcionProducto = producto?.descripcion || 'Producto artesanal sin gluten.'
-  const precioProducto = producto?.precio_venta ? `₲ ${Number(producto.precio_venta).toLocaleString('es-PY')}` : null
+  
+  // Limitar la descripción a 80 caracteres para que no se corte feo
+  const descCompleta = producto?.descripcion || 'Producto artesanal sin gluten.'
+  const descripcionProducto = descCompleta.length > 80 ? descCompleta.substring(0, 77) + '...' : descCompleta
+  
+  // Usar "Gs." en lugar del símbolo ₲ para evitar problemas de fuente
+  const precioProducto = producto?.precio_venta 
+    ? `Gs. ${Number(producto.precio_venta).toLocaleString('es-PY')}` 
+    : null
 
   const logoUrl = 'https://res.cloudinary.com/d7simx38/image/upload/v1788037279/logo-panfree.png'
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=https://panfree.fit/diptico/${codigo}`
@@ -159,7 +166,7 @@ export async function GET(request, { params }) {
               <div
                 style={{
                   display: 'flex',
-                  fontSize: '54px',
+                  fontSize: '48px', // Un poco más chico para dar espacio
                   fontWeight: 900,
                   color: '#334c2b',
                   lineHeight: 1.1,
@@ -170,11 +177,11 @@ export async function GET(request, { params }) {
               <div
                 style={{
                   display: 'flex',
-                  fontSize: '30px',
+                  fontSize: '26px', // Un poco más chico
                   color: '#6b5d4f',
                   marginTop: '8px',
                   lineHeight: 1.25,
-                  maxHeight: '114px',
+                  maxHeight: '100px',
                   overflow: 'hidden',
                 }}
               >
@@ -184,7 +191,7 @@ export async function GET(request, { params }) {
                 <div
                   style={{
                     display: 'flex',
-                    fontSize: '56px',
+                    fontSize: '48px', // Un poco más chico para que no empuje
                     fontWeight: 900,
                     color: '#f46e15',
                     marginTop: '10px',
