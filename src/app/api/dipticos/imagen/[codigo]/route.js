@@ -22,7 +22,7 @@ export async function GET(request, { params }) {
   const descripcionProducto = producto?.descripcion || 'Disfruta de nuestros productos 100% libres de gluten.'
   const imagenProducto = producto?.imagen_url || 'https://res.cloudinary.com/d7simx38/image/upload/v1788037279/logo-panfree.png'
   const precioProducto = producto?.precio_venta ? `₲ ${Number(producto.precio_venta).toLocaleString('es-PY')}` : null
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://panfree.fit/diptico/${codigo}`
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https://panfree.fit/diptico/${codigo}`
   const logoUrl = 'https://res.cloudinary.com/d7simx38/image/upload/v1788037279/logo-panfree.png'
 
   return new ImageResponse(
@@ -35,10 +35,9 @@ export async function GET(request, { params }) {
           height: '100%',
           backgroundColor: '#fcfaf7',
           fontFamily: 'sans-serif',
-          position: 'relative',
         }}
       >
-        {/* 1. Header (Verde, sin óvalo, con borde recto) */}
+        {/* 1. Header (Verde, con borde dorado) */}
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column', 
@@ -46,49 +45,48 @@ export async function GET(request, { params }) {
           backgroundColor: '#334c2b', 
           padding: '40px 20px', 
           color: '#eee6d9',
-          borderBottom: '4px solid #b7996b'
+          borderBottom: '6px solid #b7996b'
         }}>
-          {/* Logo dentro de recuadro blanco */}
           <div style={{
             display: 'flex',
             backgroundColor: '#ffffff',
-            padding: '10px 20px',
-            borderRadius: '20px',
+            padding: '15px 30px',
+            borderRadius: '25px',
             marginBottom: '20px',
             boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
           }}>
-            <img src={logoUrl} width="80" height="80" style={{ objectFit: 'contain' }} alt="PanFree Logo" />
+            <img src={logoUrl} width="120" height="120" style={{ objectFit: 'contain' }} alt="PanFree Logo" />
           </div>
 
-          <h1 style={{ fontSize: '32px', margin: 0, fontWeight: '800', textAlign: 'center', letterSpacing: '-0.5px' }}>¡Gracias por elegir PanFree!</h1>
-          <p style={{ fontSize: '18px', margin: '10px 0 0 0', color: '#b7996b', fontWeight: '600' }}>El placer de volver a comer libremente</p>
+          <h1 style={{ fontSize: '38px', margin: 0, fontWeight: '900', textAlign: 'center' }}>¡Gracias por elegir PanFree!</h1>
+          <p style={{ fontSize: '20px', margin: '10px 0 0 0', color: '#b7996b', fontWeight: '600' }}>El placer de volver a comer libremente</p>
         </div>
 
         {/* 2. Cuerpo (Fondo crema) */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px', flex: 1 }}>
           
-          {/* Tarjeta de Cupón (Estilo Voucher blanco) */}
+          {/* Tarjeta de Cupón */}
           <div style={{ 
             display: 'flex', 
             flexDirection: 'column', 
             backgroundColor: '#ffffff', 
-            padding: '25px', 
-            borderRadius: '20px', 
+            padding: '30px', 
+            borderRadius: '24px', 
             border: '1px solid #e8dfd3', 
             width: '85%',
             boxShadow: '0 8px 20px rgba(51, 76, 43, 0.08)',
-            marginBottom: '20px',
+            marginBottom: '25px',
             position: 'relative'
           }}>
             {/* Barra superior de colores */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '6px', display: 'flex' }}>
-              <div style={{ width: '33%', height: '100%', backgroundColor: '#b7996b', borderTopLeftRadius: '20px' }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '8px', display: 'flex' }}>
+              <div style={{ width: '33%', height: '100%', backgroundColor: '#b7996b', borderTopLeftRadius: '24px' }} />
               <div style={{ width: '33%', height: '100%', backgroundColor: '#f46e15' }} />
-              <div style={{ width: '34%', height: '100%', backgroundColor: '#334c2b', borderTopRightRadius: '20px' }} />
+              <div style={{ width: '34%', height: '100%', backgroundColor: '#334c2b', borderTopRightRadius: '24px' }} />
             </div>
 
-            <span style={{ fontSize: '11px', color: '#f46e15', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '10px', marginBottom: '2px' }}>CLUB DE FIDELIDAD</span>
-            <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#334c2b', margin: '0 0 15px 0' }}>Tu código exclusivo</h2>
+            <span style={{ fontSize: '13px', color: '#f46e15', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '15px', marginBottom: '5px' }}>CLUB DE FIDELIDAD</span>
+            <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#334c2b', margin: '0 0 20px 0' }}>Tu código exclusivo</h2>
 
             {/* Caja del código */}
             <div style={{ 
@@ -96,14 +94,14 @@ export async function GET(request, { params }) {
               flexDirection: 'column', 
               alignItems: 'center', 
               backgroundColor: '#fcfaf7', 
-              padding: '20px', 
-              borderRadius: '12px', 
-              border: '2px dashed #b7996b', 
+              padding: '25px', 
+              borderRadius: '16px', 
+              border: '3px dashed #b7996b', 
               width: '100%'
             }}>
-              <span style={{ fontSize: '11px', color: '#8a7a6b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '5px' }}>Código del Díptico</span>
-              <span style={{ fontSize: '40px', fontWeight: '900', letterSpacing: '6px', color: '#334c2b', fontFamily: 'monospace' }}>{codigo}</span>
-              <p style={{ fontSize: '12px', color: '#8a7a6b', margin: '5px 0 0 0' }}>Canjeá este código en panfree.fit/diptico</p>
+              <span style={{ fontSize: '12px', color: '#8a7a6b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Código del Díptico</span>
+              <span style={{ fontSize: '50px', fontWeight: '900', letterSpacing: '8px', color: '#334c2b', fontFamily: 'monospace' }}>{codigo}</span>
+              <p style={{ fontSize: '14px', color: '#8a7a6b', margin: '8px 0 0 0' }}>Canjeá este código en panfree.fit/diptico</p>
             </div>
           </div>
 
@@ -112,58 +110,58 @@ export async function GET(request, { params }) {
             display: 'flex', 
             flexDirection: 'row', 
             backgroundColor: '#ffffff', 
-            padding: '15px', 
-            borderRadius: '20px', 
+            padding: '20px', 
+            borderRadius: '24px', 
             border: '1px solid #e8dfd3', 
             width: '85%',
             boxShadow: '0 8px 20px rgba(51, 76, 43, 0.08)',
             alignItems: 'center',
-            marginBottom: '20px'
+            marginBottom: '30px'
           }}>
             <img 
               src={imagenProducto} 
-              width="90" 
-              height="90" 
-              style={{ borderRadius: '12px', objectFit: 'cover', border: '1px solid #eee' }} 
+              width="110" 
+              height="110" 
+              style={{ borderRadius: '16px', objectFit: 'cover', border: '1px solid #eee' }} 
               alt="Producto"
             />
-            <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '15px', flex: 1 }}>
-              <span style={{ fontSize: '11px', color: '#b7996b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Producto Asociado</span>
-              <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#334c2b', marginBottom: '4px' }}>{nombreProducto}</span>
-              <span style={{ fontSize: '12px', color: '#8a7a6b', lineHeight: 1.3 }}>{descripcionProducto}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '20px', flex: 1 }}>
+              <span style={{ fontSize: '12px', color: '#b7996b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Producto Asociado</span>
+              <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#334c2b', marginBottom: '4px' }}>{nombreProducto}</span>
+              <span style={{ fontSize: '14px', color: '#8a7a6b', lineHeight: 1.4 }}>{descripcionProducto}</span>
               {precioProducto && (
-                <span style={{ fontSize: '18px', fontWeight: '900', color: '#f46e15', marginTop: '5px' }}>{precioProducto}</span>
+                <span style={{ fontSize: '22px', fontWeight: '900', color: '#f46e15', marginTop: '6px' }}>{precioProducto}</span>
               )}
             </div>
           </div>
 
-          {/* QR GRANDE Y VISIBLE */}
+          {/* QR GRANDE Y DESTACADO */}
           <div style={{ 
             display: 'flex', 
             flexDirection: 'column',
             alignItems: 'center',
             backgroundColor: '#ffffff', 
-            padding: '15px', 
-            borderRadius: '16px', 
-            border: '2px solid #e8dfd3',
-            width: '220px',
+            padding: '20px', 
+            borderRadius: '24px', 
+            border: '4px solid #b7996b',
+            boxShadow: '0 10px 25px rgba(51, 76, 43, 0.15)',
           }}>
-            <img src={qrUrl} width="180" height="180" alt="QR para canjear" />
-            <span style={{ fontSize: '12px', color: '#8a7a6b', fontWeight: 'bold', marginTop: '8px' }}>Escaneá para sumar puntos</span>
+            <img src={qrUrl} width="280" height="280" alt="QR para canjear" />
+            <span style={{ fontSize: '16px', color: '#334c2b', fontWeight: 'bold', marginTop: '10px' }}>Escaneá para sumar 100 puntos</span>
           </div>
 
         </div>
 
-        {/* 3. Footer (Estilo Landing) */}
-        <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#253920', padding: '15px', alignItems: 'center', borderTop: '1px solid #334c2b' }}>
-          <span style={{ fontSize: '14px', color: '#f5f1eb', fontWeight: 'bold' }}>Pedidos online en panfree.fit</span>
-          <span style={{ fontSize: '11px', color: '#b7996b', marginTop: '4px' }}>© 2026 PanFree. Encarnación, Paraguay.</span>
+        {/* 3. Footer */}
+        <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#253920', padding: '20px', alignItems: 'center', borderTop: '6px solid #b7996b' }}>
+          <span style={{ fontSize: '18px', color: '#f5f1eb', fontWeight: 'bold' }}>Pedidos online en panfree.fit</span>
+          <span style={{ fontSize: '14px', color: '#b7996b', marginTop: '6px' }}>© 2026 PanFree. Encarnación, Paraguay.</span>
         </div>
       </div>
     ),
     {
-      width: 600,
-      height: 900,
+      width: 1080,
+      height: 1920,
       headers: {
         'Content-Disposition': `attachment; filename="Diptico-PanFree-${codigo}.png"`,
       },
