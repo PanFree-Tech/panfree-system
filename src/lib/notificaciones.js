@@ -74,11 +74,11 @@ function getWebPushInstance() {
 }
 
 /**
- * EnvÃa una notificacion Push Web a un usuario especÃfico
+ * Envia una notificacion Push Web a un usuario especifico
  * 
  * @param {Object} param
  * @param {string} param.userId - ID del usuario (de auth.users o tabla usuarios)
- * @param {string} param.titulo - TÃtulo de la notificacion
+ * @param {string} param.titulo - Titulo de la notificacion
  * @param {string} param.mensaje - Cuerpo del mensaje
  * @param {string} [param.url] - URL de destino al hacer clic (default: '/admin/pedidos')
  * @returns {Promise<{success: boolean, enviadas: number, error?: string}>}
@@ -95,7 +95,7 @@ export async function enviarPushAdmin({ userId, titulo, mensaje, url = '/admin/p
   try {
     const wp = getWebPushInstance()
     if (!wp) {
-      logger.log('â„¹ï¸ [Push] Claves VAPID no disponibles en el entorno. Omitiendo push.')
+      logger.log('[i] [Push] Claves VAPID no disponibles en el entorno. Omitiendo push.')
       return { success: false, enviadas: 0, error: 'VAPID no configurado' }
     }
 
@@ -106,7 +106,7 @@ export async function enviarPushAdmin({ userId, titulo, mensaje, url = '/admin/p
       .eq('user_id', cleanUserId)
 
     if (error || !subs || subs.length === 0) {
-      logger.log(`â„¹ï¸ [Push] Usuario ${cleanUserId} no tiene suscripciones push activas.`)
+      logger.log(`[i] [Push] Usuario ${cleanUserId} no tiene suscripciones push activas.`)
       return { success: true, enviadas: 0, message: 'Usuario no suscrito' }
     }
 
@@ -161,11 +161,11 @@ export async function enviarPushAdmin({ userId, titulo, mensaje, url = '/admin/p
 }
 
 /**
- * EnvÃa una notificacion Push Web a TODOS los administradores registrados
+ * Envia una notificacion Push Web a TODOS los administradores registrados
  * Obtiene los IDs de los administradores desde la tabla `usuarios` (rol = 'admin')
  * 
  * @param {Object} param
- * @param {string} param.titulo - TÃtulo de la notificacion
+ * @param {string} param.titulo - Titulo de la notificacion
  * @param {string} param.mensaje - Cuerpo del mensaje
  * @param {string} [param.url] - URL de destino al hacer clic (default: '/admin/pedidos')
  * @returns {Promise<{success: boolean, enviadas: number, total: number}>}
@@ -174,7 +174,7 @@ export async function enviarPushATodosLosAdmins({ titulo, mensaje, url = '/admin
   try {
     const wp = getWebPushInstance()
     if (!wp) {
-      logger.log('â„¹ï¸ [Push] Claves VAPID no disponibles en el entorno. Omitiendo push a admins.')
+      logger.log('[i] [Push] Claves VAPID no disponibles en el entorno. Omitiendo push a admins.')
       return { success: false, enviadas: 0, total: 0, error: 'VAPID no configurado' }
     }
 
@@ -208,18 +208,18 @@ export async function enviarPushATodosLosAdmins({ titulo, mensaje, url = '/admin
 
     let subscriptionsToSend = subs || []
 
-    // Fallback: si no encontro por IDs especÃficos, tomar todas las suscripciones registradas
+    // Fallback: si no encontro por IDs especificos, tomar todas las suscripciones registradas
     if (subscriptionsToSend.length === 0) {
       const { data: allSubs } = await db.from('push_subscriptions').select('*').limit(50)
       subscriptionsToSend = allSubs || []
     }
 
     if (subscriptionsToSend.length === 0) {
-      logger.log('â„¹ï¸ [Push] No hay administradores suscritos a Push Notifications Web.')
+      logger.log('[i] [Push] No hay administradores suscritos a Push Notifications Web.')
       return { success: true, enviadas: 0, total: 0 }
     }
 
-    // 3. Deduplicar por endpoint (un dispositivo fÃsico = un envÃo)
+    // 3. Deduplicar por endpoint (un dispositivo fisico = un envio)
     const subsUnicas = Array.from(
       new Map(subscriptionsToSend.map((s) => [s.endpoint, s])).values()
     )
@@ -311,7 +311,7 @@ export async function crearNotificacion({ tipo, titulo, mensaje, link = null, me
 }
 
 /**
- * Obtiene las notificaciones no leÃdas para el panel de administracion
+ * Obtiene las notificaciones no leidas para el panel de administracion
  */
 export async function obtenerNotificacionesNoLeidas(limit = 50) {
   try {
@@ -341,7 +341,7 @@ export async function obtenerNotificacionesNoLeidas(limit = 50) {
 }
 
 /**
- * Marca una notificacion especÃfica como leÃda
+ * Marca una notificacion especÃfica como leida
  */
 export async function marcarNotificacionComoLeida(id) {
   if (!id) return false
@@ -364,7 +364,7 @@ export async function marcarNotificacionComoLeida(id) {
 }
 
 /**
- * Marca todas las notificaciones no leÃdas como leÃdas
+ * Marca todas las notificaciones no leidas como leidas
  */
 export async function marcarTodasComoLeidas() {
   try {
@@ -386,14 +386,14 @@ export async function marcarTodasComoLeidas() {
 }
 
 /**
- * EnvÃa el correo de confirmacion de compra al cliente
+ * Envia el correo de confirmacion de compra al cliente
  */
 export async function enviarEmailConfirmacionCliente(pedido, cliente, items = []) {
   const emailCliente = cliente?.email
   const numeroPedido = pedido?.numero_pedido || pedido?.numero || 'N/A'
 
   if (!emailCliente) {
-    logger.log(`â„¹ï¸ [Email] Cliente sin correo para pedido #${numeroPedido}. Omitiendo envÃo.`)
+    logger.log(`[i] [Email] Cliente sin correo para pedido #${numeroPedido}. Omitiendo envio.`)
     return { success: false, error: 'Cliente sin email registrado' }
   }
 
@@ -567,7 +567,7 @@ export async function notificarStockBajo(insumo) {
   const dbPromise = crearNotificacion({
     tipo: 'stock_bajo',
     titulo: `âšï¸ Stock bajo: ${nombre}`,
-    mensaje: `Quedan ${stockActual} ${unidad} (mÃnimo establecido: ${stockMinimo} ${unidad})`,
+    mensaje: `Quedan ${stockActual} ${unidad} (minimo establecido: ${stockMinimo} ${unidad})`,
     link: `/admin/insumos`,
     metadata: {
       insumo_id: insumo?.id,
@@ -591,7 +591,7 @@ export async function notificarStockBajo(insumo) {
 
   const pushPromise = enviarPushATodosLosAdmins({
     titulo: `âšï¸ Stock bajo: ${nombre}`,
-    mensaje: `Quedan ${stockActual} ${unidad} (mÃnimo: ${stockMinimo})`,
+    mensaje: `Quedan ${stockActual} ${unidad} (minimo: ${stockMinimo})`,
     url: `/admin/insumos`,
   }).catch(() => {})
 
