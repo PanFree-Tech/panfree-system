@@ -435,3 +435,17 @@
 - Checkout reparado (trigger notificaciones y secuencia de pedidos).
 - Seguridad SEC-003 cerrada (login admin).
 - Supabase Advisors: 0 errores críticos.
+
+### Actualización S35 (2026-10-23)
+- Checkout reparado (trigger notificaciones y secuencia de pedidos).
+- Seguridad SEC-003 cerrada (login admin por app_metadata).
+- Supabase Advisors: 0 errores críticos.
+- Sistema de cupones funcionando de punta a punta.
+- Panel de premios canjeados con descarga de tickets PNG.
+- Selector de producto en generación de lotes de dípticos.
+- Descarga de dípticos completos como imagen PNG para WhatsApp.
+
+**Próximos 3 pasos:**
+1. Verificar en producción que el botón de descarga de dípticos genere la imagen completa.
+2. Probar el flujo completo: cliente canjea díptico → suma puntos → canjea premio → recibe cupón.
+3. Actualizar documentación técnica (ARCHITECTURE.md) con el nuevo flujo de dípticos y cupones.

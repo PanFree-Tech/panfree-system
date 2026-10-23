@@ -2070,3 +2070,33 @@ la referencia valida.
 - Probar en produccion los 11 archivos reparados.
 - Considerar reemplazar [BR], [PL], [OR], [VIP] por emojis reales en perfil/puntos/page.js.
 - Verificar que el simbolo del guarani se vea bien en produccion.
+## 2026-10-23 (Sesión 35)
+
+**Duración:** Sesión maratónica
+**Objetivo:** Reparar checkout, cerrar agujero de seguridad, limpiar Advisors y agregar funcionalidades de fidelización.
+
+**Completado:**
+- **Checkout Reparado:** Corregido trigger de notificaciones (usaba `leida`, ahora `leido`) y sincronizada secuencia `seq_numero_pedido`.
+- **Seguridad Crítica (SEC-003):** Login de admin migrado a `app_metadata`. `is_admin()` migrada a `app_metadata` (ADR-002).
+- **Supabase Advisors:** 0 ERRORES críticos. Vista `vista_disponibilidad_productos` migrada a `security_invoker=true`.
+- **Cupones de Descuento:** Corregido bug del backend que insertaba `cupon_id: undefined`. Restaurado permiso `EXECUTE` de `is_admin()` para `anon`. Cupones validan correctamente en el checkout.
+- **Panel de Cupones:** Creado `/admin/cupones-premios` con descarga de tickets de premios en PNG (componente `TicketCupon`).
+- **Dípticos:** 
+  - Corregidas URLs de QR para apuntar a la landing `/diptico/[codigo]` (en lugar de `/canjear`).
+  - Agregado selector de producto al generar lotes (cada lote puede promocionar un producto específico).
+  - Creado componente `TicketDiptico` para descargar el diseño completo del díptico en PNG (con logo, producto, QR y código).
+
+**Commits:**
+- `c196042` security: migrar autorizacion admin a app_metadata (SEC-003)
+- `1b9c7cc` docs(audit): cerrar hallazgos de seguridad y advisors de S34
+- `30085f7` fix(dipticos): actualizar URLs de QR para apuntar a landing /diptico
+- `9385ae8` feat(dipticos): agregar selector de producto al generar lotes
+- `41655dc` fix(dipticos): agregar import faltante de TicketDiptico
+
+**Hallazgos cerrados:**
+- SEC-003: Admin por user_metadata
+- DB-001: Advisors de Supabase (0 errores críticos)
+
+**Próxima sesión:**
+- Probar en producción el botón de "Descargar Díptico" (verificar que el PNG se descargue con el diseño completo).
+- Revisar warnings de ESLint (hooks dependencies) que quedaron pendientes.
