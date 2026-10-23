@@ -9,6 +9,7 @@
 import logger from '@/lib/logger'
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase-client'
+import TicketDiptico from '@/components/TicketDiptico'
 import { generarLoteCantidad, getEstadisticas } from '@/lib/dipticos'
 import {
     QrCode,
@@ -764,26 +765,10 @@ export default function DipticosAdminPage() {
                                                         fontSize: '0.82rem'
                                                     }}
                                                 >
-                                                                                                    <a
-                                                    href={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://panfree.fit/diptico/${c.codigo}`}
-                                                    download={`QR-PanFree-${c.codigo}.png`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    title="Descargar QR en alta calidad"
-                                                    style={{
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        gap: '0.2rem',
-                                                        color: '#334c2b',
-                                                        textDecoration: 'none',
-                                                        fontWeight: '600',
-                                                        fontSize: '0.82rem',
-                                                        marginRight: '0.75rem'
-                                                    }}
-                                                >
-                                                    <Download size={13} />
-                                                    <span>QR</span>
-                                                </a>
+                                                                                                    <TicketDiptico 
+                                                    codigo={c.codigo} 
+                                                    producto={productos.find(p => p.id === c.producto_id)} 
+                                                />
 <span>Probar</span>
                                                     <ExternalLink size={13} />
                                                 </a>
