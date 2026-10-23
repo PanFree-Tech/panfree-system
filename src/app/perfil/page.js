@@ -1,22 +1,22 @@
 /**
- * Ã°Å¸â€œÂ UBICACIÓN: src/app/perfil/page.js
- * Ã°Å¸â€œâ€¦ ACTUALIZADO: 2026-03-04
- * Ã°Å¸â€œÅ’ DESCRIPCIÓN: Página "Mi Cuenta" para clientes de PanFree.
+ * UBICACION: src/app/perfil/page.js
+ * ACTUALIZADO: 2026-03-04
+ * DESCRIPCION: Pagina "Mi Cuenta" para clientes de PanFree.
  *    Secciones:
- *      1. Info personal (nombre, email, estado confirmación, miembro desde)
- *      2. Dirección de entrega completa + notas + preferencia retiro/delivery
- *      3. Email sin confirmar Ã¢â€â€™ botón reenviar (condicional)
- *      4. Cambiar contraseña (con mostrar/ocultar)
+ *      1. Info personal (nombre, email, estado confirmacion, miembro desde)
+ *      2. Direccion de entrega completa + notas + preferencia retiro/delivery
+ *      3. Email sin confirmar -> boton reenviar (condicional)
+ *      4. Cambiar contrasena (con mostrar/ocultar)
  *      5. Historial de pedidos (expandible, con detalle_pedido real)
- *      6. Cerrar sesión Ã¢â€â€™ redirige a /
- *    CORRECCIONES vs versión anterior:
+ *      6. Cerrar sesion -> redirige a /
+ *    CORRECCIONES vs version anterior:
  *      - cargarPedidos usa tabla 'pedidos' + join 'detalle_pedido' y 'productos'
- *        (la versión anterior usaba 'pedido_items' que NO existe en el schema)
+ *        (la version anterior usaba 'pedido_items' que NO existe en el schema)
  *      - Muestra total_final en lugar de 'total' (columna real en BD)
  *      - Filtra pedidos por cliente_id (via tabla clientes) y no por user_id
- *        (pedidos no tiene user_id directo, tiene cliente_id Ã¢â€â€™ clientes Ã¢â€â€™ user_id)
- *    Si no está autenticado Ã¢â€â€™ abre modal de login automáticamente.
- * Ã¢Å¡ÂÃ¯Â¸Â  EN CASO DE MODIFICACIÓN SIGNIFICATIVA, actualizar este comentario.
+ *        (pedidos no tiene user_id directo, tiene cliente_id -> clientes -> user_id)
+ *    Si no esta autenticado -> abre modal de login automaticamente.
+ * ADVERTENCIA: EN CASO DE MODIFICACION SIGNIFICATIVA, actualizar este comentario.
  */
 
 'use client'
@@ -57,7 +57,7 @@ import {
 const formatPYG   = n => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
 const formatFecha = f => f
   ? new Date(f).toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  : 'Ã¢â‚¬â€'
+  : '---'
 const colorEstado = e => ({
   pendiente:     { bg: '#fff3e0', text: '#e65100' },
   confirmado:    { bg: '#e8f5e9', text: '#2e7d32' },
@@ -117,7 +117,7 @@ async function subirAvatarACloudinary(archivo) {
 const PERFIL_VACIO = {
   nombre_completo: '', telefono: '', avatar_url: '', foto_url: '',
   direccion_calle: '', direccion_numero: '', direccion_piso_dept: '',
-  direccion_ciudad: 'Encarnación', direccion_provincia: 'Itapúa',
+  direccion_ciudad: 'Encarnacion', direccion_provincia: 'Itapua',
   notas_cliente: '', prefiere_retiro: false, prefiere_delivery: true,
 }
 
@@ -125,7 +125,6 @@ export default function PaginaPerfil() {
   const { usuario, loading, abrirModal, cerrarSesion } = useAuth()
   const router = useRouter()
 
-  // Ã¢â‚¬â€ Perfil
   const [perfil, setPerfil]                 = useState(PERFIL_VACIO)
   const [perfilOriginal, setPerfilOriginal]   = useState(PERFIL_VACIO)
   const [guardandoPerfil, setGuardandoPerfil] = useState(false)
@@ -133,33 +132,27 @@ export default function PaginaPerfil() {
   const [perfilDirty, setPerfilDirty]         = useState(false)
   const [subiendoAvatar, setSubiendoAvatar]   = useState(false)
 
-  // Ã¢â‚¬â€ Email confirmación
   const [enviandoConfirm, setEnviandoConfirm] = useState(false)
   const [mensajeConfirm, setMensajeConfirm]   = useState(null)
   const emailConfirmado = !!usuario?.email_confirmed_at
 
-  // Ã¢â‚¬â€ Contraseña
   const [passNueva, setPassNueva]         = useState('')
   const [passRepeat, setPassRepeat]       = useState('')
   const [cambiandoPass, setCambiandoPass] = useState(false)
   const [mensajePass, setMensajePass]     = useState(null)
   const [mostrarPass, setMostrarPass]     = useState(false)
 
-  // Ã¢â‚¬â€ Fidelidad y Puntos
   const [fidelidad, setFidelidad]             = useState({ puntos: 0, nivel: 'bronce' })
 
-  // Ã¢â‚¬â€ Pedidos
   const [pedidos, setPedidos]                 = useState([])
   const [cargandoPedidos, setCargandoPedidos] = useState(false)
   const [pedidoExpandido, setPedidoExpandido] = useState(null)
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Si no autenticado Ã¢â€â€™ modal Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!loading && !usuario) abrirModal(() => {})
   }, [loading, usuario])
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Cargar perfil Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!usuario) return
@@ -178,8 +171,8 @@ export default function PaginaPerfil() {
             direccion_calle:     data.direccion_calle     || '',
             direccion_numero:    data.direccion_numero    || '',
             direccion_piso_dept: data.direccion_piso_dept || '',
-            direccion_ciudad:    data.direccion_ciudad    || 'Encarnación',
-            direccion_provincia: data.direccion_provincia || 'Itapúa',
+            direccion_ciudad:    data.direccion_ciudad    || 'Encarnacion',
+            direccion_provincia: data.direccion_provincia || 'Itapua',
             notas_cliente:       data.notas_cliente       || '',
             prefiere_retiro:     !!data.prefiere_retiro,
             prefiere_delivery:   data.prefiere_delivery !== false,
@@ -212,7 +205,7 @@ export default function PaginaPerfil() {
       const url = await subirAvatarACloudinary(file)
       actualizarPerfil('avatar_url', url)
       actualizarPerfil('foto_url', url)
-      setMensajePerfil({ tipo: 'ok', texto: 'Avatar subido. Hacé clic en "Guardar datos" para confirmar.' })
+      setMensajePerfil({ tipo: 'ok', texto: 'Avatar subido. Hace clic en "Guardar datos" para confirmar.' })
     } catch (err) {
       setMensajePerfil({ tipo: 'err', texto: err.message || 'Error al subir avatar.' })
     } finally {
@@ -220,10 +213,9 @@ export default function PaginaPerfil() {
     }
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Guardar perfil Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   async function guardarPerfil() {
     if (!perfil.nombre_completo.trim()) {
-      setMensajePerfil({ tipo: 'err', texto: 'El nombre no puede estar vacío.' })
+      setMensajePerfil({ tipo: 'err', texto: 'El nombre no puede estar vacio.' })
       return
     }
     setGuardandoPerfil(true); setMensajePerfil(null)
@@ -238,8 +230,8 @@ export default function PaginaPerfil() {
           direccion_calle:     perfil.direccion_calle.trim() || null,
           direccion_numero:    perfil.direccion_numero.trim() || null,
           direccion_piso_dept: perfil.direccion_piso_dept.trim() || null,
-          direccion_ciudad:    perfil.direccion_ciudad.trim() || 'Encarnación',
-          direccion_provincia: perfil.direccion_provincia.trim() || 'Itapúa',
+          direccion_ciudad:    perfil.direccion_ciudad.trim() || 'Encarnacion',
+          direccion_provincia: perfil.direccion_provincia.trim() || 'Itapua',
           notas_cliente:       perfil.notas_cliente.trim() || null,
           prefiere_retiro:     perfil.prefiere_retiro,
           prefiere_delivery:   perfil.prefiere_delivery,
@@ -258,48 +250,41 @@ export default function PaginaPerfil() {
       setPerfilDirty(false)
       setMensajePerfil({ tipo: 'ok', texto: 'Datos actualizados correctamente.' })
     } catch {
-      setMensajePerfil({ tipo: 'err', texto: 'Error al guardar. Intentá de nuevo.' })
+      setMensajePerfil({ tipo: 'err', texto: 'Error al guardar. Intenta de nuevo.' })
     } finally { setGuardandoPerfil(false) }
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Reenviar confirmación Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   async function reenviarConfirmacion() {
     setEnviandoConfirm(true); setMensajeConfirm(null)
     try {
       const { error } = await supabase.auth.resend({ type: 'signup', email: usuario.email })
       if (error) throw error
-      setMensajeConfirm({ tipo: 'ok', texto: 'Email reenviado. Revisá tu bandeja y spam.' })
+      setMensajeConfirm({ tipo: 'ok', texto: 'Email reenviado. Revisa tu bandeja y spam.' })
     } catch {
-      setMensajeConfirm({ tipo: 'err', texto: 'No se pudo reenviar. Intentá en unos minutos.' })
+      setMensajeConfirm({ tipo: 'err', texto: 'No se pudo reenviar. Intenta en unos minutos.' })
     } finally { setEnviandoConfirm(false) }
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Cambiar contraseña Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   async function cambiarPassword(e) {
     e.preventDefault(); setMensajePass(null)
     const validacion = validarPassword(passNueva)
-    if (!validacion.ok) return setMensajePass({ tipo: 'err', texto: 'La contraseÃƒÆ’Ã‚Â±a no es suficientemente fuerte. Faltan: ' + validacion.errores.join(', ') + '.' })
-    if (passNueva !== passRepeat) return setMensajePass({ tipo: 'err', texto: 'Las contraseñas no coinciden.' })
+    if (!validacion.ok) return setMensajePass({ tipo: 'err', texto: 'La contrasena no es suficientemente fuerte. Faltan: ' + validacion.errores.join(', ') + '.' })
+    if (passNueva !== passRepeat) return setMensajePass({ tipo: 'err', texto: 'Las contrasenas no coinciden.' })
     setCambiandoPass(true)
     try {
       const { error } = await supabase.auth.updateUser({ password: passNueva })
       if (error) throw error
-      setMensajePass({ tipo: 'ok', texto: 'Contraseña actualizada correctamente.' })
+      setMensajePass({ tipo: 'ok', texto: 'Contrasena actualizada correctamente.' })
       setPassNueva(''); setPassRepeat('')
     } catch (err) {
-      setMensajePass({ tipo: 'err', texto: err.message?.includes('same password') ? 'La nueva contraseña debe ser diferente a la actual.' : 'Error al cambiar contraseña.' })
+      setMensajePass({ tipo: 'err', texto: err.message?.includes('same password') ? 'La nueva contrasena debe ser diferente a la actual.' : 'Error al cambiar contrasena.' })
     } finally { setCambiandoPass(false) }
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Cargar pedidos Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-  // Ã¢Å¡ÂÃ¯Â¸Â  CORRECCIÓN: pedidos no tiene user_id, tiene cliente_id Ã¢â€â€™ clientes Ã¢â€â€™ user_id
-  // Ã¢Å¡ÂÃ¯Â¸Â  CORRECCIÓN: columna es 'total_final', no 'total'
-  // Ã¢Å¡ÂÃ¯Â¸Â  CORRECCIÓN: items están en 'detalle_pedido' con join a 'productos'
   async function cargarPedidos() {
     if (!usuario) return
     setCargandoPedidos(true)
     try {
-      // Primero obtenemos el cliente_id del usuario actual
       const { data: cliente } = await supabase
         .from('clientes')
         .select('id')
@@ -333,11 +318,10 @@ export default function PaginaPerfil() {
     router.push('/')
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Guards Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   if (loading) {
     return (
       <div style={{ ...S.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: '#334c2b', fontSize: '1.1rem' }}>CargandoÃ¢â‚¬Â¦</p>
+        <p style={{ color: '#334c2b', fontSize: '1.1rem' }}>Cargando...</p>
       </div>
     )
   }
@@ -349,18 +333,15 @@ export default function PaginaPerfil() {
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
             <Lock size={48} color="#334c2b" />
           </div>
-          <p style={{ color: '#334c2b', fontSize: '1.1rem', marginBottom: '1.5rem' }}>Necesitás iniciar sesión para ver tu cuenta.</p>
-          <button style={S.btnNaranja} onClick={() => abrirModal()}>Iniciar sesión</button>
+          <p style={{ color: '#334c2b', fontSize: '1.1rem', marginBottom: '1.5rem' }}>Necesitas iniciar sesion para ver tu cuenta.</p>
+          <button style={S.btnNaranja} onClick={() => abrirModal()}>Iniciar sesion</button>
         </div>
       </div>
     )
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Render Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   return (
     <div style={S.page}>
-
-      {/* Hero */}
       <div style={S.hero}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
           <div
@@ -394,10 +375,9 @@ export default function PaginaPerfil() {
           {perfil.nombre_completo || usuario.email}
         </p>
       </div>
-
       <div style={S.main}>
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ 0. Club PanFree Fidelidad & Dípticos Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* --- 0. Club PanFree Fidelidad & Dipticos --- */}
         <div style={{
           backgroundColor: '#fff',
           border: '2px solid #b7996b',
@@ -452,7 +432,7 @@ export default function PaginaPerfil() {
                   {(fidelidad.puntos || 0).toLocaleString('es-PY')} <span style={{ fontSize: '1rem', color: '#666', fontWeight: '600' }}>pts</span>
                 </div>
                 <div style={{ fontSize: '0.82rem', color: '#666', marginTop: '0.2rem' }}>
-                  Canjeá códigos de dípticos físicos o compras por premios exclusivos.
+                  Canjea codigos de dipticos fisicos o compras por premios exclusivos.
                 </div>
               </div>
 
@@ -474,7 +454,7 @@ export default function PaginaPerfil() {
                   }}
                 >
                   <QrCode size={16} />
-                  <span>Canjear Díptico</span>
+                  <span>Canjear Diptico</span>
                 </Link>
 
                 <Link
@@ -501,10 +481,10 @@ export default function PaginaPerfil() {
           </div>
         </div>
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ 1. Información personal Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* --- 1. Informacion personal --- */}
         <div style={S.card}>
           <div style={S.cardHead}>
-            <User size={18} /> Información personal
+            <User size={18} /> Informacion personal
           </div>
           <div style={S.cardBody}>
 
@@ -515,7 +495,6 @@ export default function PaginaPerfil() {
               </div>
             )}
 
-            {/* Avatar Uploader */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
               <div
                 style={{
@@ -556,7 +535,7 @@ export default function PaginaPerfil() {
                   }}
                 >
                   <Camera size={16} />
-                  <span>{subiendoAvatar ? 'Subiendo fotoÃ¢â‚¬Â¦' : 'Cambiar foto de perfil'}</span>
+                  <span>{subiendoAvatar ? 'Subiendo foto...' : 'Cambiar foto de perfil'}</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -596,7 +575,7 @@ export default function PaginaPerfil() {
             </div>
 
             <label style={{ ...S.label, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Phone size={14} /> Teléfono
+              <Phone size={14} /> Telefono
             </label>
             <input
               style={S.input}
@@ -613,10 +592,10 @@ export default function PaginaPerfil() {
           </div>
         </div>
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ 2. Dirección de entrega Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* --- 2. Direccion de entrega --- */}
         <div style={S.card}>
           <div style={S.cardHead}>
-            <MapPin size={18} /> Dirección de entrega
+            <MapPin size={18} /> Direccion de entrega
           </div>
           <div style={S.cardBody}>
 
@@ -628,7 +607,7 @@ export default function PaginaPerfil() {
                   placeholder="Ej: Av. Costanera" />
               </div>
               <div style={{ minWidth: '100px' }}>
-                <label style={S.label}>Número</label>
+                <label style={S.label}>Numero</label>
                 <input style={S.input} value={perfil.direccion_numero}
                   onChange={e => actualizarPerfil('direccion_numero', e.target.value)}
                   placeholder="1234" />
@@ -645,13 +624,13 @@ export default function PaginaPerfil() {
                 <label style={S.label}>Ciudad</label>
                 <input style={S.input} value={perfil.direccion_ciudad}
                   onChange={e => actualizarPerfil('direccion_ciudad', e.target.value)}
-                  placeholder="Encarnación" />
+                  placeholder="Encarnacion" />
               </div>
               <div>
                 <label style={S.label}>Departamento</label>
                 <input style={S.input} value={perfil.direccion_provincia}
                   onChange={e => actualizarPerfil('direccion_provincia', e.target.value)}
-                  placeholder="Itapúa" />
+                  placeholder="Itapua" />
               </div>
             </div>
 
@@ -662,7 +641,7 @@ export default function PaginaPerfil() {
               style={{ ...S.input, minHeight: '80px', resize: 'vertical' }}
               value={perfil.notas_cliente}
               onChange={e => actualizarPerfil('notas_cliente', e.target.value)}
-              placeholder="Ej: Casa verde con portón negro, tocar timbre 2 veces"
+              placeholder="Ej: Casa verde con porton negro, tocar timbre 2 veces"
             />
 
             <label style={S.label}>Preferencia de entrega</label>
@@ -688,7 +667,7 @@ export default function PaginaPerfil() {
             <button style={{ ...S.btnVerde, opacity: perfilDirty ? 1 : 0.5, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
               onClick={guardarPerfil} disabled={guardandoPerfil || !perfilDirty}>
               <Save size={16} />
-              <span>{guardandoPerfil ? 'GuardandoÃ¢â‚¬Â¦' : 'Guardar datos'}</span>
+              <span>{guardandoPerfil ? 'Guardando...' : 'Guardar datos'}</span>
             </button>
             {!perfilDirty && !guardandoPerfil && (
               <span style={{ marginLeft: '0.75rem', fontSize: '0.85rem', color: '#999' }}>Sin cambios pendientes</span>
@@ -696,7 +675,7 @@ export default function PaginaPerfil() {
           </div>
         </div>
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ 3. Email sin confirmar (condicional) Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* --- 3. Email sin confirmar (condicional) --- */}
         {!emailConfirmado && (
           <div style={{ ...S.card, border: '2px solid #ffcc02' }}>
             <div style={{ ...S.cardHead, backgroundColor: '#e65100' }}>
@@ -704,7 +683,7 @@ export default function PaginaPerfil() {
             </div>
             <div style={S.cardBody}>
               <div style={{ ...S.alert, ...S.warn }}>
-                Tu email <strong>{usuario.email}</strong> todavía no fue confirmado.
+                Tu email <strong>{usuario.email}</strong> todavia no fue confirmado.
               </div>
               {mensajeConfirm && (
                 <div style={{ ...S.alert, ...(mensajeConfirm.tipo === 'ok' ? S.ok : S.err), display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -713,20 +692,20 @@ export default function PaginaPerfil() {
                 </div>
               )}
               <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                Revisá tu carpeta de spam o reenviá el email de confirmación.
+                Revisa tu carpeta de spam o reenvia el email de confirmacion.
               </p>
               <button style={{ ...S.btnNaranja, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }} onClick={reenviarConfirmacion} disabled={enviandoConfirm}>
                 <Mail size={16} />
-                <span>{enviandoConfirm ? 'EnviandoÃ¢â‚¬Â¦' : 'Reenviar confirmación'}</span>
+                <span>{enviandoConfirm ? 'Enviando...' : 'Reenviar confirmacion'}</span>
               </button>
             </div>
           </div>
         )}
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ 4. Cambiar contraseña Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* --- 4. Cambiar contrasena --- */}
         <div style={S.card}>
           <div style={S.cardHead}>
-            <Key size={18} /> Cambiar contraseña
+            <Key size={18} /> Cambiar contrasena
           </div>
           <div style={S.cardBody}>
             {mensajePass && (
@@ -736,39 +715,39 @@ export default function PaginaPerfil() {
               </div>
             )}
             <form onSubmit={cambiarPassword}>
-              <label style={S.label}>Nueva contraseña</label>
+              <label style={S.label}>Nueva contrasena</label>
               <input style={S.input} type={mostrarPass ? 'text' : 'password'}
                 value={passNueva} onChange={e => setPassNueva(e.target.value)}
-                placeholder="Mínimo 6 caracteres" autoComplete="new-password" />
-              <label style={S.label}>Repetir contraseña</label>
+                placeholder="Minimo 6 caracteres" autoComplete="new-password" />
+              <label style={S.label}>Repetir contrasena</label>
               <input style={S.input} type={mostrarPass ? 'text' : 'password'}
                 value={passRepeat} onChange={e => setPassRepeat(e.target.value)}
-                placeholder="Repetir contraseña" autoComplete="new-password" />
+                placeholder="Repetir contrasena" autoComplete="new-password" />
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', cursor: 'pointer', fontSize: '0.9rem', color: '#555' }}>
                 <input type="checkbox" checked={mostrarPass} onChange={e => setMostrarPass(e.target.checked)} style={{ minHeight: 'unset' }} />
-                Mostrar contraseña
+                Mostrar contrasena
               </label>
               <button type="submit" style={S.btnVerde} disabled={cambiandoPass || !passNueva || !passRepeat}>
-                {cambiandoPass ? 'GuardandoÃ¢â‚¬Â¦' : 'Cambiar contraseña'}
+                {cambiandoPass ? 'Guardando...' : 'Cambiar contrasena'}
               </button>
             </form>
           </div>
         </div>
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ 5. Historial de pedidos Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* --- 5. Historial de pedidos --- */}
         <div style={S.card}>
           <div style={S.cardHead}>
             <Package size={18} /> Mis pedidos
           </div>
           <div style={S.cardBody}>
             {cargandoPedidos ? (
-              <p style={{ color: '#666', textAlign: 'center', padding: '1rem' }}>Cargando pedidosÃ¢â‚¬Â¦</p>
+              <p style={{ color: '#666', textAlign: 'center', padding: '1rem' }}>Cargando pedidos...</p>
             ) : pedidos.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
                   <ShoppingCart size={40} color="#334c2b" />
                 </div>
-                <p style={{ color: '#666' }}>Todavía no realizaste ningún pedido.</p>
+                <p style={{ color: '#666' }}>Todavia no realizaste ningun pedido.</p>
                 <a href="/" style={{ ...S.btnNaranja, display: 'inline-block', marginTop: '1rem', textDecoration: 'none' }}>
                   Ver productos
                 </a>
@@ -780,7 +759,6 @@ export default function PaginaPerfil() {
                 return (
                   <div key={pedido.id} style={{ border: '1px solid #e0d5c5', borderRadius: '6px', marginBottom: '0.75rem', overflow: 'hidden' }}>
 
-                    {/* Cabecera clickeable */}
                     <div
                       style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', flexWrap: 'wrap', gap: '0.5rem', padding: '0.85rem 1rem', backgroundColor: expandido ? '#f9f5f0' : '#fff' }}
                       onClick={() => setPedidoExpandido(expandido ? null : pedido.id)}
@@ -806,26 +784,23 @@ export default function PaginaPerfil() {
                       </div>
                     </div>
 
-                    {/* Detalle expandido */}
                     {expandido && (
                       <div style={{ borderTop: '1px solid #f0ebe4', backgroundColor: '#fafafa', padding: '1rem' }}>
 
-                        {/* Productos */}
                         {pedido.detalle_pedido?.map((item, i) => (
                           <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#555', padding: '0.3rem 0', borderBottom: i < pedido.detalle_pedido.length - 1 ? '1px solid #f0ebe4' : 'none' }}>
-                            <span>{item.cantidad}× {item.productos?.nombre || 'Producto'}</span>
+                            <span>{item.cantidad}x {item.productos?.nombre || 'Producto'}</span>
                             <span style={{ fontWeight: '600' }}>{formatPYG(item.precio_unitario * item.cantidad)}</span>
                           </div>
                         ))}
 
-                        {/* Totales */}
                         <div style={{ marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid #eee', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#666' }}>
                             <span>Subtotal</span><span>{formatPYG(pedido.subtotal)}</span>
                           </div>
                           {pedido.entrega_costo > 0 && (
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#666' }}>
-                              <span>Envío</span><span>{formatPYG(pedido.entrega_costo)}</span>
+                              <span>Envio</span><span>{formatPYG(pedido.entrega_costo)}</span>
                             </div>
                           )}
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', color: '#334c2b', fontSize: '1rem', marginTop: '0.25rem' }}>
@@ -833,7 +808,6 @@ export default function PaginaPerfil() {
                           </div>
                         </div>
 
-                        {/* Info extra */}
                         <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', fontSize: '0.82rem', color: '#888' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                             {pedido.metodo_entrega === 'delivery' ? <><Truck size={14} /> Delivery</> : <><Store size={14} /> Retiro</>}
@@ -845,7 +819,7 @@ export default function PaginaPerfil() {
                             fontWeight: '700',
                             color: pedido.estado_pago === 'aprobado' ? '#2e7d32' : '#e65100',
                           }}>
-                            {pedido.estado_pago === 'aprobado' ? 'Ã¢Å“â€œ Pago confirmado' : 'Pago pendiente'}
+                            {pedido.estado_pago === 'aprobado' ? 'Pago confirmado' : 'Pago pendiente'}
                           </span>
                         </div>
 
@@ -863,10 +837,10 @@ export default function PaginaPerfil() {
           </div>
         </div>
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ 6. Cerrar sesión Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* --- 6. Cerrar sesion --- */}
         <div style={{ textAlign: 'center', paddingTop: '0.5rem' }}>
           <button style={S.btnRojo} onClick={handleCerrarSesion}>
-            Cerrar sesión
+            Cerrar sesion
           </button>
         </div>
 

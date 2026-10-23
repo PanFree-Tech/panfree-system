@@ -1,6 +1,6 @@
 /**
- * Ã°Å¸â€œÂ src/app/perfil/puntos/page.js
- * Dashboard de fidelización y gamificación: puntos, niveles, catálogo de premios e historial.
+ * UBICACION: src/app/perfil/puntos/page.js
+ * Dashboard de fidelizacion y gamificacion: puntos, niveles, catalogo de premios e historial.
  */
 
 'use client'
@@ -36,18 +36,18 @@ import {
 } from 'lucide-react'
 
 const NIVELES = [
-    { nombre: 'Bronce', puntosMin: 0, puntosMax: 99, color: '#cd7f32', bg: 'from-amber-50 to-orange-50', badge: 'bg-amber-100 text-amber-900 border-amber-300', emoji: 'Ã°Å¸Â¥â€°' },
-    { nombre: 'Plata', puntosMin: 100, puntosMax: 299, color: '#94a3b8', bg: 'from-slate-50 to-gray-100', badge: 'bg-slate-100 text-slate-800 border-slate-300', emoji: 'Ã°Å¸Â¥Ë†' },
-    { nombre: 'Oro', puntosMin: 300, puntosMax: 599, color: '#eab308', bg: 'from-yellow-50 to-amber-100', badge: 'bg-yellow-100 text-yellow-900 border-yellow-300', emoji: 'Ã°Å¸Â¥â€¡' },
-    { nombre: 'VIP', puntosMin: 600, puntosMax: Infinity, color: '#b8860b', bg: 'from-purple-50 to-amber-50', badge: 'bg-purple-100 text-purple-900 border-purple-300', emoji: 'Ã°Å¸â€˜â€˜' },
+    { nombre: 'Bronce', puntosMin: 0, puntosMax: 99, color: '#cd7f32', bg: 'from-amber-50 to-orange-50', badge: 'bg-amber-100 text-amber-900 border-amber-300', emoji: '[BR]' },
+    { nombre: 'Plata', puntosMin: 100, puntosMax: 299, color: '#94a3b8', bg: 'from-slate-50 to-gray-100', badge: 'bg-slate-100 text-slate-800 border-slate-300', emoji: '[PL]' },
+    { nombre: 'Oro', puntosMin: 300, puntosMax: 599, color: '#eab308', bg: 'from-yellow-50 to-amber-100', badge: 'bg-yellow-100 text-yellow-900 border-yellow-300', emoji: '[OR]' },
+    { nombre: 'VIP', puntosMin: 600, puntosMax: Infinity, color: '#b8860b', bg: 'from-purple-50 to-amber-50', badge: 'bg-purple-100 text-purple-900 border-purple-300', emoji: '[VIP]' },
 ]
 
 const PREMIOS_DEFAULT = [
-    { id: 'p1', nombre: 'Descuento 10%', descripcion: '10% de descuento en tu próxima compra', costo_puntos: 100, tipo: 'descuento', valor: '10', icono: 'Ã°Å¸â€ºÂÃ¯Â¸Â' },
-    { id: 'p2', nombre: 'Delivery Gratis', descripcion: 'Envío gratis en tu próximo pedido', costo_puntos: 150, tipo: 'delivery_gratis', valor: '0', icono: 'Ã°Å¸Å¡Å¡' },
-    { id: 'p3', nombre: 'Budín de Naranja', descripcion: 'Budín de naranja sin gluten (unidad)', costo_puntos: 200, tipo: 'producto_gratis', valor: 'Budín de Naranja', icono: 'Ã°Å¸Â§Â' },
-    { id: 'p4', nombre: 'Muffin Surtido', descripcion: 'Caja de 6 muffins surtidos', costo_puntos: 250, tipo: 'producto_gratis', valor: 'Muffin Surtido', icono: 'Ã°Å¸Â§Â' },
-    { id: 'p5', nombre: 'Pan de Campo', descripcion: 'Pan de campo artesanal (500g)', costo_puntos: 300, tipo: 'producto_gratis', valor: 'Pan de Campo', icono: 'Ã°Å¸ÂÅ¾' },
+    { id: 'p1', nombre: 'Descuento 10%', descripcion: '10% de descuento en tu proxima compra', costo_puntos: 100, tipo: 'descuento', valor: '10', icono: '[DESC]' },
+    { id: 'p2', nombre: 'Delivery Gratis', descripcion: 'Envio gratis en tu proximo pedido', costo_puntos: 150, tipo: 'delivery_gratis', valor: '0', icono: '[ENVIO]' },
+    { id: 'p3', nombre: 'Budin de Naranja', descripcion: 'Budin de naranja sin gluten (unidad)', costo_puntos: 200, tipo: 'producto_gratis', valor: 'Budin de Naranja', icono: '[PROD]' },
+    { id: 'p4', nombre: 'Muffin Surtido', descripcion: 'Caja de 6 muffins surtidos', costo_puntos: 250, tipo: 'producto_gratis', valor: 'Muffin Surtido', icono: '[PROD]' },
+    { id: 'p5', nombre: 'Pan de Campo', descripcion: 'Pan de campo artesanal (500g)', costo_puntos: 300, tipo: 'producto_gratis', valor: 'Pan de Campo', icono: '[PAN]' },
 ]
 
 function obtenerInfoNivel(puntos = 0) {
@@ -147,7 +147,7 @@ export default function PuntosPage() {
                 // Adaptar si no tienen icono
                 const adaptados = premiosData.map(p => ({
                     ...p,
-                    icono: p.icono || (p.tipo === 'delivery_gratis' ? 'Ã°Å¸Å¡Å¡' : p.tipo === 'descuento' ? 'Ã°Å¸â€ºÂÃ¯Â¸Â' : 'Ã°Å¸ÂÅ¾')
+                    icono: p.icono || (p.tipo === 'delivery_gratis' ? '[ENVIO]' : p.tipo === 'descuento' ? '[DESC]' : '[PROD]')
                 }))
                 setPremios(adaptados)
             } else {
@@ -194,7 +194,7 @@ export default function PuntosPage() {
             return
         }
 
-        const confirma = window.confirm(`Ã‚Â¿Confirmás el canje de "${premio.nombre}" por ${premio.costo_puntos} puntos?`)
+        const confirma = window.confirm(`Confirmas el canje de "${premio.nombre}" por ${premio.costo_puntos} puntos?`)
         if (!confirma) return
 
         setCanjeandoPremioId(premio.id)
@@ -216,7 +216,7 @@ export default function PuntosPage() {
             if (data.success) {
                 setMensajePremio({
                     tipo: 'success',
-                    texto: `Ã‚Â¡Felicitaciones! Canjeaste "${premio.nombre}".`,
+                    texto: `Felicitaciones! Canjeaste "${premio.nombre}".`,
                     cupon: data.cupon
                 })
                 setCliente(prev => ({
@@ -234,7 +234,7 @@ export default function PuntosPage() {
             logger.error('Error canjeando premio:', err)
             setMensajePremio({
                 tipo: 'error',
-                texto: 'Error de conexión al procesar el canje.'
+                texto: 'Error de conexion al procesar el canje.'
             })
         } finally {
             setCanjeandoPremioId(null)
@@ -268,19 +268,19 @@ export default function PuntosPage() {
                         Club PanFree Fidelidad
                     </h2>
                     <p className="text-sm text-[#8a7a6b] mb-6 leading-relaxed">
-                        Iniciá sesión para consultar tus puntos acumulados, subir de nivel y canjear premios exclusivos en panadería libre de gluten.
+                        Inicia sesion para consultar tus puntos acumulados, subir de nivel y canjear premios exclusivos en panaderia libre de gluten.
                     </p>
                     <button
                         onClick={() => abrirModal ? abrirModal() : router.push('/login?redirect=/perfil/puntos')}
                         className="w-full py-3.5 px-6 bg-[#f46e15] hover:bg-[#e05b0a] text-white rounded-xl font-bold text-base shadow-md shadow-[#f46e15]/20 hover:shadow-lg transition-all duration-200"
                     >
-                        Iniciar Sesión / Registrarme
+                        Iniciar Sesion / Registrarme
                     </button>
                     <Link
                         href="/premios"
                         className="inline-block mt-4 text-xs font-semibold text-[#334c2b] hover:text-[#f46e15] transition"
                     >
-                        Ver catálogo público de premios Ã¢â€â€™
+                        Ver catalogo publico de premios
                     </Link>
                 </div>
             </div>
@@ -295,7 +295,7 @@ export default function PuntosPage() {
         <div className="min-h-screen bg-[#fcfaf7] text-[#2d1f14] py-8 px-4 sm:px-6 antialiased">
             <div className="max-w-5xl mx-auto space-y-8">
 
-                {/* Barra de navegación superior */}
+                {/* Barra de navegacion superior */}
                 <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-[#e8dfd3]/80">
                     <Link
                         href="/perfil"
@@ -311,7 +311,7 @@ export default function PuntosPage() {
                             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#8a7a6b] hover:text-[#334c2b] transition px-3 py-1.5 rounded-lg border border-[#e8dfd3] bg-white"
                         >
                             <Gift size={14} className="text-[#f46e15]" />
-                            <span>Catálogo Público</span>
+                            <span>Catalogo Publico</span>
                         </Link>
 
                         <Link
@@ -319,7 +319,7 @@ export default function PuntosPage() {
                             className="inline-flex items-center gap-2 bg-[#f46e15] hover:bg-[#e05b0a] text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-xl shadow-sm hover:shadow-md transition"
                         >
                             <QrCode size={16} />
-                            <span>Canjear Nuevo Díptico</span>
+                            <span>Canjear Nuevo Diptico</span>
                         </Link>
                     </div>
                 </div>
@@ -331,15 +331,15 @@ export default function PuntosPage() {
                             <Sparkles size={14} /> Club PanFree Fidelidad
                         </span>
                         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#334c2b] mt-0.5">
-                            Ã‚Â¡Hola, {nombreUsuario.split(' ')[0]}!
+                            Hola, {nombreUsuario.split(' ')[0]}!
                         </h1>
                         <p className="text-xs sm:text-sm text-[#8a7a6b]">
-                            Acumulá puntos con tus compras y dípticos para canjear por premios deliciosos.
+                            Acumula puntos con tus compras y dipticos para canjear por premios deliciosos.
                         </p>
                     </div>
                 </div>
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ BANNER PRINCIPAL DE PUNTOS Y GAMIFICACIÓN Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* BANNER PRINCIPAL DE PUNTOS Y GAMIFICACION */}
                 <section className="bg-white rounded-2xl shadow-sm border border-[#e8dfd3] p-6 sm:p-8 relative overflow-hidden transition-all duration-200">
                     <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#b7996b] via-[#f46e15] to-[#334c2b]" />
 
@@ -382,7 +382,7 @@ export default function PuntosPage() {
                                     </div>
                                 ) : (
                                     <span className="text-xs font-bold text-[#b8860b] bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">
-                                        Ã‚Â¡Nivel Máximo VIP Alcanzado! Ã°Å¸â€˜â€˜
+                                        Nivel Maximo VIP Alcanzado!
                                     </span>
                                 )}
                             </div>
@@ -401,7 +401,7 @@ export default function PuntosPage() {
                                 </div>
                                 {siguienteNivel && (
                                     <p className="text-[11px] text-[#8a7a6b] text-right">
-                                        Te faltan <strong className="text-[#334c2b]">{puntosParaSiguiente} pts</strong> para subir de categoría.
+                                        Te faltan <strong className="text-[#334c2b]">{puntosParaSiguiente} pts</strong> para subir de categoria.
                                     </p>
                                 )}
                             </div>
@@ -439,7 +439,7 @@ export default function PuntosPage() {
                     </div>
                 </section>
 
-                {/* Notificación de canje de premio */}
+                {/* Notificacion de canje de premio */}
                 {mensajePremio && (
                     <div className={`p-4 rounded-2xl border flex items-start gap-3 text-sm animate-fadeIn ${
                         mensajePremio.tipo === 'success'
@@ -473,7 +473,7 @@ export default function PuntosPage() {
                     </div>
                 )}
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ CATÃƒÂLOGO DE PREMIOS CANJEABLES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* CATALOGO DE PREMIOS CANJEABLES */}
                 <section className="space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div>
@@ -481,11 +481,11 @@ export default function PuntosPage() {
                                 Recompensas Disponibles
                             </span>
                             <h2 className="text-xl sm:text-2xl font-extrabold text-[#334c2b]">
-                                Catálogo de Premios
+                                Catalogo de Premios
                             </h2>
                         </div>
                         <p className="text-xs text-[#8a7a6b]">
-                            Elegí tu premio favorito y canjealo al instante con tus puntos.
+                            Elegi tu premio favorito y canjealo al instante con tus puntos.
                         </p>
                     </div>
 
@@ -506,12 +506,12 @@ export default function PuntosPage() {
                                 >
                                     {puedeCanjear && (
                                         <div className="absolute top-0 right-0 bg-emerald-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider shadow-xs">
-                                            Ã‚Â¡Listo para canjear!
+                                            Listo para canjear!
                                         </div>
                                     )}
 
                                     <div>
-                                        <div className="text-4xl mb-3">{premio.icono || 'Ã°Å¸Å½Â'}</div>
+                                        <div className="text-2xl mb-3 font-bold text-[#f46e15]">{premio.icono || '[REGALO]'}</div>
                                         <h3 className="text-lg font-bold text-[#334c2b] mb-1">
                                             {premio.nombre}
                                         </h3>
@@ -556,7 +556,7 @@ export default function PuntosPage() {
                     </div>
                 </section>
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HISTORIAL DE ACTIVIDAD (COLAPSABLE / ELEGANTE) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* HISTORIAL DE ACTIVIDAD */}
                 <section className="bg-white rounded-2xl border border-[#e8dfd3] shadow-sm overflow-hidden">
                     <button
                         onClick={() => setMostrarHistorial(!mostrarHistorial)}
@@ -571,7 +571,7 @@ export default function PuntosPage() {
                                     Historial de Puntos y Premios
                                 </h3>
                                 <p className="text-xs text-[#8a7a6b]">
-                                    Consultá tus dípticos canjeados y cupones generados
+                                    Consulta tus dipticos canjeados y cupones generados
                                 </p>
                             </div>
                         </div>
@@ -583,18 +583,18 @@ export default function PuntosPage() {
 
                     {mostrarHistorial && (
                         <div className="p-6 pt-0 border-t border-[#f0e9df] grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                            {/* Dípticos Canjeados */}
+                            {/* Dipticos Canjeados */}
                             <div className="bg-[#fcfaf7] p-4 rounded-xl border border-[#e8dfd3]">
                                 <h4 className="text-xs font-bold text-[#334c2b] uppercase tracking-wider mb-3 flex items-center gap-1.5">
                                     <QrCode size={15} className="text-[#f46e15]" />
-                                    Dípticos Físicos Canjeados
+                                    Dipticos Fisicos Canjeados
                                 </h4>
 
                                 {historialCanjes.length === 0 ? (
                                     <div className="text-center py-6 text-xs text-[#8a7a6b]">
-                                        <p>Aún no has canjeado ningún código de díptico.</p>
+                                        <p>Aun no has canjeado ningun codigo de diptico.</p>
                                         <Link href="/canjear" className="text-[#f46e15] font-semibold mt-1 inline-block hover:underline">
-                                            Canjear mi primer código Ã¢â€â€™
+                                            Canjear mi primer codigo
                                         </Link>
                                     </div>
                                 ) : (
@@ -603,7 +603,7 @@ export default function PuntosPage() {
                                             <thead>
                                                 <tr className="border-b border-[#e8dfd3] text-[#8a7a6b]">
                                                     <th className="py-2">Fecha</th>
-                                                    <th className="py-2">Código</th>
+                                                    <th className="py-2">Codigo</th>
                                                     <th className="py-2 text-right">Puntos</th>
                                                 </tr>
                                             </thead>
@@ -614,7 +614,7 @@ export default function PuntosPage() {
                                                             {new Date(item.created_at).toLocaleDateString('es-PY')}
                                                         </td>
                                                         <td className="py-2 font-mono font-bold text-[#334c2b]">
-                                                            {item.codigos_dipticos?.codigo || 'DÃƒÂPTICO'}
+                                                            {item.codigos_dipticos?.codigo || 'DIPTICO'}
                                                         </td>
                                                         <td className="py-2 text-right font-extrabold text-emerald-600">
                                                             +{item.puntos_ganados}
@@ -636,7 +636,7 @@ export default function PuntosPage() {
 
                                 {historialPremios.length === 0 ? (
                                     <div className="text-center py-6 text-xs text-[#8a7a6b]">
-                                        <p>Cuando canjees premios, aquí verás tus cupones activos.</p>
+                                        <p>Cuando canjees premios, aqui veras tus cupones activos.</p>
                                     </div>
                                 ) : (
                                     <div className="overflow-x-auto">
@@ -644,7 +644,7 @@ export default function PuntosPage() {
                                             <thead>
                                                 <tr className="border-b border-[#e8dfd3] text-[#8a7a6b]">
                                                     <th className="py-2">Premio</th>
-                                                    <th className="py-2">Cupón</th>
+                                                    <th className="py-2">Cupon</th>
                                                     <th className="py-2 text-right">Puntos</th>
                                                 </tr>
                                             </thead>
@@ -664,7 +664,7 @@ export default function PuntosPage() {
                                                                     <Copy size={10} />
                                                                 </button>
                                                             ) : (
-                                                                <span className="text-gray-400">Ã¢â‚¬â€</span>
+                                                                <span className="text-gray-400">---</span>
                                                             )}
                                                         </td>
                                                         <td className="py-2 text-right font-extrabold text-rose-600">
@@ -681,14 +681,14 @@ export default function PuntosPage() {
                     )}
                 </section>
 
-                {/* Bases de la promoción footer link */}
+                {/* Bases de la promocion footer link */}
                 <div className="text-center pt-4">
                     <Link
                         href="/promocion-dipticos-bases"
                         className="text-xs text-[#8a7a6b] hover:text-[#f46e15] hover:underline"
                         target="_blank"
                     >
-                        Ver Bases y Condiciones de la Promoción de Puntos Ã¢â€â€™
+                        Ver Bases y Condiciones de la Promocion de Puntos
                     </Link>
                 </div>
 

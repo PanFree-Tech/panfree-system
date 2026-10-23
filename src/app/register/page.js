@@ -20,12 +20,9 @@ export default function RegisterPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Si ya está logueado, redirigir al home
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        router.push('/')
-      }
+      if (session) router.push('/')
     })
   }, [router])
 
@@ -35,13 +32,13 @@ export default function RegisterPage() {
     setMessage('')
 
     if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden')
+      setError('Las contrasenas no coinciden')
       return
     }
 
     const validacion = validarPassword(password)
     if (!validacion.ok) {
-      setError('La contraseÃ±a no es suficientemente fuerte. Faltan: ' + validacion.errores.join(', ') + '.')
+      setError('La contrasena no es suficientemente fuerte. Faltan: ' + validacion.errores.join(', ') + '.')
       return
     }
 
@@ -56,16 +53,11 @@ export default function RegisterPage() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            nombre_completo: nombre,
-          },
-        },
+        options: { data: { nombre_completo: nombre } },
       })
 
       if (error) throw error
 
-      // Crear registro en la tabla clientes
       if (data.user) {
         const { error: insertError } = await supabase.from('clientes').upsert({
           user_id: data.user.id,
@@ -73,21 +65,19 @@ export default function RegisterPage() {
           nombre_completo: nombre,
         }, { onConflict: 'email' })
 
-        if (insertError) {
-          logger.error('Error creando cliente:', insertError)
-        }
+        if (insertError) logger.error('Error creando cliente:', insertError)
       }
 
-      setMessage('✅ Te registraste correctamente. Revisá tu email para confirmar la cuenta.')
+      setMessage('Te registraste correctamente. Revisa tu email para confirmar la cuenta.')
       setNombre('')
       setEmail('')
       setPassword('')
       setConfirmPassword('')
     } catch (err) {
       if (err.message === 'User already registered') {
-        setError('Este email ya está registrado. Iniciá sesión.')
+        setError('Este email ya esta registrado. Inicia sesion.')
       } else {
-        setError(err.message || 'Error al registrarse. Intentá de nuevo.')
+        setError(err.message || 'Error al registrarse. Intenta de nuevo.')
       }
     } finally {
       setLoading(false)
@@ -97,14 +87,9 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#fcfaf7] px-4 py-8">
       <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <img
-              src="https://res.cloudinary.com/d7simx38/image/upload/v1788037279/logo-panfree.png"
-              alt="PanFree"
-              className="h-16 w-auto"
-            />
+            <img src="https://res.cloudinary.com/d7simx38/image/upload/v1788037279/logo-panfree.png" alt="PanFree" className="h-16 w-auto" />
           </div>
           <h1 className="text-2xl font-bold text-[#334c2b]">Crear cuenta</h1>
           <p className="text-gray-500 text-sm">Registrate en PanFree</p>
@@ -126,95 +111,44 @@ export default function RegisterPage() {
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre completo
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                required
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#334c2b] focus:border-transparent outline-none"
-                placeholder="Tu nombre"
-              />
+              <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} required className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#334c2b] focus:border-transparent outline-none" placeholder="Tu nombre" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#334c2b] focus:border-transparent outline-none"
-                placeholder="tu@email.com"
-              />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#334c2b] focus:border-transparent outline-none" placeholder="tu@email.com" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Contraseña
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contrasena</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={PASSWORD_MIN_LENGTH}
-                className="w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#334c2b] focus:border-transparent outline-none"
-                placeholder="•••••••• (minimo 10 chars, mayuscula, numero, simbolo)"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
-                tabIndex={-1}
-              >
+              <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={PASSWORD_MIN_LENGTH} className="w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#334c2b] focus:border-transparent outline-none" placeholder="Minimo 10 chars, mayuscula, numero, simbolo" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition" tabIndex={-1}>
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Confirmar contraseña
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar contrasena</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                className="w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#334c2b] focus:border-transparent outline-none"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
-                tabIndex={-1}
-              >
+              <input type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#334c2b] focus:border-transparent outline-none" placeholder="Repetir contrasena" />
+              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition" tabIndex={-1}>
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[#334c2b] text-white py-2.5 rounded-lg hover:bg-[#2a3d24] transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={loading} className="w-full bg-[#334c2b] text-white py-2.5 rounded-lg hover:bg-[#2a3d24] transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -223,25 +157,16 @@ export default function RegisterPage() {
                 </svg>
                 Registrando...
               </span>
-            ) : (
-              'Registrarse'
-            )}
+            ) : ('Registrarse')}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            ¿Ya tenés cuenta?{' '}
-            <Link href="/login" className="text-[#f46e15] hover:underline font-medium">
-              Iniciá sesión
-            </Link>
+            Ya tenes cuenta?{' '}
+            <Link href="/login" className="text-[#f46e15] hover:underline font-medium">Inicia sesion</Link>
           </p>
-          <Link
-            href="/"
-            className="text-sm text-gray-400 hover:text-gray-600 transition mt-2 inline-block"
-          >
-            ← Volver a la tienda
-          </Link>
+          <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 transition mt-2 inline-block">Volver a la tienda</Link>
         </div>
       </div>
     </div>
