@@ -24,6 +24,7 @@
 
 import './globals.css'
 import LayoutClient from './layout-client'
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 // ============================================
 // METADATOS (SEO) - CON VERIFICACION DE FACEBOOK
@@ -107,6 +108,7 @@ export default function RootLayout({ children }) {
     <html lang="es">
       <body>
         <LayoutClient>{children}</LayoutClient>
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
       </body>
     </html>
   )
