@@ -430,3 +430,8 @@
   - Script 'test' en package.json funcional.
 - PRs #40 y #41 mergeados.
 - **Auditoria inicial 2026-10-13: 100% CERRADA.** Todos los hallazgos cerrados o aceptados.
+
+### Actualización S34 (2026-10-23)
+- Checkout reparado (trigger notificaciones y secuencia de pedidos).
+- Seguridad SEC-003 cerrada (login admin).
+- Supabase Advisors: 0 errores críticos.
