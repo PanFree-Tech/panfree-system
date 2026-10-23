@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 📁 src/app/admin/dipticos/page.js
  * Panel administrativo completo para gestión, generación por lotes,
  * exportación, impresión QR y analíticas de Códigos de Dípticos PanFree.
@@ -155,7 +155,7 @@ export default function DipticosAdminPage() {
             c.codigo,
             c.lote_id || 'N/A',
             c.canjeado ? 'Canjeado' : 'Activo',
-            `${baseUrl}/canjear?codigo=${c.codigo}`,
+            `${baseUrl}/diptico/${c.codigo}`,
             c.clientes?.email || c.clientes?.nombre_completo || c.canjeado_por || '',
             c.canjeado_en ? new Date(c.canjeado_en).toLocaleString('es-PY') : '',
             c.fecha_expiracion ? new Date(c.fecha_expiracion).toLocaleDateString('es-PY') : '',
@@ -640,7 +640,7 @@ export default function DipticosAdminPage() {
                             ) : (
                                 codigosFiltrados.map((c) => {
                                     const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-                                    const urlCanje = `${baseUrl}/canjear?codigo=${c.codigo}`
+                                    const urlCanje = `${baseUrl}/diptico/${c.codigo}`
                                     const copiado = copiadoId === c.id
 
                                     return (
@@ -825,7 +825,7 @@ export default function DipticosAdminPage() {
                             gap: '1rem'
                         }}>
                             {codigosFiltrados.slice(0, 24).map(c => {
-                                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : 'https://panfree.com'}/canjear?codigo=${c.codigo}`)}`
+                                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : 'https://panfree.com'}/diptico/${c.codigo}`)}`
                                 return (
                                     <div
                                         key={c.id}
@@ -857,7 +857,7 @@ export default function DipticosAdminPage() {
                                         </div>
 
                                         <div style={{ fontSize: '0.7rem', color: '#666', marginBottom: '0.2rem' }}>
-                                            Escaneá o ingresá en <strong>/canjear</strong>
+                                            Escaneá o ingresá en <strong>/diptico</strong>
                                         </div>
                                         <div style={{
                                             fontFamily: 'monospace',
