@@ -46,10 +46,26 @@ export default function DipticosAdminPage() {
     const [modalImprimir, setModalImprimir] = useState(false)
     const [copiadoId, setCopiadoId] = useState(null)
     const [notificacion, setNotificacion] = useState(null)
+    const [productos, setProductos] = useState([])
+    const [productoSeleccionado, setProductoSeleccionado] = useState('')
 
     useEffect(() => {
         cargarDatos()
+        cargarProductos()
     }, [])
+
+    const cargarProductos = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('productos')
+                .select('id, nombre, precio_venta')
+                .eq('is_active', true)
+                .order('nombre', { ascending: true })
+            if (!error && data) setProductos(data)
+        } catch (err) {
+            logger.error('Error cargando productos:', err)
+        }
+    }
 
     const cargarDatos = async () => {
         setCargando(true)
@@ -89,6 +105,11 @@ export default function DipticosAdminPage() {
         try {
             const lotePersonalizado = nombreLote.trim() || `LOTE-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`
             const { codigos: codigosAGuardar } = await generarLoteCantidad(cant, lotePersonalizado, diasValidez)
+
+            // Asignar el producto seleccionado a cada código
+            if (productoSeleccionado) {
+                codigosAGuardar.forEach(c => c.producto_id = productoSeleccionado)
+            }
 
             const { data, error } = await supabase
                 .from('codigos_dipticos')
