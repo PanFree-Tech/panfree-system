@@ -749,6 +749,26 @@ export default function DipticosAdminPage() {
                                             {/* Acciones */}
                                             <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
                                                 <a
+                                                    href={https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=}
+                                                    download={QR-PanFree-.png}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    title="Descargar QR en alta calidad"
+                                                    style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.2rem',
+                                                        color: '#334c2b',
+                                                        textDecoration: 'none',
+                                                        fontWeight: '600',
+                                                        fontSize: '0.82rem',
+                                                        marginRight: '0.75rem'
+                                                    }}
+                                                >
+                                                    <Download size={13} />
+                                                    <span>QR</span>
+                                                </a>
+                                                <a
                                                     href={urlCanje}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
