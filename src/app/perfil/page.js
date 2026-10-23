@@ -54,7 +54,7 @@ import {
   UploadCloud,
 } from 'lucide-react'
 
-const formatPYG   = n => `Ã¢â€šÂ² ${Number(n || 0).toLocaleString('es-PY')}`
+const formatPYG   = n => `₲ ${Number(n || 0).toLocaleString('es-PY')}`
 const formatFecha = f => f
   ? new Date(f).toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', year: 'numeric' })
   : 'Ã¢â‚¬â€'
