@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 📁 UBICACIÓN: src/app/admin/layout.js
  * 📅 ACTUALIZADO: 2026-10-19
  * 📌 DESCRIPCIÓN: Layout del panel administrativo con:
@@ -41,6 +41,7 @@ import {
   X,
   Loader2,
   Tag,
+  Gift,
   QrCode,
   BellRing,
   CheckCircle2,
@@ -198,6 +199,7 @@ export default function AdminLayout({ children }) {
     { href: '/admin/maquinarias', icon: Wrench, label: 'Maquinarias' },
     { href: '/admin/dipticos', icon: QrCode, label: 'Dípticos' },
     { href: '/admin/cupones', icon: Tag, label: 'Cupones' },
+    { href: '/admin/cupones-premios', icon: Gift, label: 'Premios Canjeados' },
     { href: '/admin/correos', icon: Mail, label: 'Correos' },
     { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
     { href: '/admin/reportes', icon: TrendingUp, label: 'Reportes' },
