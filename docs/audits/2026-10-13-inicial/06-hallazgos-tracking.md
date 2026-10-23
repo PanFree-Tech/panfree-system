@@ -196,3 +196,13 @@ considera **CERRADA**.
 - [F1-08 Consolidacion](./15-f1-08-consolidacion-rls.md)
 | DOC-020 | panfree.fit (apex) no redirigía a www.panfree.fit | Baja | Config | Cerrado (S31) | S31 | Vercel Domains: agregado panfree.fit con redirect 308 a www. |
 | DB-003 | Tablas huerfanas tras retiro de Marketing: `reglas_promocion`, `promociones_historico`, `instagram_posts` | Baja | DB | Cerrado (S32) | S32 | Tablas dropeadas con migracion `2026-10-19-s32-drop-tablas-marketing.sql`. Backup de `reglas_promocion` (4 filas) en `docs/audits/2026-10-13-inicial/48-s32-backup-reglas-promocion.json`. |
+
+---
+
+## Cierre Técnico (2026-10-23) - Advisors y Estabilidad
+
+- **Checkout Reparado:** Corregido trigger crear_notificacion_pedido (usaba leida, ahora leido). Sincronizada secuencia seq_numero_pedido (setval 12).
+- **Seguridad Crítica (SEC-003):** Login de admin migrado a pp_metadata. is_admin() migrada a pp_metadata (ADR-002).
+- **Advisor Security:** 0 ERRORES críticos. Vista ista_disponibilidad_productos migrada a security_invoker=true.
+- **Advisor Performance:** Aplicados 3 fixes de mejores prácticas (search_path en funciones is_admin y sumar_puntos_diptico, e InitPlan en 
+otificaciones_admin). Se aceptan WARN de "Multiple Permissive Policies" por diseño de negocio (RLS mixto).
