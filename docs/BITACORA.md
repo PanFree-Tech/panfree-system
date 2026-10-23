@@ -2006,3 +2006,67 @@ la referencia valida.
 - **Auditoria inicial 2026-10-13: 100% CERRADA.**
 
 **Hito:** Todos los hallazgos de la auditoria inicial (P0, P1, P2, P3) cerrados o aceptados con revision agendada.
+
+
+---
+
+## 2026-10-23 (Sesion 34 - ENV) - COMPLETA
+
+**Duracion:** ~6 horas
+**Objetivo:** Reparar mojibake (encoding roto) en 11 archivos del codigo fuente.
+
+**Completado:**
+- Diagnostico inicial: 12 archivos con mojibake en distintos niveles (1 a 4 niveles).
+- Reparacion de 8 archivos con mojibake de 2 niveles (v1-v5):
+  layout.js, perfil/page.js, perfil/puntos/page.js, usePushNotifications.js,
+  pushService.js, notificaciones.js, ga-metrics/route.js, crear-pedido/route.js.
+- Reparacion de PedidoModal.js (4 niveles de mojibake): reescritura manual en VS Code.
+- Reparacion de AuthModal.js, register/page.js y catalogo/page.js.
+- Reparacion del simbolo del guarani en perfil/page.js (de basura a guarani correcto).
+- Reparacion de comentarios y logs internos en 5 archivos mas.
+- .gitignore: agregadas reglas para *.bak-final, *.bak-*, public/sw.js,
+  public/workbox-*.js, public/worker-*.js.
+- Eliminacion de todos los backups .bak* del disco (30+ archivos).
+- Verificacion final: git grep "Ã" en src/ devuelve 0 resultados.
+- Build local (npm run build) compila sin errores (51/51 paginas generadas).
+
+**Commits:**
+- 1b2a104e fix(encoding): reparar mojibake en 8 archivos (v1-v5)
+- 737e5496 fix(encoding): limpiar mojibake de 4 niveles en PedidoModal
+- 7d95c285 fix(encoding): limpiar mojibake residual en 5 archivos
+- f68d4810 chore: ignorar backups .bak-final en git
+- 51af886a fix(encoding): corregir contrasena en AuthModal
+- 77aa9637 fix(encoding): limpiar mojibake restante en comentarios y logs internos
+- f3d8f65c fix(encoding): limpiar ultimos residuos en notificaciones.js
+- 7acfc066 fix(encoding): limpiar ultimo residuo en notificaciones.js
+
+**Hallazgos cerrados:**
+- Ninguno del tracking formal (era deuda tecnica no registrada).
+
+**Hallazgos nuevos:**
+- DBG-002: Mojibake en 11 archivos de codigo (2-4 niveles). Cerrado en esta sesion.
+
+**Bloqueantes:**
+- Ninguno.
+
+**Aprendizajes:**
+- PowerShell 5.1 + here-strings '@...'@ preservan UTF-8 correctamente.
+  El problema era pegar caracteres no-ASCII directamente en la consola.
+- [char]0xXXXX no soporta emojis (rango astral > 0xFFFF). Reemplazarlos
+  por texto plano ([BR], [PL], [OR], [VIP]) es la solucion practica.
+- .Replace() literal es seguro. -replace con regex es peligroso porque
+  borra cosas sueltas.
+- Mojibake de 4 niveles requiere edicion manual o scripts muy especificos
+  con los codigos Unicode exactos. No se puede automatizar a ciegas.
+- git grep "Ã" es la verificacion mas rapida de que no quedan residuos.
+- *.bak-* en .gitignore evita que los backups contaminen el repo.
+- GitHub tarda ~2-5 min en propagar permisos de colaborador (403 transitorio).
+- VS Code "Resolve save conflict": cuando el archivo cambio por fuera,
+  VS Code bloquea el guardado. Cerrar y reabrir el archivo.
+- Build OK no garantiza runtime OK. Verificar siempre en produccion.
+
+**Proxima sesion (S35):**
+- Verificar deploy en Vercel (commit 7acfc066).
+- Probar en produccion los 11 archivos reparados.
+- Considerar reemplazar [BR], [PL], [OR], [VIP] por emojis reales en perfil/puntos/page.js.
+- Verificar que el simbolo del guarani se vea bien en produccion.
