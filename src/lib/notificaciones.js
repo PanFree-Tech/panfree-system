@@ -1,12 +1,12 @@
 /**
- * ðŸ“ UBICACIÃ“N: src/lib/notificaciones.js
+ * ðŸ“ UBICACION: src/lib/notificaciones.js
  * ðŸ“… ACTUALIZADO: 2026-08-28
- * ðŸ“Œ DESCRIPCIÃ“N: Servicio centralizado de notificaciones internas, transaccionales y Push Web (VAPID) para PanFree:
- *    - Notificaciones internas para el panel de administraciÃ³n (tabla notificaciones_admin)
+ * ðŸ“Œ DESCRIPCION: Servicio centralizado de notificaciones internas, transaccionales y Push Web (VAPID) para PanFree:
+ *    - Notificaciones internas para el panel de administracion (tabla notificaciones_admin)
  *    - Push Notifications Web (VAPID) para administradores (tabla push_subscriptions)
  *    - Correos transaccionales a clientes y administradores con Resend
  *    - Mensajes por WhatsApp a administradores y clientes
- *    - IntegraciÃ³n tolerante a fallos y no bloqueante.
+ *    - Integracion tolerante a fallos y no bloqueante.
  */
 
 import logger from '@/lib/logger'
@@ -23,7 +23,7 @@ import { enviarPlantillaWhatsApp } from './whatsapp'
 import webpush from 'web-push'
 
 /**
- * Regex estÃ¡ndar para validar UUID v4 (8-4-4-4-12 caracteres)
+ * Regex estandar para validar UUID v4 (8-4-4-4-12 caracteres)
  */
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -33,7 +33,7 @@ function isValidUUID(value) {
 }
 
 /**
- * Obtiene el cliente Supabase adecuado (usa service_role si estÃ¡ disponible en entorno server)
+ * Obtiene el cliente Supabase adecuado (usa service_role si esta disponible en entorno server)
  */
 function getSupabaseClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -74,11 +74,11 @@ function getWebPushInstance() {
 }
 
 /**
- * EnvÃa una notificaciÃ³n Push Web a un usuario especÃfico
+ * EnvÃa una notificacion Push Web a un usuario especÃfico
  * 
  * @param {Object} param
  * @param {string} param.userId - ID del usuario (de auth.users o tabla usuarios)
- * @param {string} param.titulo - TÃtulo de la notificaciÃ³n
+ * @param {string} param.titulo - TÃtulo de la notificacion
  * @param {string} param.mensaje - Cuerpo del mensaje
  * @param {string} [param.url] - URL de destino al hacer clic (default: '/admin/pedidos')
  * @returns {Promise<{success: boolean, enviadas: number, error?: string}>}
@@ -88,8 +88,8 @@ export async function enviarPushAdmin({ userId, titulo, mensaje, url = '/admin/p
 
   const cleanUserId = typeof userId === 'string' ? userId.trim() : String(userId).trim()
   if (!isValidUUID(cleanUserId)) {
-    logger.warn(`âšï¸ [Push] userId invÃ¡lido recibido ("${cleanUserId}"). Se requiere formato UUID vÃ¡lido.`)
-    return { success: false, enviadas: 0, error: `UUID invÃ¡lido: ${cleanUserId}` }
+    logger.warn(`âšï¸ [Push] userId invalido recibido ("${cleanUserId}"). Se requiere formato UUID valido.`)
+    return { success: false, enviadas: 0, error: `UUID invalido: ${cleanUserId}` }
   }
 
   try {
@@ -161,11 +161,11 @@ export async function enviarPushAdmin({ userId, titulo, mensaje, url = '/admin/p
 }
 
 /**
- * EnvÃa una notificaciÃ³n Push Web a TODOS los administradores registrados
+ * EnvÃa una notificacion Push Web a TODOS los administradores registrados
  * Obtiene los IDs de los administradores desde la tabla `usuarios` (rol = 'admin')
  * 
  * @param {Object} param
- * @param {string} param.titulo - TÃtulo de la notificaciÃ³n
+ * @param {string} param.titulo - TÃtulo de la notificacion
  * @param {string} param.mensaje - Cuerpo del mensaje
  * @param {string} [param.url] - URL de destino al hacer clic (default: '/admin/pedidos')
  * @returns {Promise<{success: boolean, enviadas: number, total: number}>}
@@ -208,7 +208,7 @@ export async function enviarPushATodosLosAdmins({ titulo, mensaje, url = '/admin
 
     let subscriptionsToSend = subs || []
 
-    // Fallback: si no encontrÃ³ por IDs especÃficos, tomar todas las suscripciones registradas
+    // Fallback: si no encontro por IDs especÃficos, tomar todas las suscripciones registradas
     if (subscriptionsToSend.length === 0) {
       const { data: allSubs } = await db.from('push_subscriptions').select('*').limit(50)
       subscriptionsToSend = allSubs || []
@@ -271,7 +271,7 @@ export async function enviarPushATodosLosAdmins({ titulo, mensaje, url = '/admin
       await db.from('push_subscriptions').delete().in('endpoint', caducados).catch(() => {})
     }
 
-    logger.log(`ðŸ”” [Push] NotificaciÃ³n push enviada a ${enviadas} de ${subsUnicas.length} dispositivos administradores.`)
+    logger.log(`ðŸ”” [Push] Notificacion push enviada a ${enviadas} de ${subsUnicas.length} dispositivos administradores.`)
 
     return { success: true, enviadas, fallos, total: subsUnicas.length }
   } catch (err) {
@@ -281,7 +281,7 @@ export async function enviarPushATodosLosAdmins({ titulo, mensaje, url = '/admin
 }
 
 /**
- * Inserta una nueva notificaciÃ³n interna en la tabla `notificaciones_admin`
+ * Inserta una nueva notificacion interna en la tabla `notificaciones_admin`
  */
 export async function crearNotificacion({ tipo, titulo, mensaje, link = null, metadata = {} }) {
   try {
@@ -305,13 +305,13 @@ export async function crearNotificacion({ tipo, titulo, mensaje, link = null, me
 
     return { success: true, data }
   } catch (err) {
-    logger.error('ðŸ’¥ [Notificaciones] ExcepciÃ³n en crearNotificacion:', err)
+    logger.error('ðŸ’¥ [Notificaciones] Excepcion en crearNotificacion:', err)
     return { success: false, error: err.message }
   }
 }
 
 /**
- * Obtiene las notificaciones no leÃdas para el panel de administraciÃ³n
+ * Obtiene las notificaciones no leÃdas para el panel de administracion
  */
 export async function obtenerNotificacionesNoLeidas(limit = 50) {
   try {
@@ -341,7 +341,7 @@ export async function obtenerNotificacionesNoLeidas(limit = 50) {
 }
 
 /**
- * Marca una notificaciÃ³n especÃfica como leÃda
+ * Marca una notificacion especÃfica como leÃda
  */
 export async function marcarNotificacionComoLeida(id) {
   if (!id) return false
@@ -386,7 +386,7 @@ export async function marcarTodasComoLeidas() {
 }
 
 /**
- * EnvÃa el correo de confirmaciÃ³n de compra al cliente
+ * EnvÃa el correo de confirmacion de compra al cliente
  */
 export async function enviarEmailConfirmacionCliente(pedido, cliente, items = []) {
   const emailCliente = cliente?.email
@@ -407,7 +407,7 @@ export async function enviarEmailConfirmacionCliente(pedido, cliente, items = []
 
     return res
   } catch (err) {
-    logger.error(`âŒ [Email] Error enviando confirmaciÃ³n a ${emailCliente}:`, err)
+    logger.error(`âŒ [Email] Error enviando confirmacion a ${emailCliente}:`, err)
     return { success: false, error: err.message }
   }
 }
@@ -448,7 +448,7 @@ export async function notificarNuevoPedido(pedido, cliente, items = []) {
   // 2. Enviar Push Notification Web a TODOS los Administradores
   const pushPromise = enviarPushATodosLosAdmins({
     titulo: `ðŸ“¦ Â¡Nuevo pedido #${numeroPedido}!`,
-    mensaje: `${nombreCliente} realizÃ³ un pedido por ${total} â‚² (${metodoEntrega})`,
+    mensaje: `${nombreCliente} realizo un pedido por ${total} â‚² (${metodoEntrega})`,
     url: `/admin/pedidos`,
   }).catch((err) => {
     logger.warn('âšï¸ [Push Admin] Error no bloqueante al notificar push a admins:', err.message)
@@ -470,7 +470,7 @@ export async function notificarNuevoPedido(pedido, cliente, items = []) {
   })
   promises.push(emailPromise)
 
-  // 4. Enviar WhatsApp a Admin si estÃ¡ configurado
+  // 4. Enviar WhatsApp a Admin si esta configurado
   const adminWa = process.env.ADMIN_WHATSAPP || process.env.WHATSAPP_TEAM_NUMBER
   let waPromise = Promise.resolve(null)
   if (adminWa) {
@@ -486,7 +486,7 @@ export async function notificarNuevoPedido(pedido, cliente, items = []) {
     promises.push(waPromise)
   }
 
-  // EjecuciÃ³n paralela no bloqueante
+  // Ejecucion paralela no bloqueante
   const results = await Promise.allSettled(promises)
   return {
     db: results[0]?.status === 'fulfilled' ? results[0].value : null,
@@ -497,7 +497,7 @@ export async function notificarNuevoPedido(pedido, cliente, items = []) {
 }
 
 /**
- * Notifica el cambio de estado de un pedido (Correo al cliente y alerta si es cancelaciÃ³n)
+ * Notifica el cambio de estado de un pedido (Correo al cliente y alerta si es cancelacion)
  */
 export async function notificarCambioEstadoPedido(pedido, cliente, nuevoEstado) {
   const numeroPedido = pedido?.numero_pedido || pedido?.numero || 'N/A'
@@ -539,7 +539,7 @@ export async function notificarCambioEstadoPedido(pedido, cliente, nuevoEstado) 
       metadata: {
         pedido_id: pedido?.id,
         numero_pedido: numeroPedido,
-        motivo: pedido?.motivo_cancelacion || 'Cancelado desde panel de administraciÃ³n',
+        motivo: pedido?.motivo_cancelacion || 'Cancelado desde panel de administracion',
       },
     })
 

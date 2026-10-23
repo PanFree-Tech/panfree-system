@@ -3,33 +3,33 @@ import { supabase } from '@/lib/supabase'
 /**
  * src/services/pushService.js
  * Servicio centralizado para notificaciones push
- * SOLO para eventos importantes (pedidos, envÃƒÆ’Ã‚Âos, etc.)
+ * SOLO para eventos importantes (pedidos, envÆ’‚os, etc.)
  */
 
-// ConfiguraciÃƒÆ’Ã‚Â³n
+// ConfiguraciÆ’‚³n
 const THROTTLE_MS = 60000 // 1 minuto entre notificaciones
 let lastNotificationTime = 0
 let notificationInProgress = false
 
 /**
- * Enviar notificaciÃƒÆ’Ã‚Â³n push
+ * Enviar notificaciÆ’‚³n push
  * @param {Object} data - { title, body, icon, url }
  */
 export async function sendPushNotification(data) {
   // 1. Verificar throttling
   const now = Date.now()
   if (notificationInProgress || (now - lastNotificationTime < THROTTLE_MS)) {
-    logger.warn('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â¢ NotificaciÃƒÆ’Ã‚Â³n push bloqueada por throttle')
+    logger.warn('°…¸â‚¬â‚¬¢ NotificaciÆ’‚³n push bloqueada por throttle')
     return { success: false, message: 'Throttled' }
   }
 
   // 2. Validar datos
   if (!data?.title || !data?.body) {
-    logger.warn('ÃƒÂ¢Ã…Â¡Ã‚ÂÃƒÂ¯Ã‚Â¸Ã‚Â Datos de notificaciÃƒÆ’Ã‚Â³n incompletos')
+    logger.warn('¢…¡‚¯‚¸‚ Datos de notificaciÆ’‚³n incompletos')
     return { success: false, message: 'Datos incompletos' }
   }
 
-  // 3. Enviar notificaciÃƒÆ’Ã‚Â³n
+  // 3. Enviar notificaciÆ’‚³n
   notificationInProgress = true
   lastNotificationTime = now
 
@@ -50,10 +50,10 @@ export async function sendPushNotification(data) {
     })
 
     const result = await response.json()
-    logger.log(`ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¨ NotificaciÃƒÆ’Ã‚Â³n enviada: ${result.enviadas || 0} enviadas`)
+    logger.log(`°…¸â‚¬Å“‚¨ NotificaciÆ’‚³n enviada: ${result.enviadas || 0} enviadas`)
     return result
   } catch (error) {
-    logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Error enviando notificaciÃƒÆ’Ã‚Â³n push:', error)
+    logger.error('¢‚…â€™ Error enviando notificaciÆ’‚³n push:', error)
     return { success: false, error: error.message }
   } finally {
     notificationInProgress = false
@@ -61,29 +61,29 @@ export async function sendPushNotification(data) {
 }
 
 /**
- * NotificaciÃƒÆ’Ã‚Â³n de pedido confirmado
+ * NotificaciÆ’‚³n de pedido confirmado
  */
 export function notifyOrderConfirmed(orderData) {
   return sendPushNotification({
-    title: 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Ãƒâ€šÃ‚Â¡Pedido confirmado!',
-    body: `Tu pedido #${orderData.id} ha sido confirmado. EstarÃƒÆ’Ã‚Â¡ listo en 24-48 horas.`,
+    title: '¢…â€œâ‚¬¦ â€š‚¡Pedido confirmado!',
+    body: `Tu pedido #${orderData.id} ha sido confirmado. EstarÆ’‚¡ listo en 24-48 horas.`,
     url: `/pedido/${orderData.id}`,
   })
 }
 
 /**
- * NotificaciÃƒÆ’Ã‚Â³n de pedido enviado
+ * NotificaciÆ’‚³n de pedido enviado
  */
 export function notifyOrderShipped(orderData) {
   return sendPushNotification({
-    title: 'ÃƒÂ°Ã…Â¸Ã…Â¡Ã…Â¡ Ãƒâ€šÃ‚Â¡Pedido enviado!',
-    body: `Tu pedido #${orderData.id} estÃƒÆ’Ã‚Â¡ en camino. Ãƒâ€šÃ‚Â¡LlegarÃƒÆ’Ã‚Â¡ pronto!`,
+    title: '°…¸…¡…¡ â€š‚¡Pedido enviado!',
+    body: `Tu pedido #${orderData.id} estÆ’‚¡ en camino. â€š‚¡LlegarÆ’‚¡ pronto!`,
     url: `/pedido/${orderData.id}`,
   })
 }
 
 /**
- * NotificaciÃƒÆ’Ã‚Â³n de carrito abandonado (se programa para despuÃƒÆ’Ã‚Â©s de 30 min)
+ * NotificaciÆ’‚³n de carrito abandonado (se programa para despuÆ’‚©s de 30 min)
  */
 export function notifyCartAbandoned(cartData) {
   if (!cartData?.items?.length) return
@@ -92,8 +92,8 @@ export function notifyCartAbandoned(cartData) {
   const totalPrice = cartData.total
 
   return sendPushNotification({
-    title: 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂºÃ¢â‚¬â„¢ Ãƒâ€šÃ‚Â¿Olvidaste algo?',
-    body: `Tienes ${totalItems} productos en tu carrito por ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â² ${totalPrice.toLocaleString('es-PY')}. Ãƒâ€šÃ‚Â¡No esperes mÃƒÆ’Ã‚Â¡s!`,
+    title: '°…¸â‚¬ºâ‚¬â„¢ â€š‚¿Olvidaste algo?',
+    body: `Tienes ${totalItems} productos en tu carrito por ¢â‚¬Å¡‚² ${totalPrice.toLocaleString('es-PY')}. â€š‚¡No esperes mÆ’‚¡s!`,
     url: '/carrito',
   })
 }

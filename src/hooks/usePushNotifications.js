@@ -1,11 +1,11 @@
 /**
- * ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â UBICACIÃƒÆ’Ã¢â‚¬Å“N: src/hooks/usePushNotifications.js
- * ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦ ACTUALIZADO: 2026-08-28
- * ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ DESCRIPCIÃƒÆ’Ã¢â‚¬Å“N: Hook de React para gestionar Push Notifications Web (VAPID) y Service Worker en PanFree:
- *    - DetecciÃƒÆ’Ã‚Â³n de compatibilidad en el navegador
+ * °…¸â‚¬Å“‚ UBICACIÆ’â‚¬Å“N: src/hooks/usePushNotifications.js
+ * °…¸â‚¬Å“â‚¬¦ ACTUALIZADO: 2026-08-28
+ * °…¸â‚¬Å“…â€™ DESCRIPCIÆ’â‚¬Å“N: Hook de React para gestionar Push Notifications Web (VAPID) y Service Worker en PanFree:
+ *    - DetecciÆ’‚³n de compatibilidad en el navegador
  *    - Solicitud de permisos con feedback claro (default, granted, denied)
- *    - SuscripciÃƒÆ’Ã‚Â³n y registro automÃƒÆ’Ã‚Â¡tico/manual sincronizado con Supabase (/api/push-suscribir)
- *    - EnvÃƒÆ’Ã‚Âo de notificaciones de prueba (sendTestNotification)
+ *    - SuscripciÆ’‚³n y registro automÆ’‚¡tico/manual sincronizado con Supabase (/api/push-suscribir)
+ *    - EnvÆ’‚o de notificaciones de prueba (sendTestNotification)
  */
 
 'use client'
@@ -15,7 +15,7 @@ import { supabase } from '@/lib/supabase'
 import { useState, useEffect, useCallback, useRef } from 'react'
 
 /**
- * Convierte una clave VAPID pÃƒÆ’Ã‚Âºblica en Base64 URL a Uint8Array requerido por PushManager
+ * Convierte una clave VAPID pÆ’‚ºblica en Base64 URL a Uint8Array requerido por PushManager
  */
 function urlBase64ToUint8Array(base64String) {
   if (!base64String) return new Uint8Array()
@@ -38,7 +38,7 @@ export function usePushNotifications() {
   const [error, setError] = useState(null)
   const isSubscribingRef = useRef(false)
 
-  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 1. Verificar soporte y estado inicial de suscripciÃƒÆ’Ã‚Â³n ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+  // ¢â‚¬â€š¬¢â‚¬â€š¬ 1. Verificar soporte y estado inicial de suscripciÆ’‚³n ¢â‚¬â€š¬¢â‚¬â€š¬
   const checkSubscriptionStatus = useCallback(async () => {
     try {
       if (
@@ -73,7 +73,7 @@ export function usePushNotifications() {
         return
       }
 
-      // Verificar si ya existe suscripciÃƒÆ’Ã‚Â³n activa en PushManager
+      // Verificar si ya existe suscripciÆ’‚³n activa en PushManager
       const existingSub = await registration.pushManager.getSubscription()
       if (existingSub) {
         setSubscription(existingSub)
@@ -83,7 +83,7 @@ export function usePushNotifications() {
         setIsSubscribed(false)
       }
     } catch (err) {
-      logger.warn('ÃƒÂ¢Ã…Â¡Ã‚ÂÃƒÂ¯Ã‚Â¸Ã‚Â [Push Hook] Error verificando estado de push:', err)
+      logger.warn('¢…¡‚¯‚¸‚ [Push Hook] Error verificando estado de push:', err)
       setError(err.message)
     } finally {
       setLoading(false)
@@ -94,10 +94,10 @@ export function usePushNotifications() {
     checkSubscriptionStatus()
   }, [checkSubscriptionStatus])
 
-  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 2. Solicitar permiso al usuario de forma explÃƒÆ’Ã‚Âcita ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+  // ¢â‚¬â€š¬¢â‚¬â€š¬ 2. Solicitar permiso al usuario de forma explÆ’‚cita ¢â‚¬â€š¬¢â‚¬â€š¬
   const requestPermission = async () => {
     if (!isSupported) {
-      setError('Las notificaciones push no estÃƒÆ’Ã‚Â¡n soportadas en este navegador')
+      setError('Las notificaciones push no estÆ’‚¡n soportadas en este navegador')
       return 'unsupported'
     }
 
@@ -106,13 +106,13 @@ export function usePushNotifications() {
       setPermission(result)
       return result
     } catch (err) {
-      logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ [Push Hook] Error solicitando permiso:', err)
+      logger.error('¢‚…â€™ [Push Hook] Error solicitando permiso:', err)
       setError(err.message)
       return 'denied'
     }
   }
 
-  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 3. Suscribir dispositivo y guardar en Supabase ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+  // ¢â‚¬â€š¬¢â‚¬â€š¬ 3. Suscribir dispositivo y guardar en Supabase ¢â‚¬â€š¬¢â‚¬â€š¬
   const subscribe = async (userId = null) => {
     if (!isSupported) {
       setError('Notificaciones no soportadas en este navegador')
@@ -120,7 +120,7 @@ export function usePushNotifications() {
     }
 
     if (isSubscribingRef.current) {
-      logger.log('ÃƒÂ¢Ã‚ÂÃ‚Â³ [Push Hook] SuscripciÃƒÆ’Ã‚Â³n en curso, esperando...')
+      logger.log('¢‚‚³ [Push Hook] SuscripciÆ’‚³n en curso, esperando...')
       return { success: false, inProgress: true }
     }
 
@@ -140,13 +140,13 @@ export function usePushNotifications() {
         throw new Error('Permiso de notificaciones no concedido por el usuario')
       }
 
-      // 2. Asegurar que el Service Worker estÃƒÆ’Ã‚Â© registrado y listo
+      // 2. Asegurar que el Service Worker estÆ’‚© registrado y listo
       let registration = await navigator.serviceWorker.getRegistration()
       if (!registration) {
         registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
       }
 
-      // Esperar a que el SW estÃƒÆ’Ã‚Â© activo
+      // Esperar a que el SW estÆ’‚© activo
       if (registration.installing) {
         await new Promise((resolve) => {
           registration.installing.addEventListener('statechange', (e) => {
@@ -156,7 +156,7 @@ export function usePushNotifications() {
         })
       }
 
-      // 3. Obtener clave pÃƒÆ’Ã‚Âºblica VAPID
+      // 3. Obtener clave pÆ’‚ºblica VAPID
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
       if (!vapidPublicKey) {
         throw new Error('Variable NEXT_PUBLIC_VAPID_PUBLIC_KEY no encontrada en el entorno')
@@ -164,7 +164,7 @@ export function usePushNotifications() {
 
       const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey)
 
-      // 4. Obtener o crear suscripciÃƒÆ’Ã‚Â³n en PushManager
+      // 4. Obtener o crear suscripciÆ’‚³n en PushManager
       let pushSub = await registration.pushManager.getSubscription()
       if (!pushSub) {
         pushSub = await registration.pushManager.subscribe({
@@ -173,7 +173,7 @@ export function usePushNotifications() {
         })
       }
 
-      // 5. Guardar suscripciÃƒÆ’Ã‚Â³n en Supabase vÃƒÆ’Ã‚Âa API
+      // 5. Guardar suscripciÆ’‚³n en Supabase vÆ’‚a API
       const subPayload = pushSub.toJSON ? pushSub.toJSON() : pushSub
       const response = await fetch('/api/push-suscribir', {
         method: 'POST',
@@ -186,17 +186,17 @@ export function usePushNotifications() {
 
       const data = await response.json()
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Error al registrar suscripciÃƒÆ’Ã‚Â³n en la base de datos')
+        throw new Error(data.error || 'Error al registrar suscripciÆ’‚³n en la base de datos')
       }
 
       setSubscription(pushSub)
       setIsSubscribed(true)
       setPermission('granted')
-      logger.log('ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â‚¬Â° [Push Hook] Dispositivo suscrito con ÃƒÆ’Ã‚Â©xito a Push Notifications')
+      logger.log('°…¸…½â‚¬° [Push Hook] Dispositivo suscrito con Æ’‚©xito a Push Notifications')
 
       return { success: true, subscription: pushSub }
     } catch (err) {
-      logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ [Push Hook] Error al suscribir a push:', err)
+      logger.error('¢‚…â€™ [Push Hook] Error al suscribir a push:', err)
       setError(err.message)
       return { success: false, error: err.message }
     } finally {
@@ -205,7 +205,7 @@ export function usePushNotifications() {
     }
   }
 
-  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 4. Desuscribir dispositivo ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+  // ¢â‚¬â€š¬¢â‚¬â€š¬ 4. Desuscribir dispositivo ¢â‚¬â€š¬¢â‚¬â€š¬
   const unsubscribe = async () => {
     if (!isSupported) return { success: false }
 
@@ -231,7 +231,7 @@ export function usePushNotifications() {
       setIsSubscribed(false)
       return { success: true }
     } catch (err) {
-      logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ [Push Hook] Error al desuscribir:', err)
+      logger.error('¢‚…â€™ [Push Hook] Error al desuscribir:', err)
       setError(err.message)
       return { success: false, error: err.message }
     } finally {
@@ -239,7 +239,7 @@ export function usePushNotifications() {
     }
   }
 
-  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 5. Enviar notificaciÃƒÆ’Ã‚Â³n de prueba ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+  // ¢â‚¬â€š¬¢â‚¬â€š¬ 5. Enviar notificaciÆ’‚³n de prueba ¢â‚¬â€š¬¢â‚¬â€š¬
   const sendTestNotification = async (customTitle, customBody) => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -250,8 +250,8 @@ export function usePushNotifications() {
           ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
         },
         body: JSON.stringify({
-          titulo: customTitle || 'ÃƒÂ°Ã…Â¸Ã‚ÂÃ…Â¾ NotificaciÃƒÆ’Ã‚Â³n de Prueba - PanFree',
-          cuerpo: customBody || 'Ãƒâ€šÃ‚Â¡El sistema de notificaciones Push Web estÃƒÆ’Ã‚Â¡ funcionando correctamente!',
+          titulo: customTitle || '°…¸‚…¾ NotificaciÆ’‚³n de Prueba - PanFree',
+          cuerpo: customBody || 'â€š‚¡El sistema de notificaciones Push Web estÆ’‚¡ funcionando correctamente!',
           url_accion: '/admin/pedidos',
           sendToAdmins: true,
         }),
@@ -260,7 +260,7 @@ export function usePushNotifications() {
       const result = await response.json()
       return result
     } catch (err) {
-      logger.error('ÃƒÂ¢Ã‚ÂÃ…â€™ [Push Hook] Error enviando prueba:', err)
+      logger.error('¢‚…â€™ [Push Hook] Error enviando prueba:', err)
       return { success: false, error: err.message }
     }
   }

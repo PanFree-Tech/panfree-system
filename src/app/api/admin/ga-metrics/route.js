@@ -44,7 +44,7 @@ export async function GET(request) {
     const fechaInicioStr = fechaInicio.toISOString()
     const hoyStr = new Date().toISOString()
 
-    // â”€â”€ 1. PEDIDOS DEL PERÃODO â”€â”€
+    // â”€â”€ 1. PEDIDOS DEL PERODO â”€â”€
     const { data: pedidos, error: pedidosError } = await supabase
       .from('pedidos')
       .select('total_final, estado, created_at, cliente_id')
@@ -57,7 +57,7 @@ export async function GET(request) {
       return NextResponse.json({ success: false, error: pedidosError.message }, { status: 500 })
     }
 
-    // â”€â”€ 2. PEDIDOS HISTÃ“RICOS (para ingresos totales) â”€â”€
+    // â”€â”€ 2. PEDIDOS HISTORICOS (para ingresos totales) â”€â”€
     const { data: pedidosHistoricos, error: historicError } = await supabase
       .from('pedidos')
       .select('total_final, cliente_id, created_at')
@@ -65,7 +65,7 @@ export async function GET(request) {
       .order('created_at', { ascending: true })
 
     if (historicError) {
-      logger.warn('Error cargando pedidos histÃ³ricos:', historicError.message)
+      logger.warn('Error cargando pedidos historicos:', historicError.message)
     }
 
     // â”€â”€ 3. CLICKS EN ANUNCIOS (UTM) â”€â”€
@@ -82,9 +82,9 @@ export async function GET(request) {
       logger.warn('Error cargando datos UTM:', utmError.message)
     }
 
-    // â”€â”€ 4. CALCULAR MÃ‰TRICAS â”€â”€
+    // â”€â”€ 4. CALCULAR M‰TRICAS â”€â”€
 
-    // 4.1 MÃ©tricas del perÃ­odo
+    // 4.1 Metricas del periodo
     const ingresosPeriodo = pedidos?.reduce((sum, p) => sum + (p.total_final || 0), 0) || 0
     const pedidosTotales = pedidos?.length || 0
     const pedidosCompletados = pedidos?.filter(p => p.estado === 'entregado' || p.estado === 'confirmado').length || 0
@@ -93,7 +93,7 @@ export async function GET(request) {
     const ticketPromedio = pedidosTotales > 0 ? Math.round(ingresosPeriodo / pedidosTotales) : 0
     const conversionRate = pedidosTotales > 0 ? Math.round((pedidosCompletados / pedidosTotales) * 100) : 0
 
-    // 4.2 MÃ©tricas histÃ³ricas (INGRESOS TOTALES)
+    // 4.2 Metricas historicas (INGRESOS TOTALES)
     const ingresosHistoricos = pedidosHistoricos?.reduce((sum, p) => sum + (p.total_final || 0), 0) || 0
     const clientesHistoricos = new Set(pedidosHistoricos?.map(p => p.cliente_id).filter(Boolean))
     const totalClientes = clientesHistoricos.size || 1
@@ -111,7 +111,7 @@ export async function GET(request) {
       }
       clicksPorFuente[source]++
       
-      // Agrupar por campaÃ±a (utm_campaign)
+      // Agrupar por campana (utm_campaign)
       const campania = item.utm_campaign || 'sin_campania'
       if (!clicksPorCampania[campania]) {
         clicksPorCampania[campania] = 0
@@ -135,13 +135,13 @@ export async function GET(request) {
     return NextResponse.json({
       success: true,
       resumen: {
-        // PerÃ­odo
+        // Periodo
         revenue: ingresosPeriodo,
         pedidos: pedidosTotales,
         usuarios: usuariosUnicos,
         ticketPromedio: ticketPromedio,
         conversion_rate: conversionRate,
-        // HistÃ³rico
+        // Historico
         ingresos_totales: ingresosHistoricos,
         ltv: ltv,
         clientes_unicos: totalClientes,
