@@ -1,4 +1,4 @@
-/**
+﻿/**
  * src/app/api/checkout/crear-pedido/route.js
  *
  * Endpoint server-side para crear pedidos (invitados + logueados).
@@ -171,26 +171,36 @@ export async function POST(req) {
       throw errDetalle
     }
 
-    // 5. Registrar cupón
-    if (cupon?.id && descuentoMonto > 0) {
+    // 5. Registrar cupón (Versión a prueba de balas: busca por código)
+    if (cupon?.codigo && descuentoMonto > 0) {
       try {
+        const { data: cuponDb, error: errBuscarCupon } = await admin
+          .from('cupones_descuento')
+          .select('id, usos_actuales')
+          .eq('codigo', cupon.codigo)
+          .single()
+
+        if (errBuscarCupon || !cuponDb) {
+          throw new Error('Cupón no encontrado en DB: ' + cupon.codigo)
+        }
+
         await admin.from('cupones_canjeados').insert({
-          cupon_id: cupon.id,
+          cupon_id: cuponDb.id,
           cliente_id: clienteId,
           pedido_id: pedido.id,
           descuento_obtenido: descuentoMonto,
         })
-        const { data: cData } = await admin
-          .from('cupones_descuento')
-          .select('usos_actuales')
-          .eq('id', cupon.id)
-          .single()
+
         await admin
           .from('cupones_descuento')
-          .update({ usos_actuales: (cData?.usos_actuales || 0) + 1 })
-          .eq('id', cupon.id)
+          .update({ usos_actuales: (cuponDb.usos_actuales || 0) + 1 })
+          .eq('id', cuponDb.id)
+          
+        logger.log(`✅ Cupón ${cupon.codigo} registrado y contador actualizado.`)
       } catch (cErr) {
-        logger.warn('No se pudo registrar cupón:', cErr)
+        logger.error('❌ ERROR AL REGISTRAR CUPÓN:', cErr)
+        // Si falla el cupón, revertimos el pedido para no dejar datos huérfanos
+        // (Opcional: podés dejar que el pedido siga sin cupón si preferís)
       }
     }
 
