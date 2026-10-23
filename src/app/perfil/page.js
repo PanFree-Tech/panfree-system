@@ -813,7 +813,7 @@ export default function PaginaPerfil() {
                         {/* Productos */}
                         {pedido.detalle_pedido?.map((item, i) => (
                           <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#555', padding: '0.3rem 0', borderBottom: i < pedido.detalle_pedido.length - 1 ? '1px solid #f0ebe4' : 'none' }}>
-                            <span>{item.cantidad}Ãƒâ€” {item.productos?.nombre || 'Producto'}</span>
+                            <span>{item.cantidad}× {item.productos?.nombre || 'Producto'}</span>
                             <span style={{ fontWeight: '600' }}>{formatPYG(item.precio_unitario * item.cantidad)}</span>
                           </div>
                         ))}
