@@ -341,7 +341,7 @@ export async function obtenerNotificacionesNoLeidas(limit = 50) {
 }
 
 /**
- * Marca una notificacion especÃfica como leida
+ * Marca una notificacion especifica como leida
  */
 export async function marcarNotificacionComoLeida(id) {
   if (!id) return false
